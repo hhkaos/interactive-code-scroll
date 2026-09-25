@@ -37,19 +37,27 @@ export function useStepsMeta(): StepsMetaState {
   return ctx;
 }
 
+const isStep = (node: ReactNode): node is ReactElement<StepProps> => isValidElement(node) && node.type === Step;
+
+/** Makes each top-level `<Step>` selectable and passes other MDX content through. */
 export function Steps({ children }: { children: ReactNode }) {
-  const items = Children.toArray(children).filter(isValidElement) as ReactElement<StepProps>[];
+  const nodes = Children.toArray(children);
+  const items = nodes.filter(isStep);
   const { setSteps } = useStepsMeta();
   const metas = items.map(({ props: { id, file, region, images } }) => ({ id, file, region, images }));
   const key = JSON.stringify(metas);
 
   useLayoutEffect(() => setSteps(JSON.parse(key) as StepMeta[]), [key, setSteps]);
 
-  return items.map((item, index) => (
-    <Selectable key={item.props.id} index={index} selectOn={["scroll", "click"]} id={item.props.id} className="step">
-      {item}
-    </Selectable>
-  ));
+  return nodes.map((node) =>
+    isStep(node) ? (
+      <Selectable key={node.props.id} index={items.indexOf(node)} selectOn={["scroll", "click"]} id={node.props.id} className="step">
+        {node}
+      </Selectable>
+    ) : (
+      node
+    ),
+  );
 }
 
 export function Step({ children }: StepProps) {

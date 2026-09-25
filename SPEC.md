@@ -51,10 +51,11 @@ When a step comes into focus, its text block can:
 ### Preview
 - **Optional**: the author can disable it per tutorial.
 - **Configurable mode** per tutorial: embedded **iframe**, **open in new tab**, or **both**.
-- **Iframe mode**: collapsible; sandboxed iframe (srcdoc or blob) with the current files (form values applied). Client-side only.
-- **New tab mode**: opens the current files (form values applied) as a standalone page; OAuth can use a regular redirect.
+- **Preview page**: both modes load a same-origin preview page (`preview/`) that renders the current files (form values applied). Client-side only. Not `srcdoc`/blob: the ArcGIS Maps SDK derives the OAuth `redirect_uri` from `location`, which is `about:srcdoc` there.
+- **Iframe mode**: collapsible iframe pointing at the preview page; sandbox `allow-scripts allow-popups allow-forms allow-same-origin` (same origin is required by the OAuth callback; tutorial code is trusted author code).
+- **New tab mode**: opens the preview page in a new tab; OAuth can use a regular redirect.
 - **Refresh**: automatic after form changes (~500 ms debounce) + manual Run/Reload button.
-- **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via a static `callback.html` published with the tutorial.
+- **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via the SDK's `oauth-callback.html`, published next to the preview page (`preview/oauth-callback.html`).
 
 ### Forms → variables
 - Forms defined in MDX (left panel); filling them updates code variables in real time.
@@ -173,6 +174,7 @@ When a step comes into focus, its text block can:
 
 ## Decisions
 
+- **Preview runs from a same-origin page, not `srcdoc`/blob** (spike finding): required for a valid OAuth `redirect_uri` and for the callback to reach `window.opener`.
 - **Default Preview mode: `both`** (embedded iframe + "open in new tab"). The tab is the fallback when the OAuth popup is blocked.
 - **Distribution: core npm package + `pnpm create interactive-code-scroll` scaffolder.** Generated projects depend on the core package, so improvements arrive via `pnpm update`.
 - **Styling: plain CSS with CSS Modules, no SCSS.** Calcite is themed via CSS custom properties; native CSS nesting covers the rest.

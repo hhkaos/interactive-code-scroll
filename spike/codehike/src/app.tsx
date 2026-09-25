@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import { SelectionProvider, useSelectedIndex } from "codehike/utils/selection";
-import Tutorial from "./tutorial.mdx";
+import Tutorial from "../../tutorial/tutorial.mdx";
 import { CodePanel } from "./code-panel.tsx";
 import { Preview } from "./preview.tsx";
 import { Step, Steps, StepsMetaProvider, useStepsMeta } from "./steps.tsx";
 import { VarField } from "./var-field.tsx";
 import { VarsProvider } from "./vars.tsx";
+
+// MDX content has no hooks: calling it (like Code Hike's parseRoot) exposes the top-level nodes.
+const tutorialContent = (Tutorial({ components: { Step, VarField } }) as ReactElement<{ children: ReactNode }>).props
+  .children;
 
 type Mode = "light" | "dark";
 
@@ -73,7 +77,7 @@ function Layout() {
   return (
     <>
       <main className="docs">
-        <Tutorial components={{ Steps, Step, VarField }} />
+        <Steps>{tutorialContent}</Steps>
       </main>
       <aside className="right">
         <div className="toolbar">
