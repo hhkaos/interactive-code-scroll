@@ -164,7 +164,9 @@ When a step comes into focus, its text block can:
 - **Code markup in comments**: tutorial source code must remain valid, runnable and lintable without the framework.
 - **Technical base: Astro + MDX + Shiki** (decided after a spike; see Decisions and `spike/FINDINGS.md`).
 - **Tutorial folder layout**: `tutorial.mdx` + `code/` + `images/`.
-- **`@var` targets a single string literal** (runtime values replace it in place in the pre-highlighted code).
+- **Code markup rules** (enforced by the build):
+  - `@var` targets the first string literal on its line; one `@var` per line; var names are unique per file. Runtime values replace the literal in place in the pre-highlighted code, escaped for its context (script string or HTML attribute).
+  - Region ids are unique per file; regions may nest; empty regions are errors; `#endregion <id>` (optional id) must match the region it closes.
 
 ---
 
@@ -175,6 +177,25 @@ When a step comes into focus, its text block can:
 ---
 
 ## Decisions
+
+- **MDX syntax.** Frontmatter holds tutorial config; components hold steps and fields:
+
+  ```mdx
+  ---
+  title: OAuth 2.0 with the ArcGIS Maps SDK for JavaScript
+  preview: both        # off | iframe | tab | both
+  ---
+
+  <Step id="config" file="main.js" region="config">
+  ## Configure the app
+  <VarField name="clientId" label="Client ID" secret persist />
+  </Step>
+
+  <Step id="register-app" images={["oauth-step-1.png", "oauth-step-2.png"]}>
+  </Step>
+  ```
+
+  One region per step for now (a future `region="a b"` stays backwards compatible). File paths are relative to `code/`, image names to `images/`.
 
 - **Technical base: Astro + MDX + Shiki.** Build-time highlighting (Shiki dual themes), `@var` via in-place token substitution (no client-side highlighter), strict validation at build time, framework-free TypeScript on the client. Rejected: Code Hike (client highlighting fetches grammars from a third-party host at runtime, ~7× client JS, code-in-MDX authoring model) and TutorialKit (requires COOP/COEP isolation, which breaks the OAuth popup and is not possible on GitHub Pages).
 - **Preview runs from a same-origin page, not `srcdoc`/blob** (spike finding): required for a valid OAuth `redirect_uri` and for the callback to reach `window.opener`.
@@ -191,5 +212,5 @@ When a step comes into focus, its text block can:
 ## Open questions
 
 - [x] Spike outcome: Astro + MDX + Shiki.
-- [ ] Concrete MDX component syntax (steps, actions, forms, carousel, preview config) — after the spike, aligned with the chosen base.
+- [x] Concrete MDX component syntax — see Decisions.
 - [ ] Not covered yet: advanced accessibility, framework versioning.
