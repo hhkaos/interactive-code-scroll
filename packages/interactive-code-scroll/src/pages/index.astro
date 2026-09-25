@@ -5,12 +5,19 @@ import VarField from "../components/VarField.astro";
 import { readTutorialConfig } from "../frontmatter.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
+import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import "../styles/tutorial.css";
 
 const config = readTutorialConfig(frontmatter);
-const panes = await Promise.all(
-  files.map(async (f) => ({ path: f.path, html: await highlight(parseSource(f.source, `code/${f.path}`), f.path) })),
-);
+if (config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
+  throw new Error(`tutorial.mdx frontmatter: preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
+}
+const parsed = files.map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
+const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: await highlight(f.parsed, f.path) })));
+const withIframe = config.preview === "iframe" || config.preview === "both";
+const withTab = config.preview === "tab" || config.preview === "both";
+// Escape "<" so embedded code containing </script> cannot close the data block.
+const clientData = JSON.stringify({ preview: config.preview, files: parsed }).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -28,6 +35,15 @@ const panes = await Promise.all(
       <aside class="right">
         <div class="toolbar">
           <span class="progress" aria-live="polite"></span>
+          {
+            withIframe && (
+              <>
+                <calcite-button id="preview-run" appearance="transparent" icon-start="refresh">Run</calcite-button>
+                <calcite-button id="preview-toggle" appearance="transparent" icon-start="browser">Preview</calcite-button>
+              </>
+            )
+          }
+          {withTab && <calcite-button id="preview-open" appearance="transparent" icon-start="launch">Open in new tab</calcite-button>}
         </div>
         <div class="progress-bar" aria-hidden="true"></div>
         <div class="code-panel">
@@ -37,15 +53,44 @@ const panes = await Promise.all(
           {panes.map((p, i) => <div class="code" data-file={p.path} hidden={i !== 0} set:html={p.html} />)}
         </div>
         <div class="media-panel" hidden></div>
+        {
+          withIframe && (
+            <div class="preview">
+              {/* Same origin is required: the SDK's OAuth callback talks to window.opener. */}
+              <iframe title="Preview" sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" />
+            </div>
+          )
+        }
       </aside>
     </div>
+    <script type="application/json" id="ics-data" set:html={clientData} />
     <script>
       import "../client/calcite.ts";
+      import type { ParsedSource } from "../markers.ts";
+      import { keyToDelta } from "../client/navigation.ts";
+      import { startPreview } from "../client/preview.ts";
       import { startStepEngine } from "../client/steps.ts";
       import { startVars } from "../client/vars.ts";
 
-      startStepEngine();
-      startVars();
+      const data = JSON.parse(document.querySelector("#ics-data")!.textContent!) as {
+        preview: "off" | "iframe" | "tab" | "both";
+        files: { path: string; parsed: ParsedSource }[];
+      };
+
+      const engine = startStepEngine();
+      let refreshPreview = () => {};
+      const vars = startVars(() => refreshPreview());
+      if (data.preview !== "off") {
+        const pageUrl = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}preview/`;
+        refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl }).refresh;
+      }
+
+      // Clicker keys pressed while the preview has focus.
+      addEventListener("message", (event) => {
+        if (event.origin !== location.origin || event.data?.type !== "ics:step-key") return;
+        const delta = keyToDelta(String(event.data.key));
+        if (delta) engine.step(delta);
+      });
     </script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 # Spike: technical base — findings
 
-Branch `spike/base-framework`. Two throwaway prototypes render the same mini tutorial
+Branch `spike/base-framework`. The prototype code was removed once ported; it is in git history at commit `f265e61` (`git show f265e61:spike/...`). Two throwaway prototypes render the same mini tutorial
 (`tutorial/`: ArcGIS Maps SDK 5.1 + OAuth, 3 files, regions, 2 `@var`s, 2 images) and share
 the marker parser (`shared/markers.ts`) and preview helpers (`shared/preview.ts`).
 

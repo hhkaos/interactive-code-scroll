@@ -95,3 +95,13 @@ body {
 }
 
 .step-image { width: 100%; height: auto; }
+
+.preview {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  border-top: 1px solid var(--calcite-color-border-1);
+
+  &[hidden] { display: none; }
+  iframe { flex: 1; border: 0; background: #fff; }
+}

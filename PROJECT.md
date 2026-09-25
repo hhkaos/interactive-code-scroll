@@ -13,7 +13,7 @@ Agent-specific behaviour rules live in each agent's own file (CLAUDE.md, AGENTS.
 
 A framework that turns a tutorial folder (MDX + code + images) into an interactive static website: documentation on the left, code on the right, synchronized by scroll/keyboard (region highlighting, file switching, images), with forms that update code variables, an optional Preview (iframe and/or new tab), downloads and a presentation mode. Built for projecting at conferences and for reproducing at home. Desktop-first. Published on GitHub Pages.
 
-Status: pre-implementation. Technical base chosen (Astro + MDX + Shiki); throwaway prototypes and findings in `spike/`.
+Status: in development. Base: Astro + MDX + Shiki; spike findings in `spike/FINDINGS.md`.
 
 ---
 
@@ -30,14 +30,6 @@ pnpm test         # Vitest unit tests
 pnpm test:e2e     # Playwright: builds the example and serves it on :4400
 ```
 
-Spike (run from `spike/`, separate pnpm workspace):
-
-```sh
-pnpm install
-pnpm --filter ics-spike-astro dev      # http://localhost:4321 (daemon: `astro dev stop`)
-pnpm --filter ics-spike-astro build
-pnpm exec playwright test               # smoke tests, both prototypes
-```
 
 ---
 
@@ -90,23 +82,23 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/components/                  # Step.astro, VarField.astro
   src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code)
   src/pages/index.astro            # injected tutorial page
+  src/preview/                     # preview page, OAuth callback endpoint, HTML builder
   test/                            # Astro build integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 e2e/                               # Playwright tests (against the built example)
-spike/                             # throwaway prototypes (Code Hike, Astro) + FINDINGS.md
+spike/FINDINGS.md                  # spike findings (prototype code in git history, commit f265e61)
 ```
 
-Rest: _TBD — after spike._
 
 ---
 
 ## Architecture
 
-Target design, proven in `spike/astro/` (not built yet in the core package):
+Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 
 | Piece | Runs | Responsibility |
 |---|---|---|
-| Marker parser | build | Strips `#region` / `@var`, returns clean code + region line ranges + var positions (`spike/shared/markers.ts`) |
+| Marker parser | build | Strips `#region` / `@var`, returns clean code + region line ranges + var positions (`src/markers.ts`) |
 | Highlighter | build | Shiki dual themes; `line` transformer tags `data-regions`; `decorations` put `data-var` on the literal's token |
 | Validation | build | Each `<Step>` / `<VarField>` asserts its file, region, image and var exist; build fails with a clear message |
 | MDX components | build | `<Step id file region images>`, `<VarField name label secret persist>` render static HTML |
@@ -206,7 +198,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 - GitHub Pages via GitHub Actions, on push to `main`.
 - Base path `/<repo>/`.
 - Supports one tutorial per repo or several (`/tutorials/<name>/`) with an index page.
-- Workflow details: _TBD — after spike._
+- Workflow details: _TBD — GitHub Pages task in `TODO.md`._
 
 ---
 

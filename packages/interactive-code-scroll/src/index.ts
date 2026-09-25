@@ -37,6 +37,11 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
           },
         });
         injectRoute({ pattern: "/", entrypoint: new URL("./pages/index.astro", import.meta.url) });
+        injectRoute({ pattern: "/preview", entrypoint: new URL("./preview/page.astro", import.meta.url) });
+        injectRoute({
+          pattern: "/preview/oauth-callback.html",
+          entrypoint: new URL("./preview/oauth-callback.ts", import.meta.url),
+        });
       },
     },
   };

@@ -7,9 +7,13 @@ const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode 
 ];
 
 /** Scroll/keyboard-driven steps: active step → file, region focus, images, hash and progress. */
-export function startStepEngine(): void {
+export interface StepEngine {
+  step(delta: -1 | 1): void;
+}
+
+export function startStepEngine(): StepEngine {
   const steps = $$("section.step");
-  if (steps.length === 0) return;
+  if (steps.length === 0) return { step: () => {} };
 
   const codePanel = document.querySelector<HTMLElement>(".code-panel")!;
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
@@ -84,9 +88,17 @@ export function startStepEngine(): void {
 
   // The active step is the one crossing the viewport's center line.
   let restoring = true;
+  // A key-driven smooth scroll passes over other steps; the observer must not re-activate them.
+  let keyScrolling = false;
+  let keyScrollTimer: ReturnType<typeof setTimeout> | undefined;
+  const endKeyScroll = () => {
+    keyScrolling = false;
+    clearTimeout(keyScrollTimer);
+  };
+  addEventListener("scrollend", endKeyScroll);
   const observer = new IntersectionObserver(
     (entries) => {
-      if (restoring) return;
+      if (restoring || keyScrolling) return;
       const entering = entries.find((e) => e.isIntersecting);
       if (entering) activate(steps.indexOf(entering.target as HTMLElement));
     },
@@ -104,6 +116,17 @@ export function startStepEngine(): void {
     return true;
   }
 
+  /** Moves one step (or one carousel image) forwards/backwards, with snapping. */
+  function step(delta: -1 | 1): void {
+    if (moveCarousel(delta)) return;
+    const next = clampIndex(current + delta, steps.length);
+    keyScrolling = true;
+    clearTimeout(keyScrollTimer);
+    keyScrollTimer = setTimeout(endKeyScroll, 1000); // Fallback where `scrollend` is unsupported.
+    steps[next]!.scrollIntoView({ block: "center", behavior: "smooth" });
+    activate(next, delta < 0);
+  }
+
   // Keyboard / presentation clicker. Capture phase so the carousel does not also handle the key.
   addEventListener(
     "keydown",
@@ -114,10 +137,7 @@ export function startStepEngine(): void {
       if (!delta || event.altKey || event.ctrlKey || event.metaKey) return;
       event.preventDefault();
       event.stopPropagation();
-      if (moveCarousel(delta)) return;
-      const next = clampIndex(current + delta, steps.length);
-      steps[next]!.scrollIntoView({ block: "center", behavior: "smooth" });
-      activate(next, delta < 0);
+      step(delta);
     },
     { capture: true },
   );
@@ -137,4 +157,5 @@ export function startStepEngine(): void {
       restoring = false;
     }),
   );
+  return { step };
 }
