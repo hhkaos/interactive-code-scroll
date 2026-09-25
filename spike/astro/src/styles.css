@@ -1,0 +1,103 @@
+body {
+  margin: 0;
+  font-family: var(--calcite-font-family);
+  background: var(--calcite-color-background);
+  color: var(--calcite-color-text-1);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(20rem, 40%) 1fr;
+}
+
+.docs {
+  padding: 0 2rem 60vh;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.step {
+  min-height: 40vh;
+  padding: 1rem;
+  /* Native #step-id scrolling must land the step on the viewport's center line (the trigger). */
+  scroll-margin-top: 30vh;
+  border-inline-start: 4px solid transparent;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+
+  &[data-selected] {
+    border-color: var(--calcite-color-brand);
+    opacity: 1;
+  }
+}
+
+.right {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-inline-start: 1px solid var(--calcite-color-border-1);
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--calcite-color-border-1);
+
+  .progress { margin-inline-end: auto; }
+}
+
+.code-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.code {
+  flex: 1;
+  margin: 0;
+  overflow: auto;
+  padding: 1rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: var(--ch-16);
+  color: var(--ch-4);
+
+  .line { padding-inline: 1rem; opacity: 1; transition: opacity 0.2s; }
+}
+
+.code:has(.line-focus) .line:not(.line-focus) { opacity: 0.35; }
+
+.line-focus { background: var(--ch-17); }
+
+calcite-carousel { flex: 1; }
+
+.step-image { width: 100%; height: auto; }
+
+.preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--calcite-color-border-1);
+
+  iframe { flex: 1; border: 0; background: #fff; }
+}
+
+.preview-toolbar { display: flex; gap: 0.25rem; padding: 0.25rem; }
+
+/* Shiki dual themes (defaultColor: false) mapped to Calcite modes. */
+.shiki { margin: 0; background: transparent; }
+.calcite-mode-light .shiki span { color: var(--shiki-light); }
+.calcite-mode-dark .shiki span { color: var(--shiki-dark); }
+.calcite-mode-light .code { background: var(--shiki-light-bg, #fff); color: #24292e; }
+.calcite-mode-dark .code { background: #24292e; color: #e1e4e8; }
+.code .line { display: inline-block; width: 100%; box-sizing: border-box; }
+.code:has(.line[data-focus]) .line:not([data-focus]) { opacity: 0.35; }
+.line[data-focus] { background: color-mix(in srgb, var(--calcite-color-brand) 12%, transparent); }
+.code[hidden], .code-panel[hidden], .media-panel[hidden], .preview[hidden] { display: none; }
+.media-panel { flex: 1; display: flex; }

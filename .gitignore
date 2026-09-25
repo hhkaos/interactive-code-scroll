@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+test-results/
+playwright-report/
+.playwright-mcp/
+spike/.shots/
+.DS_Store

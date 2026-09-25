@@ -1,0 +1,64 @@
+# OAuth 2.0 with the ArcGIS Maps SDK for JavaScript
+
+<Steps>
+
+<Step id="load-sdk" file="index.html" region="cdn">
+
+## Load the SDK
+
+Add the ArcGIS Maps SDK for JavaScript from the CDN. It also loads Calcite.
+
+</Step>
+
+<Step id="ui" file="index.html" region="ui">
+
+## Build the UI
+
+A Calcite shell with a sign-in button and an `arcgis-map`.
+
+</Step>
+
+<Step id="register-app" images={["oauth-step-1.svg", "oauth-step-2.svg"]}>
+
+## Register your app
+
+Create OAuth credentials in your ArcGIS account and copy the Client ID.
+
+</Step>
+
+<Step id="config" file="main.js" region="config">
+
+## Configure the app
+
+Paste your Client ID. It is stored in this browser only.
+
+<VarField name="clientId" label="Client ID" secret persist />
+<VarField name="portalUrl" label="Portal URL" persist />
+
+</Step>
+
+<Step id="oauth" file="main.js" region="oauth">
+
+## Register OAuthInfo
+
+`popup: true` opens the sign-in page in a popup, so it works inside the Preview iframe.
+
+</Step>
+
+<Step id="sign-in" file="main.js" region="sign-in">
+
+## Sign in
+
+`getCredential` triggers the OAuth flow.
+
+</Step>
+
+<Step id="styles" file="style.css" region="layout">
+
+## Style the page
+
+The map fills the page.
+
+</Step>
+
+</Steps>

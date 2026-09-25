@@ -1,0 +1,5 @@
+packages:
+  - codehike
+  - astro
+allowBuilds:
+  esbuild: true

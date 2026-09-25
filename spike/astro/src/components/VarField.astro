@@ -1,0 +1,27 @@
+---
+import { files } from "../lib/files.ts";
+
+interface Props {
+  name: string;
+  label: string;
+  secret?: boolean;
+  persist?: boolean;
+}
+
+const { name, label, secret = false, persist = false } = Astro.props;
+const ref = files.flatMap((f) => f.parsed.vars).find((v) => v.name === name);
+if (!ref) throw new Error(`VarField: no "// @var ${name}" found in tutorial code`);
+---
+
+<calcite-label>
+  {label}
+  <calcite-input
+    data-var={name}
+    data-persist={persist ? "" : undefined}
+    data-secret={secret ? "" : undefined}
+    placeholder={ref.defaultValue}
+    type={secret ? "password" : "text"}
+  >
+    {secret && <calcite-button slot="action" appearance="transparent" kind="neutral" icon-start="view-visible" label="Show" data-reveal={name} />}
+  </calcite-input>
+</calcite-label>
