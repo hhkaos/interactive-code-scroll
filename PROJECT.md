@@ -19,9 +19,18 @@ Status: pre-implementation. Technical base chosen (Astro + MDX + Shiki); throwaw
 
 ## Commands
 
-Package manager: **pnpm**. Core package commands: _TBD — first implementation task._
+Package manager: **pnpm**. From the repo root:
 
-Spike (run from `spike/`):
+```sh
+pnpm install
+pnpm dev          # example tutorial (examples/oauth-pkce) in dev mode
+pnpm build        # build the example
+pnpm check        # tsc (core package) + astro check (example)
+pnpm test         # Vitest unit tests
+pnpm test:e2e     # Playwright: builds the example and serves it on :4400
+```
+
+Spike (run from `spike/`, separate pnpm workspace):
 
 ```sh
 pnpm install
@@ -69,7 +78,13 @@ README.md
 .claude/skills/     # project skills (init-spec, review-spec, init-memory)
 .codex/config.toml  # Codex config (Esri developer docs MCP)
 .vscode/mcp.json    # VS Code MCP config (Esri developer docs)
-spike/              # throwaway prototypes (Code Hike, Astro) + FINDINGS.md
+packages/interactive-code-scroll/  # core package: Astro integration
+  src/index.ts                     # interactiveCodeScroll() integration (adds MDX, injects /)
+  src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial → author's tutorial.mdx
+  src/pages/index.astro            # injected tutorial page
+examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
+e2e/                               # Playwright tests (against the built example)
+spike/                             # throwaway prototypes (Code Hike, Astro) + FINDINGS.md
 ```
 
 Rest: _TBD — after spike._
@@ -169,7 +184,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 | Keyboard step navigation | Focus in page: works | Focus inside Preview iframe: keys go to the map | Forward keys from the preview page (same origin) |
 | `#step-id` deep link | Native fragment scroll puts the step at the top | Trigger line is the viewport center | Needs `scroll-margin-top` on steps and waiting for Calcite hydration (layout shift) |
 | Astro 7 + pnpm build | Prerender bundle externalizes `cookie`; pnpm does not hoist it | Node resolves a stray copy up the tree (e.g. `~/node_modules`) → CJS import error | `vite.environments.prerender.resolve.noExternal: ["cookie"]` |
-| `astro dev` (v7) | Runs as a daemon and returns immediately | — | Stop with `astro dev stop`, logs with `astro dev logs` |
+| `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 
 ---

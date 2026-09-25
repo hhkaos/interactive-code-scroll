@@ -2,7 +2,6 @@
 
 ## Next
 
-- [ ] **Core package scaffold**: pnpm workspace with `packages/interactive-code-scroll` (Astro integration) and `examples/oauth-pkce` (tutorial folder: `tutorial.mdx` + `code/` + `images/`). Vitest + Playwright wired.
 - [ ] **Marker parser**: port `spike/shared/markers.ts` + Vitest unit tests (nested regions, HTML/CSS/JS comments, errors, escaping per language).
 
 ## Backlog

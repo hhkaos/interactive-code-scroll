@@ -1,0 +1,24 @@
+{
+  "name": "interactive-code-scroll",
+  "version": "0.0.0",
+  "description": "Build guided, interactive code tutorials from MDX and annotated source code.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^8.0.2",
+    "@esri/calcite-components": "^5.1.2",
+    "shiki": "^4.4.3"
+  },
+  "devDependencies": {
+    "astro": "7.3.5"
+  },
+  "peerDependencies": {
+    "astro": "^7.3.5"
+  }
+}
