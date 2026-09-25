@@ -1,11 +1,9 @@
+import { setAction } from "./actions.ts";
+
 /** Fired on `document` when the explanations panel is shown or hidden. */
 export const DOCS_TOGGLE_EVENT = "ics:docs-toggle";
 
-function setIcon(selector: string, icon: string, label: string): void {
-  const button = document.querySelector(selector);
-  button?.setAttribute("icon-start", icon);
-  button?.setAttribute("label", label);
-}
+const setIcon = (selector: string, icon: string, text: string) => setAction(document.querySelector(selector), icon, text);
 
 /**
  * Presentation mode: browser full screen (hides its navigation bar) plus a compact

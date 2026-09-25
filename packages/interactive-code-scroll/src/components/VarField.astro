@@ -15,19 +15,15 @@ const defaultValue = files
   .find((v) => v.name === name)?.defaultValue;
 ---
 
-<calcite-label>
-  {label}
-  <calcite-input
-    data-var={name}
-    data-persist={persist ? "" : undefined}
-    data-secret={secret ? "" : undefined}
-    placeholder={defaultValue}
-    type={secret ? "password" : "text"}
-  >
-    {
-      secret && (
-        <calcite-button slot="action" appearance="transparent" kind="neutral" icon-start="view-visible" label="Show" data-reveal={name} />
-      )
-    }
-  </calcite-input>
-</calcite-label>
+<calcite-input
+  class="var-field"
+  label-text={label}
+  data-var={name}
+  data-persist={persist ? "" : undefined}
+  data-secret={secret ? "" : undefined}
+  placeholder={defaultValue}
+  type={secret ? "password" : "text"}
+>
+  {/* Calcite's `action` slot joins the reveal toggle to the input. */}
+  {secret && <calcite-action slot="action" icon="view-visible" text="Show value" data-reveal={name} />}
+</calcite-input>

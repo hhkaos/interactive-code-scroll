@@ -15,7 +15,7 @@ test("secret values are masked until revealed", async ({ page }) => {
   await page.goto("/#config");
   await clientIdInput(page).fill("my-client-id");
   await expect(code(page)).toContainText('const clientId = "••••••••••••";');
-  await page.locator('calcite-input[data-var="clientId"] calcite-button[data-reveal]').click();
+  await page.locator('calcite-input[data-var="clientId"] [data-reveal]').click();
   await expect(code(page)).toContainText('const clientId = "my-client-id";');
 });
 

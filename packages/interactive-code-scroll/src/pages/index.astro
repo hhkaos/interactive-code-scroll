@@ -16,6 +16,8 @@ const parsed = files.map((f) => ({ path: f.path, parsed: parseSource(f.source, `
 const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: await highlight(f.parsed, f.path) })));
 const withIframe = config.preview === "iframe" || config.preview === "both";
 const withTab = config.preview === "tab" || config.preview === "both";
+// Scoping a Calcite mode class to the panel themes its components and (via color-scheme) the code.
+const codeMode = config.codeTheme === "auto" ? undefined : `calcite-mode-${config.codeTheme}`;
 // Escape "<" so embedded code containing </script> cannot close the data block.
 const clientData = JSON.stringify({ title: config.title, preview: config.preview, files: parsed }).replace(/</g, "\\u003c");
 ---
@@ -39,6 +41,16 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
         document.body.className = dark ? "calcite-mode-dark" : "calcite-mode-light";
       })();
     </script>
+    <calcite-navigation class="app-header">
+      <calcite-action slot="navigation-action" id="docs-toggle" icon="chevrons-left" text="Hide explanations" />
+      <calcite-navigation-logo slot="logo" heading={config.title} />
+      <div slot="content-end" class="header-actions">
+        <span id="step-count" aria-live="polite"></span>
+        <calcite-action id="present-toggle" icon="presentation" text="Present" />
+        <calcite-action id="theme-toggle" icon="moon" text="Toggle theme" />
+      </div>
+      <calcite-progress slot="progress" id="progress-bar" value="0" label="Tutorial progress" />
+    </calcite-navigation>
     <div class="layout">
       <main class="docs">
         <Content components={{ Step, VarField }} />
@@ -54,41 +66,44 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
         data-own-keys
       >
       </div>
-      <aside class="right">
-        <div class="toolbar">
-          <calcite-button id="docs-toggle" appearance="transparent" kind="neutral" icon-start="chevrons-left" label="Hide explanations" />
-          <span class="progress" aria-live="polite"></span>
-          {
-            withIframe && (
-              <>
-                <calcite-button id="preview-run" appearance="transparent" icon-start="refresh">Run</calcite-button>
-                <calcite-button id="preview-toggle" appearance="transparent" icon-start="browser">Preview</calcite-button>
-              </>
-            )
-          }
-          {withTab && <calcite-button id="preview-open" appearance="transparent" icon-start="launch">Open in new tab</calcite-button>}
-          <calcite-button id="present-toggle" appearance="transparent" kind="neutral" icon-start="presentation" label="Present" />
-          <calcite-button id="theme-toggle" appearance="transparent" kind="neutral" icon-start="moon" label="Toggle theme" />
-        </div>
-        <div class="progress-bar" aria-hidden="true"></div>
+      <aside class:list={["right", codeMode]}>
         <div class="code-panel">
-          <div class="code-header">
+          <div class="panel-header">
             <calcite-tab-nav>
-              {panes.map((p, i) => <calcite-tab-title data-file={p.path} selected={i === 0}>{p.path}</calcite-tab-title>)}
+              {
+                panes.map((p, i) => (
+                  <calcite-tab-title data-file={p.path} selected={i === 0} icon-start="file-code">
+                    {p.path}
+                  </calcite-tab-title>
+                ))
+              }
             </calcite-tab-nav>
-            <calcite-button id="copy-file" appearance="transparent" kind="neutral" icon-start="copy-to-clipboard" label="Copy file" />
-            <calcite-button id="download-file" appearance="transparent" kind="neutral" icon-start="download" label="Download file" />
-            <calcite-button id="download-zip" appearance="transparent" kind="neutral" icon-start="file-zip" label="Download project (ZIP)" />
+            <calcite-action id="copy-file" icon="copy-to-clipboard" text="Copy file" />
+            <calcite-action id="download-file" icon="download" text="Download file" />
+            <calcite-action id="download-zip" icon="file-zip" text="Download project (ZIP)" />
           </div>
           {panes.map((p, i) => <div class="code" data-file={p.path} hidden={i !== 0} set:html={p.html} />)}
         </div>
         <div class="media-panel" hidden></div>
         {
-          withIframe && (
-            <div class="preview">
-              {/* Same origin is required: the SDK's OAuth callback talks to window.opener. */}
-              <iframe title="Preview" sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" />
-            </div>
+          config.preview !== "off" && (
+            <section class="preview" aria-label="Preview">
+              <div class="panel-header">
+                {withIframe ? (
+                  <calcite-action id="preview-toggle" icon="chevron-down" text="Preview" text-enabled />
+                ) : (
+                  <span class="panel-title">Preview</span>
+                )}
+                {withIframe && <calcite-action id="preview-run" icon="refresh" text="Run" text-enabled />}
+                {withTab && <calcite-action id="preview-open" icon="launch" text="Open in new tab" text-enabled />}
+              </div>
+              {withIframe && (
+                <div class="preview-frame">
+                  {/* Same origin is required: the SDK's OAuth callback talks to window.opener. */}
+                  <iframe title="Preview" sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" />
+                </div>
+              )}
+            </section>
           )
         }
       </aside>
@@ -98,6 +113,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       import "../client/calcite.ts";
       import type { ParsedSource } from "../markers.ts";
       import { keyToDelta } from "../client/navigation.ts";
+      import { startTooltips } from "../client/actions.ts";
       import { startDownloads } from "../client/downloads.ts";
       import { startLayout } from "../client/layout.ts";
       import { startPresentation } from "../client/presentation.ts";
@@ -111,6 +127,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
         files: { path: string; parsed: ParsedSource }[];
       };
 
+      startTooltips();
       startLayout();
       startPresentation();
       const engine = startStepEngine();

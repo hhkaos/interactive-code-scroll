@@ -12,14 +12,29 @@ export interface StepEngine {
   step(delta: -1 | 1): void;
 }
 
+/**
+ * Resolves when each Calcite component on the page has rendered once. `whenDefined` is
+ * not enough: components wait for their translations (t9n) before the first render.
+ */
+function calciteRendered(): Promise<unknown>[] {
+  return [...document.querySelectorAll("*")]
+    .filter((el) => el.localName.startsWith("calcite-"))
+    .map((el) =>
+      customElements
+        .whenDefined(el.localName)
+        .then(() => (el as Element & { componentOnReady?(): Promise<unknown> }).componentOnReady?.())
+        .catch(() => {}),
+    );
+}
+
 export function startStepEngine(): StepEngine {
   const steps = $$("section.step");
   if (steps.length === 0) return { step: () => {} };
 
   const codePanel = document.querySelector<HTMLElement>(".code-panel")!;
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
-  const progress = document.querySelector<HTMLElement>(".progress");
-  const progressBar = document.querySelector<HTMLElement>(".progress-bar");
+  const progress = document.querySelector<HTMLElement>("#step-count");
+  const progressBar = document.querySelector<HTMLElement & { value: number }>("#progress-bar");
 
   function showFile(path: string): void {
     for (const pane of $$(".code")) pane.hidden = pane.dataset.file !== path;
@@ -64,7 +79,7 @@ export function startStepEngine(): StepEngine {
     steps.forEach((s, i) => s.toggleAttribute("data-active", i === index));
     history.replaceState(null, "", `#${step.id}`);
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
-    progressBar?.style.setProperty("--progress", String((index + 1) / steps.length));
+    if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
 
     const media = step.querySelector<HTMLTemplateElement>("template.step-media");
     mediaPanel.hidden = !media;
@@ -87,7 +102,7 @@ export function startStepEngine(): StepEngine {
     lines[0]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
-  // The active step is the one crossing the viewport's center line.
+  // The active step is the one crossing the center line of the docs panel (its own scroller).
   let restoring = true;
   let userNavigated = false;
   // A key-driven smooth scroll passes over other steps: until it reaches its target,
@@ -110,7 +125,7 @@ export function startStepEngine(): StepEngine {
       }
       activate(index);
     },
-    { rootMargin: "-50% 0px -50% 0px" },
+    { root: steps[0]!.closest(".docs"), rootMargin: "-50% 0px -50% 0px" },
   );
   steps.forEach((step) => observer.observe(step));
 
@@ -124,16 +139,20 @@ export function startStepEngine(): StepEngine {
     return true;
   }
 
+  /** Centers step `index` with a smooth scroll and activates it right away. */
+  function goTo(index: number, fromEnd = false): void {
+    userNavigated = true;
+    keyTarget = index;
+    clearTimeout(keyTargetTimer);
+    keyTargetTimer = setTimeout(endKeyScroll, 1500);
+    steps[index]!.scrollIntoView({ block: "center", behavior: "smooth" });
+    activate(index, fromEnd);
+  }
+
   /** Moves one step (or one carousel image) forwards/backwards, with snapping. */
   function step(delta: -1 | 1): void {
     if (moveCarousel(delta)) return;
-    const next = clampIndex(current + delta, steps.length);
-    userNavigated = true;
-    keyTarget = next;
-    clearTimeout(keyTargetTimer);
-    keyTargetTimer = setTimeout(endKeyScroll, 1500);
-    steps[next]!.scrollIntoView({ block: "center", behavior: "smooth" });
-    activate(next, delta < 0);
+    goTo(clampIndex(current + delta, steps.length), delta < 0);
   }
 
   // Keyboard / presentation clicker. Capture phase so the carousel does not also handle the key.
@@ -161,16 +180,21 @@ export function startStepEngine(): StepEngine {
     steps[current]!.scrollIntoView({ block: "center" });
   });
 
-  // Deep link: activate now, scroll once Calcite has hydrated (hydration changes step heights).
+  // In-page #step-id links: center the step (native anchor scrolling would align its top).
+  addEventListener("hashchange", () => {
+    const index = steps.findIndex((s) => `#${s.id}` === location.hash);
+    if (index >= 0) goTo(index);
+  });
+
+  // Deep link: activate now, scroll once Calcite has rendered (first render changes step heights).
   const initial = indexFromHash(
     steps.map((s) => s.id),
     location.hash,
   );
   activate(initial);
-  void Promise.all([
-    ...["calcite-input", "calcite-label", "calcite-button"].map((tag) => customElements.whenDefined(tag)),
-    document.fonts.ready,
-  ]).then(() =>
+  // Capped: a component that never renders must not leave the engine stuck in `restoring`.
+  const settled = Promise.all([...calciteRendered(), document.fonts.ready]);
+  void Promise.race([settled, new Promise((resolve) => setTimeout(resolve, 3000))]).then(() =>
     requestAnimationFrame(() => {
       // Keys pressed before hydration finished win over the deep link.
       if (!userNavigated) steps[initial]!.scrollIntoView({ block: "center" });

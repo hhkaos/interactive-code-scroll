@@ -1,4 +1,5 @@
 import { buildZip, projectFiles, slugify, type ParsedFile } from "../downloads.ts";
+import { setAction } from "./actions.ts";
 
 function save(name: string, data: BlobPart, type: string): void {
   const url = URL.createObjectURL(new Blob([data], { type }));
@@ -7,15 +8,11 @@ function save(name: string, data: BlobPart, type: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-/** Brief confirmation on a Calcite button (icon + label), then restore. */
-function flash(button: HTMLElement, icon: string, label: string): void {
-  const previous = [button.getAttribute("icon-start"), button.getAttribute("label")] as const;
-  button.setAttribute("icon-start", icon);
-  button.setAttribute("label", label);
-  setTimeout(() => {
-    button.setAttribute("icon-start", previous[0] ?? "");
-    button.setAttribute("label", previous[1] ?? "");
-  }, 1500);
+/** Brief confirmation on a Calcite action (icon + text), then restore. */
+function flash(action: HTMLElement, icon: string, text: string): void {
+  const previous = [action.getAttribute("icon") ?? "", action.getAttribute("text") ?? ""] as const;
+  setAction(action, icon, text);
+  setTimeout(() => setAction(action, ...previous), 1500);
 }
 
 export interface DownloadsOptions {

@@ -7,7 +7,8 @@ test("a deep link activates its step, file and region", async ({ page }) => {
   await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "main.js");
   await expect(focused(page).first()).toContainText("$arcgis.import");
-  await expect(page.locator(".progress")).toHaveText("Step 5 of 8");
+  await expect(page.locator("#step-count")).toHaveText("Step 5 of 8");
+  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 62.5);
   await expect(page).toHaveURL(/#oauth$/);
 });
 
@@ -19,6 +20,24 @@ test("keyboard and clicker keys move between steps", async ({ page }) => {
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "style.css");
   await page.keyboard.press("ArrowUp");
   await expect(page).toHaveURL(/#sign-in$/);
+});
+
+test("the focused region keeps its colors; the rest of the file turns gray", async ({ page }) => {
+  await page.goto("/#oauth");
+  const colors = (selector: string) =>
+    page.locator(`.code[data-file="main.js"] ${selector} span`).evaluateAll((spans) => [
+      ...new Set(spans.filter((s) => s.textContent!.trim()).map((s) => getComputedStyle(s).color)),
+    ]);
+  // Polled: colors transition when the focus changes.
+  await expect.poll(async () => (await colors(".line:not([data-focus])")).length).toBe(1);
+  expect((await colors(".line[data-focus]")).length).toBeGreaterThan(1);
+});
+
+test("in-page links to a step center and activate it", async ({ page }) => {
+  await page.goto("/#config");
+  await page.evaluate(() => (location.hash = "#sign-in"));
+  await expect(page.locator("section.step#sign-in")).toHaveAttribute("data-active", "");
+  await expect(focused(page).first()).toContainText("signInButton");
 });
 
 test("scrolling activates the step crossing the center line", async ({ page }) => {

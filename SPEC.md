@@ -27,7 +27,8 @@ A library/tool/"framework" that lets technical writers, devrels and speakers eas
 ### Layout
 - **Side-by-side**: documentation (left) and code (right).
 - **Resizable splitter** between the panels; width is remembered.
-- **Light + Dark** with a manual toggle; defaults to `prefers-color-scheme`. The code highlighting theme matches.
+- **Light + Dark** with a manual toggle; defaults to `prefers-color-scheme`. The code panel is dark by default so it reads well on any projector (`codeTheme: dark | light | auto` frontmatter; `auto` follows the page mode).
+- **Look and feel**: Esri corporate (Calcite Design System). Calcite components are styled only through their tokens, props and slots.
 - **Readable at high zoom**: code and text must stay readable when the browser font size is increased (CMD+"+" or similar).
 
 ### Code model
@@ -43,7 +44,7 @@ When a step comes into focus, its text block can:
 - **Free scroll**: the active step is determined by scroll position.
 - **Keyboard / clicker**: arrows and PageDown/PageUp jump to the next/previous step with snapping (compatible with presentation clickers).
 - **Deep link per step**: URL with `#step-id` to share or resume.
-- **Progress indicator** (step X of N / bar), visible in presentation mode.
+- **Progress indicator**: a bar under the header; "Step X of N" text in presentation mode.
 
 ### Image carousel
 - Step keys (arrows, PageUp/PageDown, clickers) first page through the carousel's images; past the last image they move to the next step, before the first image to the previous step. Entering a carousel step backwards starts at its last image.
@@ -53,7 +54,7 @@ When a step comes into focus, its text block can:
 - **Optional**: the author can disable it per tutorial.
 - **Configurable mode** per tutorial: embedded **iframe**, **open in new tab**, or **both**.
 - **Preview page**: both modes load a same-origin preview page (`preview/`) that renders the current files (form values applied). Client-side only. Not `srcdoc`/blob: the ArcGIS Maps SDK derives the OAuth `redirect_uri` from `location`, which is `about:srcdoc` there.
-- **Iframe mode**: collapsible iframe pointing at the preview page; sandbox `allow-scripts allow-popups allow-forms allow-same-origin` (same origin is required by the OAuth callback; tutorial code is trusted author code).
+- **Iframe mode**: iframe pointing at the preview page, collapsible to a header bar that keeps its controls (Run, open in new tab); sandbox `allow-scripts allow-popups allow-forms allow-same-origin` (same origin is required by the OAuth callback; tutorial code is trusted author code).
 - **New tab mode**: opens the preview page in a new tab; OAuth can use a regular redirect.
 - **Refresh**: automatic after form changes (~500 ms debounce) + manual Run/Reload button.
 - **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via the tutorial's own `code/oauth-callback.html` (it is part of the tutorial: shown, explained, downloaded). Every `code/` file is published next to the preview page (`preview/<path>`, markers stripped), so relative references resolve there.
@@ -185,6 +186,7 @@ When a step comes into focus, its text block can:
   ---
   title: OAuth 2.0 with the ArcGIS Maps SDK for JavaScript
   preview: both        # off | iframe | tab | both
+  codeTheme: dark      # dark | light | auto (follows the page mode)
   ---
 
   <Step id="config" file="main.js" region="config">

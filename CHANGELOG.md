@@ -27,6 +27,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- UI redesign on Calcite: `calcite-navigation` header (explanations toggle, title, present, theme, progress bar; "Step X of N" only while presenting); explanations scroll in their own panel (no page scroll, separated scrollbars); Calcite type scale (16 px text, 13 px code with the Calcite code font, 1.6/1.7 line heights), compact steps (no minimum height, no dimmed text; active step gets a subtle background and brand edge), numbered section headings, styled inline code, 70ch line length; icon-only `calcite-action`s with tooltips; file icons on tabs; thin splitter and scrollbars.
+- Code panel: dark by default in both modes (`codeTheme` frontmatter: `dark` / `light` / `auto`), GitHub default themes; outside the focused region the code turns uniformly gray, the region keeps its colors on a brand band.
+- Preview: own header bar next to the iframe (collapse, Run, open in new tab); collapsing keeps the header.
+- Image carousel fits and centers in the panel (never scrolls).
+- `<VarField>`: Calcite `label-text` instead of a `calcite-label` wrapper; the secret reveal toggle is a `calcite-action` in the input's `action` slot, joined to the field.
 - Every `code/` file is published at `preview/<path>` (markers stripped); the OAuth popup callback is now the tutorial's own `code/oauth-callback.html` (shown as a step in the example and included in downloads) instead of a built-in framework page.
 - E2E tests block the whole Esri CDN by default (`network: true` to opt in).
 
@@ -38,6 +43,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Spike prototype code (`spike/`), now ported; findings kept in `spike/FINDINGS.md`.
 
 ### Fixed
+
+- Deep links and in-page `#step-id` links center the step (short steps used to land below the trigger line); the engine waits for Calcite's first render (`componentOnReady`, capped at 3 s) before restoring the position.
 
 - Keys pressed before Calcite finished hydrating no longer get undone by the deep-link restore scroll; the scroll observer only confirms the target of a key-driven scroll (an interrupted smooth scroll could re-activate a passed step).
 

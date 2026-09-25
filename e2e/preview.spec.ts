@@ -17,12 +17,14 @@ test("form values reach the preview after the debounce, markers stripped", async
   expect(await previewScript(page)).not.toContain("@var");
 });
 
-test("the preview can be collapsed and reopened", async ({ page }) => {
+test("the preview collapses to its header and reopens", async ({ page }) => {
   await page.goto("/");
   await page.locator("#preview-toggle").click();
-  await expect(page.locator(".preview")).toBeHidden();
+  await expect(page.locator(".preview iframe")).toBeHidden();
+  await expect(page.locator("#preview-run")).toBeVisible();
+  await expect(page.locator("#preview-toggle")).toHaveAttribute("icon", "chevron-right");
   await page.locator("#preview-toggle").click();
-  await expect(page.locator(".preview")).toBeVisible();
+  await expect(page.locator(".preview iframe")).toBeVisible();
 });
 
 test("open in new tab shows the current code as a standalone page", async ({ page, context, baseURL }) => {

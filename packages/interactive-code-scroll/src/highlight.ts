@@ -24,7 +24,7 @@ export function langFor(path: string): string {
 export function highlight({ code, regions, vars }: ParsedSource, path: string): Promise<string> {
   return codeToHtml(code, {
     lang: langFor(path),
-    themes: { light: "github-light", dark: "github-dark" },
+    themes: { light: "github-light-default", dark: "github-dark-default" },
     defaultColor: false,
     decorations: vars
       .filter((v) => v.toColumn > v.fromColumn)

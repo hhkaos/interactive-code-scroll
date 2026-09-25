@@ -1,8 +1,11 @@
 import "@esri/calcite-components/main.css";
-import "@esri/calcite-components/components/calcite-button";
+import "@esri/calcite-components/components/calcite-action";
 import "@esri/calcite-components/components/calcite-carousel";
 import "@esri/calcite-components/components/calcite-carousel-item";
 import "@esri/calcite-components/components/calcite-input";
-import "@esri/calcite-components/components/calcite-label";
+import "@esri/calcite-components/components/calcite-navigation";
+import "@esri/calcite-components/components/calcite-navigation-logo";
+import "@esri/calcite-components/components/calcite-progress";
 import "@esri/calcite-components/components/calcite-tab-nav";
 import "@esri/calcite-components/components/calcite-tab-title";
+import "@esri/calcite-components/components/calcite-tooltip";

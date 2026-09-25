@@ -13,7 +13,7 @@ test("copies the visible file with form values and without markers", async ({ pa
   const text = await page.evaluate(() => navigator.clipboard.readText());
   expect(text).toContain('const clientId = "secret-id";');
   expect(text).not.toMatch(/#region|@var/);
-  await expect(page.locator("#copy-file")).toHaveAttribute("icon-start", "check");
+  await expect(page.locator("#copy-file")).toHaveAttribute("icon", "check");
 });
 
 test("downloads the visible file", async ({ page }) => {

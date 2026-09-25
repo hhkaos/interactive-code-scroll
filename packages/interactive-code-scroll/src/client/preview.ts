@@ -1,5 +1,6 @@
 import { projectFiles, type ParsedFile } from "../downloads.ts";
 import { buildPreviewHtml } from "../preview/build-html.ts";
+import { setAction } from "./actions.ts";
 
 export type PreviewTarget = "iframe" | "tab";
 const storageKey = (target: PreviewTarget) => `ics:preview:${target}`;
@@ -26,11 +27,11 @@ function store(html: string, target: PreviewTarget, pageUrl: string): string {
 
 export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): { refresh(): void } {
   const html = () => buildPreviewHtml(projectFiles(files, values()));
-  const container = document.querySelector<HTMLElement>(".preview");
-  const iframe = container?.querySelector("iframe");
+  const frame = document.querySelector<HTMLElement>(".preview-frame");
+  const iframe = frame?.querySelector("iframe");
 
   const run = () => {
-    if (!iframe || container!.hidden) return;
+    if (!iframe || frame!.hidden) return;
     const url = store(html(), "iframe", pageUrl);
     if (iframe.src === url) iframe.contentWindow?.location.reload();
     else iframe.src = url;
@@ -40,8 +41,10 @@ export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): 
   document.querySelector("#preview-open")?.addEventListener("click", () => {
     window.open(store(html(), "tab", pageUrl), "_blank");
   });
-  document.querySelector("#preview-toggle")?.addEventListener("click", () => {
-    container!.hidden = !container!.hidden;
+  // Collapsing keeps the preview header (and its controls) in place.
+  document.querySelector("#preview-toggle")?.addEventListener("click", (event) => {
+    frame!.hidden = !frame!.hidden;
+    setAction(event.currentTarget as Element, frame!.hidden ? "chevron-right" : "chevron-down", "Preview");
     run();
   });
 

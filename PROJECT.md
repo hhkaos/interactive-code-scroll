@@ -104,6 +104,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 | Validation | build | Each `<Step>` / `<VarField>` asserts its file, region, image and var exist; build fails with a clear message |
 | MDX components | build | `<Step id file region images>`, `<VarField name label secret persist>` render static HTML |
 | Client runtime | browser | IntersectionObserver (center line) + keyboard → activate step (file, focus lines, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
+| Page shell | browser | `calcite-navigation` header (explanations toggle, title, step count, present, theme, `calcite-progress`); explanations scroll in their own panel (the page never scrolls); the right panel carries its own Calcite mode class per `codeTheme` (dark by default), with header bars for code (file tabs, copy, downloads) and preview (collapse, Run, open in tab) |
 | Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab. Every other `code/` file is published at `preview/<path>` (e.g. the tutorial's `oauth-callback.html`) |
 
 ### Data flow
@@ -142,7 +143,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 | API / SDK version | ArcGIS Maps SDK for JavaScript, latest 5.x, via CDN (`js.arcgis.com`) |
 | Product tier | ArcGIS Online and Enterprise (portal URL as a form field) |
 | OAuth references | [identity-oauth-basic sample](https://developers.arcgis.com/javascript/latest/sample-code/identity-oauth-basic/) · [Create OAuth credentials (Location Platform)](https://developers.arcgis.com/documentation/security-and-authentication/user-authentication/tutorials/create-oauth-credentials-user-auth/location-platform/) |
-| UI rules | Calcite only. No inline styles. |
+| UI rules | Calcite only. No inline styles. Style Calcite through its tokens, props and slots (host-level tokens/borders at most, never shadow internals); our CSS covers layout and our own content (MDX text, highlighted code). |
 | Explore first | Before writing code for X, ask "what already exists for X?" and request existing code as a reference pattern. |
 | Documentation | Query the Esri MCP server (`mcp-for-esri-developers`, developers.arcgis.com docs) before assuming ArcGIS APIs. |
 | Off-limits | AMD modules, `watchUtils`, legacy widgets (in tutorial sample code). |
@@ -174,6 +175,8 @@ MDX + annotated code + images → build (validates references; fails on broken I
 - Non-English text in the repo.
 - E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the Esri CDN: SDK and Calcite assets); opt in with `test.use({ network: true })` only when testing the SDK itself.
 - E2E assertions that check state the code under test just set; assert the user-visible outcome (what the component actually shows).
+- Generic class names in E2E selectors (e.g. `.progress`): Playwright pierces shadow DOM and matches Calcite internals; use ids or `data-*` attributes.
+- Overriding Calcite styles by reaching into components (`::part` hacks, `!important`, shadow selectors); use tokens, props and slots.
 
 ---
 
@@ -186,12 +189,15 @@ MDX + annotated code + images → build (validates references; fails on broken I
 | Preview `redirect_uri` | `srcdoc` / blob iframe: SDK builds it from `location` → `about://null/oauth-callback.html` (`<base href>` ignored) | Real same-origin preview page: correct URI | Preview (iframe and tab) must load a real URL; `oauth-callback.html` must sit next to that page |
 | Preview sandbox | Without `allow-same-origin`: opaque origin, no Referer (OSM tiles 403, referrer-restricted API keys fail), callback cannot reach `window.opener` | With `allow-same-origin`: works | Preview can read the tutorial's `localStorage` (author-trusted code) |
 | Keyboard step navigation | Focus in page: works | Focus inside Preview iframe: keys go to the map | Forward keys from the preview page (same origin) |
-| `#step-id` deep link | Native fragment scroll puts the step at the top | Trigger line is the viewport center | Needs `scroll-margin-top` on steps and waiting for Calcite hydration (layout shift) |
+| `#step-id` deep link | Native fragment scroll aligns the step top; `scrollIntoView({ block: "center" })` also honours `scroll-margin`, so a short step lands below the center line | Trigger line is the docs panel center | No `scroll-margin` on steps; the engine centers the step itself (on load and on `hashchange`) after Calcite's first render |
 | Astro 7 + pnpm build | Prerender bundle externalizes `cookie`; pnpm does not hoist it | Node resolves a stray copy up the tree (e.g. `~/node_modules`) → CJS import error | `vite.environments.prerender.resolve.noExternal: ["cookie"]` |
 | MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |
-| Calcite runtime assets | Online: components wait for t9n JSON from `js.arcgis.com` before first render (~1 s, more under load) | Offline / CDN blocked: render immediately, but no icons or translated labels | Matters for the "serve locally" plan B; tests block the CDN (`e2e/fixtures.ts`) |
+| Calcite runtime assets | Online: components wait for t9n JSON from `js.arcgis.com` before first render (~1 s, more under load) | Offline / CDN blocked: render once the fetch fails, but no icons or translated labels | Matters for the "serve locally" plan B; tests block the CDN (`e2e/fixtures.ts`). `customElements.whenDefined` resolves before that first render: wait for `componentOnReady()` when layout matters |
+| Calcite mode classes | `calcite-mode-light` / `-dark` set Calcite tokens | They do not set `color-scheme` | Set it ourselves: `light-dark()` (Shiki colors) and native scrollbars follow the nearest mode class (the code panel's own class) |
+| `calcite-input` `action` slot | Slotted `calcite-action` renders next to the field without a border | Reads as a separate button | Give the action host the input border token (`--calcite-color-border-input`), no start border |
+| TypeScript Node types | Repo: `tsc` finds `@types/node` in a stray `~/node_modules` up the tree | Fresh clone / CI: not declared, `pnpm check` fails | Pending: add `@types/node` as a dev dependency (needs approval) |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 
 ---

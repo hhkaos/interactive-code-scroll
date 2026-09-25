@@ -1,3 +1,4 @@
+import { setAction } from "./actions.ts";
 import { displayValue, readStored, valueFromInput, writeStored } from "./var-values.ts";
 
 type CalciteInput = HTMLElement & { value: string; type: string; placeholder: string };
@@ -41,9 +42,7 @@ export function startVars(onChange: () => void = () => {}): VarsHandle {
     input.querySelector("[data-reveal]")?.addEventListener("click", (event) => {
       revealed = !revealed;
       input.type = revealed ? "text" : "password";
-      const button = event.currentTarget as HTMLElement;
-      button.setAttribute("icon-start", revealed ? "view-hide" : "view-visible");
-      button.setAttribute("label", revealed ? "Hide" : "Show");
+      setAction(event.currentTarget as Element, revealed ? "view-hide" : "view-visible", revealed ? "Hide value" : "Show value");
       render();
     });
   }

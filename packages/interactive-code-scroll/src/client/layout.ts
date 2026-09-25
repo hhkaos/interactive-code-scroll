@@ -1,3 +1,4 @@
+import { setAction } from "./actions.ts";
 import { clampSplit, parseStoredSplit, resolveMode, SPLIT_KEY, splitFromPointer, THEME_KEY, type Mode } from "./layout-values.ts";
 
 const read = (key: string) => {
@@ -18,9 +19,11 @@ const write = (key: string, value: string) => {
 function applyMode(mode: Mode): void {
   document.body.classList.toggle("calcite-mode-dark", mode === "dark");
   document.body.classList.toggle("calcite-mode-light", mode === "light");
-  const toggle = document.querySelector("#theme-toggle");
-  toggle?.setAttribute("icon-start", mode === "dark" ? "brightness" : "moon");
-  toggle?.setAttribute("label", mode === "dark" ? "Switch to light mode" : "Switch to dark mode");
+  setAction(
+    document.querySelector("#theme-toggle"),
+    mode === "dark" ? "brightness" : "moon",
+    mode === "dark" ? "Switch to light mode" : "Switch to dark mode",
+  );
 }
 
 /** Light/dark toggle (remembered) and the resizable docs/code splitter (remembered). */
