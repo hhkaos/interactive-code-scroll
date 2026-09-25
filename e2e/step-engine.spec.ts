@@ -80,7 +80,9 @@ test("each step shows its whole code region when it fits", async ({ page }) => {
     await page.keyboard.press("PageDown");
     await expect(page).toHaveURL(new RegExp(`#${id}$`));
     if (id === "register-app") {
-      await page.keyboard.press("PageDown"); // Second image; no code in this step.
+      // Images, no code: page through the rest of the carousel.
+      const images = await page.locator(".media-panel calcite-carousel-item").count();
+      for (let i = 1; i < images; i++) await page.keyboard.press("PageDown");
       continue;
     }
     await expect.poll(() => regionShown(page), { message: id }).toBe(true);
@@ -113,8 +115,10 @@ test("step keys page through a carousel before leaving the step", async ({ page 
   await page.goto("/#register-app");
   await expect(page.locator(".media-panel calcite-carousel")).toBeVisible();
   await expect(page.locator(".code-panel")).toBeHidden();
-  await expect.poll(shown).toBe("oauth-step-1.svg");
+  await expect.poll(shown).toBe("credential-type-user-alp.png");
 
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(shown).toBe("oauth-step-1.svg");
   await page.keyboard.press("ArrowDown");
   await expect.poll(shown).toBe("oauth-step-2.svg");
   await expect(page).toHaveURL(/#register-app$/);
@@ -129,6 +133,8 @@ test("step keys page through a carousel before leaving the step", async ({ page 
   await expect.poll(shown).toBe("oauth-step-2.svg");
   await page.keyboard.press("ArrowLeft");
   await expect.poll(shown).toBe("oauth-step-1.svg");
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(shown).toBe("credential-type-user-alp.png");
   await page.keyboard.press("PageUp");
   await expect(page).toHaveURL(/#ui$/);
 });
