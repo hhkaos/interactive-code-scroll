@@ -33,11 +33,17 @@ export function startPresentation(): void {
     if (!document.fullscreenElement) setPresenting(false);
   });
   // Where Esc reaches the page instead (full screen refused, some embeddings), handle it too.
-  addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !body.hasAttribute("data-presenting")) return;
-    setPresenting(false);
-    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
-  });
+  // Capture phase: an open dialog (image viewer) takes that Esc before it closes.
+  addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key !== "Escape" || !body.hasAttribute("data-presenting")) return;
+      if (document.querySelector("calcite-dialog[open]")) return;
+      setPresenting(false);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    },
+    { capture: true },
+  );
 
   document.querySelector("#docs-toggle")?.addEventListener("click", () => {
     const hidden = !body.hasAttribute("data-docs-hidden");

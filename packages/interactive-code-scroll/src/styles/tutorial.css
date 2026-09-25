@@ -48,32 +48,56 @@ body[data-presenting] :is(#theme-toggle, #copy-file, #download-file, #download-z
   min-height: 0;
   display: grid;
   grid-template-columns: var(--split, 40%) auto minmax(0, 1fr);
-
-  &[data-resizing] {
-    cursor: col-resize;
-    user-select: none;
-    iframe { pointer-events: none; }
-  }
 }
 
 /* Hidden explanations: code gets the full width; steps still move with keys/clicker. */
 body[data-docs-hidden] {
-  .layout { grid-template-columns: minmax(0, 1fr); }
+  .layout { grid-template-columns: auto minmax(0, 1fr); }
   .docs, .splitter { display: none; }
+  /* The gutter stays as a rail at the left edge, holding the "show" handle. */
+  .docs-toggle { left: 0; transform: translateY(-50%); }
 }
 
-.splitter {
+/* Column between the panels: the splitter plus the explanations handle on top of it. */
+.gutter {
+  position: relative;
   width: 4px;
-  cursor: col-resize;
+  background: var(--calcite-color-border-3);
+}
+
+.splitter, .preview-splitter {
   touch-action: none;
   background: var(--calcite-color-border-3);
   transition: background 0.15s;
 
-  &:hover, &:focus-visible, .layout[data-resizing] & {
+  &:hover, &:focus-visible, .layout[data-resizing] &.splitter, .right[data-resizing] &.preview-splitter {
     background: var(--calcite-color-brand);
     outline: none;
   }
 }
+
+.splitter { height: 100%; cursor: col-resize; }
+.preview-splitter { flex: none; height: 4px; cursor: row-resize; }
+
+.docs-toggle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  --calcite-action-background-color: var(--calcite-color-foreground-1);
+  border: 1px solid var(--calcite-color-border-2);
+  border-radius: var(--calcite-corner-radius-pill);
+  overflow: hidden;
+  box-shadow: var(--calcite-shadow-sm);
+}
+
+[data-resizing] {
+  user-select: none;
+  iframe { pointer-events: none; }
+}
+.layout[data-resizing] { cursor: col-resize; }
+.right[data-resizing] { cursor: row-resize; }
 
 .docs, .code {
   scrollbar-width: thin;
@@ -89,8 +113,8 @@ body[data-docs-hidden] {
   overflow-y: auto;
   overflow-wrap: break-word;
   counter-reset: step;
-  /* The bottom room lets the last step reach the center line. */
-  padding: 2rem 0 60vh;
+  /* The bottom room lets the last step reach the center line (--tail: computed by the step engine). */
+  padding: 2rem 0 var(--tail, 60vh);
   background: var(--calcite-color-foreground-1);
   font-size: var(--calcite-font-size-md);
   line-height: 1.6;
@@ -153,8 +177,6 @@ body[data-docs-hidden] {
     }
   }
 
-  /* Clicking a step activates it: hint on hover. */
-  &:not([data-active]):hover { background: var(--calcite-color-transparent-hover); }
 
   &[data-active] {
     cursor: auto;
@@ -259,6 +281,7 @@ body[data-docs-hidden] {
 
 /* Fits the panel (room left for the carousel's pagination) and stays centered. */
 .step-image {
+  cursor: zoom-in;
   display: block;
   margin-inline: auto;
   max-width: 100%;
@@ -268,14 +291,18 @@ body[data-docs-hidden] {
 }
 
 .preview {
-  flex: 1;
+  /* Height set with the preview splitter (--preview-split on .right). */
+  flex: 0 0 var(--preview-split, 50%);
   min-height: 0;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--calcite-color-border-3);
 
-  /* Collapsed: only the header remains. */
-  &:not(:has(.preview-frame:not([hidden]))) { flex: none; }
+  /* Collapsed: only the header remains (no splitter). */
+  &:not(:has(.preview-frame:not([hidden]))) {
+    flex: none;
+    border-top: 1px solid var(--calcite-color-border-3);
+    .preview-splitter { display: none; }
+  }
   .panel-header { gap: 0.25rem; }
   :is(#preview-toggle, .panel-title) { margin-inline-end: auto; }
 }
@@ -287,4 +314,18 @@ body[data-docs-hidden] {
 
   &[hidden] { display: none; }
   iframe { flex: 1; border: 0; background: #fff; }
+}
+
+/* Carousel image viewer: as large as the screen allows. */
+#image-viewer {
+  --calcite-dialog-size-x: 96vw;
+  --calcite-dialog-size-y: 94vh;
+  --calcite-dialog-content-space: 0.5rem;
+
+  img {
+    display: block;
+    width: 100%;
+    height: calc(94vh - 5rem);
+    object-fit: contain;
+  }
 }

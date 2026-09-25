@@ -14,9 +14,14 @@ describe("readTutorialConfig", () => {
     });
   });
 
+  it("accepts an optional logo from images/", () => {
+    expect(readTutorialConfig({ logo: "logo.png" })).toMatchObject({ logo: "logo.png" });
+  });
+
   it("rejects invalid values", () => {
     expect(() => readTutorialConfig({ preview: "popup" })).toThrow(/"preview" must be one of off, iframe, tab, both/);
     expect(() => readTutorialConfig({ theme: "blue" })).toThrow(/"theme" must be one of auto, light, dark/);
     expect(() => readTutorialConfig({ title: 3 })).toThrow(/"title" must be a string/);
+    expect(() => readTutorialConfig({ logo: true })).toThrow(/"logo" must be a string/);
   });
 });

@@ -58,6 +58,41 @@ test("dragging the splitter resizes the panels and is remembered", async ({ page
   await expect.poll(() => docsWidth(page)).toBeGreaterThan(880);
 });
 
+test("dragging the preview splitter resizes the preview and is remembered", async ({ page }) => {
+  await page.goto("/#config");
+  const previewHeight = () => page.locator(".preview").evaluate((el) => el.getBoundingClientRect().height);
+  const before = await previewHeight();
+  const box = (await page.locator(".preview-splitter").boundingBox())!;
+  await page.mouse.move(700, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(700, box.y - 200, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(previewHeight).toBeGreaterThan(before + 150);
+
+  await page.reload();
+  await expect.poll(previewHeight).toBeGreaterThan(before + 150);
+  // Keyboard too, without moving steps.
+  const resized = await previewHeight();
+  await page.locator(".preview-splitter").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(previewHeight).toBeLessThan(resized);
+  await expect(page).toHaveURL(/#config$/);
+});
+
+test("the explanations handle sits on the splitter and stays reachable when they are hidden", async ({ page }) => {
+  await page.goto("/#config");
+  const handle = page.locator("#docs-toggle");
+  const gutter = (await page.locator(".gutter").boundingBox())!;
+  const box = (await handle.boundingBox())!;
+  expect(box.x).toBeLessThan(gutter.x);
+  expect(box.x + box.width).toBeGreaterThan(gutter.x + gutter.width);
+  await handle.click();
+  await expect(page.locator("main.docs")).toBeHidden();
+  await expect(handle).toBeInViewport();
+  await handle.click();
+  await expect(page.locator("main.docs")).toBeVisible();
+});
+
 test("the splitter works with the keyboard without moving steps", async ({ page }) => {
   await page.goto("/#config");
   const before = await docsWidth(page);

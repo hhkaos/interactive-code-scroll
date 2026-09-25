@@ -1,4 +1,5 @@
 import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta, revealScroll, type RevealOptions } from "./navigation.ts";
+import { MEDIA_EVENT } from "./image-viewer.ts";
 import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
 
 type TabTitle = HTMLElement & { selected: boolean };
@@ -59,6 +60,11 @@ export function startStepEngine(): StepEngine {
    * `selected` when items are created (setting it later does not move the carousel),
    * so each change re-creates the carousel from the step's template.
    */
+  function announceMedia(): void {
+    const image = mediaPanel.querySelectorAll<HTMLImageElement>(".step-image")[mediaIndex] ?? null;
+    document.dispatchEvent(new CustomEvent(MEDIA_EVENT, { detail: mediaPanel.hidden ? null : image }));
+  }
+
   function showMedia(template: HTMLTemplateElement, index: number): void {
     const fragment = template.content.cloneNode(true) as DocumentFragment;
     const items = [...fragment.querySelectorAll("calcite-carousel-item")];
@@ -69,8 +75,10 @@ export function startStepEngine(): StepEngine {
     carousel.addEventListener("calciteCarouselChange", () => {
       const selected = (carousel as HTMLElement & { selectedItem?: Element }).selectedItem;
       if (selected) mediaIndex = [...carousel.querySelectorAll("calcite-carousel-item")].findIndex((item) => item === selected);
+      announceMedia();
     });
     mediaPanel.replaceChildren(fragment);
+    announceMedia();
   }
 
   function mediaCount(): number {
@@ -95,6 +103,7 @@ export function startStepEngine(): StepEngine {
       return;
     }
     mediaPanel.replaceChildren();
+    announceMedia();
 
     const { file, region } = step.dataset;
     if (!file) return; // Text-only step: keep the current file.
@@ -155,6 +164,7 @@ export function startStepEngine(): StepEngine {
   /** Scrolls to step `index` (smoothly) and activates it right away. */
   function goTo(index: number, { fromEnd = false, center = true } = {}): void {
     userNavigated = true;
+    userScrolling = false;
     keyTarget = index;
     clearTimeout(keyTargetTimer);
     keyTargetTimer = setTimeout(endKeyScroll, 1500);
@@ -202,10 +212,15 @@ export function startStepEngine(): StepEngine {
   });
 
   // Back at the top, the first step is active again (it cannot reach the center line there).
+  // Only for scrolling done by the user: a key/click scroll towards an early step also ends at 0.
+  let userScrolling = false;
+  for (const type of ["wheel", "touchmove", "pointerdown"]) {
+    docs.addEventListener(type, () => (userScrolling = true), { passive: true });
+  }
   docs.addEventListener(
     "scroll",
     () => {
-      if (!restoring && keyTarget === undefined && docs.scrollTop <= 0) activate(0);
+      if (userScrolling && !restoring && docs.scrollTop <= 0) activate(0);
     },
     { passive: true },
   );
@@ -215,6 +230,14 @@ export function startStepEngine(): StepEngine {
     const index = steps.findIndex((s) => `#${s.id}` === location.hash);
     if (index >= 0) goTo(index);
   });
+
+  // Just enough room below the last step for it to reach the center line (no fixed blank tail).
+  const last = steps.at(-1)!;
+  const tail = new ResizeObserver(() => {
+    docs.style.setProperty("--tail", `${Math.max(docs.clientHeight / 2 - last.offsetHeight / 2, 32)}px`);
+  });
+  tail.observe(docs);
+  tail.observe(last);
 
   // Deep link: activate now and keep the step centered while the layout settles (Calcite
   // components render late, after fetching their translations), until the user takes over.

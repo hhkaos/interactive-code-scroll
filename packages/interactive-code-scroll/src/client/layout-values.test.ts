@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampSplit, parseStoredSplit, resolveMode, splitFromPointer, SPLIT_DEFAULT, SPLIT_MAX, SPLIT_MIN } from "./layout-values.ts";
+import { clampSplit, DOCS_SPLIT, parseStoredSplit, PREVIEW_SPLIT, resolveMode, splitFromPointer } from "./layout-values.ts";
 
 describe("resolveMode", () => {
   it("prefers a stored manual choice", () => {
@@ -21,20 +21,21 @@ describe("resolveMode", () => {
 
 describe("split", () => {
   it("clamps to keep both panels usable", () => {
-    expect(clampSplit(5)).toBe(SPLIT_MIN);
-    expect(clampSplit(95)).toBe(SPLIT_MAX);
-    expect(clampSplit(33.333)).toBe(33.3);
-    expect(clampSplit(Number.NaN)).toBe(SPLIT_DEFAULT);
+    expect(clampSplit(5, DOCS_SPLIT)).toBe(DOCS_SPLIT.min);
+    expect(clampSplit(95, DOCS_SPLIT)).toBe(DOCS_SPLIT.max);
+    expect(clampSplit(33.333, DOCS_SPLIT)).toBe(33.3);
+    expect(clampSplit(Number.NaN, DOCS_SPLIT)).toBe(DOCS_SPLIT.fallback);
+    expect(clampSplit(95, PREVIEW_SPLIT)).toBe(PREVIEW_SPLIT.max);
   });
 
-  it("converts pointer position to a percentage of the layout", () => {
-    expect(splitFromPointer(600, 100, 1000)).toBe(50);
-    expect(splitFromPointer(0, 0, 1000)).toBe(SPLIT_MIN);
+  it("converts pointer position to a percentage of the container", () => {
+    expect(splitFromPointer(600, 100, 1000, DOCS_SPLIT)).toBe(50);
+    expect(splitFromPointer(0, 0, 1000, DOCS_SPLIT)).toBe(DOCS_SPLIT.min);
   });
 
   it("parses stored values", () => {
-    expect(parseStoredSplit(null)).toBe(SPLIT_DEFAULT);
-    expect(parseStoredSplit("55")).toBe(55);
-    expect(parseStoredSplit("junk")).toBe(SPLIT_DEFAULT);
+    expect(parseStoredSplit(null, DOCS_SPLIT)).toBe(DOCS_SPLIT.fallback);
+    expect(parseStoredSplit("55", DOCS_SPLIT)).toBe(55);
+    expect(parseStoredSplit("junk", PREVIEW_SPLIT)).toBe(PREVIEW_SPLIT.fallback);
   });
 });

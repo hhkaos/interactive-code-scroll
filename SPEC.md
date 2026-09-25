@@ -26,7 +26,8 @@ A library/tool/"framework" that lets technical writers, devrels and speakers eas
 
 ### Layout
 - **Side-by-side**: documentation (left) and code (right).
-- **Resizable splitter** between the panels; width is remembered.
+- **Resizable splitters** between docs and code, and between code and Preview; sizes are remembered. A handle on the docs/code splitter hides/shows the explanations.
+- **Logo** (optional, `logo` frontmatter, a file in `images/`): shown in the header and used as favicon. Square SVG, or PNG of at least 512×512.
 - **Light + Dark** with a manual toggle (remembered). The author sets the tutorial's default with the `theme` frontmatter (`auto` = `prefers-color-scheme`, the default; `light`; `dark`). The code panel and the Preview iframe follow the page mode (the iframe's `prefers-color-scheme` follows it, so apps using `calcite-mode-auto` match).
 - **Look and feel**: Esri corporate (Calcite Design System). Calcite components are styled only through their tokens, props and slots.
 - **Readable at high zoom**: code and text must stay readable when the browser font size is increased (CMD+"+" or similar).
@@ -51,6 +52,7 @@ When a step comes into focus, its text block can:
 ### Image carousel
 - Step keys (arrows, PageUp/PageDown, clickers) first page through the carousel's images; past the last image they move to the next step, before the first image to the previous step. Entering a carousel step backwards starts at its last image.
 - The carousel's own controls also work.
+- Clicking an image opens it in a full-screen viewer; step keys keep paging the images there, and leaving the step's images (or Esc) closes it.
 
 ### Preview
 - **Optional**: the author can disable it per tutorial.
@@ -189,6 +191,7 @@ When a step comes into focus, its text block can:
   title: OAuth 2.0 with the ArcGIS Maps SDK for JavaScript
   preview: both        # off | iframe | tab | both
   theme: auto          # auto (OS preference) | light | dark: default mode; the viewer's toggle wins
+  logo: logo.svg       # optional, from images/: header logo and favicon
   ---
 
   <Step id="config" file="main.js" region="config">

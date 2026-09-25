@@ -139,6 +139,45 @@ test("step keys page through a carousel before leaving the step", async ({ page 
   await expect(page).toHaveURL(/#ui$/);
 });
 
+test("clicking a carousel image opens it large; step keys page it; leaving the step closes it", async ({ page }) => {
+  const dialog = page.locator("#image-viewer");
+  await page.goto("/#register-app");
+  await page.locator(".media-panel .step-image").first().click();
+  await expect(dialog).toHaveAttribute("open", "");
+  await expect(dialog.locator("img")).toHaveAttribute("alt", "credential-type-user-alp.png");
+  await expect(dialog).toHaveJSProperty("heading", "credential-type-user-alp.png (1 of 3)");
+  const size = (await dialog.locator("img").boundingBox())!;
+  expect(size.width).toBeGreaterThan(1200);
+
+  await page.keyboard.press("PageDown");
+  await expect(dialog.locator("img")).toHaveAttribute("alt", "oauth-step-1.svg");
+  await page.keyboard.press("PageDown");
+  await page.keyboard.press("PageDown");
+  await expect(dialog).not.toHaveAttribute("open", "");
+  await expect(page).toHaveURL(/#config$/);
+});
+
+test("Esc closes the image viewer", async ({ page }) => {
+  await page.goto("/#register-app");
+  await page.locator(".media-panel .step-image").first().click();
+  await expect(page.locator("#image-viewer img")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#image-viewer")).not.toHaveAttribute("open", "");
+});
+
+test("the last step is reachable by scrolling, with no more blank room than needed", async ({ page }) => {
+  await page.goto("/#config");
+  await page.locator("main.docs").hover();
+  await page.mouse.wheel(0, 10_000);
+  await expect(page.locator("section.step#styles")).toHaveAttribute("data-active", "");
+  const room = await page.locator("main.docs").evaluate((docs) => {
+    const last = [...docs.querySelectorAll("section.step")].at(-1)!;
+    const below = docs.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom;
+    return { below, half: docs.clientHeight / 2 };
+  });
+  expect(room.below).toBeLessThanOrEqual(room.half);
+});
+
 test("typing in a field does not move steps", async ({ page }) => {
   await page.goto("/#config");
   await page.locator('calcite-input[data-var="clientId"] input').press("ArrowDown");

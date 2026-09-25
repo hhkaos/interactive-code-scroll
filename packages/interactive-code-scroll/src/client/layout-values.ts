@@ -1,10 +1,19 @@
 export type Mode = "light" | "dark";
 
 export const THEME_KEY = "ics:theme";
-export const SPLIT_KEY = "ics:split";
-export const SPLIT_MIN = 20;
-export const SPLIT_MAX = 70;
-export const SPLIT_DEFAULT = 40;
+
+export interface SplitRange {
+  /** localStorage key. */
+  key: string;
+  min: number;
+  max: number;
+  fallback: number;
+}
+
+/** Docs column width, in % of the layout width. */
+export const DOCS_SPLIT: SplitRange = { key: "ics:split", min: 20, max: 70, fallback: 40 };
+/** Preview height, in % of the right panel height. */
+export const PREVIEW_SPLIT: SplitRange = { key: "ics:preview-split", min: 15, max: 85, fallback: 50 };
 
 /** A stored manual choice wins, then the tutorial's default (`theme` frontmatter), then the OS preference. */
 export function resolveMode(stored: string | null | undefined, prefersDark: boolean, tutorialDefault?: string): Mode {
@@ -12,16 +21,17 @@ export function resolveMode(stored: string | null | undefined, prefersDark: bool
   return prefersDark ? "dark" : "light";
 }
 
-/** Docs column width in % of the layout, clamped so neither panel disappears. */
-export function clampSplit(percent: number): number {
-  if (!Number.isFinite(percent)) return SPLIT_DEFAULT;
-  return Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, Math.round(percent * 10) / 10));
+/** Clamped so neither panel disappears; one decimal. */
+export function clampSplit(percent: number, range: SplitRange): number {
+  if (!Number.isFinite(percent)) return range.fallback;
+  return Math.min(range.max, Math.max(range.min, Math.round(percent * 10) / 10));
 }
 
-export function splitFromPointer(clientX: number, layoutLeft: number, layoutWidth: number): number {
-  return clampSplit(((clientX - layoutLeft) / layoutWidth) * 100);
+/** Pointer position → % of the container along the splitter's axis. */
+export function splitFromPointer(pointer: number, start: number, size: number, range: SplitRange): number {
+  return clampSplit(((pointer - start) / size) * 100, range);
 }
 
-export function parseStoredSplit(stored: string | null | undefined): number {
-  return stored == null ? SPLIT_DEFAULT : clampSplit(Number(stored));
+export function parseStoredSplit(stored: string | null | undefined, range: SplitRange): number {
+  return stored == null ? range.fallback : clampSplit(Number(stored), range);
 }

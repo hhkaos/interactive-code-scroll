@@ -2,6 +2,7 @@ import "@esri/calcite-components/main.css";
 import "@esri/calcite-components/components/calcite-action";
 import "@esri/calcite-components/components/calcite-carousel";
 import "@esri/calcite-components/components/calcite-carousel-item";
+import "@esri/calcite-components/components/calcite-dialog";
 import "@esri/calcite-components/components/calcite-input";
 import "@esri/calcite-components/components/calcite-navigation";
 import "@esri/calcite-components/components/calcite-navigation-logo";
