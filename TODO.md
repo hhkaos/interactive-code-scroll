@@ -2,20 +2,23 @@
 
 ## Next
 
-- [ ] **Spike (1–2 days, branch `spike/base-framework`): choose the technical base.** Build two minimal prototypes and compare:
-  - Code Hike (Vite or Next)
-  - Custom Astro + MDX + Shiki
-
-  Also review [TutorialKit](https://tutorialkit.dev) (StackBlitz, Astro-based) for gaps and as a possible base.
-
-  Validate in both:
-  - [ ] Runtime variables: form field → `// @var` literal replaced → code re-highlighted client-side
-  - [ ] Scroll/keyboard-driven focus: highlight `#region`, gray out the rest, switch files
-  - [ ] Calcite Design System integration (web components) incl. light/dark
-  - [ ] Preview in sandboxed iframe + open in new tab
-
-  Outcome: decision recorded in `SPEC.md`; commands, stack, file map and architecture filled in `PROJECT.md`.
+- [ ] **Core package scaffold**: pnpm workspace with `packages/interactive-code-scroll` (Astro integration) and `examples/oauth-pkce` (tutorial folder: `tutorial.mdx` + `code/` + `images/`). Vitest + Playwright wired.
+- [ ] **Marker parser**: port `spike/shared/markers.ts` + Vitest unit tests (nested regions, HTML/CSS/JS comments, errors, escaping per language).
 
 ## Backlog
 
-_Derived from `SPEC.md` after the spike. Finished tasks move to `CHANGELOG.md`._
+_Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
+
+- [ ] Build-time highlighting + strict validation with MDX file/line in errors; dev-mode browser overlay.
+- [ ] Scroll/keyboard step engine, deep links, progress indicator.
+- [ ] Forms → variables (persist, secret + reveal toggle).
+- [ ] Preview page (iframe + new tab, debounce + Run, `oauth-callback.html`), key forwarding from the preview.
+- [ ] Image carousel.
+- [ ] Downloads: single file, project ZIP, copy to clipboard.
+- [ ] Layout: resizable splitter (remembered), light/dark toggle, high-zoom readability.
+- [ ] Presentation mode.
+- [ ] CLI: dev, build, serve; print OAuth redirect URIs.
+- [ ] `pnpm create interactive-code-scroll` scaffolder.
+- [ ] Multi-tutorial repos with index page; GitHub Pages workflow.
+- [ ] Finalize MDX component syntax (open question in `SPEC.md`).
+- [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.

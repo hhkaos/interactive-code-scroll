@@ -13,13 +13,22 @@ Agent-specific behaviour rules live in each agent's own file (CLAUDE.md, AGENTS.
 
 A framework that turns a tutorial folder (MDX + code + images) into an interactive static website: documentation on the left, code on the right, synchronized by scroll/keyboard (region highlighting, file switching, images), with forms that update code variables, an optional Preview (iframe and/or new tab), downloads and a presentation mode. Built for projecting at conferences and for reproducing at home. Desktop-first. Published on GitHub Pages.
 
-Status: pre-implementation. The technical base will be chosen after a spike (see `TODO.md`).
+Status: pre-implementation. Technical base chosen (Astro + MDX + Shiki); throwaway prototypes and findings in `spike/`.
 
 ---
 
 ## Commands
 
-_TBD — after spike._ Package manager: **pnpm**.
+Package manager: **pnpm**. Core package commands: _TBD — first implementation task._
+
+Spike (run from `spike/`):
+
+```sh
+pnpm install
+pnpm --filter ics-spike-astro dev      # http://localhost:4321 (daemon: `astro dev stop`)
+pnpm --filter ics-spike-astro build
+pnpm exec playwright test               # smoke tests, both prototypes
+```
 
 ---
 
@@ -33,7 +42,9 @@ _TBD — after spike._ Package manager: **pnpm**.
 | UI | Calcite Design System (Esri) |
 | Unit tests | Vitest |
 | E2E tests | Playwright |
-| Base framework | _TBD — spike: Code Hike (Vite/Next) vs Astro + MDX + Shiki_ |
+| Base framework | Astro 7 + `@astrojs/mdx` (static output) |
+| Code highlighting | Shiki 4 at build time (dual themes via CSS variables) |
+| Client runtime | Framework-free TypeScript (add an island only if state grows) |
 | Styling | Plain CSS + CSS Modules (no SCSS) |
 | Output | Static website (GitHub Pages) |
 | Package name | `interactive-code-scroll` |
@@ -58,6 +69,7 @@ README.md
 .claude/skills/     # project skills (init-spec, review-spec, init-memory)
 .codex/config.toml  # Codex config (Esri developer docs MCP)
 .vscode/mcp.json    # VS Code MCP config (Esri developer docs)
+spike/              # throwaway prototypes (Code Hike, Astro) + FINDINGS.md
 ```
 
 Rest: _TBD — after spike._
@@ -66,7 +78,16 @@ Rest: _TBD — after spike._
 
 ## Architecture
 
-_TBD — after spike._
+Target design, proven in `spike/astro/` (not built yet in the core package):
+
+| Piece | Runs | Responsibility |
+|---|---|---|
+| Marker parser | build | Strips `#region` / `@var`, returns clean code + region line ranges + var positions (`spike/shared/markers.ts`) |
+| Highlighter | build | Shiki dual themes; `line` transformer tags `data-regions`; `decorations` put `data-var` on the literal's token |
+| Validation | build | Each `<Step>` / `<VarField>` asserts its file, region, image and var exist; build fails with a clear message |
+| MDX components | build | `<Step id file region images>`, `<VarField name label secret persist>` render static HTML |
+| Client runtime | browser | IntersectionObserver (center line) + keyboard → activate step (file, focus lines, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
+| Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab; `preview/oauth-callback.html` next to it |
 
 ### Data flow
 
@@ -122,7 +143,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 ### Preview
 - Optional and configurable per tutorial: iframe, new tab, or both.
 - Default mode: `both`.
-- Iframe: sandboxed (srcdoc/blob) with current files; OAuth via popup (`OAuthInfo` with `popup: true`) + static `callback.html`.
+- Iframe and tab both load a same-origin preview page (`preview/`) that renders the current files; iframe sandbox includes `allow-same-origin`. OAuth via popup (`OAuthInfo` with `popup: true`) + the SDK's `oauth-callback.html` at `preview/oauth-callback.html`.
 - New tab: standalone page with current files; OAuth via regular redirect.
 
 ---
@@ -141,8 +162,15 @@ MDX + annotated code + images → build (validates references; fails on broken I
 
 | Feature | Context A | Context B | Notes |
 |---|---|---|---|
-| ArcGIS OAuth sign-in | Inside iframe: expected to be blocked (X-Frame-Options) — **unverified** | Popup / new tab: works | Verify during spike |
+| ArcGIS OAuth sign-in | Inside iframe: expected to be blocked (X-Frame-Options) — **unverified** | Popup from the Preview iframe: **verified** (PKCE S256, real Client ID) | The SDK shows its own "Please sign in" dialog first: the popup needs a user gesture |
 | OAuth redirect URI | GitHub Pages | localhost (served locally) | Both must be registered in the app by the author; the CLI prints the exact URIs |
+| Preview `redirect_uri` | `srcdoc` / blob iframe: SDK builds it from `location` → `about://null/oauth-callback.html` (`<base href>` ignored) | Real same-origin preview page: correct URI | Preview (iframe and tab) must load a real URL; `oauth-callback.html` must sit next to that page |
+| Preview sandbox | Without `allow-same-origin`: opaque origin, no Referer (OSM tiles 403, referrer-restricted API keys fail), callback cannot reach `window.opener` | With `allow-same-origin`: works | Preview can read the tutorial's `localStorage` (author-trusted code) |
+| Keyboard step navigation | Focus in page: works | Focus inside Preview iframe: keys go to the map | Forward keys from the preview page (same origin) |
+| `#step-id` deep link | Native fragment scroll puts the step at the top | Trigger line is the viewport center | Needs `scroll-margin-top` on steps and waiting for Calcite hydration (layout shift) |
+| Astro 7 + pnpm build | Prerender bundle externalizes `cookie`; pnpm does not hoist it | Node resolves a stray copy up the tree (e.g. `~/node_modules`) → CJS import error | `vite.environments.prerender.resolve.noExternal: ["cookie"]` |
+| `astro dev` (v7) | Runs as a daemon and returns immediately | — | Stop with `astro dev stop`, logs with `astro dev logs` |
+| Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 
 ---
 

@@ -162,7 +162,9 @@ When a step comes into focus, its text block can:
 - All repo content (code, comments, docs, commit messages) in English.
 - **Tutorial code without a build step**: HTML/JS/CSS runnable as-is; dependencies via CDN (script tags / import maps, e.g. `js.arcgis.com`). The downloaded ZIP works by opening `index.html` or with a static server.
 - **Code markup in comments**: tutorial source code must remain valid, runnable and lintable without the framework.
-- **Technical base decided after a spike** (1–2 days): Code Hike (Vite/Next) prototype vs custom Astro + MDX + Shiki, validating the 3 hard features: runtime variables (client-side re-highlighting or token substitution), file switching and Calcite integration (web components).
+- **Technical base: Astro + MDX + Shiki** (decided after a spike; see Decisions and `spike/FINDINGS.md`).
+- **Tutorial folder layout**: `tutorial.mdx` + `code/` + `images/`.
+- **`@var` targets a single string literal** (runtime values replace it in place in the pre-highlighted code).
 
 ---
 
@@ -174,6 +176,7 @@ When a step comes into focus, its text block can:
 
 ## Decisions
 
+- **Technical base: Astro + MDX + Shiki.** Build-time highlighting (Shiki dual themes), `@var` via in-place token substitution (no client-side highlighter), strict validation at build time, framework-free TypeScript on the client. Rejected: Code Hike (client highlighting fetches grammars from a third-party host at runtime, ~7× client JS, code-in-MDX authoring model) and TutorialKit (requires COOP/COEP isolation, which breaks the OAuth popup and is not possible on GitHub Pages).
 - **Preview runs from a same-origin page, not `srcdoc`/blob** (spike finding): required for a valid OAuth `redirect_uri` and for the callback to reach `window.opener`.
 - **Default Preview mode: `both`** (embedded iframe + "open in new tab"). The tab is the fallback when the OAuth popup is blocked.
 - **Distribution: core npm package + `pnpm create interactive-code-scroll` scaffolder.** Generated projects depend on the core package, so improvements arrive via `pnpm update`.
@@ -187,6 +190,6 @@ When a step comes into focus, its text block can:
 
 ## Open questions
 
-- [ ] Spike outcome: [Code Hike](https://github.com/code-hike/not-stripe) vs custom Astro + MDX + Shiki. ([Markdoc](https://stripe.dev/blog/markdoc) as a source of ideas only; it is not MDX.)
+- [x] Spike outcome: Astro + MDX + Shiki.
 - [ ] Concrete MDX component syntax (steps, actions, forms, carousel, preview config) — after the spike, aligned with the chosen base.
 - [ ] Not covered yet: advanced accessibility, framework versioning.
