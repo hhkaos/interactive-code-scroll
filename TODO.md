@@ -2,13 +2,12 @@
 
 ## Next
 
-- [ ] **Marker parser**: port `spike/shared/markers.ts` + Vitest unit tests (nested regions, HTML/CSS/JS comments, errors, escaping per language).
+- [ ] **Build-time highlighting + strict validation**: Shiki dual themes, `<Step>` / `<VarField>` components, errors with MDX file/line; dev-mode browser overlay.
 
 ## Backlog
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
-- [ ] Build-time highlighting + strict validation with MDX file/line in errors; dev-mode browser overlay.
 - [ ] Scroll/keyboard step engine, deep links, progress indicator.
 - [ ] Forms → variables (persist, secret + reveal toggle).
 - [ ] Preview page (iframe + new tab, debounce + Run, `oauth-callback.html`), key forwarding from the preview.
