@@ -1,13 +1,11 @@
-> **Note:** Please follow the [repository conventions](https://github.com/EsriDevEvents/contributor-guides/blob/main/conventions.md#conventions-for-repositories) and [slugify](https://slugify.online/) the title of your repo
+# InteractiveCodeScroll
 
-# Name of the session
+Interactive, scroll-driven code tutorials and live-coding talks from MDX.
 
-[Description of the session]
+Write your tutorial in MDX, annotate your source code, and get a static site with docs and code side by side: scrolling (or a presentation clicker) highlights the relevant code, switches files and shows images; forms update the code live; readers can preview, copy and download the result.
 
-## Slides and recording
+> Status: early design. See [SPEC.md](SPEC.md) for requirements and [TODO.md](TODO.md) for what's next.
 
-Most of the slides are made available at [Esri Events > Proceedings](https://www.esri.com/en-us/about/events/index/proceedings).
+## License
 
-## Related sessions
-
-...
+[Apache-2.0](LICENSE)

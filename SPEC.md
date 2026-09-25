@@ -1,0 +1,190 @@
+# InteractiveCodeScroll
+
+> A framework for building guided, interactive code tutorials (in the style of the [Stripe Checkout quickstart](https://docs.stripe.com/checkout/quickstart)) by writing MDX and annotating source code — designed both for self-paced reading and for projecting at conferences.
+
+---
+
+## Problem
+
+Today, technical tutorials are read step by step with the code split into many separate blocks (e.g. [ArcGIS Esri Leaflet – Find places nearby](https://developers.arcgis.com/esri-leaflet/places/find-places-nearby/)).
+
+At conferences (e.g. explaining user authentication with OAuth 2.0 in the ArcGIS Maps SDK for JavaScript):
+
+- Existing documentation UIs are not designed for projection: navigation bars and extra page elements add noise, and the experience is not interactive.
+- Presenters open their IDE and walk through the code step by step.
+- Many sessions are not recorded; remembering the steps and reproducing them at home is not trivial.
+
+---
+
+## What this is
+
+A library/tool/"framework" that lets technical writers, devrels and speakers easily create guided, interactive tutorials. The author writes MDX (text for the left panel) and annotates source code; the build produces a static website with documentation and code side by side, synchronized by scrolling. It serves both for presenting in a talk and for attendees to reproduce the tutorial afterwards.
+
+---
+
+## Core features (v1)
+
+### Layout
+- **Side-by-side**: documentation (left) and code (right).
+- **Resizable splitter** between the panels; width is remembered.
+- **Light + Dark** with a manual toggle; defaults to `prefers-color-scheme`. The code highlighting theme matches.
+- **Readable at high zoom**: code and text must stay readable when the browser font size is increased (CMD+"+" or similar).
+
+### Code model
+- **Final code + highlighting** (like Stripe): each file exists in its final version; steps only highlight regions. No incremental code per step.
+
+### Scroll-driven focus
+When a step comes into focus, its text block can:
+- highlight parts of the code (focus + auto-scroll to make sure it is visible + gray out the rest),
+- switch from one file to another (`server.js`, `checkout.html`, etc.),
+- switch the right panel from code to an image or image carousel.
+
+### Step navigation
+- **Free scroll**: the active step is determined by scroll position.
+- **Keyboard / clicker**: arrows and PageDown/PageUp jump to the next/previous step with snapping (compatible with presentation clickers).
+- **Deep link per step**: URL with `#step-id` to share or resume.
+- **Progress indicator** (step X of N / bar), visible in presentation mode.
+
+### Image carousel
+- Controlled by the user/presenter with the carousel's own controls. Keyboard arrows keep navigating between steps.
+
+### Preview
+- **Optional**: the author can disable it per tutorial.
+- **Configurable mode** per tutorial: embedded **iframe**, **open in new tab**, or **both**.
+- **Iframe mode**: collapsible; sandboxed iframe (srcdoc or blob) with the current files (form values applied). Client-side only.
+- **New tab mode**: opens the current files (form values applied) as a standalone page; OAuth can use a regular redirect.
+- **Refresh**: automatic after form changes (~500 ms debounce) + manual Run/Reload button.
+- **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via a static `callback.html` published with the tutorial.
+
+### Forms → variables
+- Forms defined in MDX (left panel); filling them updates code variables in real time.
+- **Default value**: the literal in the code is the single source of truth (default and field placeholder).
+- **localStorage persistence**: configurable per field by the author (persist or not).
+- **Secret fields**: the author can mark a field as sensitive → masked in the form and in the code, with a **visibility toggle** to reveal it when needed.
+- Entered values are included in downloads.
+
+### Download
+- **Single file** (button on each file tab).
+- **ZIP of the full project** with form values applied, runnable locally.
+- **Copy to clipboard**.
+- Framework markers (`#region`, `@var`) are stripped from rendered and downloaded code.
+
+### Presentation mode
+- "Full screen mode" that fully hides/collapses the navigation bar.
+- Allows hiding/collapsing the explanations in the left panel.
+
+### Authoring and DX
+- **Dev mode** with file watching and live updates.
+- **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server.
+- **Serve locally**: the CLI can serve the built site on localhost (fallback if conference wifi fails; Preview/OAuth still need network — plan B: images/carousel of the result).
+- Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (`/tutorials/<name>/`) with an index page.
+
+---
+
+## Key user flows
+
+### Author (technical writer / devrel / speaker)
+
+1. Creates a folder named after the tutorial.
+2. Creates an MDX file in it with markdown and special components: the text blocks for the left panel.
+3. Adds subdirectories with the required code in the same folder.
+4. Marks regions in the code with `#region <id>` / `#endregion` comments.
+5. Updates the markdown to link actions (highlight, switch file) via those identifiers.
+6. Marks configurable variables with an inline comment (e.g. `const clientId = "DEMO_ID"; // @var clientId`) and defines the linked form in the markdown (including whether each field persists in localStorage and whether it is secret).
+7. Adds images in one or more folders inside the tutorial.
+8. Updates the markdown to indicate which blocks load which images.
+9. Configures the Preview (disabled / iframe / new tab / both).
+10. Works in dev mode (watch + live reload); reference errors show up as an overlay.
+11. Builds (fails on broken references).
+12. Publishes the result as a static page on GitHub Pages.
+
+### End user (attendee / reader)
+
+1. Opens the URL (optionally with `#step-id`).
+2. Starts reading and scrolling the left panel (or navigates with the keyboard).
+3. The right panel syncs where the markdown says so: highlights code, switches file or shows images.
+4. Fills in forms and sees the code change in real time; the Preview refreshes automatically or with Run.
+5. At any time copies or downloads a file, or downloads the project ZIP.
+
+### Presenter at a conference
+
+1. Opens the tutorial (GitHub Pages or served locally with the CLI).
+2. Enables presentation mode (hides navigation; optionally the explanations panel).
+3. Adjusts browser zoom and the splitter; picks light/dark depending on the projector.
+4. Moves between steps with the clicker / keyboard; the progress indicator shows the position.
+5. Fills in fields live; shows or hides secrets with the toggle.
+6. Runs the Preview; the OAuth sign-in opens in a popup (iframe) or redirects normally (new tab).
+
+---
+
+## Out of scope (v1)
+
+- Running backend code. (Must support 100% client-side flows, e.g. OAuth PKCE.)
+- Incremental code per step (animated diffs).
+- Bundling npm dependencies in the Preview (see Tech constraints).
+- CMS or visual editor, for either the writer or the end user.
+- Multi-language support.
+- Custom themes (the UI uses Esri's Calcite Design System; light/dark only).
+- Support for browsers without JavaScript.
+- Mobile-first: the experience is desktop-first.
+- Offline mode / PWA.
+- Visual regression and automated accessibility tests.
+- Analytics and SEO.
+
+---
+
+## Data model
+
+| Entity | Key fields | Notes |
+|---|---|---|
+| Tutorial | folder, MDX file, preview config (disabled / iframe / tab / both) | Contains steps, code files and images. A repo can hold one or several |
+| Step / Text block | id (deep link), MDX content, associated action | Fires its action when it comes into focus (scroll or keyboard) |
+| Code file | path (`server.js`, `checkout.html`…) | Final version; downloadable individually or as ZIP |
+| Code region | id | Marked with `#region <id>` / `#endregion`; referenced from MDX |
+| Action | type: highlight / switch file / show image(s) | Links a Step to a Region, File or Image |
+| Form | fields | Defined in MDX |
+| Field ↔ Variable | variable name, persist (bool), secret (bool) | Variable marked with `// @var <name>`; default = code literal |
+| Image / Carousel | image files | In tutorial folders; shown instead of code; manual navigation |
+
+---
+
+## Tech constraints
+
+- Authoring in MDX.
+- Output: static website publishable on GitHub Pages.
+- UI with Calcite Design System (Esri).
+- Desktop-first; requires JavaScript.
+- TypeScript.
+- pnpm.
+- Tests: **unit with Vitest** (`#region`/`@var` parser, validation, variable substitution, ZIP generation) and **E2E with Playwright** (scroll/keyboard highlighting, file switching, form → code, download, presentation mode).
+- Dependencies on recent, stable and secure versions.
+- All repo content (code, comments, docs, commit messages) in English.
+- **Tutorial code without a build step**: HTML/JS/CSS runnable as-is; dependencies via CDN (script tags / import maps, e.g. `js.arcgis.com`). The downloaded ZIP works by opening `index.html` or with a static server.
+- **Code markup in comments**: tutorial source code must remain valid, runnable and lintable without the framework.
+- **Technical base decided after a spike** (1–2 days): Code Hike (Vite/Next) prototype vs custom Astro + MDX + Shiki, validating the 3 hard features: runtime variables (client-side re-highlighting or token substitution), file switching and Calcite integration (web components).
+
+---
+
+## Success criteria
+
+- "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial published on GitHub Pages and used in a talk.
+
+---
+
+## Decisions
+
+- **Default Preview mode: `both`** (embedded iframe + "open in new tab"). The tab is the fallback when the OAuth popup is blocked.
+- **Distribution: core npm package + `pnpm create interactive-code-scroll` scaffolder.** Generated projects depend on the core package, so improvements arrive via `pnpm update`.
+- **Styling: plain CSS with CSS Modules, no SCSS.** Calcite is themed via CSS custom properties; native CSS nesting covers the rest.
+- **OAuth redirect URIs: registered by the author.** The CLI prints the exact URIs to register (GitHub Pages and localhost), derived from the base path. The CLI never handles ArcGIS credentials.
+- **Name: InteractiveCodeScroll** (brand, PascalCase); `interactive-code-scroll` for the repo and npm package (kebab-case).
+- **License: Apache-2.0.**
+- **Out of v1: analytics and SEO.**
+
+---
+
+## Open questions
+
+- [ ] Spike outcome: [Code Hike](https://github.com/code-hike/not-stripe) vs custom Astro + MDX + Shiki. ([Markdoc](https://stripe.dev/blog/markdoc) as a source of ideas only; it is not MDX.)
+- [ ] Concrete MDX component syntax (steps, actions, forms, carousel, preview config) — after the spike, aligned with the chosen base.
+- [ ] Not covered yet: advanced accessibility, framework versioning.
