@@ -50,6 +50,16 @@ Paste your Client ID. It is stored in this browser only.
 
 </Step>
 
+<Step id="callback" file="oauth-callback.html" region="handler">
+
+## Add the callback page
+
+After signing in, ArcGIS redirects the popup to `oauth-callback.html`, next to `index.html`. It hands the authorization code back to the app and closes the popup.
+
+Register its URL as a redirect URI of your app, for every place the tutorial runs (e.g. `http://localhost:4321/preview/oauth-callback.html`).
+
+</Step>
+
 <Step id="sign-in" file="main.js" region="sign-in">
 
 ## Sign in

@@ -42,15 +42,21 @@ test("clicker keys pressed inside the preview move the tutorial", async ({ page 
   await expect(page).toHaveURL(/#oauth$/);
 });
 
-test("the OAuth callback is published next to the preview page", async ({ request }) => {
-  const response = await request.get("/preview/oauth-callback.html");
-  expect(response.status()).toBe(200);
-  expect(response.headers()["content-type"]).toContain("text/html");
-  expect(await response.text()).toContain("arcgis:auth:location:search");
+test("code/ files are published next to the preview page, markers stripped", async ({ request }) => {
+  const callback = await request.get("/preview/oauth-callback.html");
+  expect(callback.status()).toBe(200);
+  expect(callback.headers()["content-type"]).toContain("text/html");
+  const html = await callback.text();
+  expect(html).toContain("arcgis:auth:location:search");
+  expect(html).not.toContain("#region");
+
+  const main = await request.get("/preview/main.js");
+  expect(main.headers()["content-type"]).toContain("text/javascript");
+  expect(await main.text()).not.toContain("@var");
 });
 
 test.describe("with the real ArcGIS SDK (needs network)", () => {
-  test.use({ sdk: true });
+  test.use({ network: true });
 
   test("sign-in from the iframe uses preview/oauth-callback.html as redirect_uri", async ({
     page,

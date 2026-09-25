@@ -19,12 +19,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Strict validation as a Sätteri mdast plugin: every broken step id, file, region, image or var, and every marker error in `code/`, fails the build with `file:line:column`; shown in the dev error overlay.
 - Step engine (client): the step crossing the viewport center becomes active; arrows / PageUp / PageDown (presentation clickers) move with snapping, also from a focused carousel but not from fields; deep links `#step-id` (restored after Calcite hydration); file switching, region focus with gray-out and auto-scroll, image carousel panel, progress text and bar; file tabs.
 - Step keys page through an image carousel before leaving the step (backwards entry starts at the last image); the carousel's own controls stay in sync.
-- Preview: iframe and/or new tab per `preview` frontmatter (`both` by default), both loading a same-origin `preview/` page; ~500 ms debounce after form changes plus Run; collapsible iframe; `preview/oauth-callback.html` (ArcGIS SDK callback) published next to it; PageUp/PageDown pressed inside the preview move the tutorial; build fails if `code/index.html` is missing while the preview is on.
+- Preview: iframe and/or new tab per `preview` frontmatter (`both` by default), both loading a same-origin `preview/` page; ~500 ms debounce after form changes plus Run; collapsible iframe; PageUp/PageDown pressed inside the preview move the tutorial; build fails if `code/index.html` is missing while the preview is on.
 - Layout: light/dark toggle (defaults to `prefers-color-scheme`, manual choice remembered, applied before first paint; code theme follows); resizable docs/code splitter (pointer and keyboard, width remembered); usable at high browser zoom (toolbar wraps, no page-level horizontal scroll).
 - Downloads: copy the visible file to the clipboard, download it, or download the project as a ZIP (`fflate`, loaded on demand) under a folder named after the tutorial; form values (secrets included) applied, markers stripped.
 - Forms → variables: typing in a `<VarField>` swaps the `@var` token text in place (highlighting kept); an empty field restores the code default; `persist` stores values in `localStorage` (tolerating blocked storage); `secret` values are masked in field and code, with a reveal toggle.
 
 ### Changed
+
+- Every `code/` file is published at `preview/<path>` (markers stripped); the OAuth popup callback is now the tutorial's own `code/oauth-callback.html` (shown as a step in the example and included in downloads) instead of a built-in framework page.
+- E2E tests block the whole Esri CDN by default (`network: true` to opt in).
 
 - `SPEC.md`: carousel keyboard behavior (step keys page through images first).
 - `SPEC.md`: Preview runs from a same-origin preview page (not `srcdoc`/blob); technical base recorded.

@@ -83,7 +83,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/components/                  # Step.astro, VarField.astro
   src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitter), preview.ts, downloads.ts
   src/pages/index.astro            # injected tutorial page
-  src/preview/                     # preview page, OAuth callback endpoint, HTML builder
+  src/preview/                     # preview page, code/ files published under preview/, HTML builder
   test/                            # Astro build integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 e2e/                               # Playwright tests (against the built example)
@@ -104,7 +104,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 | Validation | build | Each `<Step>` / `<VarField>` asserts its file, region, image and var exist; build fails with a clear message |
 | MDX components | build | `<Step id file region images>`, `<VarField name label secret persist>` render static HTML |
 | Client runtime | browser | IntersectionObserver (center line) + keyboard → activate step (file, focus lines, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
-| Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab; `preview/oauth-callback.html` next to it |
+| Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab. Every other `code/` file is published at `preview/<path>` (e.g. the tutorial's `oauth-callback.html`) |
 
 ### Data flow
 
@@ -160,7 +160,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 ### Preview
 - Optional and configurable per tutorial: iframe, new tab, or both.
 - Default mode: `both`.
-- Iframe and tab both load a same-origin preview page (`preview/`) that renders the current files; iframe sandbox includes `allow-same-origin`. OAuth via popup (`OAuthInfo` with `popup: true`) + the SDK's `oauth-callback.html` at `preview/oauth-callback.html`.
+- Iframe and tab both load a same-origin preview page (`preview/`) that renders the current files; iframe sandbox includes `allow-same-origin`. OAuth via popup (`OAuthInfo` with `popup: true`) + the tutorial's own `code/oauth-callback.html`, published at `preview/oauth-callback.html`.
 - New tab: standalone page with current files; OAuth via regular redirect.
 
 ---
@@ -172,7 +172,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 - Loading the OAuth sign-in page inside the Preview iframe.
 - Adding dependencies without justification.
 - Non-English text in the repo.
-- E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the ArcGIS SDK CDN); opt in with `test.use({ sdk: true })` only when testing the SDK itself.
+- E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the Esri CDN: SDK and Calcite assets); opt in with `test.use({ network: true })` only when testing the SDK itself.
 - E2E assertions that check state the code under test just set; assert the user-visible outcome (what the component actually shows).
 
 ---
@@ -191,6 +191,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 | MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |
+| Calcite runtime assets | Online: components wait for t9n JSON from `js.arcgis.com` before first render (~1 s, more under load) | Offline / CDN blocked: render immediately, but no icons or translated labels | Matters for the "serve locally" plan B; tests block the CDN (`e2e/fixtures.ts`) |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 
 ---

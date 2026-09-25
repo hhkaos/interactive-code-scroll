@@ -30,7 +30,12 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
   expect(download.suggestedFilename()).toBe(`${folder}.zip`);
   const zip = (await download.path())!;
   const listing = execFileSync("unzip", ["-Z1", zip], { encoding: "utf8" }).trim().split("\n").sort();
-  expect(listing).toEqual([`${folder}/index.html`, `${folder}/main.js`, `${folder}/style.css`]);
+  expect(listing).toEqual([
+    `${folder}/index.html`,
+    `${folder}/main.js`,
+    `${folder}/oauth-callback.html`,
+    `${folder}/style.css`,
+  ]);
   const main = execFileSync("unzip", ["-p", zip, `${folder}/main.js`], { encoding: "utf8" });
   expect(main).toContain('const clientId = "secret-id";');
   expect(main).not.toMatch(/#region|@var/);

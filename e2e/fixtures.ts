@@ -2,17 +2,18 @@ import { test as base } from "@playwright/test";
 
 export { expect, type Page } from "@playwright/test";
 
-/** ArcGIS Maps SDK on the CDN (`js.arcgis.com/<major>.<minor>/…`), not Calcite's assets. */
-const ARCGIS_SDK = /^https:\/\/js\.arcgis\.com\/\d+\.\d+\//;
+/** ArcGIS Maps SDK and Calcite assets (t9n, icons) are served from this CDN. */
+const ESRI_CDN = /^https:\/\/js\.arcgis\.com\//;
 
 /**
- * Tests are hermetic by default: the SDK is blocked so the preview iframe's map
- * never delays `load` or depends on the network. Opt in with `test.use({ sdk: true })`.
+ * Tests are hermetic by default: the Esri CDN is blocked, so neither the preview's
+ * map nor Calcite's runtime asset fetches (which delay first render) depend on the
+ * network. Opt in with `test.use({ network: true })`.
  */
-export const test = base.extend<{ sdk: boolean }>({
-  sdk: [false, { option: true }],
-  context: async ({ context, sdk }, use) => {
-    if (!sdk) await context.route(ARCGIS_SDK, (route) => route.abort());
+export const test = base.extend<{ network: boolean }>({
+  network: [false, { option: true }],
+  context: async ({ context, network }, use) => {
+    if (!network) await context.route(ESRI_CDN, (route) => route.abort());
     await use(context);
   },
 });

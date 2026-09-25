@@ -7,7 +7,7 @@ test("a deep link activates its step, file and region", async ({ page }) => {
   await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "main.js");
   await expect(focused(page).first()).toContainText("$arcgis.import");
-  await expect(page.locator(".progress")).toHaveText("Step 5 of 7");
+  await expect(page.locator(".progress")).toHaveText("Step 5 of 8");
   await expect(page).toHaveURL(/#oauth$/);
 });
 

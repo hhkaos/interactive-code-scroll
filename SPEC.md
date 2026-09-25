@@ -56,7 +56,7 @@ When a step comes into focus, its text block can:
 - **Iframe mode**: collapsible iframe pointing at the preview page; sandbox `allow-scripts allow-popups allow-forms allow-same-origin` (same origin is required by the OAuth callback; tutorial code is trusted author code).
 - **New tab mode**: opens the preview page in a new tab; OAuth can use a regular redirect.
 - **Refresh**: automatic after form changes (~500 ms debounce) + manual Run/Reload button.
-- **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via the SDK's `oauth-callback.html`, published next to the preview page (`preview/oauth-callback.html`).
+- **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via the tutorial's own `code/oauth-callback.html` (it is part of the tutorial: shown, explained, downloaded). Every `code/` file is published next to the preview page (`preview/<path>`, markers stripped), so relative references resolve there.
 
 ### Forms → variables
 - Forms defined in MDX (left panel); filling them updates code variables in real time.
