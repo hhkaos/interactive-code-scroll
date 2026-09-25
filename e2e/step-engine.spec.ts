@@ -28,14 +28,33 @@ test("scrolling activates the step crossing the center line", async ({ page }) =
   await expect(focused(page)).toHaveCount(2);
 });
 
-test("an image step shows the carousel; arrows still move steps", async ({ page }) => {
+test("step keys page through a carousel before leaving the step", async ({ page }) => {
+  // What the carousel shows (its own selectedItem), not just the items' `selected` flags.
+  const shown = () =>
+    page.locator(".media-panel calcite-carousel").evaluate((c: HTMLElement & { selectedItem?: Element }) =>
+      c.selectedItem?.getAttribute("label"),
+    );
   await page.goto("/#register-app");
   await expect(page.locator(".media-panel calcite-carousel")).toBeVisible();
   await expect(page.locator(".code-panel")).toBeHidden();
-  await page.locator(".media-panel calcite-carousel").focus();
-  await page.keyboard.press("ArrowRight");
+  await expect.poll(shown).toBe("oauth-step-1.svg");
+
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(shown).toBe("oauth-step-2.svg");
+  await expect(page).toHaveURL(/#register-app$/);
+
+  await page.keyboard.press("PageDown");
   await expect(page).toHaveURL(/#config$/);
   await expect(page.locator(".code-panel")).toBeVisible();
+
+  // Backwards: enter at the last image, then page back to the first, then leave.
+  await page.keyboard.press("ArrowUp");
+  await expect(page).toHaveURL(/#register-app$/);
+  await expect.poll(shown).toBe("oauth-step-2.svg");
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(shown).toBe("oauth-step-1.svg");
+  await page.keyboard.press("PageUp");
+  await expect(page).toHaveURL(/#ui$/);
 });
 
 test("typing in a field does not move steps", async ({ page }) => {

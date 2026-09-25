@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampIndex, indexFromHash, isEditableTag, keyToDelta } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta } from "./navigation.ts";
 
 describe("navigation", () => {
   it.each([
@@ -34,5 +34,12 @@ describe("navigation", () => {
     expect(indexFromHash(ids, "#config")).toBe(1);
     expect(indexFromHash(ids, "#nope")).toBe(0);
     expect(indexFromHash(ids, "")).toBe(0);
+  });
+
+  it("moves through carousel images before leaving the step", () => {
+    expect(carouselTarget(0, 3, 1)).toBe(1);
+    expect(carouselTarget(2, 3, 1)).toBeUndefined();
+    expect(carouselTarget(1, 3, -1)).toBe(0);
+    expect(carouselTarget(0, 3, -1)).toBeUndefined();
   });
 });

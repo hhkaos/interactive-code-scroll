@@ -46,7 +46,8 @@ When a step comes into focus, its text block can:
 - **Progress indicator** (step X of N / bar), visible in presentation mode.
 
 ### Image carousel
-- Controlled by the user/presenter with the carousel's own controls. Keyboard arrows keep navigating between steps.
+- Step keys (arrows, PageUp/PageDown, clickers) first page through the carousel's images; past the last image they move to the next step, before the first image to the previous step. Entering a carousel step backwards starts at its last image.
+- The carousel's own controls also work.
 
 ### Preview
 - **Optional**: the author can disable it per tutorial.

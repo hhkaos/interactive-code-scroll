@@ -23,3 +23,12 @@ export function indexFromHash(ids: readonly string[], hash: string): number {
   const index = ids.indexOf(decodeURIComponent(hash.replace(/^#/, "")));
   return index < 0 ? 0 : index;
 }
+
+/**
+ * Carousel image to select for a step key, or `undefined` when the key goes past
+ * the first/last image and should move to the previous/next step instead.
+ */
+export function carouselTarget(selected: number, count: number, delta: -1 | 1): number | undefined {
+  const next = selected + delta;
+  return next >= 0 && next < count ? next : undefined;
+}

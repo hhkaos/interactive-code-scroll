@@ -1,4 +1,4 @@
-import { clampIndex, indexFromHash, isEditableTag, keyToDelta } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta } from "./navigation.ts";
 
 type TabTitle = HTMLElement & { selected: boolean };
 
@@ -26,8 +26,33 @@ export function startStepEngine(): void {
   }
 
   let current = -1;
+  let mediaIndex = 0;
 
-  function activate(index: number): void {
+  /**
+   * Renders the step's carousel with image `index` selected. Calcite only honours
+   * `selected` when items are created (setting it later does not move the carousel),
+   * so each change re-creates the carousel from the step's template.
+   */
+  function showMedia(template: HTMLTemplateElement, index: number): void {
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    const items = [...fragment.querySelectorAll("calcite-carousel-item")];
+    mediaIndex = clampIndex(index, items.length);
+    items.forEach((item, i) => item.toggleAttribute("selected", i === mediaIndex));
+    const carousel = fragment.querySelector("calcite-carousel")!;
+    // Keep in sync when the user drives the carousel with its own controls.
+    carousel.addEventListener("calciteCarouselChange", () => {
+      const selected = (carousel as HTMLElement & { selectedItem?: Element }).selectedItem;
+      if (selected) mediaIndex = [...carousel.querySelectorAll("calcite-carousel-item")].findIndex((item) => item === selected);
+    });
+    mediaPanel.replaceChildren(fragment);
+  }
+
+  function mediaCount(): number {
+    return mediaPanel.querySelectorAll("calcite-carousel-item").length;
+  }
+
+  /** `fromEnd`: entering backwards starts a carousel at its last image. */
+  function activate(index: number, fromEnd = false): void {
     if (index === current) return;
     current = index;
     const step = steps[index]!;
@@ -39,8 +64,11 @@ export function startStepEngine(): void {
     const media = step.querySelector<HTMLTemplateElement>("template.step-media");
     mediaPanel.hidden = !media;
     codePanel.hidden = !!media;
-    mediaPanel.replaceChildren(...(media ? [media.content.cloneNode(true)] : []));
-    if (media) return;
+    if (media) {
+      showMedia(media, fromEnd ? Number.MAX_SAFE_INTEGER : 0);
+      return;
+    }
+    mediaPanel.replaceChildren();
 
     const { file, region } = step.dataset;
     if (!file) return; // Text-only step: keep the current file.
@@ -66,7 +94,17 @@ export function startStepEngine(): void {
   );
   steps.forEach((step) => observer.observe(step));
 
-  // Keyboard / presentation clicker. Capture phase so widgets (e.g. carousels) do not eat step keys.
+  /** Step keys first page through the active step's carousel; true when they did. */
+  function moveCarousel(delta: -1 | 1): boolean {
+    const template = steps[current]?.querySelector<HTMLTemplateElement>("template.step-media");
+    if (!template) return false;
+    const target = carouselTarget(mediaIndex, mediaCount(), delta);
+    if (target === undefined) return false;
+    showMedia(template, target);
+    return true;
+  }
+
+  // Keyboard / presentation clicker. Capture phase so the carousel does not also handle the key.
   addEventListener(
     "keydown",
     (event) => {
@@ -76,9 +114,10 @@ export function startStepEngine(): void {
       if (!delta || event.altKey || event.ctrlKey || event.metaKey) return;
       event.preventDefault();
       event.stopPropagation();
+      if (moveCarousel(delta)) return;
       const next = clampIndex(current + delta, steps.length);
       steps[next]!.scrollIntoView({ block: "center", behavior: "smooth" });
-      activate(next);
+      activate(next, delta < 0);
     },
     { capture: true },
   );
