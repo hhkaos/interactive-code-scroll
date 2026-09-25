@@ -27,11 +27,33 @@ const clientData = JSON.stringify({ preview: config.preview, files: parsed }).re
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{config.title}</title>
   </head>
-  <body class="calcite-mode-light" data-preview={config.preview}>
+  <body data-preview={config.preview}>
+    <script is:inline>
+      // Before first paint: avoid a flash of the wrong theme. Mirrors client/layout-values.ts.
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem("ics:theme");
+        } catch (e) {}
+        var dark = stored === "dark" || (stored !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.body.className = dark ? "calcite-mode-dark" : "calcite-mode-light";
+      })();
+    </script>
     <div class="layout">
       <main class="docs">
         <Content components={{ Step, VarField }} />
       </main>
+      <div
+        class="splitter"
+        role="separator"
+        tabindex="0"
+        aria-orientation="vertical"
+        aria-label="Resize panels"
+        aria-valuemin="20"
+        aria-valuemax="70"
+        data-own-keys
+      >
+      </div>
       <aside class="right">
         <div class="toolbar">
           <span class="progress" aria-live="polite"></span>
@@ -44,6 +66,7 @@ const clientData = JSON.stringify({ preview: config.preview, files: parsed }).re
             )
           }
           {withTab && <calcite-button id="preview-open" appearance="transparent" icon-start="launch">Open in new tab</calcite-button>}
+          <calcite-button id="theme-toggle" appearance="transparent" kind="neutral" icon-start="moon" label="Toggle theme" />
         </div>
         <div class="progress-bar" aria-hidden="true"></div>
         <div class="code-panel">
@@ -68,6 +91,7 @@ const clientData = JSON.stringify({ preview: config.preview, files: parsed }).re
       import "../client/calcite.ts";
       import type { ParsedSource } from "../markers.ts";
       import { keyToDelta } from "../client/navigation.ts";
+      import { startLayout } from "../client/layout.ts";
       import { startPreview } from "../client/preview.ts";
       import { startStepEngine } from "../client/steps.ts";
       import { startVars } from "../client/vars.ts";
@@ -77,6 +101,7 @@ const clientData = JSON.stringify({ preview: config.preview, files: parsed }).re
         files: { path: string; parsed: ParsedSource }[];
       };
 
+      startLayout();
       const engine = startStepEngine();
       let refreshPreview = () => {};
       const vars = startVars(() => refreshPreview());

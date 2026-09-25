@@ -132,7 +132,8 @@ export function startStepEngine(): StepEngine {
     "keydown",
     (event) => {
       const target = event.target instanceof HTMLElement ? event.target : undefined;
-      if (target && isEditableTag(target.tagName, target.isContentEditable)) return;
+      // Fields, and widgets marked `data-own-keys` (e.g. the splitter), keep their keys.
+      if (target && (isEditableTag(target.tagName, target.isContentEditable) || target.closest("[data-own-keys]"))) return;
       const delta = keyToDelta(event.key);
       if (!delta || event.altKey || event.ctrlKey || event.metaKey) return;
       event.preventDefault();
