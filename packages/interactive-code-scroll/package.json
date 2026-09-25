@@ -19,6 +19,7 @@
     "shiki": "^4.4.3"
   },
   "devDependencies": {
+    "@types/node": "^22.20.4",
     "astro": "7.3.5"
   },
   "peerDependencies": {

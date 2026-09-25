@@ -3,20 +3,20 @@ import { readTutorialConfig } from "./frontmatter.ts";
 
 describe("readTutorialConfig", () => {
   it("applies defaults", () => {
-    expect(readTutorialConfig({})).toEqual({ title: "Tutorial", preview: "both", codeTheme: "dark" });
+    expect(readTutorialConfig({})).toEqual({ title: "Tutorial", preview: "both", theme: "auto" });
   });
 
   it("accepts valid values", () => {
-    expect(readTutorialConfig({ title: "OAuth", preview: "iframe", codeTheme: "auto" })).toEqual({
+    expect(readTutorialConfig({ title: "OAuth", preview: "iframe", theme: "dark" })).toEqual({
       title: "OAuth",
       preview: "iframe",
-      codeTheme: "auto",
+      theme: "dark",
     });
   });
 
   it("rejects invalid values", () => {
     expect(() => readTutorialConfig({ preview: "popup" })).toThrow(/"preview" must be one of off, iframe, tab, both/);
-    expect(() => readTutorialConfig({ codeTheme: "blue" })).toThrow(/"codeTheme" must be one of dark, light, auto/);
+    expect(() => readTutorialConfig({ theme: "blue" })).toThrow(/"theme" must be one of auto, light, dark/);
     expect(() => readTutorialConfig({ title: 3 })).toThrow(/"title" must be a string/);
   });
 });

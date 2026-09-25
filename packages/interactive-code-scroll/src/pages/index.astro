@@ -16,8 +16,6 @@ const parsed = files.map((f) => ({ path: f.path, parsed: parseSource(f.source, `
 const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: await highlight(f.parsed, f.path) })));
 const withIframe = config.preview === "iframe" || config.preview === "both";
 const withTab = config.preview === "tab" || config.preview === "both";
-// Scoping a Calcite mode class to the panel themes its components and (via color-scheme) the code.
-const codeMode = config.codeTheme === "auto" ? undefined : `calcite-mode-${config.codeTheme}`;
 // Escape "<" so embedded code containing </script> cannot close the data block.
 const clientData = JSON.stringify({ title: config.title, preview: config.preview, files: parsed }).replace(/</g, "\\u003c");
 ---
@@ -29,7 +27,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{config.title}</title>
   </head>
-  <body data-preview={config.preview}>
+  <body data-preview={config.preview} data-theme={config.theme}>
     <script is:inline>
       // Before first paint: avoid a flash of the wrong theme. Mirrors client/layout-values.ts.
       (function () {
@@ -37,7 +35,8 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
         try {
           stored = localStorage.getItem("ics:theme");
         } catch (e) {}
-        var dark = stored === "dark" || (stored !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        var choice = stored === "light" || stored === "dark" ? stored : document.body.dataset.theme;
+        var dark = choice === "dark" || (choice !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
         document.body.className = dark ? "calcite-mode-dark" : "calcite-mode-light";
       })();
     </script>
@@ -66,7 +65,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
         data-own-keys
       >
       </div>
-      <aside class:list={["right", codeMode]}>
+      <aside class="right">
         <div class="code-panel">
           <div class="panel-header">
             <calcite-tab-nav>

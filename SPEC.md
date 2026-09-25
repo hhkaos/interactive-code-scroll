@@ -27,7 +27,7 @@ A library/tool/"framework" that lets technical writers, devrels and speakers eas
 ### Layout
 - **Side-by-side**: documentation (left) and code (right).
 - **Resizable splitter** between the panels; width is remembered.
-- **Light + Dark** with a manual toggle; defaults to `prefers-color-scheme`. The code panel is dark by default so it reads well on any projector (`codeTheme: dark | light | auto` frontmatter; `auto` follows the page mode).
+- **Light + Dark** with a manual toggle (remembered). The author sets the tutorial's default with the `theme` frontmatter (`auto` = `prefers-color-scheme`, the default; `light`; `dark`). The code panel and the Preview iframe follow the page mode (the iframe's `prefers-color-scheme` follows it, so apps using `calcite-mode-auto` match).
 - **Look and feel**: Esri corporate (Calcite Design System). Calcite components are styled only through their tokens, props and slots.
 - **Readable at high zoom**: code and text must stay readable when the browser font size is increased (CMD+"+" or similar).
 
@@ -186,7 +186,7 @@ When a step comes into focus, its text block can:
   ---
   title: OAuth 2.0 with the ArcGIS Maps SDK for JavaScript
   preview: both        # off | iframe | tab | both
-  codeTheme: dark      # dark | light | auto (follows the page mode)
+  theme: auto          # auto (OS preference) | light | dark: default mode; the viewer's toggle wins
   ---
 
   <Step id="config" file="main.js" region="config">

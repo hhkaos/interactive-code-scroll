@@ -40,8 +40,20 @@ test("in-page links to a step center and activate it", async ({ page }) => {
   await expect(focused(page).first()).toContainText("signInButton");
 });
 
+test("a deep link stays centered while the layout settles, until the user scrolls", async ({ page }) => {
+  await page.goto("/#oauth");
+  await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
+  // A late layout shift above the step (as when Calcite renders after fetching its translations).
+  await page.locator("section.step#load-sdk").evaluate((el) => (el.style.paddingTop = "600px"));
+  await expect(page.locator("section.step#oauth h2")).toBeInViewport();
+  await expect(page).toHaveURL(/#oauth$/);
+});
+
 test("scrolling activates the step crossing the center line", async ({ page }) => {
   await page.goto("/");
+  // Any user input (here a wheel tick) hands scrolling over from the deep-link restore.
+  await page.locator("main.docs").hover();
+  await page.mouse.wheel(0, 10);
   await page.evaluate(() => document.getElementById("config")!.scrollIntoView({ block: "center" }));
   await expect(page).toHaveURL(/#config$/);
   await expect(focused(page)).toHaveCount(2);

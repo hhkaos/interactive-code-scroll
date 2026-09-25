@@ -12,25 +12,14 @@ export interface StepEngine {
   step(delta: -1 | 1): void;
 }
 
-/**
- * Resolves when each Calcite component on the page has rendered once. `whenDefined` is
- * not enough: components wait for their translations (t9n) before the first render.
- */
-function calciteRendered(): Promise<unknown>[] {
-  return [...document.querySelectorAll("*")]
-    .filter((el) => el.localName.startsWith("calcite-"))
-    .map((el) =>
-      customElements
-        .whenDefined(el.localName)
-        .then(() => (el as Element & { componentOnReady?(): Promise<unknown> }).componentOnReady?.())
-        .catch(() => {}),
-    );
-}
+/** User input that ends the deep-link restore (programmatic scrolling fires none of these). */
+const TAKE_OVER_EVENTS = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
 
 export function startStepEngine(): StepEngine {
   const steps = $$("section.step");
   if (steps.length === 0) return { step: () => {} };
 
+  const docs = steps[0]!.closest<HTMLElement>(".docs")!;
   const codePanel = document.querySelector<HTMLElement>(".code-panel")!;
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
   const progress = document.querySelector<HTMLElement>("#step-count");
@@ -103,6 +92,7 @@ export function startStepEngine(): StepEngine {
   }
 
   // The active step is the one crossing the center line of the docs panel (its own scroller).
+  // Scroll-driven activation starts once the user takes over from the deep-link restore.
   let restoring = true;
   let userNavigated = false;
   // A key-driven smooth scroll passes over other steps: until it reaches its target,
@@ -125,7 +115,7 @@ export function startStepEngine(): StepEngine {
       }
       activate(index);
     },
-    { root: steps[0]!.closest(".docs"), rootMargin: "-50% 0px -50% 0px" },
+    { root: docs, rootMargin: "-50% 0px -50% 0px" },
   );
   steps.forEach((step) => observer.observe(step));
 
@@ -186,20 +176,22 @@ export function startStepEngine(): StepEngine {
     if (index >= 0) goTo(index);
   });
 
-  // Deep link: activate now, scroll once Calcite has rendered (first render changes step heights).
+  // Deep link: activate now and keep the step centered while the layout settles (Calcite
+  // components render late, after fetching their translations), until the user takes over.
   const initial = indexFromHash(
     steps.map((s) => s.id),
     location.hash,
   );
   activate(initial);
-  // Capped: a component that never renders must not leave the engine stuck in `restoring`.
-  const settled = Promise.all([...calciteRendered(), document.fonts.ready]);
-  void Promise.race([settled, new Promise((resolve) => setTimeout(resolve, 3000))]).then(() =>
-    requestAnimationFrame(() => {
-      // Keys pressed before hydration finished win over the deep link.
-      if (!userNavigated) steps[initial]!.scrollIntoView({ block: "center" });
-      restoring = false;
-    }),
-  );
+  const settle = new ResizeObserver(() => {
+    if (!userNavigated) steps[initial]!.scrollIntoView({ block: "center" });
+  });
+  for (const el of [docs, ...steps]) settle.observe(el);
+  const takeOver = () => {
+    settle.disconnect();
+    restoring = false;
+    for (const type of TAKE_OVER_EVENTS) removeEventListener(type, takeOver, true);
+  };
+  for (const type of TAKE_OVER_EVENTS) addEventListener(type, takeOver, { capture: true, passive: true });
   return { step };
 }

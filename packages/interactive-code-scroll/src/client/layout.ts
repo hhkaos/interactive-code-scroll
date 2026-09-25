@@ -28,7 +28,8 @@ function applyMode(mode: Mode): void {
 
 /** Light/dark toggle (remembered) and the resizable docs/code splitter (remembered). */
 export function startLayout(): void {
-  applyMode(resolveMode(read(THEME_KEY), matchMedia("(prefers-color-scheme: dark)").matches));
+  const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+  applyMode(resolveMode(read(THEME_KEY), prefersDark, document.body.dataset.theme));
   document.querySelector("#theme-toggle")?.addEventListener("click", () => {
     const next: Mode = document.body.classList.contains("calcite-mode-dark") ? "light" : "dark";
     write(THEME_KEY, next);

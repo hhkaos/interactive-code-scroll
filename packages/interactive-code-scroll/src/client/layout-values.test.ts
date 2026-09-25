@@ -7,7 +7,13 @@ describe("resolveMode", () => {
     expect(resolveMode("light", true)).toBe("light");
   });
 
+  it("then the tutorial's default", () => {
+    expect(resolveMode(null, true, "light")).toBe("light");
+    expect(resolveMode("dark", false, "light")).toBe("dark");
+  });
+
   it("falls back to the OS preference", () => {
+    expect(resolveMode(null, true, "auto")).toBe("dark");
     expect(resolveMode(null, true)).toBe("dark");
     expect(resolveMode("bogus", false)).toBe("light");
   });

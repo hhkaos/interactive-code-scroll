@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `@types/node` dev dependency (types were resolved from a stray `~/node_modules`; a fresh clone failed `pnpm check`).
 - Project specification (`SPEC.md`).
 - Shared AI agent context (`PROJECT.md`, `CLAUDE.md`, `AGENTS.md`) and Esri developer docs MCP config (`.mcp.json`).
 - Task list (`TODO.md`) and changelog (`CHANGELOG.md`).
@@ -28,7 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - UI redesign on Calcite: `calcite-navigation` header (explanations toggle, title, present, theme, progress bar; "Step X of N" only while presenting); explanations scroll in their own panel (no page scroll, separated scrollbars); Calcite type scale (16 px text, 13 px code with the Calcite code font, 1.6/1.7 line heights), compact steps (no minimum height, no dimmed text; active step gets a subtle background and brand edge), numbered section headings, styled inline code, 70ch line length; icon-only `calcite-action`s with tooltips; file icons on tabs; thin splitter and scrollbars.
-- Code panel: dark by default in both modes (`codeTheme` frontmatter: `dark` / `light` / `auto`), GitHub default themes; outside the focused region the code turns uniformly gray, the region keeps its colors on a brand band.
+- Theme: `theme` frontmatter sets the tutorial's default mode (`auto` / `light` / `dark`; the viewer's toggle wins); code panel and Preview iframe follow the page mode (apps using `calcite-mode-auto` match). Code: GitHub default themes; outside the focused region the code turns uniformly gray, the region keeps its colors on a brand band.
 - Preview: own header bar next to the iframe (collapse, Run, open in new tab); collapsing keeps the header.
 - Image carousel fits and centers in the panel (never scrolls).
 - `<VarField>`: Calcite `label-text` instead of a `calcite-label` wrapper; the secret reveal toggle is a `calcite-action` in the input's `action` slot, joined to the field.
@@ -44,7 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- Deep links and in-page `#step-id` links center the step (short steps used to land below the trigger line); the engine waits for Calcite's first render (`componentOnReady`, capped at 3 s) before restoring the position.
+- Deep links and in-page `#step-id` links center the step (short steps used to land below the trigger line); on load the step stays centered while the layout settles (Calcite renders late online), until user input.
 
 - Keys pressed before Calcite finished hydrating no longer get undone by the deep-link restore scroll; the scroll observer only confirms the target of a key-driven scroll (an interrupted smooth scroll could re-activate a passed step).
 
