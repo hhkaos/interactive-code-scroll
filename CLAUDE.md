@@ -26,6 +26,7 @@ Every feature ships with tests: unit (Vitest) and/or E2E (Playwright).
 - After implementing and testing a feature (or meaningful sub-step), commit it (Conventional Commits, English).
 - In the same commit: remove the finished task from `TODO.md` (pending only) and add it to `CHANGELOG.md` under `## [Unreleased]`.
 - Never commit with failing tests; report the failure instead.
+- Run test commands on their own and check their exit status before committing; never chain a commit after a pipeline that can mask failures (e.g. `| grep`).
 
 ### Recommendations
 When a decision is open, recommend one option and explain the trade-offs; let the user confirm.
