@@ -22,6 +22,13 @@ body {
   border-inline-start: 4px solid transparent;
   /* Native #step-id scrolling must land the step on the viewport's center line (the trigger). */
   scroll-margin-top: 30vh;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+
+  &[data-active] {
+    border-color: var(--calcite-color-brand);
+    opacity: 1;
+  }
 }
 
 .right {
@@ -32,6 +39,23 @@ body {
   flex-direction: column;
   min-width: 0;
   border-inline-start: 1px solid var(--calcite-color-border-1);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--calcite-color-border-1);
+
+  .progress { margin-inline-end: auto; }
+}
+
+.progress-bar {
+  height: 3px;
+  background: linear-gradient(to right, var(--calcite-color-brand) calc(var(--progress, 0) * 100%), transparent 0);
+  transition: background 0.2s;
 }
 
 .code-panel {
@@ -48,6 +72,9 @@ body {
   line-height: 1.5;
 
   &[hidden] { display: none; }
+  &[data-has-focus] .line:not([data-focus]) { opacity: 0.35; }
+  .line { transition: opacity 0.2s, background-color 0.2s; }
+  .line[data-focus] { background: color-mix(in srgb, var(--calcite-color-brand) 12%, transparent); }
   .shiki { margin: 0; padding: 1rem 0; background: transparent; }
   .line { display: inline-block; width: 100%; box-sizing: border-box; padding-inline: 1rem; }
 }
@@ -55,5 +82,16 @@ body {
 /* Shiki dual themes (defaultColor: false) follow the Calcite mode. */
 .calcite-mode-light .code { background: #fff; color: #24292e; .shiki span { color: var(--shiki-light); } }
 .calcite-mode-dark .code { background: #24292e; color: #e1e4e8; .shiki span { color: var(--shiki-dark); } }
+
+.code-panel[hidden] { display: none; }
+
+.media-panel {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+
+  &[hidden] { display: none; }
+  calcite-carousel { flex: 1; }
+}
 
 .step-image { width: 100%; height: auto; }

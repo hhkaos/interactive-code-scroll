@@ -26,16 +26,24 @@ const panes = await Promise.all(
         <Content components={{ Step, VarField }} />
       </main>
       <aside class="right">
+        <div class="toolbar">
+          <span class="progress" aria-live="polite"></span>
+        </div>
+        <div class="progress-bar" aria-hidden="true"></div>
         <div class="code-panel">
           <calcite-tab-nav>
             {panes.map((p, i) => <calcite-tab-title data-file={p.path} selected={i === 0}>{p.path}</calcite-tab-title>)}
           </calcite-tab-nav>
           {panes.map((p, i) => <div class="code" data-file={p.path} hidden={i !== 0} set:html={p.html} />)}
         </div>
+        <div class="media-panel" hidden></div>
       </aside>
     </div>
     <script>
       import "../client/calcite.ts";
+      import { startStepEngine } from "../client/steps.ts";
+
+      startStepEngine();
     </script>
   </body>
 </html>
