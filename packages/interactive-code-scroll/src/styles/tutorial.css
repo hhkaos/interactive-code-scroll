@@ -89,6 +89,13 @@ body {
   flex-direction: column;
 }
 
+.code-header {
+  display: flex;
+  align-items: center;
+
+  calcite-tab-nav { flex: 1; min-width: 0; }
+}
+
 .code {
   flex: 1;
   overflow: auto;

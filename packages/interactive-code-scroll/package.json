@@ -14,6 +14,7 @@
     "@astrojs/markdown-satteri": "^0.4.2",
     "@astrojs/mdx": "^8.0.2",
     "@esri/calcite-components": "^5.1.2",
+    "fflate": "^0.8.3",
     "satteri": "^0.10.5",
     "shiki": "^4.4.3"
   },

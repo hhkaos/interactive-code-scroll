@@ -17,7 +17,7 @@ const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: a
 const withIframe = config.preview === "iframe" || config.preview === "both";
 const withTab = config.preview === "tab" || config.preview === "both";
 // Escape "<" so embedded code containing </script> cannot close the data block.
-const clientData = JSON.stringify({ preview: config.preview, files: parsed }).replace(/</g, "\\u003c");
+const clientData = JSON.stringify({ title: config.title, preview: config.preview, files: parsed }).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -70,9 +70,14 @@ const clientData = JSON.stringify({ preview: config.preview, files: parsed }).re
         </div>
         <div class="progress-bar" aria-hidden="true"></div>
         <div class="code-panel">
-          <calcite-tab-nav>
-            {panes.map((p, i) => <calcite-tab-title data-file={p.path} selected={i === 0}>{p.path}</calcite-tab-title>)}
-          </calcite-tab-nav>
+          <div class="code-header">
+            <calcite-tab-nav>
+              {panes.map((p, i) => <calcite-tab-title data-file={p.path} selected={i === 0}>{p.path}</calcite-tab-title>)}
+            </calcite-tab-nav>
+            <calcite-button id="copy-file" appearance="transparent" kind="neutral" icon-start="copy-to-clipboard" label="Copy file" />
+            <calcite-button id="download-file" appearance="transparent" kind="neutral" icon-start="download" label="Download file" />
+            <calcite-button id="download-zip" appearance="transparent" kind="neutral" icon-start="file-zip" label="Download project (ZIP)" />
+          </div>
           {panes.map((p, i) => <div class="code" data-file={p.path} hidden={i !== 0} set:html={p.html} />)}
         </div>
         <div class="media-panel" hidden></div>
@@ -91,12 +96,14 @@ const clientData = JSON.stringify({ preview: config.preview, files: parsed }).re
       import "../client/calcite.ts";
       import type { ParsedSource } from "../markers.ts";
       import { keyToDelta } from "../client/navigation.ts";
+      import { startDownloads } from "../client/downloads.ts";
       import { startLayout } from "../client/layout.ts";
       import { startPreview } from "../client/preview.ts";
       import { startStepEngine } from "../client/steps.ts";
       import { startVars } from "../client/vars.ts";
 
       const data = JSON.parse(document.querySelector("#ics-data")!.textContent!) as {
+        title: string;
         preview: "off" | "iframe" | "tab" | "both";
         files: { path: string; parsed: ParsedSource }[];
       };
@@ -105,6 +112,7 @@ const clientData = JSON.stringify({ preview: config.preview, files: parsed }).re
       const engine = startStepEngine();
       let refreshPreview = () => {};
       const vars = startVars(() => refreshPreview());
+      startDownloads({ files: data.files, values: vars.values, title: data.title });
       if (data.preview !== "off") {
         const pageUrl = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}preview/`;
         refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl }).refresh;

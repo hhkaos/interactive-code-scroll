@@ -1,4 +1,4 @@
-import { applyVars, type ParsedSource } from "../markers.ts";
+import { projectFiles, type ParsedFile } from "../downloads.ts";
 import { buildPreviewHtml } from "../preview/build-html.ts";
 
 export type PreviewTarget = "iframe" | "tab";
@@ -6,7 +6,7 @@ const storageKey = (target: PreviewTarget) => `ics:preview:${target}`;
 
 export interface PreviewOptions {
   mode: "iframe" | "tab" | "both";
-  files: { path: string; parsed: ParsedSource }[];
+  files: ParsedFile[];
   /** Current form values (vars without a field fall back to the code default). */
   values: () => Record<string, string>;
   /** URL of the standalone preview page (`<base>preview/`). */
@@ -25,7 +25,7 @@ function store(html: string, target: PreviewTarget, pageUrl: string): string {
 }
 
 export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): { refresh(): void } {
-  const html = () => buildPreviewHtml(Object.fromEntries(files.map((f) => [f.path, applyVars(f.parsed, values())])));
+  const html = () => buildPreviewHtml(projectFiles(files, values()));
   const container = document.querySelector<HTMLElement>(".preview");
   const iframe = container?.querySelector("iframe");
 

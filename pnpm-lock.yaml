@@ -41,6 +41,9 @@ importers:
       '@esri/calcite-components':
         specifier: ^5.1.2
         version: 5.1.2
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
       satteri:
         specifier: ^0.10.5
         version: 0.10.5
@@ -1143,6 +1146,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   find-proc@0.2.0:
     resolution: {integrity: sha512-a6h2nTrgB3g5Wrn4au9Ux4kMk7IJtyF6oA8uGn+mk3weLZssUtc1cp6meHIzzuW2o1srrBAxzkmXLbqjRkgB6w==}
@@ -2989,6 +2995,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
+
+  fflate@0.8.3: {}
 
   find-proc@0.2.0: {}
 
