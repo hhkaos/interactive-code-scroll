@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Example tutorial: ArcGIS Maps SDK for JavaScript glyph as logo and favicon.
 - The explanations toggle is a handle on the docs/code splitter (a rail at the left edge while they are hidden), no longer in the header.
 - Steps no longer change background on hover (the pointer cursor is the hint).
 - The blank room below the last step is just what it needs to reach the center line.

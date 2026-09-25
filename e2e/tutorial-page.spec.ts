@@ -9,6 +9,16 @@ test("renders the author's tutorial.mdx with its frontmatter title", async ({ pa
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("OAuth 2.0 with the ArcGIS Maps SDK for JavaScript");
 });
 
+test("shows the frontmatter logo in the header and as favicon", async ({ page }) => {
+  // Vite inlines small assets as data: URIs; larger ones get a hashed URL.
+  const favicon = await page.locator('link[rel="icon"]').getAttribute("href");
+  expect(favicon).toMatch(/^data:image\/svg\+xml|arcgis-maps-sdk-for-javascript-glyph-32.*\.svg$/);
+  await expect(page.locator("calcite-navigation-logo")).toHaveJSProperty("thumbnail", favicon);
+  const shown = page.locator("calcite-navigation-logo img");
+  await expect(shown).toBeVisible();
+  expect(await shown.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+});
+
 test("numbers each step's heading", async ({ page }) => {
   const marker = await page
     .locator("section.step#config h2")
