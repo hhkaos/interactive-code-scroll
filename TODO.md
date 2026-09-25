@@ -2,9 +2,11 @@
 
 ## Next
 
-- [ ] **Spike (1–2 days): choose the technical base.** Build two minimal prototypes and compare:
+- [ ] **Spike (1–2 days, branch `spike/base-framework`): choose the technical base.** Build two minimal prototypes and compare:
   - Code Hike (Vite or Next)
   - Custom Astro + MDX + Shiki
+
+  Also review [TutorialKit](https://tutorialkit.dev) (StackBlitz, Astro-based) for gaps and as a possible base.
 
   Validate in both:
   - [ ] Runtime variables: form field → `// @var` literal replaced → code re-highlighted client-side
