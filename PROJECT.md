@@ -88,7 +88,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/highlight.ts                 # Shiki build-time highlighting
   src/frontmatter.ts               # title / preview config
   src/components/                  # Step.astro, VarField.astro
-  src/client/                      # browser runtime: calcite.ts, steps.ts (step engine), navigation.ts (pure helpers)
+  src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code)
   src/pages/index.astro            # injected tutorial page
   test/                            # Astro build integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)

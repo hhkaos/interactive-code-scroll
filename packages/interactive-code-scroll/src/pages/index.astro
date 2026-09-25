@@ -42,8 +42,10 @@ const panes = await Promise.all(
     <script>
       import "../client/calcite.ts";
       import { startStepEngine } from "../client/steps.ts";
+      import { startVars } from "../client/vars.ts";
 
       startStepEngine();
+      startVars();
     </script>
   </body>
 </html>
