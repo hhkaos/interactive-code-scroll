@@ -88,19 +88,26 @@ export function startStepEngine(): StepEngine {
 
   // The active step is the one crossing the viewport's center line.
   let restoring = true;
-  // A key-driven smooth scroll passes over other steps; the observer must not re-activate them.
-  let keyScrolling = false;
-  let keyScrollTimer: ReturnType<typeof setTimeout> | undefined;
+  let userNavigated = false;
+  // A key-driven smooth scroll passes over other steps: until it reaches its target,
+  // the observer may only confirm that target (a timer covers interrupted scrolls).
+  let keyTarget: number | undefined;
+  let keyTargetTimer: ReturnType<typeof setTimeout> | undefined;
   const endKeyScroll = () => {
-    keyScrolling = false;
-    clearTimeout(keyScrollTimer);
+    keyTarget = undefined;
+    clearTimeout(keyTargetTimer);
   };
-  addEventListener("scrollend", endKeyScroll);
   const observer = new IntersectionObserver(
     (entries) => {
-      if (restoring || keyScrolling) return;
+      if (restoring) return;
       const entering = entries.find((e) => e.isIntersecting);
-      if (entering) activate(steps.indexOf(entering.target as HTMLElement));
+      if (!entering) return;
+      const index = steps.indexOf(entering.target as HTMLElement);
+      if (keyTarget !== undefined) {
+        if (index === keyTarget) endKeyScroll();
+        return;
+      }
+      activate(index);
     },
     { rootMargin: "-50% 0px -50% 0px" },
   );
@@ -120,9 +127,10 @@ export function startStepEngine(): StepEngine {
   function step(delta: -1 | 1): void {
     if (moveCarousel(delta)) return;
     const next = clampIndex(current + delta, steps.length);
-    keyScrolling = true;
-    clearTimeout(keyScrollTimer);
-    keyScrollTimer = setTimeout(endKeyScroll, 1000); // Fallback where `scrollend` is unsupported.
+    userNavigated = true;
+    keyTarget = next;
+    clearTimeout(keyTargetTimer);
+    keyTargetTimer = setTimeout(endKeyScroll, 1500);
     steps[next]!.scrollIntoView({ block: "center", behavior: "smooth" });
     activate(next, delta < 0);
   }
@@ -154,7 +162,8 @@ export function startStepEngine(): StepEngine {
     document.fonts.ready,
   ]).then(() =>
     requestAnimationFrame(() => {
-      steps[initial]!.scrollIntoView({ block: "center" });
+      // Keys pressed before hydration finished win over the deep link.
+      if (!userNavigated) steps[initial]!.scrollIntoView({ block: "center" });
       restoring = false;
     }),
   );

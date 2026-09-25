@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.ts";
 
 const code = (page: import("@playwright/test").Page) => page.locator('.code[data-file="main.js"]');
 const clientIdInput = (page: import("@playwright/test").Page) => page.locator('calcite-input[data-var="clientId"] input');

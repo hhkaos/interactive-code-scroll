@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
 
 const focused = (page: Page) => page.locator(".code:not([hidden]) .line[data-focus]");
 

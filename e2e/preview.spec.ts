@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
 
 const frame = (page: Page) => page.frameLocator(".preview iframe");
 const previewScript = (page: Page) => frame(page).locator("script:not([src])").last().textContent();
@@ -49,22 +49,26 @@ test("the OAuth callback is published next to the preview page", async ({ reques
   expect(await response.text()).toContain("arcgis:auth:location:search");
 });
 
-test("sign-in from the iframe uses preview/oauth-callback.html as redirect_uri (needs network)", async ({
-  page,
-  context,
-  baseURL,
-}) => {
-  test.slow();
-  await page.goto("/#sign-in");
-  const signIn = frame(page).locator("#sign-in");
-  await expect(signIn).toBeAttached();
-  await expect.poll(() => previewScript(page)).toContain("getCredential");
-  await signIn.click();
-  const [popup] = await Promise.all([
-    context.waitForEvent("page"),
-    frame(page).locator(".esri-identity-modal calcite-button").getByText("OK").click(),
-  ]);
-  const url = new URL(popup.url());
-  expect(url.searchParams.get("redirect_uri")).toBe(`${baseURL}/preview/oauth-callback.html`);
-  expect(url.searchParams.get("code_challenge_method")).toBe("S256");
+test.describe("with the real ArcGIS SDK (needs network)", () => {
+  test.use({ sdk: true });
+
+  test("sign-in from the iframe uses preview/oauth-callback.html as redirect_uri", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    test.slow();
+    await page.goto("/#sign-in");
+    const signIn = frame(page).locator("#sign-in");
+    await expect(signIn).toBeAttached();
+    await expect.poll(() => previewScript(page)).toContain("getCredential");
+    await signIn.click();
+    const [popup] = await Promise.all([
+      context.waitForEvent("page"),
+      frame(page).locator(".esri-identity-modal calcite-button").getByText("OK").click(),
+    ]);
+    const url = new URL(popup.url());
+    expect(url.searchParams.get("redirect_uri")).toBe(`${baseURL}/preview/oauth-callback.html`);
+    expect(url.searchParams.get("code_challenge_method")).toBe("S256");
+  });
 });

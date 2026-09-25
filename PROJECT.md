@@ -172,6 +172,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 - Loading the OAuth sign-in page inside the Preview iframe.
 - Adding dependencies without justification.
 - Non-English text in the repo.
+- E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the ArcGIS SDK CDN); opt in with `test.use({ sdk: true })` only when testing the SDK itself.
 - E2E assertions that check state the code under test just set; assert the user-visible outcome (what the component actually shows).
 
 ---

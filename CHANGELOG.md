@@ -35,4 +35,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Keys pressed before Calcite finished hydrating no longer get undone by the deep-link restore scroll; the scroll observer only confirms the target of a key-driven scroll (an interrupted smooth scroll could re-activate a passed step).
+
 - Key-driven smooth scrolling no longer lets the scroll observer re-activate the steps it passes over (which reset a carousel to its first image).
