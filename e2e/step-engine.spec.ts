@@ -2,6 +2,17 @@ import { expect, test, type Page } from "./fixtures.ts";
 
 const focused = (page: Page) => page.locator(".code:not([hidden]) .line[data-focus]");
 
+/** The focused region is fully inside the code pane, or (taller than the pane) starts at its top. */
+const regionShown = (page: Page) =>
+  page.evaluate(() => {
+    const pane = document.querySelector(".code:not([hidden])")!;
+    const lines = [...pane.querySelectorAll(".line[data-focus]")];
+    const box = pane.getBoundingClientRect();
+    const top = lines[0]!.getBoundingClientRect().top;
+    const bottom = lines.at(-1)!.getBoundingClientRect().bottom;
+    return bottom - top <= pane.clientHeight ? top >= box.top && bottom <= box.bottom : Math.abs(top - box.top) < 40;
+  });
+
 test("a deep link activates its step, file and region", async ({ page }) => {
   await page.goto("/#oauth");
   await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
@@ -47,6 +58,40 @@ test("a deep link stays centered while the layout settles, until the user scroll
   await page.locator("section.step#load-sdk").evaluate((el) => (el.style.paddingTop = "600px"));
   await expect(page.locator("section.step#oauth h2")).toBeInViewport();
   await expect(page).toHaveURL(/#oauth$/);
+});
+
+test("clicking a step activates it", async ({ page }) => {
+  await page.goto("/#config");
+  await page.locator("section.step#load-sdk h2").click();
+  await expect(page.locator("section.step#load-sdk")).toHaveAttribute("data-active", "");
+  await expect(page).toHaveURL(/#load-sdk$/);
+  await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "index.html");
+  // Clicks on a step's own controls (here a field of another step) keep their meaning only.
+  await page.locator('calcite-input[data-var="clientId"] input').click();
+  await expect(page).toHaveURL(/#load-sdk$/);
+  // Anywhere else in the step counts.
+  await page.locator("section.step#config").click({ position: { x: 5, y: 5 } });
+  await expect(page).toHaveURL(/#config$/);
+});
+
+test("each step shows its whole code region when it fits", async ({ page }) => {
+  await page.goto("/#load-sdk");
+  for (const id of ["ui", "register-app", "config", "oauth", "callback", "sign-in", "styles"]) {
+    await page.keyboard.press("PageDown");
+    await expect(page).toHaveURL(new RegExp(`#${id}$`));
+    if (id === "register-app") {
+      await page.keyboard.press("PageDown"); // Second image; no code in this step.
+      continue;
+    }
+    await expect.poll(() => regionShown(page), { message: id }).toBe(true);
+  }
+});
+
+test("scrolling back to the top activates the first step", async ({ page }) => {
+  await page.goto("/#oauth");
+  await page.locator("main.docs").hover();
+  await page.mouse.wheel(0, -5000);
+  await expect(page.locator("section.step#load-sdk")).toHaveAttribute("data-active", "");
 });
 
 test("scrolling activates the step crossing the center line", async ({ page }) => {

@@ -42,7 +42,8 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
     </script>
     <calcite-navigation class="app-header">
       <calcite-action slot="navigation-action" id="docs-toggle" icon="chevrons-left" text="Hide explanations" />
-      <calcite-navigation-logo slot="logo" heading={config.title} />
+      {/* The page's h1: tutorial.mdx should not repeat the title. */}
+      <calcite-navigation-logo slot="logo" heading={config.title} heading-level="1" />
       <div slot="content-end" class="header-actions">
         <span id="step-count" aria-live="polite"></span>
         <calcite-action id="present-toggle" icon="presentation" text="Present" />

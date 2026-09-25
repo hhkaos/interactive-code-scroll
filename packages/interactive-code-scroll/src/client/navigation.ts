@@ -32,3 +32,27 @@ export function carouselTarget(selected: number, count: number, delta: -1 | 1): 
   const next = selected + delta;
   return next >= 0 && next < count ? next : undefined;
 }
+
+export interface RevealOptions {
+  /** Always center the range (docs: the trigger is the center line); otherwise move only when it is not fully visible. */
+  center?: boolean;
+  /** Room kept around the range, in px. */
+  margin?: number;
+}
+
+/**
+ * Scroll position that shows the range [top, bottom] (content coordinates) in a viewport
+ * of `view` px currently at `scrollTop`: centered when it fits, else aligned to its top.
+ * `undefined` when no scroll is needed. The browser clamps the result.
+ */
+export function revealScroll(
+  top: number,
+  bottom: number,
+  scrollTop: number,
+  view: number,
+  { center = false, margin = 16 }: RevealOptions = {},
+): number | undefined {
+  if (!center && top >= scrollTop + margin && bottom <= scrollTop + view - margin) return undefined;
+  const span = bottom - top;
+  return span + 2 * margin <= view ? top - (view - span) / 2 : top - margin;
+}

@@ -1,4 +1,4 @@
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta, revealScroll, type RevealOptions } from "./navigation.ts";
 import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
 
 type TabTitle = HTMLElement & { selected: boolean };
@@ -11,6 +11,23 @@ const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode 
 export interface StepEngine {
   step(delta: -1 | 1): void;
 }
+
+/** Scrolls `container` so that `first`…`last` are visible (see `revealScroll`). */
+function reveal(
+  container: HTMLElement,
+  first: Element,
+  last: Element,
+  options: RevealOptions & { behavior?: ScrollBehavior } = {},
+): void {
+  const box = container.getBoundingClientRect();
+  const top = first.getBoundingClientRect().top - box.top + container.scrollTop;
+  const bottom = last.getBoundingClientRect().bottom - box.top + container.scrollTop;
+  const target = revealScroll(top, bottom, container.scrollTop, container.clientHeight, options);
+  if (target !== undefined) container.scrollTo({ top: target, behavior: options.behavior ?? "auto" });
+}
+
+/** Interactive content inside a step keeps its clicks (they do not activate the step). */
+const OWN_CLICKS = "a, button, input, textarea, select, [contenteditable], calcite-input, calcite-action, calcite-button";
 
 /** User input that ends the deep-link restore (programmatic scrolling fires none of these). */
 const TAKE_OVER_EVENTS = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
@@ -88,7 +105,8 @@ export function startStepEngine(): StepEngine {
     if (!region) return;
     const lines = $$(`.line[data-regions~="${CSS.escape(region)}"]`, pane);
     lines.forEach((line) => line.setAttribute("data-focus", ""));
-    lines[0]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    // The whole region when it fits (else its start); no move when it is already in view.
+    if (lines.length) reveal(pane, lines[0]!, lines.at(-1)!, { behavior: "smooth" });
   }
 
   // The active step is the one crossing the center line of the docs panel (its own scroller).
@@ -129,20 +147,25 @@ export function startStepEngine(): StepEngine {
     return true;
   }
 
-  /** Centers step `index` with a smooth scroll and activates it right away. */
-  function goTo(index: number, fromEnd = false): void {
+  /** Brings step `index` into view (centered for keys, only if needed for clicks). */
+  function showStep(index: number, center: boolean, behavior: ScrollBehavior): void {
+    reveal(docs, steps[index]!, steps[index]!, { center, behavior });
+  }
+
+  /** Scrolls to step `index` (smoothly) and activates it right away. */
+  function goTo(index: number, { fromEnd = false, center = true } = {}): void {
     userNavigated = true;
     keyTarget = index;
     clearTimeout(keyTargetTimer);
     keyTargetTimer = setTimeout(endKeyScroll, 1500);
-    steps[index]!.scrollIntoView({ block: "center", behavior: "smooth" });
+    showStep(index, center, "smooth");
     activate(index, fromEnd);
   }
 
   /** Moves one step (or one carousel image) forwards/backwards, with snapping. */
   function step(delta: -1 | 1): void {
     if (moveCarousel(delta)) return;
-    goTo(clampIndex(current + delta, steps.length), delta < 0);
+    goTo(clampIndex(current + delta, steps.length), { fromEnd: delta < 0 });
   }
 
   // Keyboard / presentation clicker. Capture phase so the carousel does not also handle the key.
@@ -167,8 +190,25 @@ export function startStepEngine(): StepEngine {
     keyTarget = current;
     clearTimeout(keyTargetTimer);
     keyTargetTimer = setTimeout(endKeyScroll, 1500);
-    steps[current]!.scrollIntoView({ block: "center" });
+    showStep(current, true, "auto");
   });
+
+  // Clicking a step activates it (short steps and the first ones may never cross the center line).
+  docs.addEventListener("click", (event) => {
+    const target = event.target as Element;
+    const step = target.closest<HTMLElement>("section.step");
+    if (!step || target.closest(OWN_CLICKS) || getSelection()?.toString()) return;
+    goTo(steps.indexOf(step), { center: false });
+  });
+
+  // Back at the top, the first step is active again (it cannot reach the center line there).
+  docs.addEventListener(
+    "scroll",
+    () => {
+      if (!restoring && keyTarget === undefined && docs.scrollTop <= 0) activate(0);
+    },
+    { passive: true },
+  );
 
   // In-page #step-id links: center the step (native anchor scrolling would align its top).
   addEventListener("hashchange", () => {
@@ -184,7 +224,7 @@ export function startStepEngine(): StepEngine {
   );
   activate(initial);
   const settle = new ResizeObserver(() => {
-    if (!userNavigated) steps[initial]!.scrollIntoView({ block: "center" });
+    if (!userNavigated) showStep(initial, true, "auto");
   });
   for (const el of [docs, ...steps]) settle.observe(el);
   const takeOver = () => {

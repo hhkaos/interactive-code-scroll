@@ -9,6 +9,13 @@ test("renders the author's tutorial.mdx with its frontmatter title", async ({ pa
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("OAuth 2.0 with the ArcGIS Maps SDK for JavaScript");
 });
 
+test("numbers each step's heading", async ({ page }) => {
+  const marker = await page
+    .locator("section.step#config h2")
+    .evaluate((h) => getComputedStyle(h, "::before").content);
+  expect(marker).toBe("counter(step)");
+});
+
 test("renders each <Step> as a section with its references", async ({ page }) => {
   const config = page.locator("section.step#config");
   await expect(config).toHaveAttribute("data-file", "main.js");

@@ -36,12 +36,14 @@ A library/tool/"framework" that lets technical writers, devrels and speakers eas
 
 ### Scroll-driven focus
 When a step comes into focus, its text block can:
-- highlight parts of the code (focus + auto-scroll to make sure it is visible + gray out the rest),
+- highlight parts of the code (focus + gray out the rest + auto-scroll so the whole region is visible when it fits, else its start; no scroll when it is already in view),
 - switch from one file to another (`server.js`, `checkout.html`, etc.),
 - switch the right panel from code to an image or image carousel.
 
 ### Step navigation
-- **Free scroll**: the active step is determined by scroll position.
+- **Free scroll**: the active step is determined by scroll position (the step crossing the center line; back at the top, the first step).
+- **Click**: clicking a step (outside its links and fields) activates it; short steps and the first ones may never cross the center line.
+- **Numbered steps**: each step's heading shows its number (as in "Step N of M").
 - **Keyboard / clicker**: arrows and PageDown/PageUp jump to the next/previous step with snapping (compatible with presentation clickers).
 - **Deep link per step**: URL with `#step-id` to share or resume.
 - **Progress indicator**: a bar under the header; "Step X of N" text in presentation mode.
@@ -180,7 +182,7 @@ When a step comes into focus, its text block can:
 
 ## Decisions
 
-- **MDX syntax.** Frontmatter holds tutorial config; components hold steps and fields:
+- **MDX syntax.** Frontmatter holds tutorial config; components hold steps and fields. The `title` is the page's h1 (header bar): the MDX should not repeat it as `#`.
 
   ```mdx
   ---

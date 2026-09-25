@@ -88,7 +88,7 @@ body[data-docs-hidden] {
   min-height: 0;
   overflow-y: auto;
   overflow-wrap: break-word;
-  counter-reset: section;
+  counter-reset: step;
   /* The bottom room lets the last step reach the center line. */
   padding: 2rem 0 60vh;
   background: var(--calcite-color-foreground-1);
@@ -105,28 +105,8 @@ body[data-docs-hidden] {
   p, ul, ol { margin-block: 0 0.75rem; }
   a { color: var(--calcite-color-text-link); }
 
-  /* Sections (headings outside steps) are numbered, like Stripe's guides. */
-  & > h2 {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    margin-block: 2.5rem 0.75rem;
-    font-size: var(--calcite-font-size-xl);
-
-    &::before {
-      counter-increment: section;
-      content: counter(section);
-      flex: none;
-      display: grid;
-      place-items: center;
-      width: 1.5rem;
-      height: 1.5rem;
-      border-radius: var(--calcite-corner-radius-pill);
-      background: var(--calcite-color-foreground-3);
-      color: var(--calcite-color-text-2);
-      font-size: var(--calcite-font-size-sm);
-    }
-  }
+  /* Section headings between steps. */
+  & > h2 { margin-block: 2.5rem 0.75rem; font-size: var(--calcite-font-size-xl); }
 
   :not(pre) > code {
     padding: 0.1em 0.35em;
@@ -140,8 +120,10 @@ body[data-docs-hidden] {
 }
 
 .step {
+  counter-increment: step;
   padding: 1.25rem var(--gutter);
   border-top: 1px solid var(--calcite-color-border-3);
+  cursor: pointer;
   transition: background-color 0.2s, box-shadow 0.2s;
 
   &:last-of-type { border-bottom: 1px solid var(--calcite-color-border-3); }
@@ -149,9 +131,40 @@ body[data-docs-hidden] {
   & > :last-child { margin-bottom: 0; }
   h2, h3 { margin-block: 0 0.5rem; font-size: var(--calcite-font-size-lg); }
 
+  /* Each step's heading carries its number (the same N as "Step N of M"). */
+  & > :is(h2, h3):first-child {
+    display: flex;
+    align-items: baseline;
+    gap: 0.625rem;
+
+    &::before {
+      content: counter(step);
+      flex: none;
+      align-self: center;
+      display: grid;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: var(--calcite-corner-radius-pill);
+      background: var(--calcite-color-foreground-3);
+      color: var(--calcite-color-text-2);
+      font-size: var(--calcite-font-size-sm);
+      font-weight: var(--calcite-font-weight-medium);
+    }
+  }
+
+  /* Clicking a step activates it: hint on hover. */
+  &:not([data-active]):hover { background: var(--calcite-color-transparent-hover); }
+
   &[data-active] {
+    cursor: auto;
     background: var(--calcite-color-foreground-2);
     box-shadow: inset 3px 0 0 var(--calcite-color-brand);
+
+    & > :is(h2, h3):first-child::before {
+      background: var(--calcite-color-brand);
+      color: var(--calcite-color-text-inverse);
+    }
   }
 }
 

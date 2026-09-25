@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta, revealScroll } from "./navigation.ts";
 
 describe("navigation", () => {
   it.each([
@@ -41,5 +41,26 @@ describe("navigation", () => {
     expect(carouselTarget(2, 3, 1)).toBeUndefined();
     expect(carouselTarget(1, 3, -1)).toBe(0);
     expect(carouselTarget(0, 3, -1)).toBeUndefined();
+  });
+});
+
+describe("revealScroll", () => {
+  // Viewport 400 px at scrollTop 1000; margin 16.
+  it("does not move when the range is fully visible", () => {
+    expect(revealScroll(1100, 1300, 1000, 400)).toBeUndefined();
+  });
+
+  it("centers a range that fits but is (partly) out of view", () => {
+    expect(revealScroll(1350, 1450, 1000, 400)).toBe(1200);
+    expect(revealScroll(900, 1000, 1000, 400)).toBe(750);
+  });
+
+  it("aligns a range taller than the viewport to its top", () => {
+    expect(revealScroll(1500, 2500, 1000, 400)).toBe(1484);
+  });
+
+  it("always centers with `center`", () => {
+    expect(revealScroll(1100, 1300, 1000, 400, { center: true })).toBe(1000);
+    expect(revealScroll(1100, 1300, 1000, 300, { center: true })).toBe(1050);
   });
 });

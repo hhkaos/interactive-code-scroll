@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Steps: clicking a step activates it; scrolling back to the top activates the first one; each step heading is numbered (the active one in brand color); the whole code region scrolls into view when it fits (no scroll when already visible) and key navigation shows tall steps from their start. The tutorial title is the page's h1 (header); the example MDX no longer repeats it.
 - UI redesign on Calcite: `calcite-navigation` header (explanations toggle, title, present, theme, progress bar; "Step X of N" only while presenting); explanations scroll in their own panel (no page scroll, separated scrollbars); Calcite type scale (16 px text, 13 px code with the Calcite code font, 1.6/1.7 line heights), compact steps (no minimum height, no dimmed text; active step gets a subtle background and brand edge), numbered section headings, styled inline code, 70ch line length; icon-only `calcite-action`s with tooltips; file icons on tabs; thin splitter and scrollbars.
 - Theme: `theme` frontmatter sets the tutorial's default mode (`auto` / `light` / `dark`; the viewer's toggle wins); code panel and Preview iframe follow the page mode (apps using `calcite-mode-auto` match). Code: GitHub default themes; outside the focused region the code turns uniformly gray, the region keeps its colors on a brand band.
 - Preview: own header bar next to the iframe (collapse, Run, open in new tab); collapsing keeps the header.
