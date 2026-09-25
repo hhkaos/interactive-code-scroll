@@ -1,4 +1,5 @@
 import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta } from "./navigation.ts";
+import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
 
 type TabTitle = HTMLElement & { selected: boolean };
 
@@ -150,6 +151,15 @@ export function startStepEngine(): StepEngine {
     },
     { capture: true },
   );
+
+  // Explanations shown again: bring the active step's text back to the center line.
+  document.addEventListener(DOCS_TOGGLE_EVENT, (event) => {
+    if ((event as CustomEvent<{ hidden: boolean }>).detail.hidden || current < 0) return;
+    keyTarget = current;
+    clearTimeout(keyTargetTimer);
+    keyTargetTimer = setTimeout(endKeyScroll, 1500);
+    steps[current]!.scrollIntoView({ block: "center" });
+  });
 
   // Deep link: activate now, scroll once Calcite has hydrated (hydration changes step heights).
   const initial = indexFromHash(

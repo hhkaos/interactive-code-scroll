@@ -16,6 +16,17 @@ body {
   }
 }
 
+/* Hidden explanations: code gets the full width; steps still move with keys/clicker. */
+body[data-docs-hidden] {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .docs, .splitter { display: none; }
+}
+
+/* Presentation mode: compact toolbar (progress, preview, exit stay). */
+body[data-presenting] :is(#theme-toggle, #copy-file, #download-file, #download-zip) {
+  display: none;
+}
+
 .splitter {
   position: sticky;
   top: 0;

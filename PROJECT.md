@@ -81,7 +81,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/frontmatter.ts               # title / preview config
   src/downloads.ts                 # project files with values applied, ZIP (fflate)
   src/components/                  # Step.astro, VarField.astro
-  src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitter), preview.ts, downloads.ts
+  src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitter), presentation.ts, preview.ts, downloads.ts
   src/pages/index.astro            # injected tutorial page
   src/preview/                     # preview page, code/ files published under preview/, HTML builder
   test/                            # Astro build integration tests + fixtures

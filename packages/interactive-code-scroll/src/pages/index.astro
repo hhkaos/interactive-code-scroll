@@ -56,6 +56,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       </div>
       <aside class="right">
         <div class="toolbar">
+          <calcite-button id="docs-toggle" appearance="transparent" kind="neutral" icon-start="chevrons-left" label="Hide explanations" />
           <span class="progress" aria-live="polite"></span>
           {
             withIframe && (
@@ -66,6 +67,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
             )
           }
           {withTab && <calcite-button id="preview-open" appearance="transparent" icon-start="launch">Open in new tab</calcite-button>}
+          <calcite-button id="present-toggle" appearance="transparent" kind="neutral" icon-start="presentation" label="Present" />
           <calcite-button id="theme-toggle" appearance="transparent" kind="neutral" icon-start="moon" label="Toggle theme" />
         </div>
         <div class="progress-bar" aria-hidden="true"></div>
@@ -98,6 +100,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       import { keyToDelta } from "../client/navigation.ts";
       import { startDownloads } from "../client/downloads.ts";
       import { startLayout } from "../client/layout.ts";
+      import { startPresentation } from "../client/presentation.ts";
       import { startPreview } from "../client/preview.ts";
       import { startStepEngine } from "../client/steps.ts";
       import { startVars } from "../client/vars.ts";
@@ -109,6 +112,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       };
 
       startLayout();
+      startPresentation();
       const engine = startStepEngine();
       let refreshPreview = () => {};
       const vars = startVars(() => refreshPreview());
