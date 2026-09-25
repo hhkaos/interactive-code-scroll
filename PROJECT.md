@@ -79,9 +79,17 @@ README.md
 .codex/config.toml  # Codex config (Esri developer docs MCP)
 .vscode/mcp.json    # VS Code MCP config (Esri developer docs)
 packages/interactive-code-scroll/  # core package: Astro integration
-  src/index.ts                     # interactiveCodeScroll() integration (adds MDX, injects /)
-  src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial → author's tutorial.mdx
+  src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
+  src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**
+  src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images)
+  src/markers.ts                   # #region / @var parser + applyVars
+  src/validate.ts                  # reference validation (pure)
+  src/mdx-validation.ts            # Sätteri mdast plugin that runs validate.ts with MDX positions
+  src/highlight.ts                 # Shiki build-time highlighting
+  src/frontmatter.ts               # title / preview config
+  src/components/                  # Step.astro, VarField.astro
   src/pages/index.astro            # injected tutorial page
+  test/                            # Astro build integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 e2e/                               # Playwright tests (against the built example)
 spike/                             # throwaway prototypes (Code Hike, Astro) + FINDINGS.md
@@ -184,6 +192,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 | Keyboard step navigation | Focus in page: works | Focus inside Preview iframe: keys go to the map | Forward keys from the preview page (same origin) |
 | `#step-id` deep link | Native fragment scroll puts the step at the top | Trigger line is the viewport center | Needs `scroll-margin-top` on steps and waiting for Calcite hydration (layout shift) |
 | Astro 7 + pnpm build | Prerender bundle externalizes `cookie`; pnpm does not hoist it | Node resolves a stray copy up the tree (e.g. `~/node_modules`) → CJS import error | `vite.environments.prerender.resolve.noExternal: ["cookie"]` |
+| MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 

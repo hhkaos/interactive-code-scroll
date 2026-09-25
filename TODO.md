@@ -2,13 +2,13 @@
 
 ## Next
 
-- [ ] **Build-time highlighting + strict validation**: Shiki dual themes, `<Step>` / `<VarField>` components, errors with MDX file/line; dev-mode browser overlay.
+- [ ] **Scroll/keyboard step engine**: client runtime (port `spike/astro/src/scripts/app.ts`): active step by center line, file switch, region focus + gray-out, carousel, deep links (`scroll-margin-top`, wait for Calcite hydration), progress indicator.
 
 ## Backlog
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
-- [ ] Scroll/keyboard step engine, deep links, progress indicator.
+- [ ] Dev mode: re-validate MDX when `code/` or `images/` change (today validation is stale until the MDX is edited); center the error overlay on the failing MDX line (`loc`).
 - [ ] Forms → variables (persist, secret + reveal toggle).
 - [ ] Preview page (iframe + new tab, debounce + Run, `oauth-callback.html`), key forwarding from the preview.
 - [ ] Image carousel.

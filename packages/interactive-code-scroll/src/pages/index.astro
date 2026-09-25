@@ -1,5 +1,16 @@
 ---
-import { Content } from "virtual:interactive-code-scroll/tutorial";
+import { Content, files, frontmatter } from "virtual:interactive-code-scroll/tutorial";
+import Step from "../components/Step.astro";
+import VarField from "../components/VarField.astro";
+import { readTutorialConfig } from "../frontmatter.ts";
+import { highlight } from "../highlight.ts";
+import { parseSource } from "../markers.ts";
+import "../styles/tutorial.css";
+
+const config = readTutorialConfig(frontmatter);
+const panes = await Promise.all(
+  files.map(async (f) => ({ path: f.path, html: await highlight(parseSource(f.source, `code/${f.path}`), f.path) })),
+);
 ---
 
 <!doctype html>
@@ -7,11 +18,24 @@ import { Content } from "virtual:interactive-code-scroll/tutorial";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>InteractiveCodeScroll</title>
+    <title>{config.title}</title>
   </head>
-  <body>
-    <main>
-      <Content />
-    </main>
+  <body class="calcite-mode-light" data-preview={config.preview}>
+    <div class="layout">
+      <main class="docs">
+        <Content components={{ Step, VarField }} />
+      </main>
+      <aside class="right">
+        <div class="code-panel">
+          <calcite-tab-nav>
+            {panes.map((p, i) => <calcite-tab-title data-file={p.path} selected={i === 0}>{p.path}</calcite-tab-title>)}
+          </calcite-tab-nav>
+          {panes.map((p, i) => <div class="code" data-file={p.path} hidden={i !== 0} set:html={p.html} />)}
+        </div>
+      </aside>
+    </div>
+    <script>
+      import "../client/calcite.ts";
+    </script>
   </body>
 </html>

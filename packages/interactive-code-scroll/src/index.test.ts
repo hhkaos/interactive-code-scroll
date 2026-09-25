@@ -13,7 +13,7 @@ function runSetup(root: string, options?: Parameters<typeof interactiveCodeScrol
   const updateConfig = vi.fn();
   const injectRoute = vi.fn();
   const setup = interactiveCodeScroll(options).hooks["astro:config:setup"] as SetupHook;
-  const config = { root: pathToFileURL(`${root}/`) } as AstroConfig;
+  const config = { root: pathToFileURL(`${root}/`), markdown: {} } as AstroConfig;
   void setup({ config, updateConfig, injectRoute } as unknown as Parameters<SetupHook>[0]);
   return { updateConfig, injectRoute };
 }
@@ -50,10 +50,23 @@ describe("interactiveCodeScroll", () => {
 });
 
 describe("tutorialModule", () => {
-  it("re-exports Content from the tutorial MDX", () => {
-    const plugin = tutorialModule("/abs/tutorial/tutorial.mdx");
-    const resolved = plugin.resolveId(TUTORIAL_MODULE_ID)!;
-    expect(plugin.load(resolved)).toBe('export { Content } from "/abs/tutorial/tutorial.mdx";');
+  it("exposes content, frontmatter, code sources and image URLs", () => {
+    const root = projectWithTutorial();
+    mkdirSync(join(root, "tutorial", "code", "js"), { recursive: true });
+    mkdirSync(join(root, "tutorial", "images"));
+    writeFileSync(join(root, "tutorial", "code", "js", "main.js"), 'const a = "1";\n');
+    writeFileSync(join(root, "tutorial", "images", "shot.png"), "");
+    const plugin = tutorialModule(join(root, "tutorial"));
+    const watched: string[] = [];
+    const ctx = { addWatchFile: (id: string) => watched.push(id) };
+
+    const code = plugin.load.call(ctx, plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
+    expect(code).toContain(`export { Content, frontmatter } from ${JSON.stringify(join(root, "tutorial", "tutorial.mdx"))};`);
+    expect(code).toContain('export const files = [{"path":"js/main.js","source":"const a = \\"1\\";\\n"}];');
+    expect(code).toContain(`import image0 from ${JSON.stringify(join(root, "tutorial", "images", "shot.png") + "?url")};`);
+    expect(code).toContain('export const images = {"images/shot.png": image0};'.replace("images/", ""));
+    expect(watched).toEqual([join(root, "tutorial", "code", "js", "main.js")]);
     expect(plugin.resolveId("other")).toBeUndefined();
+    expect(plugin.load.call(ctx, "other")).toBeUndefined();
   });
 });

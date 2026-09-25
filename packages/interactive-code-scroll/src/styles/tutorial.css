@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  font-family: var(--calcite-font-family);
+  background: var(--calcite-color-background);
+  color: var(--calcite-color-text-1);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(20rem, 40%) 1fr;
+}
+
+.docs {
+  padding: 0 2rem 60vh;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.step {
+  min-height: 40vh;
+  padding: 1rem;
+  border-inline-start: 4px solid transparent;
+  /* Native #step-id scrolling must land the step on the viewport's center line (the trigger). */
+  scroll-margin-top: 30vh;
+}
+
+.right {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-inline-start: 1px solid var(--calcite-color-border-1);
+}
+
+.code-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.code {
+  flex: 1;
+  overflow: auto;
+  font-size: 0.9rem;
+  line-height: 1.5;
+
+  &[hidden] { display: none; }
+  .shiki { margin: 0; padding: 1rem 0; background: transparent; }
+  .line { display: inline-block; width: 100%; box-sizing: border-box; padding-inline: 1rem; }
+}
+
+/* Shiki dual themes (defaultColor: false) follow the Calcite mode. */
+.calcite-mode-light .code { background: #fff; color: #24292e; .shiki span { color: var(--shiki-light); } }
+.calcite-mode-dark .code { background: #24292e; color: #e1e4e8; .shiki span { color: var(--shiki-dark); } }
+
+.step-image { width: 100%; height: auto; }

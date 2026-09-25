@@ -1,0 +1,30 @@
+---
+import { images as imageUrls } from "virtual:interactive-code-scroll/tutorial";
+
+// References are validated at MDX compile time (mdx-validation.ts).
+interface Props {
+  id: string;
+  file?: string;
+  region?: string;
+  images?: string[];
+}
+
+const { id, file, region, images } = Astro.props;
+---
+
+<section class="step" id={id} data-file={file} data-region={region}>
+  <slot />
+  {
+    images?.length ? (
+      <template class="step-media">
+        <calcite-carousel label="Step images" arrow-type="edge">
+          {images.map((name) => (
+            <calcite-carousel-item label={name}>
+              <img src={imageUrls[name]} alt={name} class="step-image" />
+            </calcite-carousel-item>
+          ))}
+        </calcite-carousel>
+      </template>
+    ) : null
+  }
+</section>
