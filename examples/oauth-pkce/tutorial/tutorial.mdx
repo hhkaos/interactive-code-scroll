@@ -4,14 +4,21 @@ preview: both
 logo: arcgis-maps-sdk-for-javascript-glyph-32.svg
 ---
 
+<Step id="before-you-start">
+
+## Before you start
+
 In this tutorial you will build a small browser app that signs a user in with ArcGIS OAuth 2.0.
 The app uses the ArcGIS Maps SDK for JavaScript, a popup-based OAuth flow, and a callback page that
 works from the embedded Preview as well as from a normal browser tab.
 
-You need an ArcGIS account that can create OAuth credentials. If you want to compare the account
-setup screens with the product documentation, keep the
+You need an ArcGIS Location Platform, ArcGIS Online, or ArcGIS Enterprise account that can create
+developer credentials. In ArcGIS Online, that usually means a user type of Creator or higher. If you
+want to compare the account setup screens with the product documentation, keep the
 [Create OAuth credentials for user authentication](https://developers.arcgis.com/documentation/security-and-authentication/user-authentication/tutorials/create-oauth-credentials-user-auth/)
 tutorial open in another tab.
+
+</Step>
 
 <Step id="load-sdk" file="index.html" region="cdn">
 
@@ -41,8 +48,12 @@ flow is easier to understand when authentication is tied to one explicit action:
 
 ## Register your app
 
-Create OAuth credentials in your ArcGIS portal, then copy the **Client ID**. Use credentials for
-**user authentication**, not app authentication with a client secret.
+Create OAuth credentials in your ArcGIS portal, then copy the **Client ID**. In ArcGIS Location
+Platform, open `https://location.arcgis.com`, sign in, and go to **My portal** before creating the
+developer credentials item.
+
+Use credentials for **user authentication**, not app authentication with a client secret. Browser
+apps should keep only the Client ID in client-side code.
 
 Add a redirect URL for every place where this tutorial will run. In this project, OAuth returns to
 the preview callback page:
@@ -83,6 +94,10 @@ Import `OAuthInfo` and `IdentityManager`, then register one `OAuthInfo` object.
 authenticate the user. `popup: true` is important for this tutorial: it opens the ArcGIS sign-in
 screen in a popup, so authentication can start from the embedded Preview iframe instead of trying to
 load the sign-in page inside the iframe.
+
+The callback file is named explicitly with `popupCallbackUrl`. That makes the relationship between
+the registered redirect URL and this project visible in the code. `authNamespace` keeps this demo's
+stored sign-in state separate from other apps on the same domain.
 
 </Step>
 

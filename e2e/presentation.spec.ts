@@ -8,7 +8,7 @@ test("presentation mode goes full screen with a compact toolbar; Esc exits", asy
   await expect(page.locator("#theme-toggle")).toBeHidden();
   await expect(page.locator("#download-zip")).toBeHidden();
   await expect(page.locator("#step-count")).toBeVisible();
-  await expect(page.locator("#step-count")).toHaveText("Step 4 of 8");
+  await expect(page.locator("#step-count")).toHaveText("Step 5 of 9");
 
   await page.keyboard.press("Escape");
   await expect(page.locator("body")).not.toHaveAttribute("data-presenting", "");

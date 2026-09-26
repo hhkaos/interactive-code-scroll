@@ -18,8 +18,8 @@ test("a deep link activates its step, file and region", async ({ page }) => {
   await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "main.js");
   await expect(focused(page).first()).toContainText("$arcgis.import");
-  await expect(page.locator("#step-count")).toHaveText("Step 5 of 8");
-  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 62.5);
+  await expect(page.locator("#step-count")).toHaveText("Step 6 of 9");
+  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 66.66666666666666);
   await expect(page).toHaveURL(/#oauth$/);
 });
 
@@ -93,7 +93,7 @@ test("scrolling back to the top activates the first step", async ({ page }) => {
   await page.goto("/#oauth");
   await page.locator("main.docs").hover();
   await page.mouse.wheel(0, -5000);
-  await expect(page.locator("section.step#load-sdk")).toHaveAttribute("data-active", "");
+  await expect(page.locator("section.step#before-you-start")).toHaveAttribute("data-active", "");
 });
 
 test("scrolling activates the step crossing the center line", async ({ page }) => {

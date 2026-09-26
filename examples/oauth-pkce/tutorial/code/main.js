@@ -9,7 +9,13 @@ const [OAuthInfo, esriId] = await $arcgis.import([
   "@arcgis/core/identity/IdentityManager.js",
 ]);
 
-const info = new OAuthInfo({ appId: clientId, portalUrl, popup: true });
+const info = new OAuthInfo({
+  appId: clientId,
+  portalUrl,
+  popup: true,
+  popupCallbackUrl: "oauth-callback.html",
+  authNamespace: "interactive-code-scroll-oauth-demo",
+});
 esriId.registerOAuthInfos([info]);
 // #endregion
 
