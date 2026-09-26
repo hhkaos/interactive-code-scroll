@@ -26,7 +26,7 @@ test("downloads the visible file", async ({ page }) => {
 
 test("downloads the project as a ZIP with form values applied", async ({ page }) => {
   const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download-zip").click()]);
-  const folder = "oauth-2-0-with-the-arcgis-maps-sdk-for-javascript";
+  const folder = "user-authentication-with-the-arcgis-maps-sdk-for-javascript";
   expect(download.suggestedFilename()).toBe(`${folder}.zip`);
   const zip = (await download.path())!;
   const listing = execFileSync("unzip", ["-Z1", zip], { encoding: "utf8" }).trim().split("\n").sort();

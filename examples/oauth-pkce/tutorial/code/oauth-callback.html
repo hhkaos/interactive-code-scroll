@@ -5,7 +5,7 @@
     <script>
       // #region handler
       function loadHandler() {
-        if (opener) {
+        if (opener) { // windown.opener returns a reference to the window that opened the window, either with open(), or by navigating a link with a target attribute
           if (location.hash) {
             try {
               var esriId = opener.require("esri/kernel").id;

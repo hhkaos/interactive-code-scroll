@@ -40,6 +40,7 @@ When a step comes into focus, its text block can:
 - highlight parts of the code (focus + gray out the rest + auto-scroll so the whole region is visible when it fits, else its start; no scroll when it is already in view),
 - switch from one file to another (`server.js`, `checkout.html`, etc.),
 - switch the right panel from code to an image or image carousel.
+- A step with a `file` and no `region` shows that file with no focused lines; a text-only step (no `file`) keeps the current file visible but also clears any previous focus.
 
 ### Step navigation
 - **Free scroll**: the active step is determined by scroll position (the step crossing the center line; back at the top, the first step).
@@ -59,6 +60,7 @@ When a step comes into focus, its text block can:
 - **Configurable mode** per tutorial: embedded **iframe**, **open in new tab**, or **both**.
 - **Preview page**: both modes load a same-origin preview page (`preview/`) that renders the current files (form values applied). Client-side only. Not `srcdoc`/blob: the ArcGIS Maps SDK derives the OAuth `redirect_uri` from `location`, which is `about:srcdoc` there.
 - **Iframe mode**: iframe pointing at the preview page, collapsible to a header bar that keeps its controls (Run, open in new tab); sandbox `allow-scripts allow-popups allow-forms allow-same-origin` (same origin is required by the OAuth callback; tutorial code is trusted author code).
+- **Per-step Preview state**: a step can set `preview="expanded"` or `preview="collapsed"` to open or collapse the iframe when that step becomes active; omitted or `preview="keep"` preserves the viewer's current state.
 - **New tab mode**: opens the preview page in a new tab; OAuth can use a regular redirect.
 - **Refresh**: automatic after form changes (~500 ms debounce) + manual Run/Reload button.
 - **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via the tutorial's own `code/oauth-callback.html` (it is part of the tutorial: shown, explained, downloaded). Every `code/` file is published next to the preview page (`preview/<path>`, markers stripped), so relative references resolve there.

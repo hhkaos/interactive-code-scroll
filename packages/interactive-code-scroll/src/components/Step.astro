@@ -7,12 +7,13 @@ interface Props {
   file?: string;
   region?: string;
   images?: string[];
+  preview?: "expanded" | "collapsed" | "keep";
 }
 
-const { id, file, region, images } = Astro.props;
+const { id, file, region, images, preview } = Astro.props;
 ---
 
-<section class="step" id={id} data-file={file} data-region={region}>
+<section class="step" id={id} data-file={file} data-region={region} data-preview={preview}>
   <slot />
   {
     images?.length ? (

@@ -1,5 +1,5 @@
 ---
-title: OAuth 2.0 with the ArcGIS Maps SDK for JavaScript
+title: User Authentication with the ArcGIS Maps SDK for JavaScript
 preview: both
 logo: arcgis-maps-sdk-for-javascript-glyph-32.svg
 ---
@@ -8,19 +8,18 @@ logo: arcgis-maps-sdk-for-javascript-glyph-32.svg
 
 ## Before you start
 
-In this tutorial you will build a small browser app that signs a user in with ArcGIS OAuth 2.0.
-The app uses the ArcGIS Maps SDK for JavaScript, a popup-based OAuth flow, and a callback page that
-works from the embedded Preview as well as from a normal browser tab.
+In this tutorial you will build a small browser app that signs a user in with OAuth 2.0.
+The app uses the ArcGIS Maps SDK for JavaScript, a popup-based OAuth flow.
 
+<details>
+<summary>Check prerequisites</summary>
 You need an ArcGIS Location Platform, ArcGIS Online, or ArcGIS Enterprise account that can create
-developer credentials. In ArcGIS Online, that usually means a user type of Creator or higher. If you
-want to compare the account setup screens with the product documentation, keep the
-[Create OAuth credentials for user authentication](https://developers.arcgis.com/documentation/security-and-authentication/user-authentication/tutorials/create-oauth-credentials-user-auth/)
-tutorial open in another tab.
+developer credentials. In ArcGIS Online, that usually means a user type of Creator or higher.
+</details>
 
 </Step>
 
-<Step id="load-sdk" file="index.html" region="cdn">
+<Step id="load-sdk" file="index.html" region="cdn" preview="collapsed">
 
 ## Load the SDK
 
@@ -31,7 +30,7 @@ sign-in button, so this tutorial does not need a bundler or a package install st
 
 </Step>
 
-<Step id="ui" file="index.html" region="ui">
+<Step id="ui" file="index.html" region="ui" preview="expanded">
 
 ## Build the UI
 
@@ -40,13 +39,17 @@ message.
 
 </Step>
 
-<Step id="register-app" images={["credential-type-user-alp.png", "oauth-step-1.svg", "oauth-step-2.svg"]}>
+<Step id="register-app" images={["credential-type-user-alp.png", "oauth-step-1.svg", "oauth-step-2.svg"]} preview="collapsed">
 
-## Register your app
+## Create the Developer Credential
 
 Create OAuth credentials in your ArcGIS portal, then copy the **Client ID**. In ArcGIS Location
 Platform, open `https://location.arcgis.com`, sign in, and go to **My portal** before creating the
 developer credentials item.
+
+>  If you want to compare the account setup screens with the product documentation, keep the
+[Create OAuth credentials for user authentication](https://developers.arcgis.com/documentation/security-and-authentication/user-authentication/tutorials/create-oauth-credentials-user-auth/)
+tutorial open in another tab.
 
 Use credentials for **user authentication**, not app authentication with a client secret. Browser
 apps should keep only the Client ID in client-side code.
@@ -62,7 +65,7 @@ append `/preview/oauth-callback.html`.
 
 </Step>
 
-<Step id="config" file="main.js" region="config">
+<Step id="config" file="main.js" region="config" preview="collapsed">
 
 ## Configure the app
 
@@ -80,7 +83,7 @@ browser.
 
 </Step>
 
-<Step id="oauth" file="main.js" region="oauth">
+<Step id="oauth" file="main.js" region="oauth" preview="collapsed">
 
 ## Register OAuth information
 
@@ -97,7 +100,7 @@ stored sign-in state separate from other apps on the same domain.
 
 </Step>
 
-<Step id="callback" file="oauth-callback.html" region="handler">
+<Step id="callback" file="oauth-callback.html" region="handler" preview="collapsed">
 
 ## Add the callback page
 
@@ -112,22 +115,23 @@ exactly. Check the protocol, hostname, port, base path, and filename.
 
 </Step>
 
-<Step id="sign-in" file="main.js" region="sign-in">
+<Step id="sign-in" file="main.js" region="sign-in" preview="collapsed">
 
-## Sign in
+## Sign in and out
 
-Wire the button to `IdentityManager.getCredential()`.
+Wire the button to `IdentityManager.getCredential()` and `IdentityManager.destroyCredentials()`.
 
 The URL ends in `/sharing` because the ArcGIS sharing endpoint is the secured resource that starts
 the portal sign-in flow. When sign-in succeeds, the SDK stores the credential in memory and the app
-replaces the button text and status message with the signed-in user name.
+changes the button to **Sign out**. Pressing it again destroys the stored credential and returns the
+app to its signed-out state for this page session.
 
 Try it in the Preview. If the browser blocks the popup, open the Preview in a new tab and press
 **Sign in** there.
 
 </Step>
 
-<Step id="styles" file="style.css" region="layout">
+<Step id="styles" file="style.css" preview="collapsed">
 
 ## Style the page
 

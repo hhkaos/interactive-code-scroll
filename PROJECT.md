@@ -157,6 +157,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 - Form variables: inline comment, e.g. `const clientId = "DEMO_ID"; // @var clientId`. The literal is the default (single source of truth).
 - Source code must remain valid, runnable and lintable without the framework.
 - Markers are stripped from rendered and downloaded code.
+- `<Step file="...">` without `region` intentionally shows the whole file with no focus; text-only steps keep the current file visible but must clear any previous focused region.
 
 ### Preview
 - Optional and configurable per tutorial: iframe, new tab, or both.

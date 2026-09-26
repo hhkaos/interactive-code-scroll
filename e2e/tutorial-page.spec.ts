@@ -5,8 +5,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("renders the author's tutorial.mdx with its frontmatter title", async ({ page }) => {
-  await expect(page).toHaveTitle("OAuth 2.0 with the ArcGIS Maps SDK for JavaScript");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("OAuth 2.0 with the ArcGIS Maps SDK for JavaScript");
+  await expect(page).toHaveTitle("User Authentication with the ArcGIS Maps SDK for JavaScript");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "User Authentication with the ArcGIS Maps SDK for JavaScript",
+  );
 });
 
 test("shows the frontmatter logo in the header and as favicon", async ({ page }) => {

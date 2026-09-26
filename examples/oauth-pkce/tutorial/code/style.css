@@ -1,4 +1,3 @@
-/* #region layout */
 html,
 body {
   margin: 0;
@@ -27,5 +26,3 @@ calcite-shell {
 #user-status {
   text-align: center;
 }
-
-/* #endregion */

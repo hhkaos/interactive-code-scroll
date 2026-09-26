@@ -3,6 +3,8 @@ import { buildPreviewHtml } from "../preview/build-html.ts";
 import { setAction } from "./actions.ts";
 
 export type PreviewTarget = "iframe" | "tab";
+export type PreviewState = "expanded" | "collapsed";
+export const PREVIEW_STATE_EVENT = "ics:preview-state";
 const storageKey = (target: PreviewTarget) => `ics:preview:${target}`;
 
 export interface PreviewOptions {
@@ -37,15 +39,24 @@ export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): 
     else iframe.src = url;
   };
 
+  const setCollapsed = (collapsed: boolean) => {
+    if (!frame) return;
+    frame.hidden = collapsed;
+    setAction(document.querySelector("#preview-toggle"), collapsed ? "chevron-right" : "chevron-down", "Preview");
+    run();
+  };
+
   document.querySelector("#preview-run")?.addEventListener("click", run);
   document.querySelector("#preview-open")?.addEventListener("click", () => {
     window.open(store(html(), "tab", pageUrl), "_blank");
   });
   // Collapsing keeps the preview header (and its controls) in place.
-  document.querySelector("#preview-toggle")?.addEventListener("click", (event) => {
-    frame!.hidden = !frame!.hidden;
-    setAction(event.currentTarget as Element, frame!.hidden ? "chevron-right" : "chevron-down", "Preview");
-    run();
+  document.querySelector("#preview-toggle")?.addEventListener("click", () => {
+    setCollapsed(!frame!.hidden);
+  });
+  document.addEventListener(PREVIEW_STATE_EVENT, (event) => {
+    const state = (event as CustomEvent<PreviewState>).detail;
+    setCollapsed(state === "collapsed");
   });
 
   if (mode !== "tab") run();

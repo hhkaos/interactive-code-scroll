@@ -1,6 +1,8 @@
 import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta, revealScroll, type RevealOptions } from "./navigation.ts";
 import { MEDIA_EVENT } from "./image-viewer.ts";
+import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
+import { setAction } from "./actions.ts";
 
 type TabTitle = HTMLElement & { selected: boolean };
 
@@ -42,6 +44,15 @@ export function startStepEngine(): StepEngine {
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
   const progress = document.querySelector<HTMLElement>("#step-count");
   const progressBar = document.querySelector<HTMLElement & { value: number }>("#progress-bar");
+
+  function setPreviewState(state: string | undefined): void {
+    if (state !== "expanded" && state !== "collapsed") return;
+    const frame = document.querySelector<HTMLElement>(".preview-frame");
+    if (!frame) return;
+    frame.hidden = state === "collapsed";
+    setAction(document.querySelector("#preview-toggle"), frame.hidden ? "chevron-right" : "chevron-down", "Preview");
+    document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
+  }
 
   function showFile(path: string): void {
     for (const pane of $$(".code")) pane.hidden = pane.dataset.file !== path;
@@ -94,6 +105,7 @@ export function startStepEngine(): StepEngine {
     history.replaceState(null, "", `#${step.id}`);
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
     if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
+    setPreviewState(step.dataset.preview);
 
     const media = step.querySelector<HTMLTemplateElement>("template.step-media");
     mediaPanel.hidden = !media;
@@ -105,10 +117,12 @@ export function startStepEngine(): StepEngine {
     mediaPanel.replaceChildren();
     announceMedia();
 
+    for (const line of $$(".code .line[data-focus]")) line.removeAttribute("data-focus");
+    for (const pane of $$(".code[data-has-focus]")) pane.removeAttribute("data-has-focus");
+
     const { file, region } = step.dataset;
     if (!file) return; // Text-only step: keep the current file.
     showFile(file);
-    for (const line of $$(".code .line[data-focus]")) line.removeAttribute("data-focus");
     const pane = document.querySelector<HTMLElement>(`.code[data-file="${CSS.escape(file)}"]`)!;
     pane.toggleAttribute("data-has-focus", !!region);
     if (!region) return;

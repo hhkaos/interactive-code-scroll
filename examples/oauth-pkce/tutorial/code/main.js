@@ -22,9 +22,29 @@ esriId.registerOAuthInfos([info]);
 // #region sign-in
 const signInButton = document.querySelector("#sign-in");
 const userStatus = document.querySelector("#user-status");
+let signedIn = false;
+
+// Set visible text when the user is not signed in
+function showSignedOut() {
+  signedIn = false;
+  signInButton.textContent = "Sign in";
+  userStatus.textContent = "You are not signed in yet.";
+}
+
+function showSignedIn(userId) {
+  signedIn = true;
+  signInButton.textContent = "Sign out";
+  userStatus.textContent = `Signed in as ${userId}.`;
+}
+
 signInButton.addEventListener("click", async () => {
+  if (signedIn) {
+    esriId.destroyCredentials();
+    showSignedOut();
+    return;
+  }
+
   const credential = await esriId.getCredential(`${portalUrl}/sharing`);
-  signInButton.textContent = credential.userId;
-  userStatus.textContent = `Signed in as ${credential.userId}.`;
+  showSignedIn(credential.userId);
 });
 // #endregion

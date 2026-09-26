@@ -19,6 +19,7 @@ export interface ValidationInput {
 }
 
 const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
+const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -61,6 +62,10 @@ export function validateTutorial({ mdxFile, uses, files, images }: ValidationInp
 
       const file = text("file");
       const region = text("region");
+      const preview = text("preview");
+      if (preview !== undefined && !PREVIEW_STATES.has(preview)) {
+        report('"preview" must be one of expanded, collapsed, keep');
+      }
       const source = file === undefined ? undefined : parsed.get(file);
       if (file !== undefined && !files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
       if (region !== undefined) {

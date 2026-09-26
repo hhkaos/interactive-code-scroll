@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Per-step Preview state: `<Step preview="expanded">` and `<Step preview="collapsed">` control the iframe when the step becomes active.
 - Resizable Preview: a splitter between code and Preview (pointer and keyboard, height remembered).
 - Image viewer: clicking a carousel image opens it full screen (`calcite-dialog`); step keys page the images inside it and leaving the step closes it.
 - Optional `logo` frontmatter (a file in `images/`): header logo (`calcite-navigation-logo` thumbnail) and favicon.
@@ -31,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- The OAuth PKCE example sign-in button now becomes a sign-out action after authentication.
 - Removed the basemap from the OAuth PKCE example so the tutorial focuses only on user authentication.
 - Expanded the OAuth PKCE example tutorial into a complete walkthrough suitable as a CLI example, with an explicit OAuth popup callback URL and auth namespace.
 - Moved the technical base spike findings to `docs/research/technical-base-spike.md`.
@@ -38,7 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The explanations toggle is a handle on the docs/code splitter (a rail at the left edge while they are hidden), no longer in the header.
 - Steps no longer change background on hover (the pointer cursor is the hint).
 - The blank room below the last step is just what it needs to reach the center line.
-- Example tutorial: link to the original Esri tutorial, credential-type screenshot first in the "Register your app" carousel, and the demo app follows the page mode (`calcite-mode-auto`).
+- Example tutorial: link to the original Esri tutorial, credential-type screenshot first in the developer credential carousel, and the demo app follows the page mode (`calcite-mode-auto`).
 - Steps: clicking a step activates it; scrolling back to the top activates the first one; each step heading is numbered (the active one in brand color); the whole code region scrolls into view when it fits (no scroll when already visible) and key navigation shows tall steps from their start. The tutorial title is the page's h1 (header); the example MDX no longer repeats it.
 - UI redesign on Calcite: `calcite-navigation` header (explanations toggle, title, present, theme, progress bar; "Step X of N" only while presenting); explanations scroll in their own panel (no page scroll, separated scrollbars); Calcite type scale (16 px text, 13 px code with the Calcite code font, 1.6/1.7 line heights), compact steps (no minimum height, no dimmed text; active step gets a subtle background and brand edge), numbered section headings, styled inline code, 70ch line length; icon-only `calcite-action`s with tooltips; file icons on tabs; thin splitter and scrollbars.
 - Theme: `theme` frontmatter sets the tutorial's default mode (`auto` / `light` / `dark`; the viewer's toggle wins); code panel and Preview iframe follow the page mode (apps using `calcite-mode-auto` match). Code: GitHub default themes; outside the focused region the code turns uniformly gray, the region keeps its colors on a brand band.
@@ -57,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Text-only steps now clear any previously focused code region.
 - Deep links and in-page `#step-id` links center the step (short steps used to land below the trigger line); on load the step stays centered while the layout settles (Calcite renders late online), until user input.
 
 - Keys pressed before Calcite finished hydrating no longer get undone by the deep-link restore scroll; the scroll observer only confirms the target of a key-driven scroll (an interrupted smooth scroll could re-activate a passed step).

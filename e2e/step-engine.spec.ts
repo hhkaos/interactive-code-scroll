@@ -33,6 +33,15 @@ test("keyboard and clicker keys move between steps", async ({ page }) => {
   await expect(page).toHaveURL(/#sign-in$/);
 });
 
+test("going back to a text-only step clears the focused region", async ({ page }) => {
+  await page.goto("/#load-sdk");
+  await expect(focused(page)).toHaveCount(1);
+  await page.keyboard.press("ArrowUp");
+  await expect(page).toHaveURL(/#before-you-start$/);
+  await expect(focused(page)).toHaveCount(0);
+  await expect(page.locator(".code[data-has-focus]")).toHaveCount(0);
+});
+
 test("the focused region keeps its colors; the rest of the file turns gray", async ({ page }) => {
   await page.goto("/#oauth");
   const colors = (selector: string) =>
@@ -85,7 +94,9 @@ test("each step shows its whole code region when it fits", async ({ page }) => {
       for (let i = 1; i < images; i++) await page.keyboard.press("PageDown");
       continue;
     }
-    await expect.poll(() => regionShown(page), { message: id }).toBe(true);
+    const region = await page.locator(`section.step#${id}`).getAttribute("data-region");
+    if (region) await expect.poll(() => regionShown(page), { message: id }).toBe(true);
+    else await expect(focused(page)).toHaveCount(0);
   }
 });
 
