@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Expanded the OAuth PKCE example tutorial into a complete walkthrough suitable as a CLI example.
 - Moved the technical base spike findings to `docs/research/technical-base-spike.md`.
 - Example tutorial: ArcGIS Maps SDK for JavaScript glyph as logo and favicon.
 - The explanations toggle is a handle on the docs/code splitter (a rail at the left edge while they are hidden), no longer in the header.
