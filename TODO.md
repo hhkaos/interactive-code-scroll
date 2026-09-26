@@ -8,6 +8,7 @@
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
+- [ ] Public documentation for technical writers: expand `README.md`, add an authoring/API reference, create a dogfooding "getting started" tutorial built with InteractiveCodeScroll itself (separate from `examples/framework-fixture`), and document how to upgrade existing tutorials across framework, CLI and client runtime versions.
 - [ ] Dev mode: re-validate MDX when `code/` or `images/` change (today validation is stale until the MDX is edited); center the error overlay on the failing MDX line (`loc`).
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).

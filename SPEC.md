@@ -88,6 +88,13 @@ When a step comes into focus, its text block can:
 - **Serve locally**: the CLI can serve the built site on localhost (fallback if conference wifi fails; Preview/OAuth still need network — plan B: images/carousel of the result).
 - Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (`/tutorials/<name>/`) with an index page.
 
+### Public documentation
+- **README for repository visitors**: explains what InteractiveCodeScroll is, who it is for, how to start, and where to find the tutorial, reference and examples.
+- **Getting started tutorial**: teaches authors how to build their first tutorial with InteractiveCodeScroll. It should be built with InteractiveCodeScroll itself ("eat your own dog food") and live outside the stable E2E fixture.
+- **Authoring / API reference**: documents the tutorial folder layout, frontmatter options, MDX components, code markers, Preview behavior, downloads, validation rules, limitations and gotchas.
+- **CLI reference**: once the CLI exists, documents `dev`, `build`, `serve`, generated redirect URIs and scaffolding commands.
+- **Upgrade guide**: documents how authors update existing tutorials when the framework, CLI or client runtime changes, including supported version ranges, breaking-change notes, migration steps and validation commands.
+
 ---
 
 ## Key user flows
@@ -106,6 +113,7 @@ When a step comes into focus, its text block can:
 10. Works in dev mode (watch + live reload); reference errors show up as an overlay.
 11. Builds (fails on broken references).
 12. Publishes the result as a static page on GitHub Pages.
+13. Uses the public authoring reference to check supported frontmatter, component props, code markers and Preview behavior.
 
 ### End user (attendee / reader)
 
@@ -181,6 +189,8 @@ When a step comes into focus, its text block can:
 ## Success criteria
 
 - "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial published on GitHub Pages and used in a talk.
+- Public documentation is good enough for a technical writer to create and publish a first tutorial without reading the framework source.
+- The "getting started" documentation for InteractiveCodeScroll is itself an InteractiveCodeScroll tutorial.
 
 ---
 
@@ -213,6 +223,7 @@ When a step comes into focus, its text block can:
 - **Distribution: core npm package + `pnpm create interactive-code-scroll` scaffolder.** Generated projects depend on the core package, so improvements arrive via `pnpm update`.
 - **Styling: plain CSS with CSS Modules, no SCSS.** Calcite is themed via CSS custom properties; native CSS nesting covers the rest.
 - **OAuth redirect URIs: registered by the author.** The CLI prints the exact URIs to register (GitHub Pages and localhost), derived from the base path. The CLI never handles ArcGIS credentials.
+- **Upgrade path for existing tutorials.** Framework releases should avoid breaking existing tutorials when possible. When a breaking authoring/runtime/CLI change is necessary, document it in the upgrade guide and changelog, keep validation errors actionable, and add coverage in `examples/framework-fixture` when the behavior is observable through a tutorial.
 - **Name: InteractiveCodeScroll** (brand, PascalCase); `interactive-code-scroll` for the repo and npm package (kebab-case).
 - **License: Apache-2.0.**
 - **Out of v1: analytics and SEO.**
