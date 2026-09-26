@@ -1,8 +1,8 @@
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { planCli, writeAstroConfig } from "./interactive-code-scroll.mjs";
+import { planCli, resolveAstroBin, writeAstroConfig } from "./interactive-code-scroll.mjs";
 
 describe("interactive-code-scroll CLI", () => {
   it("builds a generic Astro dev command for the current tutorial project", () => {
@@ -43,5 +43,14 @@ describe("interactive-code-scroll CLI", () => {
     const config = readFileSync(configPath, "utf8");
     expect(config).toContain('interactiveCodeScroll({ tutorial: "tutorials/basics" })');
     expect(config).not.toMatch(/oauth|arcgis/i);
+  });
+
+  it("resolves Astro from the consuming project when installed from a package", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    const astroBin = join(root, "node_modules", "astro", "bin", "astro.mjs");
+    mkdirSync(join(root, "node_modules", "astro", "bin"), { recursive: true });
+    writeFileSync(astroBin, "");
+
+    expect(resolveAstroBin(root)).toBe(astroBin);
   });
 });

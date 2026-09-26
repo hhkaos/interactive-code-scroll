@@ -23,6 +23,17 @@ Use `--tutorial <dir>` for a different folder and pass Astro deployment options 
 The CLI is tutorial-agnostic. Provider-specific guidance, such as OAuth redirect URI help, is outside
 the core flow unless a project opts into it explicitly.
 
+## Package Smoke Test
+
+Before publishing, verify the package as an external project would consume it:
+
+```sh
+pnpm test:pack
+```
+
+This builds the package, creates a tarball with `pnpm pack`, installs it into a temporary tutorial
+project, runs `interactive-code-scroll build`, and checks that the static site was produced.
+
 ## License
 
 [Apache-2.0](LICENSE)

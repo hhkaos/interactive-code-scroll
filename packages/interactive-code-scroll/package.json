@@ -5,14 +5,24 @@
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "interactive-code-scroll": "./bin/interactive-code-scroll.mjs",
-    "ics": "./bin/interactive-code-scroll.mjs"
+    "interactive-code-scroll": "./dist/bin/interactive-code-scroll.mjs",
+    "ics": "./dist/bin/interactive-code-scroll.mjs"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
-    "check": "tsc --noEmit"
+    "build": "node scripts/build-package.mjs",
+    "check": "tsc --noEmit",
+    "prepack": "pnpm run build"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.2",

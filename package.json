@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "pnpm --filter example-framework-fixture dev",
     "build": "pnpm --filter example-framework-fixture build",
-    "check": "pnpm -r check",
+    "check": "pnpm --filter interactive-code-scroll build && pnpm -r check",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:pack": "node scripts/smoke-pack.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",

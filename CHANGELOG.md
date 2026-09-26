@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Package build pipeline for `interactive-code-scroll`: compiled `dist` output, packaged CLI entrypoints, `prepack`, and a tarball smoke test that installs the package in a temporary tutorial project.
 - Generic `interactive-code-scroll` CLI with `dev`, `build` and `serve` commands for any tutorial project, backed by a generated Astro config and topic-agnostic options.
 - Stable `examples/framework-fixture` tutorial for framework E2E coverage.
 - Per-step Preview state: `<Step preview="expanded">` and `<Step preview="collapsed">` control the iframe when the step becomes active.
@@ -67,6 +68,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Packaged CLI execution under pnpm now follows bin symlinks correctly and resolves Astro from the consuming project before falling back to the workspace package.
 - Text-only steps now clear any previously focused code region.
 - Deep links and in-page `#step-id` links center the step (short steps used to land below the trigger line); on load the step stays centered while the layout settles (Calcite renders late online), until user input.
 

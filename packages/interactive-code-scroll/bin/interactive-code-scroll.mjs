@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // @ts-check
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
@@ -21,7 +21,6 @@ const COMMAND_FLAG_TARGETS = new Map([
 ]);
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const astroBin = join(packageRoot, "node_modules", "astro", "bin", "astro.mjs");
 const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
 
 /**
@@ -128,6 +127,12 @@ function validateProject(plan) {
   if (!existsSync(mdxPath)) throw new Error(`Tutorial not found at ${mdxPath}`);
 }
 
+export function resolveAstroBin(root) {
+  const projectAstro = join(root, "node_modules", "astro", "bin", "astro.mjs");
+  if (existsSync(projectAstro)) return projectAstro;
+  return join(packageRoot, "node_modules", "astro", "bin", "astro.mjs");
+}
+
 /**
  * @param {string[]} argv
  */
@@ -141,7 +146,7 @@ export async function main(argv) {
   validateProject(plan);
   writeAstroConfig(plan);
 
-  const child = spawn(process.execPath, [astroBin, ...plan.astroArgs], {
+  const child = spawn(process.execPath, [resolveAstroBin(plan.root), ...plan.astroArgs], {
     cwd: plan.root,
     stdio: "inherit",
     env: { ...process.env, ASTRO_TELEMETRY_DISABLED: process.env.ASTRO_TELEMETRY_DISABLED ?? "1" },
@@ -159,7 +164,7 @@ export async function main(argv) {
   });
 }
 
-if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+if (process.argv[1] && pathToFileURL(realpathSync(resolve(process.argv[1]))).href === import.meta.url) {
   main(process.argv.slice(2))
     .then((code) => {
       process.exitCode = code;

@@ -29,6 +29,7 @@ pnpm dev          # framework fixture through the generic CLI
 pnpm build        # build the framework fixture through the generic CLI
 pnpm check        # tsc (core package) + astro check (example)
 pnpm test         # Vitest unit tests
+pnpm test:pack    # pack the package, install it in a temporary project, and build that project
 pnpm test:e2e     # Playwright: builds the example and serves it on :4400
 ```
 
@@ -76,6 +77,8 @@ AGENTS.md           # Codex CLI-specific rules
 README.md
 packages/interactive-code-scroll/  # core package: Astro integration
   bin/interactive-code-scroll.mjs   # generic CLI: dev, build, serve
+  scripts/build-package.mjs         # package build: compiles TS and copies Astro/CSS assets
+  dist/                             # generated package output (ignored; built by prepack)
   src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
   src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**
   src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images)
@@ -113,6 +116,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 | Page shell | browser | `calcite-navigation` header (explanations toggle, title, step count, present, theme, `calcite-progress`); explanations scroll in their own panel (the page never scrolls); the whole page follows one Calcite mode (`theme` frontmatter default, viewer toggle wins); the explanations handle sits on the docs/code splitter (a rail when hidden); a second splitter sizes the Preview; the right panel has header bars for code (file tabs, copy, downloads) and preview (collapse, Run, open in tab) |
 | Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab. Every other `code/` file is published at `preview/<path>` (e.g. the tutorial's `oauth-callback.html`) |
 | CLI | Node | Generates a temporary Astro config for the selected tutorial folder and runs Astro `dev`, `build` or `preview` (`serve`) with generic options only. OAuth/provider help stays outside the core path unless explicitly configured later. |
+| Package build | Node | `pnpm --filter interactive-code-scroll build` compiles TS to `dist`, copies `.astro`/CSS assets, rewrites internal imports to built `.js`, and emits a packaged CLI that resolves Astro from the consuming project first. `prepack` runs this before tarball creation. |
 
 ### Data flow
 
@@ -210,6 +214,8 @@ When adding or changing framework behavior, update this fixture to include the n
 | `#step-id` deep link | Native fragment scroll aligns the step top; `scrollIntoView({ block: "center" })` also honours `scroll-margin`, so a short step lands below the center line | Trigger line is the docs panel center | No `scroll-margin` on steps; the engine centers the step itself (on load and on `hashchange`); on load a `ResizeObserver` keeps it centered while the layout settles, until user input (wheel, touch, pointer, key) |
 | Astro 7 + pnpm build | Prerender bundle externalizes `cookie`; pnpm does not hoist it | Node resolves a stray copy up the tree (e.g. `~/node_modules`) → CJS import error | `vite.environments.prerender.resolve.noExternal: ["cookie"]` |
 | Astro 7 CLI `--config` | Absolute path passed to `--config` | Astro joins it with `--root` and reports `ConfigNotFound` | Pass a config path relative to `--root`; the generated CLI config may still be written via an absolute path |
+| pnpm package bin shim | `process.argv[1]` points at a symlink under `node_modules/.bin` | `import.meta.url` points at the real file under `.pnpm` | Resolve `process.argv[1]` with `realpathSync` before deciding whether the CLI is the entrypoint |
+| Packaged CLI Astro lookup | Workspace package has Astro under the package root | Installed package usually has Astro as a peer in the consuming project | Resolve `root/node_modules/astro/bin/astro.mjs` first, then fall back to the package-local path for workspace/dev |
 | MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |
