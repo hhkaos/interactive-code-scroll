@@ -7,7 +7,7 @@ const ESRI_CDN = /^https:\/\/js\.arcgis\.com\//;
 
 /**
  * Tests are hermetic by default: the Esri CDN is blocked, so neither the preview's
- * map nor Calcite's runtime asset fetches (which delay first render) depend on the
+ * app nor Calcite's runtime asset fetches (which delay first render) depend on the
  * network. Opt in with `test.use({ network: true })`.
  */
 export const test = base.extend<{ network: boolean }>({

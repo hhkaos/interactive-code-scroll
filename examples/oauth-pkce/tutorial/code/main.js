@@ -21,8 +21,10 @@ esriId.registerOAuthInfos([info]);
 
 // #region sign-in
 const signInButton = document.querySelector("#sign-in");
+const userStatus = document.querySelector("#user-status");
 signInButton.addEventListener("click", async () => {
   const credential = await esriId.getCredential(`${portalUrl}/sharing`);
   signInButton.textContent = credential.userId;
+  userStatus.textContent = `Signed in as ${credential.userId}.`;
 });
 // #endregion

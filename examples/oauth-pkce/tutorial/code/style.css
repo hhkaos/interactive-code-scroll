@@ -5,7 +5,27 @@ body {
   height: 100%;
 }
 
-arcgis-map {
-  height: 100%;
+body {
+  font-family: var(--calcite-sans-family);
 }
+
+calcite-shell {
+  min-height: 100%;
+}
+
+.demo-content {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: 2rem;
+}
+
+.status-card {
+  max-width: 36rem;
+}
+
+#user-status {
+  text-align: center;
+}
+
 /* #endregion */

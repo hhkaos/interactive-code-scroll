@@ -30,7 +30,7 @@ test("renders each <Step> as a section with its references", async ({ page }) =>
   const config = page.locator("section.step#config");
   await expect(config).toHaveAttribute("data-file", "main.js");
   await expect(config).toHaveAttribute("data-region", "config");
-  await expect(page.locator("section.step")).toHaveCount(8);
+  await expect(page.locator("section.step")).toHaveCount(9);
   await expect(page.locator("section.step#register-app template.step-media")).toHaveCount(1);
 });
 

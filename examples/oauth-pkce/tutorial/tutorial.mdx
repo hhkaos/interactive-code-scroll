@@ -26,9 +26,8 @@ tutorial open in another tab.
 
 Start with a plain HTML page and load the ArcGIS Maps SDK for JavaScript from the CDN.
 
-The SDK module bootstraps the ArcGIS web components used in the page, including `arcgis-map`.
-It also loads the Calcite components used by the header and sign-in button, so this tutorial does
-not need a bundler or a package install step.
+The SDK module bootstraps the ArcGIS runtime and the Calcite components used by the header and
+sign-in button, so this tutorial does not need a bundler or a package install step.
 
 </Step>
 
@@ -36,11 +35,8 @@ not need a bundler or a package install step.
 
 ## Build the UI
 
-The app shell is intentionally small: a Calcite navigation bar, one sign-in button, and a map.
-
-The map uses the public `osm` basemap, so the page can render before the user signs in. The OAuth
-flow is easier to understand when authentication is tied to one explicit action: pressing
-**Sign in**.
+The app shell is intentionally small: a Calcite navigation bar, one sign-in button, and a status
+message.
 
 </Step>
 
@@ -124,7 +120,7 @@ Wire the button to `IdentityManager.getCredential()`.
 
 The URL ends in `/sharing` because the ArcGIS sharing endpoint is the secured resource that starts
 the portal sign-in flow. When sign-in succeeds, the SDK stores the credential in memory and the app
-replaces the button text with the signed-in user name.
+replaces the button text and status message with the signed-in user name.
 
 Try it in the Preview. If the browser blocks the popup, open the Preview in a new tab and press
 **Sign in** there.
@@ -135,7 +131,7 @@ Try it in the Preview. If the browser blocks the popup, open the Preview in a ne
 
 ## Style the page
 
-Finish with just enough CSS to make the map fill the page.
+Finish with just enough CSS to center the status message.
 
 The app inherits light or dark mode from the tutorial page through `calcite-mode-auto`, so the same
 downloaded files work in both the embedded Preview and a standalone tab.

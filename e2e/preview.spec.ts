@@ -6,7 +6,7 @@ const previewScript = (page: Page) => frame(page).locator("script:not([src])").l
 test("the iframe runs the code from a real same-origin preview URL", async ({ page, baseURL }) => {
   await page.goto("/#config");
   await expect(page.locator(".preview iframe")).toHaveAttribute("src", `${baseURL}/preview/?target=iframe`);
-  await expect(frame(page).locator("arcgis-map")).toBeAttached();
+  await expect(frame(page).locator("#user-status")).toHaveText("You are not signed in yet.");
   await expect.poll(() => previewScript(page)).toContain('const clientId = "YOUR_CLIENT_ID";');
 });
 
@@ -32,13 +32,13 @@ test("open in new tab shows the current code as a standalone page", async ({ pag
   await page.locator('calcite-input[data-var="clientId"] input').fill("tab-id");
   const [tab] = await Promise.all([context.waitForEvent("page"), page.locator("#preview-open").click()]);
   await expect(tab).toHaveURL(`${baseURL}/preview/?target=tab`);
-  await expect(tab.locator("arcgis-map")).toBeAttached();
+  await expect(tab.locator("#user-status")).toHaveText("You are not signed in yet.");
   expect(await tab.locator("script:not([src])").last().textContent()).toContain('"tab-id"');
 });
 
 test("clicker keys pressed inside the preview move the tutorial", async ({ page }) => {
   await page.goto("/#config");
-  await expect(frame(page).locator("arcgis-map")).toBeAttached();
+  await expect(frame(page).locator("#user-status")).toBeAttached();
   await frame(page).locator("body").click({ position: { x: 5, y: 5 } });
   await page.keyboard.press("PageDown");
   await expect(page).toHaveURL(/#oauth$/);

@@ -17,7 +17,11 @@
         <calcite-navigation-logo slot="logo" heading="OAuth demo"></calcite-navigation-logo>
         <calcite-button id="sign-in" slot="user">Sign in</calcite-button>
       </calcite-navigation>
-      <arcgis-map basemap="osm" center="-3.7,40.4" zoom="5"></arcgis-map>
+      <main class="demo-content">
+        <section class="status-card" aria-label="Sign-in status">
+          <p id="user-status">You are not signed in yet.</p>
+        </section>
+      </main>
     </calcite-shell>
     <!-- #endregion -->
   </body>
