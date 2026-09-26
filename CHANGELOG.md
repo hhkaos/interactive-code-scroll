@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Optional `logo` frontmatter (a file in `images/`): header logo (`calcite-navigation-logo` thumbnail) and favicon.
 - `@types/node` dev dependency (types were resolved from a stray `~/node_modules`; a fresh clone failed `pnpm check`).
 - Project specification (`SPEC.md`).
-- Shared AI agent context (`PROJECT.md`, `CLAUDE.md`, `AGENTS.md`) and Esri developer docs MCP config (`.mcp.json`).
+- Shared AI agent context (`PROJECT.md`, `CLAUDE.md`, `AGENTS.md`).
 - Task list (`TODO.md`) and changelog (`CHANGELOG.md`).
 - Technical base spike: Code Hike and Astro prototypes of the same tutorial, shared marker parser and preview helpers, Playwright smoke tests, and findings now documented in `docs/research/technical-base-spike.md`. Decision: Astro + MDX + Shiki.
 
@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Removed
 
+- Hidden local agent/editor configuration directories and MCP config files from the repository.
 - Spike prototype code (`spike/`), now ported; findings kept in `docs/research/technical-base-spike.md`.
 
 ### Fixed

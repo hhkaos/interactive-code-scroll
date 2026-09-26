@@ -32,7 +32,7 @@ Every feature ships with tests: unit (Vitest) and/or E2E (Playwright).
 When a decision is open, recommend one option and explain the trade-offs; let the user confirm.
 
 ### ArcGIS
-Explore first: before writing code for X, ask what already exists. Query the Esri MCP server (`mcp-for-esri-developers`, tool `search_esri_developer_docs`) before assuming ArcGIS APIs.
+Explore first: before writing code for X, ask what already exists. Check official Esri developer documentation before assuming ArcGIS APIs.
 
 ### When you need information from me
 - Ask one question at a time — never a list of questions at once.

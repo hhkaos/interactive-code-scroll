@@ -82,10 +82,6 @@ LICENSE             # Apache-2.0
 CLAUDE.md           # Claude Code-specific rules
 AGENTS.md           # Codex CLI-specific rules
 README.md
-.mcp.json           # MCP servers for Claude Code (Esri developer docs)
-.claude/skills/     # project skills (init-spec, review-spec, init-memory)
-.codex/config.toml  # Codex config (Esri developer docs MCP)
-.vscode/mcp.json    # VS Code MCP config (Esri developer docs)
 packages/interactive-code-scroll/  # core package: Astro integration
   src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
   src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**
@@ -168,7 +164,7 @@ When adding or changing framework behavior, update this fixture to include the n
 | OAuth references | [identity-oauth-basic sample](https://developers.arcgis.com/javascript/latest/sample-code/identity-oauth-basic/) · [Create OAuth credentials (Location Platform)](https://developers.arcgis.com/documentation/security-and-authentication/user-authentication/tutorials/create-oauth-credentials-user-auth/location-platform/) |
 | UI rules | Calcite only. No inline styles. Style Calcite through its tokens, props and slots (host-level tokens/borders at most, never shadow internals); our CSS covers layout and our own content (MDX text, highlighted code). |
 | Explore first | Before writing code for X, ask "what already exists for X?" and request existing code as a reference pattern. |
-| Documentation | Query the Esri MCP server (`mcp-for-esri-developers`, developers.arcgis.com docs) before assuming ArcGIS APIs. |
+| Documentation | Check official Esri developer documentation before assuming ArcGIS APIs. |
 | Off-limits | AMD modules, `watchUtils`, legacy widgets (in tutorial sample code). |
 
 ---

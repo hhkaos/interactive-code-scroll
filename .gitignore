@@ -5,5 +5,9 @@ dist/
 test-results/
 playwright-report/
 .playwright-mcp/
+.claude/
+.codex/
+.vscode/
+.mcp.json
 spike/.shots/
 .DS_Store

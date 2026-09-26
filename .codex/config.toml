@@ -1,6 +1,0 @@
-[mcp_servers.mcp-for-esri-developers]
-url = "https://developers-mcpdevext.arcgis.com/mcp"
-enabled = true
-
-[mcp_servers.mcp-for-esri-developers.tools.search_esri_developer_docs]
-approval_mode = "approve"
