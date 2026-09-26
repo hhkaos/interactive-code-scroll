@@ -9,7 +9,7 @@ the marker parser (`shared/markers.ts`) and preview helpers (`shared/preview.ts`
 | `codehike/` | Vite 8 + React 19 + `@mdx-js/rollup` + Code Hike 1.1 | `pnpm --filter ics-spike-codehike dev` → :5173 |
 | `astro/` | Astro 7 + `@astrojs/mdx` + Shiki 4, vanilla TS client | `pnpm --filter ics-spike-astro dev` → :4321 (`astro dev stop` to stop) |
 
-Smoke tests (both prototypes, 10/10 passing): `pnpm exec playwright test` from `spike/`.
+Historical smoke tests for both prototypes passed 10/10 from the original `spike/` workspace.
 
 ## Hard features
 

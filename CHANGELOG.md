@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Project specification (`SPEC.md`).
 - Shared AI agent context (`PROJECT.md`, `CLAUDE.md`, `AGENTS.md`) and Esri developer docs MCP config (`.mcp.json`).
 - Task list (`TODO.md`) and changelog (`CHANGELOG.md`).
-- Technical base spike (`spike/`): Code Hike and Astro prototypes of the same tutorial, shared marker parser and preview helpers, Playwright smoke tests, `FINDINGS.md`. Decision: Astro + MDX + Shiki.
+- Technical base spike: Code Hike and Astro prototypes of the same tutorial, shared marker parser and preview helpers, Playwright smoke tests, and findings now documented in `docs/research/technical-base-spike.md`. Decision: Astro + MDX + Shiki.
 
 - Core package scaffold: pnpm workspace with `interactive-code-scroll` (Astro integration that adds MDX and injects the tutorial page, reading the author's `tutorial/tutorial.mdx` through a virtual module) and the `examples/oauth-pkce` project. Vitest unit tests and a Playwright E2E test.
 - Marker parser (`markers.ts`): `#region` / `#endregion [id]` and `@var` in JS, CSS and HTML comments; nested regions; errors with file and line (unmatched, unclosed, mismatched, empty or duplicate regions, duplicate vars, var without literal); context-aware escaping (script string vs HTML attribute).
@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Moved the technical base spike findings to `docs/research/technical-base-spike.md`.
 - Example tutorial: ArcGIS Maps SDK for JavaScript glyph as logo and favicon.
 - The explanations toggle is a handle on the docs/code splitter (a rail at the left edge while they are hidden), no longer in the header.
 - Steps no longer change background on hover (the pointer cursor is the hint).
@@ -50,7 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Removed
 
-- Spike prototype code (`spike/`), now ported; findings kept in `spike/FINDINGS.md`.
+- Spike prototype code (`spike/`), now ported; findings kept in `docs/research/technical-base-spike.md`.
 
 ### Fixed
 

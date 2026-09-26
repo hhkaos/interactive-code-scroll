@@ -13,7 +13,7 @@ Agent-specific behaviour rules live in each agent's own file (CLAUDE.md, AGENTS.
 
 A framework that turns a tutorial folder (MDX + code + images) into an interactive static website: documentation on the left, code on the right, synchronized by scroll/keyboard (region highlighting, file switching, images), with forms that update code variables, an optional Preview (iframe and/or new tab), downloads and a presentation mode. Built for projecting at conferences and for reproducing at home. Desktop-first. Published on GitHub Pages.
 
-Status: in development. Base: Astro + MDX + Shiki; spike findings in `spike/FINDINGS.md`.
+Status: in development. Base: Astro + MDX + Shiki; spike findings in `docs/research/technical-base-spike.md`.
 
 ---
 
@@ -87,7 +87,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   test/                            # Astro build integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 e2e/                               # Playwright tests (against the built example)
-spike/FINDINGS.md                  # spike findings (prototype code in git history, commit f265e61)
+docs/research/technical-base-spike.md # spike findings (prototype code in git history, commit f265e61)
 ```
 
 

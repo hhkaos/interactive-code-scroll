@@ -168,7 +168,7 @@ When a step comes into focus, its text block can:
 - All repo content (code, comments, docs, commit messages) in English.
 - **Tutorial code without a build step**: HTML/JS/CSS runnable as-is; dependencies via CDN (script tags / import maps, e.g. `js.arcgis.com`). The downloaded ZIP works by opening `index.html` or with a static server.
 - **Code markup in comments**: tutorial source code must remain valid, runnable and lintable without the framework.
-- **Technical base: Astro + MDX + Shiki** (decided after a spike; see Decisions and `spike/FINDINGS.md`).
+- **Technical base: Astro + MDX + Shiki** (decided after a spike; see Decisions and `docs/research/technical-base-spike.md`).
 - **Tutorial folder layout**: `tutorial.mdx` + `code/` + `images/`.
 - **Code markup rules** (enforced by the build):
   - `@var` targets the first string literal on its line; one `@var` per line; var names are unique per file. Runtime values replace the literal in place in the pre-highlighted code, escaped for its context (script string or HTML attribute).
