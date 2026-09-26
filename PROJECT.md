@@ -25,8 +25,8 @@ Package manager: **pnpm**. From the repo root:
 
 ```sh
 pnpm install
-pnpm dev          # example tutorial (examples/oauth-pkce) in dev mode
-pnpm build        # build the example
+pnpm dev          # framework fixture through the generic CLI
+pnpm build        # build the framework fixture through the generic CLI
 pnpm check        # tsc (core package) + astro check (example)
 pnpm test         # Vitest unit tests
 pnpm test:e2e     # Playwright: builds the example and serves it on :4400
@@ -37,15 +37,7 @@ pnpm test:e2e     # Playwright: builds the example and serves it on :4400
 
 ## Next Session Plan
 
-Goal: implement the first generic CLI slice without coupling the framework to the OAuth tutorial.
-
-1. Re-read `SPEC.md`, `PROJECT.md`, `TODO.md`, `CHANGELOG.md` and check `git status`.
-2. Inspect the current package setup (`package.json`, workspace packages, `examples/*/package.json`) before designing the CLI entry point.
-3. Implement a minimal generic CLI for existing tutorial projects: `dev`, `build` and `serve`.
-4. Keep OAuth redirect URI printing out of the core path unless it is behind explicit tutorial/project configuration.
-5. Add focused tests for CLI command construction/configuration and, when behavior is observable through a tutorial, add coverage to `examples/framework-fixture` plus Playwright assertions.
-6. Update public-facing docs or TODO entries only for the behavior actually implemented.
-7. Run the relevant checks, update `CHANGELOG.md`/`TODO.md`, and commit.
+_TBD after the current CLI slice lands._
 
 ---
 
@@ -83,6 +75,7 @@ CLAUDE.md           # Claude Code-specific rules
 AGENTS.md           # Codex CLI-specific rules
 README.md
 packages/interactive-code-scroll/  # core package: Astro integration
+  bin/interactive-code-scroll.mjs   # generic CLI: dev, build, serve
   src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
   src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**
   src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images)
@@ -119,6 +112,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 | Client runtime | browser | IntersectionObserver (center line of the docs panel) + keyboard + click on a step + top of the panel (first step) → activate step (file, focus lines revealed with `revealScroll`, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
 | Page shell | browser | `calcite-navigation` header (explanations toggle, title, step count, present, theme, `calcite-progress`); explanations scroll in their own panel (the page never scrolls); the whole page follows one Calcite mode (`theme` frontmatter default, viewer toggle wins); the explanations handle sits on the docs/code splitter (a rail when hidden); a second splitter sizes the Preview; the right panel has header bars for code (file tabs, copy, downloads) and preview (collapse, Run, open in tab) |
 | Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab. Every other `code/` file is published at `preview/<path>` (e.g. the tutorial's `oauth-callback.html`) |
+| CLI | Node | Generates a temporary Astro config for the selected tutorial folder and runs Astro `dev`, `build` or `preview` (`serve`) with generic options only. OAuth/provider help stays outside the core path unless explicitly configured later. |
 
 ### Data flow
 
@@ -215,6 +209,7 @@ When adding or changing framework behavior, update this fixture to include the n
 | `calcite-dialog` | Esc closes it while focus is inside | Focus outside (e.g. opened from a click that keeps focus on the page): Esc does nothing | Handle Esc ourselves too; `heading` is a property (not reflected): assert with `toHaveJSProperty` |
 | `#step-id` deep link | Native fragment scroll aligns the step top; `scrollIntoView({ block: "center" })` also honours `scroll-margin`, so a short step lands below the center line | Trigger line is the docs panel center | No `scroll-margin` on steps; the engine centers the step itself (on load and on `hashchange`); on load a `ResizeObserver` keeps it centered while the layout settles, until user input (wheel, touch, pointer, key) |
 | Astro 7 + pnpm build | Prerender bundle externalizes `cookie`; pnpm does not hoist it | Node resolves a stray copy up the tree (e.g. `~/node_modules`) → CJS import error | `vite.environments.prerender.resolve.noExternal: ["cookie"]` |
+| Astro 7 CLI `--config` | Absolute path passed to `--config` | Astro joins it with `--root` and reports `ConfigNotFound` | Pass a config path relative to `--root`; the generated CLI config may still be written via an absolute path |
 | MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |

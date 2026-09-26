@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Generic `interactive-code-scroll` CLI with `dev`, `build` and `serve` commands for any tutorial project, backed by a generated Astro config and topic-agnostic options.
 - Stable `examples/framework-fixture` tutorial for framework E2E coverage.
 - Per-step Preview state: `<Step preview="expanded">` and `<Step preview="collapsed">` control the iframe when the step becomes active.
 - Resizable Preview: a splitter between code and Preview (pointer and keyboard, height remembered).
@@ -33,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Root and example dev/build/preview scripts now exercise the generic CLI against `examples/framework-fixture`.
 - Clarified that InteractiveCodeScroll is a generic framework; OAuth/ArcGIS are example concerns only, and the next CLI work must stay topic-agnostic.
 - Expanded `SPEC.md` with public documentation requirements: README, dogfooding getting-started tutorial, authoring/API reference, CLI reference and upgrade guide.
 - Documented `examples/framework-fixture` as the required regression fixture for new framework behavior and matching E2E coverage.

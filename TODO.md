@@ -1,9 +1,5 @@
 # TODO
 
-## Next
-
-- [ ] **Generic CLI**: `dev`, `build`, `serve` for any InteractiveCodeScroll tutorial project. Do not couple the CLI to OAuth/ArcGIS; OAuth redirect URI guidance should be optional and driven by explicit tutorial/project configuration.
-
 ## Backlog
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._

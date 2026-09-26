@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter example-oauth-pkce dev",
-    "build": "pnpm --filter example-oauth-pkce build",
+    "dev": "pnpm --filter example-framework-fixture dev",
+    "build": "pnpm --filter example-framework-fixture build",
     "check": "pnpm -r check",
     "test": "vitest run",
     "test:e2e": "playwright test"

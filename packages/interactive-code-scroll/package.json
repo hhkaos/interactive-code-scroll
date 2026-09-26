@@ -4,6 +4,10 @@
   "description": "Build guided, interactive code tutorials from MDX and annotated source code.",
   "license": "Apache-2.0",
   "type": "module",
+  "bin": {
+    "interactive-code-scroll": "./bin/interactive-code-scroll.mjs",
+    "ics": "./bin/interactive-code-scroll.mjs"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
