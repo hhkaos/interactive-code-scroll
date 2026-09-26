@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Documented the E2E strategy: avoid chasing OAuth tutorial editorial changes and add a stable fake tutorial fixture for framework behavior.
 - The OAuth PKCE example sign-in button now becomes a sign-out action after authentication.
 - Removed the basemap from the OAuth PKCE example so the tutorial focuses only on user authentication.
 - Expanded the OAuth PKCE example tutorial into a complete walkthrough suitable as a CLI example, with an explicit OAuth popup callback URL and auth namespace.
