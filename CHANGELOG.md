@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Documented `examples/framework-fixture` as the required regression fixture for new framework behavior and matching E2E coverage.
 - Documented the E2E strategy: avoid chasing OAuth tutorial editorial changes and add a stable fake tutorial fixture for framework behavior.
 - The OAuth PKCE example sign-in button now becomes a sign-out action after authentication.
 - Removed the basemap from the OAuth PKCE example so the tutorial focuses only on user authentication.

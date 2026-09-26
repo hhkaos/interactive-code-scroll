@@ -112,6 +112,12 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 
 MDX + annotated code + images → build (validates references; fails on broken IDs) → static site → scroll/keyboard activates a step → right panel action (highlight region / switch file / show images) · form → client-side variable substitution → re-rendered code + Preview (iframe / new tab) + download.
 
+### Framework fixture
+
+`examples/framework-fixture` is the stable regression fixture for framework behavior. It is intentionally fake product content and must not be edited for tutorial narrative/design polish.
+
+When adding or changing framework behavior, update this fixture to include the new case whenever the behavior is observable through a tutorial, and add or adjust the corresponding Playwright assertions in `e2e/`. The real tutorials (for example `examples/oauth-pkce`) may change editorially; E2E tests for framework behavior should not depend on those editorial changes.
+
 ---
 
 ## Coding style
@@ -177,7 +183,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 - Non-English text in the repo.
 - E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the Esri CDN: SDK and Calcite assets); opt in with `test.use({ network: true })` only when testing the SDK itself.
 - Do not update E2E tests just to follow editorial changes in `examples/oauth-pkce`; while the tutorial is being polished, prefer testing framework behavior against stable fixtures.
-- E2E coverage uses `examples/framework-fixture`, a dedicated fake tutorial that exercises framework cases and is not edited for content/design polish.
+- E2E coverage uses `examples/framework-fixture`, a dedicated fake tutorial that exercises framework cases and is not edited for content/design polish. New framework capabilities that should be protected from regressions should add a stable case there plus the corresponding E2E assertion.
 - E2E assertions that check state the code under test just set; assert the user-visible outcome (what the component actually shows).
 - Generic class names in E2E selectors (e.g. `.progress`): Playwright pierces shadow DOM and matches Calcite internals; use ids or `data-*` attributes.
 - Overriding Calcite styles by reaching into components (`::part` hacks, `!important`, shadow selectors); use tokens, props and slots.
