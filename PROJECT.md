@@ -13,6 +13,8 @@ Agent-specific behaviour rules live in each agent's own file (CLAUDE.md, AGENTS.
 
 A framework that turns a tutorial folder (MDX + code + images) into an interactive static website: documentation on the left, code on the right, synchronized by scroll/keyboard (region highlighting, file switching, images), with forms that update code variables, an optional Preview (iframe and/or new tab), downloads and a presentation mode. Built for projecting at conferences and for reproducing at home. Desktop-first. Published on GitHub Pages.
 
+InteractiveCodeScroll is generic. OAuth, ArcGIS and maps are example/tutorial concerns only; do not add topic-specific assumptions to the core package, runtime, validation, CLI or public documentation. Topic-specific helpers must be explicit opt-ins or example-level configuration.
+
 Status: in development. Base: Astro + MDX + Shiki; spike findings in `docs/research/technical-base-spike.md`.
 
 ---
@@ -30,6 +32,20 @@ pnpm test         # Vitest unit tests
 pnpm test:e2e     # Playwright: builds the example and serves it on :4400
 ```
 
+
+---
+
+## Next Session Plan
+
+Goal: implement the first generic CLI slice without coupling the framework to the OAuth tutorial.
+
+1. Re-read `SPEC.md`, `PROJECT.md`, `TODO.md`, `CHANGELOG.md` and check `git status`.
+2. Inspect the current package setup (`package.json`, workspace packages, `examples/*/package.json`) before designing the CLI entry point.
+3. Implement a minimal generic CLI for existing tutorial projects: `dev`, `build` and `serve`.
+4. Keep OAuth redirect URI printing out of the core path unless it is behind explicit tutorial/project configuration.
+5. Add focused tests for CLI command construction/configuration and, when behavior is observable through a tutorial, add coverage to `examples/framework-fixture` plus Playwright assertions.
+6. Update public-facing docs or TODO entries only for the behavior actually implemented.
+7. Run the relevant checks, update `CHANGELOG.md`/`TODO.md`, and commit.
 
 ---
 

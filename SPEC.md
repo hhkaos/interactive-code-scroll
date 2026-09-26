@@ -20,6 +20,8 @@ At conferences (e.g. explaining user authentication with OAuth 2.0 in the ArcGIS
 
 A library/tool/"framework" that lets technical writers, devrels and speakers easily create guided, interactive tutorials. The author writes MDX (text for the left panel) and annotates source code; the build produces a static website with documentation and code side by side, synchronized by scrolling. It serves both for presenting in a talk and for attendees to reproduce the tutorial afterwards.
 
+InteractiveCodeScroll is generic. It must not assume ArcGIS, OAuth, maps, or any specific tutorial topic in the core package, CLI, runtime, validation or public documentation. ArcGIS OAuth is an example/tutorial use case only.
+
 ---
 
 ## Core features (v1)
@@ -86,6 +88,7 @@ When a step comes into focus, its text block can:
 - **Dev mode** with file watching and live updates.
 - **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server.
 - **Serve locally**: the CLI can serve the built site on localhost (fallback if conference wifi fails; Preview/OAuth still need network — plan B: images/carousel of the result).
+- **Generic CLI**: CLI commands must work for any InteractiveCodeScroll tutorial. Topic-specific helpers, such as OAuth redirect URI printing, must be opt-in or derived from explicit tutorial/project configuration, never hard-coded into the framework.
 - Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (`/tutorials/<name>/`) with an index page.
 
 ### Public documentation
@@ -223,6 +226,7 @@ When a step comes into focus, its text block can:
 - **Distribution: core npm package + `pnpm create interactive-code-scroll` scaffolder.** Generated projects depend on the core package, so improvements arrive via `pnpm update`.
 - **Styling: plain CSS with CSS Modules, no SCSS.** Calcite is themed via CSS custom properties; native CSS nesting covers the rest.
 - **OAuth redirect URIs: registered by the author.** The CLI prints the exact URIs to register (GitHub Pages and localhost), derived from the base path. The CLI never handles ArcGIS credentials.
+- **Generic core boundary.** OAuth redirect URI support is a convenience for tutorials that opt into OAuth-style callback guidance, not a core assumption. Core APIs must stay topic-agnostic and reusable for non-ArcGIS tutorials, demos and presentations.
 - **Upgrade path for existing tutorials.** Framework releases should avoid breaking existing tutorials when possible. When a breaking authoring/runtime/CLI change is necessary, document it in the upgrade guide and changelog, keep validation errors actionable, and add coverage in `examples/framework-fixture` when the behavior is observable through a tutorial.
 - **Name: InteractiveCodeScroll** (brand, PascalCase); `interactive-code-scroll` for the repo and npm package (kebab-case).
 - **License: Apache-2.0.**

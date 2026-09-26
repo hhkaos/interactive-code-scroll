@@ -2,7 +2,7 @@
 
 ## Next
 
-- [ ] **CLI**: `dev`, `build`, `serve` (built site on localhost); print the OAuth redirect URIs to register (GitHub Pages and localhost, from the base path).
+- [ ] **Generic CLI**: `dev`, `build`, `serve` for any InteractiveCodeScroll tutorial project. Do not couple the CLI to OAuth/ArcGIS; OAuth redirect URI guidance should be optional and driven by explicit tutorial/project configuration.
 
 ## Backlog
 

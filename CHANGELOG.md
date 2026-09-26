@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Clarified that InteractiveCodeScroll is a generic framework; OAuth/ArcGIS are example concerns only, and the next CLI work must stay topic-agnostic.
 - Expanded `SPEC.md` with public documentation requirements: README, dogfooding getting-started tutorial, authoring/API reference, CLI reference and upgrade guide.
 - Documented `examples/framework-fixture` as the required regression fixture for new framework behavior and matching E2E coverage.
 - Documented the E2E strategy: avoid chasing OAuth tutorial editorial changes and add a stable fake tutorial fixture for framework behavior.
