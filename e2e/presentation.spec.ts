@@ -26,7 +26,7 @@ test("hiding the explanations gives code the full width; keys still move steps",
   await page.locator(".code:not([hidden])").click();
   await page.keyboard.press("PageDown");
   await expect(page).toHaveURL(/#oauth$/);
-  await expect(page.locator(".code:not([hidden]) .line[data-focus]").first()).toContainText("$arcgis.import");
+  await expect(page.locator(".code:not([hidden]) .line[data-focus]").first()).toContainText("fixtureState");
 
   await page.locator("#docs-toggle").click();
   await expect(page.locator("section.step#oauth h2")).toBeInViewport();

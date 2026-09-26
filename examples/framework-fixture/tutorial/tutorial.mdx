@@ -1,0 +1,82 @@
+---
+title: Framework Fixture Tutorial
+preview: both
+theme: auto
+logo: fixture-logo.svg
+---
+
+<Step id="before-you-start">
+
+## Before you start
+
+This fixture is not product documentation. It is a stable contract for E2E tests.
+Do not edit its content for narrative polish; add cases only when the framework gains behavior.
+
+</Step>
+
+<Step id="load-sdk" file="index.html" region="cdn" preview="collapsed">
+
+## Load the runtime
+
+This step focuses a short HTML region and collapses the Preview.
+
+</Step>
+
+<Step id="ui" file="index.html" region="ui" preview="expanded">
+
+## Build the UI
+
+This step focuses the UI region and expands the Preview.
+
+</Step>
+
+<Step id="register-app" images={["fixture-one.svg", "fixture-two.svg", "fixture-three.svg"]} preview="collapsed">
+
+## Show images
+
+This step switches the right panel from code to a carousel.
+
+</Step>
+
+<Step id="config" file="main.js" region="config" preview="collapsed">
+
+## Configure values
+
+These fields exercise persisted values, secret masking, and runtime code replacement.
+
+<VarField name="clientId" label="Client ID" secret persist />
+<VarField name="portalUrl" label="Portal URL" persist />
+
+</Step>
+
+<Step id="oauth" file="main.js" region="oauth" preview="collapsed">
+
+## Register behavior
+
+This step focuses a multi-line JavaScript region.
+
+</Step>
+
+<Step id="callback" file="oauth-callback.html" region="handler" preview="collapsed">
+
+## Publish another file
+
+This step verifies that non-entry files are published next to the Preview.
+
+</Step>
+
+<Step id="sign-in" file="main.js" region="sign-in" preview="collapsed">
+
+## Run the action
+
+This step focuses the click handler used by the Preview tests.
+
+</Step>
+
+<Step id="styles" file="style.css" preview="collapsed">
+
+## Show a file without focus
+
+This step switches to a file without focusing a region.
+
+</Step>

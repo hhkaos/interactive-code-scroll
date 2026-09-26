@@ -17,7 +17,7 @@ test("a deep link activates its step, file and region", async ({ page }) => {
   await page.goto("/#oauth");
   await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "main.js");
-  await expect(focused(page).first()).toContainText("$arcgis.import");
+  await expect(focused(page).first()).toContainText("fixtureState");
   await expect(page.locator("#step-count")).toHaveText("Step 6 of 9");
   await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 66.66666666666666);
   await expect(page).toHaveURL(/#oauth$/);
@@ -126,12 +126,12 @@ test("step keys page through a carousel before leaving the step", async ({ page 
   await page.goto("/#register-app");
   await expect(page.locator(".media-panel calcite-carousel")).toBeVisible();
   await expect(page.locator(".code-panel")).toBeHidden();
-  await expect.poll(shown).toBe("credential-type-user-alp.png");
+  await expect.poll(shown).toBe("fixture-one.svg");
 
   await page.keyboard.press("ArrowDown");
-  await expect.poll(shown).toBe("oauth-step-1.svg");
+  await expect.poll(shown).toBe("fixture-two.svg");
   await page.keyboard.press("ArrowDown");
-  await expect.poll(shown).toBe("oauth-step-2.svg");
+  await expect.poll(shown).toBe("fixture-three.svg");
   await expect(page).toHaveURL(/#register-app$/);
 
   await page.keyboard.press("PageDown");
@@ -141,11 +141,11 @@ test("step keys page through a carousel before leaving the step", async ({ page 
   // Backwards: enter at the last image, then page back to the first, then leave.
   await page.keyboard.press("ArrowUp");
   await expect(page).toHaveURL(/#register-app$/);
-  await expect.poll(shown).toBe("oauth-step-2.svg");
+  await expect.poll(shown).toBe("fixture-three.svg");
   await page.keyboard.press("ArrowLeft");
-  await expect.poll(shown).toBe("oauth-step-1.svg");
+  await expect.poll(shown).toBe("fixture-two.svg");
   await page.keyboard.press("ArrowLeft");
-  await expect.poll(shown).toBe("credential-type-user-alp.png");
+  await expect.poll(shown).toBe("fixture-one.svg");
   await page.keyboard.press("PageUp");
   await expect(page).toHaveURL(/#ui$/);
 });
@@ -155,13 +155,13 @@ test("clicking a carousel image opens it large; step keys page it; leaving the s
   await page.goto("/#register-app");
   await page.locator(".media-panel .step-image").first().click();
   await expect(dialog).toHaveAttribute("open", "");
-  await expect(dialog.locator("img")).toHaveAttribute("alt", "credential-type-user-alp.png");
-  await expect(dialog).toHaveJSProperty("heading", "credential-type-user-alp.png (1 of 3)");
+  await expect(dialog.locator("img")).toHaveAttribute("alt", "fixture-one.svg");
+  await expect(dialog).toHaveJSProperty("heading", "fixture-one.svg (1 of 3)");
   const size = (await dialog.locator("img").boundingBox())!;
   expect(size.width).toBeGreaterThan(1200);
 
   await page.keyboard.press("PageDown");
-  await expect(dialog.locator("img")).toHaveAttribute("alt", "oauth-step-1.svg");
+  await expect(dialog.locator("img")).toHaveAttribute("alt", "fixture-two.svg");
   await page.keyboard.press("PageDown");
   await page.keyboard.press("PageDown");
   await expect(dialog).not.toHaveAttribute("open", "");

@@ -7,7 +7,7 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${port}`, viewport: { width: 1440, height: 900 } },
   webServer: {
     // --ignore-lock keeps Astro 7 in the foreground; it auto-backgrounds when it detects an AI agent.
-    command: `pnpm build && pnpm --filter example-oauth-pkce preview --port ${port} --ignore-lock`,
+    command: `CI=true pnpm --filter example-framework-fixture build && CI=true pnpm --filter example-framework-fixture preview --port ${port} --ignore-lock`,
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
   },

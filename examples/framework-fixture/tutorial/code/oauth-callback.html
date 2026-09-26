@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      // #region handler
+      window.parent?.postMessage({ type: "fixture:callback", search: location.search }, location.origin);
+      // #endregion
+    </script>
+  </head>
+  <body></body>
+</html>

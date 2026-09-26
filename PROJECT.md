@@ -86,6 +86,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/preview/                     # preview page, code/ files published under preview/, HTML builder
   test/                            # Astro build integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
+examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
 e2e/                               # Playwright tests (against the built example)
 docs/research/technical-base-spike.md # spike findings (prototype code in git history, commit f265e61)
 ```
@@ -176,7 +177,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 - Non-English text in the repo.
 - E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the Esri CDN: SDK and Calcite assets); opt in with `test.use({ network: true })` only when testing the SDK itself.
 - Do not update E2E tests just to follow editorial changes in `examples/oauth-pkce`; while the tutorial is being polished, prefer testing framework behavior against stable fixtures.
-- Long-term E2E coverage should use a dedicated fake tutorial fixture that exercises all framework cases and is not edited for content/design polish.
+- E2E coverage uses `examples/framework-fixture`, a dedicated fake tutorial that exercises framework cases and is not edited for content/design polish.
 - E2E assertions that check state the code under test just set; assert the user-visible outcome (what the component actually shows).
 - Generic class names in E2E selectors (e.g. `.progress`): Playwright pierces shadow DOM and matches Calcite internals; use ids or `data-*` attributes.
 - Overriding Calcite styles by reaching into components (`::part` hacks, `!important`, shadow selectors); use tokens, props and slots.

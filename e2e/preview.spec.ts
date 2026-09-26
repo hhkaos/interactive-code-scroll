@@ -13,7 +13,7 @@ test("the iframe runs the code from a real same-origin preview URL", async ({ pa
   await page.goto("/#config");
   await expandPreview(page);
   await expect(page.locator(".preview iframe")).toHaveAttribute("src", `${baseURL}/preview/?target=iframe`);
-  await expect(frame(page).locator("#user-status")).toHaveText("You are not signed in yet.");
+  await expect(frame(page).locator("#user-status")).toHaveText("No action has run yet.");
   await expect.poll(() => previewScript(page)).toContain('const clientId = "YOUR_CLIENT_ID";');
 });
 
@@ -51,7 +51,7 @@ test("open in new tab shows the current code as a standalone page", async ({ pag
   await page.locator('calcite-input[data-var="clientId"] input').fill("tab-id");
   const [tab] = await Promise.all([context.waitForEvent("page"), page.locator("#preview-open").click()]);
   await expect(tab).toHaveURL(`${baseURL}/preview/?target=tab`);
-  await expect(tab.locator("#user-status")).toHaveText("You are not signed in yet.");
+  await expect(tab.locator("#user-status")).toHaveText("No action has run yet.");
   expect(await tab.locator("script:not([src])").last().textContent()).toContain('"tab-id"');
 });
 
@@ -69,36 +69,10 @@ test("code/ files are published next to the preview page, markers stripped", asy
   expect(callback.status()).toBe(200);
   expect(callback.headers()["content-type"]).toContain("text/html");
   const html = await callback.text();
-  expect(html).toContain("arcgis:auth:location:search");
+  expect(html).toContain("fixture:callback");
   expect(html).not.toContain("#region");
 
   const main = await request.get("/preview/main.js");
   expect(main.headers()["content-type"]).toContain("text/javascript");
   expect(await main.text()).not.toContain("@var");
-});
-
-test.describe("with the real ArcGIS SDK (needs network)", () => {
-  test.use({ network: true });
-
-  // Re-enable once the example tutorial UI has stabilized; this depends on the live SDK/CDN.
-  test.skip("sign-in from the iframe uses preview/oauth-callback.html as redirect_uri", async ({
-    page,
-    context,
-    baseURL,
-  }) => {
-    test.slow();
-    await page.goto("/#sign-in");
-    await expandPreview(page);
-    const signIn = frame(page).locator("#sign-in");
-    await expect(signIn).toBeAttached();
-    await expect.poll(() => previewScript(page)).toContain("getCredential");
-    await signIn.click();
-    const [popup] = await Promise.all([
-      context.waitForEvent("page"),
-      frame(page).locator(".esri-identity-modal calcite-button").getByText("OK").click(),
-    ]);
-    const url = new URL(popup.url());
-    expect(url.searchParams.get("redirect_uri")).toBe(`${baseURL}/preview/oauth-callback.html`);
-    expect(url.searchParams.get("code_challenge_method")).toBe("S256");
-  });
 });

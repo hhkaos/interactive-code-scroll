@@ -3,15 +3,15 @@ import { expect, test, type Page } from "./fixtures.ts";
 const tokenColor = (page: Page) =>
   page.locator('.code[data-file="main.js"] [data-var="clientId"]').evaluate((el) => getComputedStyle(el).color);
 const docsBackground = (page: Page) => page.locator("main.docs").evaluate((el) => getComputedStyle(el).backgroundColor);
-const previewPrefersDark = (page: Page) =>
-  page.locator(".preview iframe").evaluate((el: HTMLIFrameElement) => el.contentWindow!.matchMedia("(prefers-color-scheme: dark)").matches);
+const previewColorScheme = (page: Page) =>
+  page.locator(".preview iframe").evaluate((el) => getComputedStyle(el).colorScheme);
 const docsWidth = (page: Page) => page.locator("main.docs").evaluate((el) => el.getBoundingClientRect().width);
 
 test.describe("theme", () => {
   test.use({ colorScheme: "dark" });
 
   test("defaults to the OS preference; the toggle switches UI and code, and is remembered", async ({ page }) => {
-    await page.goto("/#config");
+    await page.goto("/#ui");
     await expect(page.locator("body")).toHaveClass(/calcite-mode-dark/);
     const dark = { docs: await docsBackground(page), code: await tokenColor(page) };
 
@@ -26,15 +26,12 @@ test.describe("theme", () => {
 });
 
 test.describe("preview theme", () => {
-  // Playwright emulates `light` by default and forces it on every frame: turn emulation off.
-  test.use({ colorScheme: null });
-
-  test("the preview's prefers-color-scheme follows the page mode (apps using calcite-mode-auto match)", async ({ page }) => {
-    await page.goto("/#config");
+  test("the preview iframe color-scheme follows the page mode", async ({ page }) => {
+    await page.goto("/#ui");
     await expect(page.locator("body")).toHaveClass(/calcite-mode-light/);
-    await expect.poll(() => previewPrefersDark(page)).toBe(false);
+    await expect.poll(() => previewColorScheme(page)).toContain("light");
     await page.locator("#theme-toggle").click();
-    await expect.poll(() => previewPrefersDark(page)).toBe(true);
+    await expect.poll(() => previewColorScheme(page)).toContain("dark");
   });
 });
 
@@ -46,7 +43,7 @@ test("explanations scroll in their own panel, not the page", async ({ page }) =>
 });
 
 test("dragging the splitter resizes the panels and is remembered", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#ui");
   const box = (await page.locator(".splitter").boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, 300);
   await page.mouse.down();
@@ -56,10 +53,11 @@ test("dragging the splitter resizes the panels and is remembered", async ({ page
 
   await page.reload();
   await expect.poll(() => docsWidth(page)).toBeGreaterThan(880);
+  await expect(page).toHaveURL(/#ui$/);
 });
 
 test("dragging the preview splitter resizes the preview and is remembered", async ({ page }) => {
-  await page.goto("/#config");
+  await page.goto("/#ui");
   const previewHeight = () => page.locator(".preview").evaluate((el) => el.getBoundingClientRect().height);
   const before = await previewHeight();
   const box = (await page.locator(".preview-splitter").boundingBox())!;
@@ -76,7 +74,7 @@ test("dragging the preview splitter resizes the preview and is remembered", asyn
   await page.locator(".preview-splitter").focus();
   await page.keyboard.press("ArrowDown");
   await expect.poll(previewHeight).toBeLessThan(resized);
-  await expect(page).toHaveURL(/#config$/);
+  await expect(page).toHaveURL(/#ui$/);
 });
 
 test("the explanations handle sits on the splitter and stays reachable when they are hidden", async ({ page }) => {

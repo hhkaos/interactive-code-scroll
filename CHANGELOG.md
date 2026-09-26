@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Stable `examples/framework-fixture` tutorial for framework E2E coverage.
 - Per-step Preview state: `<Step preview="expanded">` and `<Step preview="collapsed">` control the iframe when the step becomes active.
 - Resizable Preview: a splitter between code and Preview (pointer and keyboard, height remembered).
 - Image viewer: clicking a carousel image opens it full screen (`calcite-dialog`); step keys page the images inside it and leaving the step closes it.

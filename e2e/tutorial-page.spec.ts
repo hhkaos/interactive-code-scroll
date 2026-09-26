@@ -5,16 +5,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("renders the author's tutorial.mdx with its frontmatter title", async ({ page }) => {
-  await expect(page).toHaveTitle("User Authentication with the ArcGIS Maps SDK for JavaScript");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "User Authentication with the ArcGIS Maps SDK for JavaScript",
-  );
+  await expect(page).toHaveTitle("Framework Fixture Tutorial");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Framework Fixture Tutorial");
 });
 
 test("shows the frontmatter logo in the header and as favicon", async ({ page }) => {
   // Vite inlines small assets as data: URIs; larger ones get a hashed URL.
   const favicon = await page.locator('link[rel="icon"]').getAttribute("href");
-  expect(favicon).toMatch(/^data:image\/svg\+xml|arcgis-maps-sdk-for-javascript-glyph-32.*\.svg$/);
+  expect(favicon).toMatch(/^data:image\/svg\+xml|fixture-logo.*\.svg$/);
   await expect(page.locator("calcite-navigation-logo")).toHaveJSProperty("thumbnail", favicon);
   const shown = page.locator("calcite-navigation-logo img");
   await expect(shown).toBeVisible();
@@ -46,7 +44,7 @@ test("renders <VarField> as a Calcite input with the code literal as placeholder
 test("renders build-time highlighted code with markers stripped", async ({ page }) => {
   const main = page.locator('.code[data-file="main.js"]');
   await expect(main.locator('[data-var="clientId"]')).toHaveText("YOUR_CLIENT_ID");
-  await expect(main.locator('.line[data-regions~="oauth"]').first()).toContainText("$arcgis.import");
+  await expect(main.locator('.line[data-regions~="oauth"]').first()).toContainText("fixtureState");
   await expect(main).not.toContainText("#region");
   await expect(main).not.toContainText("@var");
   await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "oauth-callback.html", "style.css"]);

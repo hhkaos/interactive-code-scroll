@@ -9,6 +9,8 @@
  */
 .calcite-mode-light { color-scheme: light; }
 .calcite-mode-dark { color-scheme: dark; }
+.calcite-mode-light .preview iframe { color-scheme: light; }
+.calcite-mode-dark .preview iframe { color-scheme: dark; }
 
 body {
   margin: 0;
