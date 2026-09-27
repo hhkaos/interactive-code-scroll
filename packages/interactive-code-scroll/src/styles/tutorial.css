@@ -250,13 +250,30 @@ body[data-docs-hidden] {
   line-height: 1.7;
 
   &[hidden] { display: none; }
-  .shiki { margin: 0; padding: 1rem 0; background: transparent; font: inherit; }
+  .shiki {
+    margin: 0;
+    min-width: max-content;
+    padding: 1rem 0;
+    background: transparent;
+    font: inherit;
+  }
   .line {
-    display: inline-block;
-    width: 100%;
+    display: block;
+    min-width: 100%;
     box-sizing: border-box;
-    padding-inline: 1.25rem;
+    padding-inline: 0 1.25rem;
     transition: background-color 0.2s;
+
+    &::before {
+      content: attr(data-line);
+      display: inline-block;
+      width: 2.75rem;
+      box-sizing: border-box;
+      padding-inline-end: 0.875rem;
+      color: var(--calcite-color-text-3);
+      text-align: right;
+      user-select: none;
+    }
   }
   /* Shiki dual themes (defaultColor: false): light-dark() follows the panel's color-scheme. */
   .shiki span { color: light-dark(var(--shiki-light), var(--shiki-dark)); transition: color 0.2s; }

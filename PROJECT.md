@@ -109,7 +109,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 | Piece | Runs | Responsibility |
 |---|---|---|
 | Marker parser | build | Strips `#region` / `@var`, returns clean code + region line ranges + var positions (`src/markers.ts`) |
-| Highlighter | build | Shiki dual themes; `line` transformer tags `data-regions`; `decorations` put `data-var` on the literal's token |
+| Highlighter | build | Shiki dual themes; `line` transformer tags `data-line` and `data-regions`; `decorations` put `data-var` on the literal's token |
 | Validation | build | Each `<Step>` / `<VarField>` asserts its file, region, image and var exist; build fails with a clear message |
 | MDX components | build | `<Step id file region images>`, `<VarField name label secret persist>` render static HTML |
 | Client runtime | browser | IntersectionObserver (center line of the docs panel) + keyboard + click on a step + top of the panel (first step) → activate step (file, focus lines revealed with `revealScroll`, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |

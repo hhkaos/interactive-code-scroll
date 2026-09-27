@@ -19,7 +19,8 @@ export function langFor(path: string): string {
 
 /**
  * Build-time highlighting with light/dark colors as CSS variables. Lines get
- * `data-regions`; each `@var` literal's token gets `data-var` for in-place substitution.
+ * `data-line` and `data-regions`; each `@var` literal's token gets `data-var`
+ * for in-place substitution.
  */
 export function highlight({ code, regions, vars }: ParsedSource, path: string): Promise<string> {
   return codeToHtml(code, {
@@ -36,6 +37,7 @@ export function highlight({ code, regions, vars }: ParsedSource, path: string): 
     transformers: [
       {
         line(node, line) {
+          node.properties["data-line"] = String(line);
           const ids = regions.filter((r) => line >= r.fromLine && line <= r.toLine).map((r) => r.id);
           if (ids.length) node.properties["data-regions"] = ids.join(" ");
         },

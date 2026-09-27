@@ -44,6 +44,7 @@ test("renders <VarField> as a Calcite input with the code literal as placeholder
 test("renders build-time highlighted code with markers stripped", async ({ page }) => {
   const main = page.locator('.code[data-file="main.js"]');
   await expect(main.locator('[data-var="clientId"]')).toHaveText("YOUR_CLIENT_ID");
+  await expect(main.locator(".line").first()).toHaveAttribute("data-line", "1");
   await expect(main.locator('.line[data-regions~="oauth"]').first()).toContainText("fixtureState");
   await expect(main).not.toContainText("#region");
   await expect(main).not.toContainText("@var");

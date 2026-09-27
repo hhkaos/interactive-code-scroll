@@ -36,6 +36,7 @@ InteractiveCodeScroll is generic. It must not assume ArcGIS, OAuth, maps, or any
 
 ### Code model
 - **Final code + highlighting** (like Stripe): each file exists in its final version; steps only highlight regions. No incremental code per step.
+- **Line numbers**: the rendered code panel shows stable line numbers in a left gutter.
 
 ### Scroll-driven focus
 When a step comes into focus, its text block can:
