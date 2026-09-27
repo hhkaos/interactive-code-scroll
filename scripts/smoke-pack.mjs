@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -16,7 +16,9 @@ mkdirSync(projectDir);
 
 try {
   run("pnpm", ["--filter", "interactive-code-scroll", "pack", "--pack-destination", packDir], root);
-  const tarball = join(packDir, "interactive-code-scroll-0.0.0.tgz");
+  const tarballName = readdirSync(packDir).find((file) => file.startsWith("interactive-code-scroll-") && file.endsWith(".tgz"));
+  if (!tarballName) throw new Error("Pack smoke test did not create an interactive-code-scroll tarball");
+  const tarball = join(packDir, tarballName);
 
   cpSync(join(root, "examples", "framework-fixture", "tutorial"), join(projectDir, "tutorial"), { recursive: true });
   writeFileSync(

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0-alpha.0] - 2026-09-26
+
 ### Added
 
 - Package build pipeline for `interactive-code-scroll`: compiled `dist` output, packaged CLI entrypoints, `prepack`, and a tarball smoke test that installs the package in a temporary tutorial project.
