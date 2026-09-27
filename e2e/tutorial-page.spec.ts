@@ -42,9 +42,17 @@ test("renders <VarField> as a Calcite input with the code literal as placeholder
 });
 
 test("renders build-time highlighted code with markers stripped", async ({ page }) => {
+  const visibleCode = page.locator(".code:not([hidden])");
   const main = page.locator('.code[data-file="main.js"]');
   await expect(main.locator('[data-var="clientId"]')).toHaveText("YOUR_CLIENT_ID");
-  await expect(main.locator(".line").first()).toHaveAttribute("data-line", "1");
+  await expect(visibleCode.locator(".line").first()).toHaveAttribute("data-line", "1");
+  const [first, second] = await visibleCode.locator(".line").evaluateAll((lines) =>
+    lines.slice(0, 2).map((line) => {
+      const rect = line.getBoundingClientRect();
+      return { top: rect.top, height: rect.height };
+    }),
+  );
+  expect(second.top - first.top).toBeLessThan(first.height * 1.2);
   await expect(main.locator('.line[data-regions~="oauth"]').first()).toContainText("fixtureState");
   await expect(main).not.toContainText("#region");
   await expect(main).not.toContainText("@var");

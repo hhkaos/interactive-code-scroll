@@ -258,8 +258,8 @@ body[data-docs-hidden] {
     font: inherit;
   }
   .line {
-    display: block;
-    min-width: 100%;
+    display: inline-block;
+    width: 100%;
     box-sizing: border-box;
     padding-inline: 0 1.25rem;
     transition: background-color 0.2s;
