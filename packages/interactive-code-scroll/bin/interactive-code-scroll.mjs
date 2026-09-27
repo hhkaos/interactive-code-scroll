@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // @ts-check
-import { existsSync, mkdirSync, realpathSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
 
-const COMMANDS = new Set(["dev", "build", "serve"]);
+const COMMANDS = new Set(["dev", "build", "serve", "doctor", "init-scripts"]);
 const OPTION_ALIASES = new Map([
   ["-r", "--root"],
   ["-t", "--tutorial"],
@@ -14,6 +14,7 @@ const OPTION_ALIASES = new Map([
 ]);
 const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--base", "--site", "--port", "--outDir"]);
 const OPTIONAL_VALUE_OPTIONS = new Set(["--host"]);
+const BOOLEAN_OPTIONS = new Set(["--write"]);
 const COMMAND_FLAG_TARGETS = new Map([
   ["--port", new Set(["dev", "serve"])],
   ["--host", new Set(["dev", "serve"])],
@@ -25,10 +26,11 @@ const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
 
 /**
  * @typedef {Readonly<{
- *   command: "dev" | "build" | "serve";
+ *   command: "dev" | "build" | "serve" | "doctor" | "init-scripts";
  *   root: string;
  *   tutorial: string;
  *   tutorialAutoDetected: boolean;
+ *   write: boolean;
  *   configPath: string;
  *   configArg: string;
  *   astroArgs: readonly string[];
@@ -47,6 +49,7 @@ export function planCli(argv, context = {}) {
   const cwd = context.cwd ?? process.cwd();
   const options = new Map();
   const forwarded = [];
+  const unexpected = [];
   let passthrough = false;
 
   for (let index = 0; index < rest.length; index += 1) {
@@ -76,8 +79,18 @@ export function planCli(argv, context = {}) {
       }
       continue;
     }
+    if (BOOLEAN_OPTIONS.has(option)) {
+      options.set(option, true);
+      continue;
+    }
+    if (!option.startsWith("-")) {
+      unexpected.push(option);
+      continue;
+    }
     forwarded.push(raw);
   }
+
+  if (unexpected.length > 0) throw new Error(unexpectedArgumentHelp(command, unexpected[0]));
 
   const root = resolve(cwd, options.get("--root") ?? ".");
   const explicitTutorial = options.get("--tutorial");
@@ -93,7 +106,7 @@ export function planCli(argv, context = {}) {
   const astroArgs = [astroCommand, "--root", root, "--config", configArg];
 
   for (const [option, value] of options) {
-    if (option === "--root" || option === "--tutorial") continue;
+    if (option === "--root" || option === "--tutorial" || option === "--write") continue;
     const targets = COMMAND_FLAG_TARGETS.get(option);
     if (targets && !targets.has(command)) throw new Error(`${option} is only supported with ${[...targets].join(" or ")}.`);
     astroArgs.push(option);
@@ -101,7 +114,7 @@ export function planCli(argv, context = {}) {
   }
   astroArgs.push(...forwarded);
 
-  return { command, root, tutorial, tutorialAutoDetected, configPath, configArg, astroArgs };
+  return { command, root, tutorial, tutorialAutoDetected, write: options.get("--write") === true, configPath, configArg, astroArgs };
 }
 
 /**
@@ -120,7 +133,7 @@ export function writeAstroConfig(plan) {
  * @param {string | undefined} prefix
  */
 function help(prefix) {
-  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n\nExamples:\n  pnpm exec interactive-code-scroll dev\n  pnpm exec interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial my-tutorial --host 127.0.0.1 --port 4321\n  pnpm exec interactive-code-scroll build\n  pnpm exec interactive-code-scroll serve --host 127.0.0.1 --port 4321\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
+  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
 }
 
 /**
@@ -130,7 +143,15 @@ export function validateProject(plan) {
   const mdxPath = join(plan.root, plan.tutorial, "tutorial.mdx");
   if (existsSync(mdxPath)) return;
   const relativeMdxPath = relative(plan.root, mdxPath).split("\\").join("/");
-  throw new Error(`Tutorial not found at ${relativeMdxPath}.\n\nExpected one of:\n  tutorial/tutorial.mdx\n  tutorial/code/\n  tutorial/images/\n\nIf your files are at the project root, run:\n  pnpm exec interactive-code-scroll ${plan.command} --tutorial .\n\nIf your tutorial is in another folder, run:\n  pnpm exec interactive-code-scroll ${plan.command} --tutorial <folder>`);
+  const candidates = findTutorialCandidates(plan.root);
+  const pm = packageManager();
+  const detected = candidates.length > 0 ? `\n\nDetected:\n${candidates.map((candidate) => `  ${candidate}`).join("\n")}` : "";
+  const first = candidates[0];
+  const suggestion = first
+    ? commandSuggestion(plan.command, first === "tutorial.mdx" ? "." : dirname(first).split("\\").join("/"), pm)
+    : `${commandSuggestion(plan.command, ".", pm)}\n  ${commandSuggestion(plan.command, "<folder>", pm)}`;
+  const scriptTutorial = first ? (first === "tutorial.mdx" ? "." : dirname(first).split("\\").join("/")) : "<folder>";
+  throw new Error(`Tutorial file not found.\n\nRoot:\n  ${plan.root}\n\nLooking for:\n  ${relativeMdxPath}${detected}\n\nTry:\n  ${suggestion}\n\nIf using package.json scripts, pass CLI arguments after --:\n  ${pm.run("dev", `--tutorial ${scriptTutorial}`)}`);
 }
 
 export function resolveAstroBin(root) {
@@ -155,9 +176,121 @@ export function preflightMessage(plan) {
   ];
   if (plan.tutorialAutoDetected) lines.push('Detected root-level tutorial.mdx; using --tutorial ".".');
   if (!existsSync(join(plan.root, "package.json"))) {
-    lines.push("", "No package.json found in the project root. If setup fails, run:", "  pnpm init", "  pnpm add -D interactive-code-scroll@alpha astro@7.3.5");
+    const pm = packageManager();
+    lines.push("", "No package.json found in the project root. If setup fails, run:", `  ${pm.init}`, `  ${pm.add}`);
   }
   return lines.join("\n");
+}
+
+export function packageManager(env = process.env) {
+  const agent = env.npm_config_user_agent ?? "";
+  if (agent.startsWith("yarn/")) {
+    return {
+      name: "yarn",
+      init: "yarn init",
+      add: "yarn add -D interactive-code-scroll@alpha astro@7.3.5",
+      exec: (args) => `yarn interactive-code-scroll ${args}`,
+      run: (script, args) => `yarn ${script} ${args}`,
+    };
+  }
+  if (agent.startsWith("pnpm/")) {
+    return {
+      name: "pnpm",
+      init: "pnpm init",
+      add: "pnpm add -D interactive-code-scroll@alpha astro@7.3.5",
+      exec: (args) => `pnpm exec interactive-code-scroll ${args}`,
+      run: (script, args) => `pnpm run ${script} -- ${args}`,
+    };
+  }
+  return {
+    name: "npm",
+    init: "npm init",
+    add: "npm install -D interactive-code-scroll@alpha astro@7.3.5",
+    exec: (args) => `npm exec -- interactive-code-scroll ${args}`,
+    run: (script, args) => `npm run ${script} -- ${args}`,
+  };
+}
+
+function commandSuggestion(command, tutorial, pm = packageManager()) {
+  return pm.exec(`${command} --tutorial ${tutorial}`);
+}
+
+function unexpectedArgumentHelp(command, arg) {
+  const pm = packageManager();
+  return `Unexpected argument: ${arg}\n\nDid you mean:\n  interactive-code-scroll ${command} --tutorial ${arg}\n\nIf you are using package.json scripts, pass CLI arguments after --:\n  ${pm.run("dev", `--tutorial ${arg}`)}\n\nNot:\n  npm run dev --tutorial ${arg}`;
+}
+
+export function findTutorialCandidates(root, maxDepth = 3) {
+  const ignored = new Set([".astro", ".git", "dist", "node_modules"]);
+  /** @type {string[]} */
+  const candidates = [];
+  function visit(dir, depth) {
+    if (depth > maxDepth) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (ignored.has(entry.name) || entry.name.startsWith(".")) continue;
+      const abs = join(dir, entry.name);
+      const rel = relative(root, abs).split("\\").join("/");
+      if (entry.isFile() && entry.name === "tutorial.mdx") candidates.push(rel);
+      if (entry.isDirectory()) visit(abs, depth + 1);
+    }
+  }
+  if (existsSync(root)) visit(root, 0);
+  return candidates.sort();
+}
+
+export function doctor(plan) {
+  const pm = packageManager();
+  const packageJson = existsSync(join(plan.root, "package.json"));
+  const astro = resolveAstroBin(plan.root);
+  const astroFound = existsSync(astro);
+  const candidates = findTutorialCandidates(plan.root);
+  const recommendedTutorial = plan.tutorial !== "tutorial" || candidates.length === 0 ? plan.tutorial : candidates[0] === "tutorial.mdx" ? "." : dirname(candidates[0]);
+  return [
+    "InteractiveCodeScroll doctor",
+    "",
+    `Package version: ${packageVersion()}`,
+    `Node: ${process.version}`,
+    `Package manager: ${pm.name}`,
+    `Project root: ${plan.root}`,
+    `package.json: ${packageJson ? "found" : "missing"}`,
+    `Astro: ${astroFound ? astro : "missing"}`,
+    "Tutorial candidates:",
+    ...(candidates.length > 0 ? candidates.map((candidate) => `  ✓ ${candidate}`) : ["  ✗ none found"]),
+    "Recommended command:",
+    `  ${pm.run("dev", `--tutorial ${recommendedTutorial}`)}`,
+  ].join("\n");
+}
+
+export function initScripts(plan) {
+  const packageJsonPath = join(plan.root, "package.json");
+  if (!existsSync(packageJsonPath)) throw new Error(`No package.json found at ${packageJsonPath}.\n\nRun:\n  ${packageManager().init}`);
+  const data = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+  const scripts = typeof data.scripts === "object" && data.scripts !== null ? data.scripts : {};
+  const usePrefixed = ["dev", "build", "serve"].some((name) => scripts[name] !== undefined);
+  const prefix = usePrefixed ? "ics:" : "";
+  const proposed = {
+    [`${prefix}dev`]: "interactive-code-scroll dev",
+    [`${prefix}build`]: "interactive-code-scroll build",
+    [`${prefix}serve`]: "interactive-code-scroll serve",
+  };
+  const missing = Object.entries(proposed).filter(([name]) => scripts[name] === undefined);
+  const lines = ["Found package.json.", "", "Suggested scripts:", ...Object.entries(proposed).map(([name, value]) => `  "${name}": "${value}"`)];
+  if (!plan.write) {
+    lines.push("", "No changes made. Run with --write to update package.json:", `  ${packageManager().exec("init-scripts --write")}`);
+    return lines.join("\n");
+  }
+  data.scripts = { ...scripts, ...Object.fromEntries(missing) };
+  writeFileSync(packageJsonPath, `${JSON.stringify(data, null, 2)}\n`);
+  lines.push("", missing.length > 0 ? `Updated package.json with ${missing.length} script(s).` : "No changes made; scripts already exist.");
+  return lines.join("\n");
+}
+
+function packageVersion() {
+  try {
+    return JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).version ?? "unknown";
+  } catch {
+    return "unknown";
+  }
 }
 
 /**
@@ -170,6 +303,14 @@ export async function main(argv) {
   }
 
   const plan = planCli(argv);
+  if (plan.command === "doctor") {
+    console.log(doctor(plan));
+    return 0;
+  }
+  if (plan.command === "init-scripts") {
+    console.log(initScripts(plan));
+    return 0;
+  }
   validateProject(plan);
   writeAstroConfig(plan);
   console.log(preflightMessage(plan));

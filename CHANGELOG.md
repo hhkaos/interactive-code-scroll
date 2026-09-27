@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0-alpha.2] - 2026-09-27
+
+### Added
+
+- Added `interactive-code-scroll doctor` to report package manager, Astro resolution, project root and detected `tutorial.mdx` candidates.
+- Added `interactive-code-scroll init-scripts`, with optional `--write`, to suggest or add package scripts without overwriting existing scripts.
+
+### Changed
+
+- Improved CLI help and missing-tutorial diagnostics with package-manager-aware commands, candidate detection and explicit npm script argument forwarding guidance.
+- Documented npm/pnpm execution paths that avoid unreliable direct pnpm bin invocation in some consumer environments.
+
+### Fixed
+
+- CLI Astro lookup now walks parent directories, so running from a tutorial subfolder can still use Astro installed at the consuming project root.
+
 ## [0.1.0-alpha.1] - 2026-09-27
 
 ### Changed

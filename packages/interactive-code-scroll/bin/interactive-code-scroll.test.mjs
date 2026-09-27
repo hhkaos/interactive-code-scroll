@@ -2,7 +2,17 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { planCli, preflightMessage, resolveAstroBin, validateProject, writeAstroConfig } from "./interactive-code-scroll.mjs";
+import {
+  doctor,
+  findTutorialCandidates,
+  initScripts,
+  packageManager,
+  planCli,
+  preflightMessage,
+  resolveAstroBin,
+  validateProject,
+  writeAstroConfig,
+} from "./interactive-code-scroll.mjs";
 
 describe("interactive-code-scroll CLI", () => {
   it("builds a generic Astro dev command for the current tutorial project", () => {
@@ -44,6 +54,10 @@ describe("interactive-code-scroll CLI", () => {
     expect(() => planCli(["dev", "--outDir", "public"])).toThrow("--outDir is only supported with build");
   });
 
+  it("rejects unexpected positional arguments before Astro passthrough", () => {
+    expect(() => planCli(["dev", "--tutorial", ".", "intro"])).toThrow(/Unexpected argument: intro/);
+  });
+
   it("writes a topic-agnostic Astro config for the selected tutorial folder", () => {
     const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
     const configPath = join(root, "generated", "astro.config.mjs");
@@ -67,7 +81,7 @@ describe("interactive-code-scroll CLI", () => {
 
   it("explains how to fix a missing tutorial folder", () => {
     const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
-    expect(() => validateProject(planCli(["build"], { cwd: root }))).toThrow(/pnpm exec interactive-code-scroll build --tutorial \./);
+    expect(() => validateProject(planCli(["build"], { cwd: root }))).toThrow(/interactive-code-scroll build --tutorial \./);
   });
 
   it("prints a preflight banner with root and tutorial paths", () => {
@@ -79,5 +93,62 @@ describe("interactive-code-scroll CLI", () => {
     expect(message).toContain(`Root: ${root}`);
     expect(message).toContain("Tutorial: .");
     expect(message).toContain('Detected root-level tutorial.mdx; using --tutorial ".".');
+  });
+
+  it("detects tutorial candidates for diagnostics", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    mkdirSync(join(root, "arcgis-js-sdk-user-auth"), { recursive: true });
+    writeFileSync(join(root, "arcgis-js-sdk-user-auth", "tutorial.mdx"), "");
+
+    expect(findTutorialCandidates(root)).toEqual(["arcgis-js-sdk-user-auth/tutorial.mdx"]);
+    expect(() => validateProject(planCli(["dev"], { cwd: root }))).toThrow(/Detected:\n  arcgis-js-sdk-user-auth\/tutorial\.mdx/);
+  });
+
+  it("detects package managers from npm user agent", () => {
+    expect(packageManager({ npm_config_user_agent: "pnpm/11.13.1 npm/? node/?" }).name).toBe("pnpm");
+    expect(packageManager({ npm_config_user_agent: "yarn/4.0.0 npm/? node/?" }).name).toBe("yarn");
+    expect(packageManager({ npm_config_user_agent: "npm/11.0.0 node/?" }).name).toBe("npm");
+  });
+
+  it("prints doctor output with tutorial candidates", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    mkdirSync(join(root, "demo"), { recursive: true });
+    writeFileSync(join(root, "package.json"), "{}");
+    writeFileSync(join(root, "demo", "tutorial.mdx"), "");
+
+    const report = doctor(planCli(["doctor"], { cwd: root }));
+    expect(report).toContain("InteractiveCodeScroll doctor");
+    expect(report).toContain("package.json: found");
+    expect(report).toContain("✓ demo/tutorial.mdx");
+  });
+
+  it("suggests package scripts without writing by default", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    writeFileSync(join(root, "package.json"), JSON.stringify({ scripts: { dev: "vite" } }));
+
+    const report = initScripts(planCli(["init-scripts"], { cwd: root }));
+    expect(report).toContain('"ics:dev": "interactive-code-scroll dev"');
+    expect(readFileSync(join(root, "package.json"), "utf8")).toContain('"dev":"vite"');
+  });
+
+  it("writes non-conflicting package scripts with --write", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    writeFileSync(join(root, "package.json"), "{}");
+
+    initScripts(planCli(["init-scripts", "--write"], { cwd: root }));
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    expect(pkg.scripts.dev).toBe("interactive-code-scroll dev");
+    expect(pkg.scripts.build).toBe("interactive-code-scroll build");
+  });
+
+  it("writes prefixed scripts when standard script names already exist", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    writeFileSync(join(root, "package.json"), JSON.stringify({ scripts: { dev: "vite" } }));
+
+    initScripts(planCli(["init-scripts", "--write"], { cwd: root }));
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    expect(pkg.scripts.dev).toBe("vite");
+    expect(pkg.scripts["ics:dev"]).toBe("interactive-code-scroll dev");
+    expect(pkg.scripts["ics:build"]).toBe("interactive-code-scroll build");
   });
 });

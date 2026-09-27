@@ -11,9 +11,9 @@ Write your tutorial in MDX, annotate your source code, and get a static site wit
 Existing tutorial projects can run the generic CLI from their project root:
 
 ```sh
-pnpm interactive-code-scroll dev
-pnpm interactive-code-scroll build
-pnpm interactive-code-scroll serve
+npm exec -- interactive-code-scroll dev
+npm exec -- interactive-code-scroll build
+npm exec -- interactive-code-scroll serve
 ```
 
 The commands default to a `tutorial/` folder containing `tutorial.mdx`, `code/` and `images/`.
@@ -23,8 +23,18 @@ Use `--tutorial <dir>` for a different folder and pass Astro deployment options 
 If your tutorial files live at the project root, use:
 
 ```sh
-pnpm exec interactive-code-scroll dev --tutorial .
+npm exec -- interactive-code-scroll dev --tutorial .
 ```
+
+For pnpm projects, use `pnpm exec interactive-code-scroll dev --tutorial .` or add scripts:
+
+```sh
+pnpm exec interactive-code-scroll init-scripts --write
+pnpm run dev -- --tutorial .
+```
+
+Use `interactive-code-scroll doctor` to inspect the detected root, package manager, Astro binary and
+`tutorial.mdx` candidates.
 
 The CLI is tutorial-agnostic. Provider-specific guidance, such as OAuth redirect URI help, is outside
 the core flow unless a project opts into it explicitly.

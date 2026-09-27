@@ -76,7 +76,7 @@ CLAUDE.md           # Claude Code-specific rules
 AGENTS.md           # Codex CLI-specific rules
 README.md
 packages/interactive-code-scroll/  # core package: Astro integration
-  bin/interactive-code-scroll.mjs   # generic CLI: dev, build, serve
+  bin/interactive-code-scroll.mjs   # generic CLI: dev, build, serve, doctor, init-scripts
   scripts/build-package.mjs         # package build: compiles TS and copies Astro/CSS assets
   dist/                             # generated package output (ignored; built by prepack)
   src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
@@ -115,7 +115,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 | Client runtime | browser | IntersectionObserver (center line of the docs panel) + keyboard + click on a step + top of the panel (first step) → activate step (file, focus lines revealed with `revealScroll`, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
 | Page shell | browser | `calcite-navigation` header (explanations toggle, title, step count, present, theme, `calcite-progress`); explanations scroll in their own panel (the page never scrolls); the whole page follows one Calcite mode (`theme` frontmatter default, viewer toggle wins); the explanations handle sits on the docs/code splitter (a rail when hidden); a second splitter sizes the Preview; the right panel has header bars for code (file tabs, copy, downloads) and preview (collapse, Run, open in tab) |
 | Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab. Every other `code/` file is published at `preview/<path>` (e.g. the tutorial's `oauth-callback.html`) |
-| CLI | Node | Generates a temporary Astro config for the selected tutorial folder and runs Astro `dev`, `build` or `preview` (`serve`) with generic options only. OAuth/provider help stays outside the core path unless explicitly configured later. |
+| CLI | Node | Generates a temporary Astro config for the selected tutorial folder and runs Astro `dev`, `build` or `preview` (`serve`) with generic options only. `doctor` reports root/package-manager/Astro/tutorial detection, and `init-scripts` can add optional package scripts without overwriting existing ones. OAuth/provider help stays outside the core path unless explicitly configured later. |
 | Package build | Node | `pnpm --filter interactive-code-scroll build` compiles TS to `dist`, copies `.astro`/CSS assets, rewrites internal imports to built `.js`, and emits a packaged CLI that resolves Astro from the consuming project first. `prepack` runs this before tarball creation. |
 
 ### Data flow
@@ -218,6 +218,7 @@ When adding or changing framework behavior, update this fixture to include the n
 | Packaged CLI Astro lookup | Workspace package has Astro under the package root | Installed package usually has Astro as a peer in the consuming project | Resolve `root/node_modules/astro/bin/astro.mjs` first, then fall back to the package-local path for workspace/dev |
 | Tutorial subfolder execution | User runs the CLI from inside a tutorial subfolder with `--tutorial .` | `astro` is installed in a parent project root | Search parent directories for `node_modules/astro/bin/astro.mjs` instead of only checking the current root |
 | External pnpm invocation | Direct `./node_modules/.bin/interactive-code-scroll` works | `pnpm exec interactive-code-scroll` may hang in some consumer environments | Keep the direct bin path and package scripts documented as reliable fallbacks while investigating pnpm behavior |
+| npm script arguments | `npm run dev -- --tutorial .` forwards `--tutorial` to the CLI | `npm run dev --tutorial .` is consumed by npm and does not reach the CLI | Missing tutorial diagnostics and unexpected positional arguments should show the `npm run ... -- ...` form explicitly |
 | MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |
