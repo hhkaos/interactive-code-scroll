@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0-alpha.1] - 2026-09-27
+
+### Changed
+
+- Improved CLI developer experience with a preflight banner, help examples, automatic root-level `tutorial.mdx` detection, and actionable missing-tutorial guidance.
+
+### Fixed
+
+- CLI Astro resolution now searches parent directories, so running from a tutorial subfolder with `--tutorial .` can use Astro installed in the parent project.
+
 ## [0.1.0-alpha.0] - 2026-09-26
 
 ### Added

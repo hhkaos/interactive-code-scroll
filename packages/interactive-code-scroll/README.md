@@ -15,5 +15,11 @@ pnpm interactive-code-scroll serve
 By default, the CLI expects a `tutorial/` folder with `tutorial.mdx`, `code/` and `images/`.
 Use `--tutorial <dir>` to select another tutorial folder.
 
+If your tutorial files live at the project root, use:
+
+```sh
+pnpm exec interactive-code-scroll dev --tutorial .
+```
+
 Provider-specific helpers, such as OAuth redirect URI guidance, are outside the core flow unless a
 project opts into them explicitly.

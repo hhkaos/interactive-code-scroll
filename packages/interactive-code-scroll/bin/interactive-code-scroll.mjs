@@ -28,6 +28,7 @@ const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
  *   command: "dev" | "build" | "serve";
  *   root: string;
  *   tutorial: string;
+ *   tutorialAutoDetected: boolean;
  *   configPath: string;
  *   configArg: string;
  *   astroArgs: readonly string[];
@@ -79,7 +80,10 @@ export function planCli(argv, context = {}) {
   }
 
   const root = resolve(cwd, options.get("--root") ?? ".");
-  const tutorial = options.get("--tutorial") ?? "tutorial";
+  const explicitTutorial = options.get("--tutorial");
+  const defaultTutorial = existsSync(join(root, "tutorial.mdx")) && !existsSync(join(root, "tutorial", "tutorial.mdx")) ? "." : "tutorial";
+  const tutorial = explicitTutorial ?? defaultTutorial;
+  const tutorialAutoDetected = explicitTutorial === undefined && tutorial === ".";
   const configDir = existsSync(join(root, "node_modules"))
     ? join(root, "node_modules", ".interactive-code-scroll")
     : join(root, ".interactive-code-scroll");
@@ -97,7 +101,7 @@ export function planCli(argv, context = {}) {
   }
   astroArgs.push(...forwarded);
 
-  return { command, root, tutorial, configPath, configArg, astroArgs };
+  return { command, root, tutorial, tutorialAutoDetected, configPath, configArg, astroArgs };
 }
 
 /**
@@ -116,21 +120,44 @@ export function writeAstroConfig(plan) {
  * @param {string | undefined} prefix
  */
 function help(prefix) {
-  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
+  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n\nExamples:\n  pnpm exec interactive-code-scroll dev\n  pnpm exec interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial my-tutorial --host 127.0.0.1 --port 4321\n  pnpm exec interactive-code-scroll build\n  pnpm exec interactive-code-scroll serve --host 127.0.0.1 --port 4321\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
 }
 
 /**
  * @param {CliPlan} plan
  */
-function validateProject(plan) {
+export function validateProject(plan) {
   const mdxPath = join(plan.root, plan.tutorial, "tutorial.mdx");
-  if (!existsSync(mdxPath)) throw new Error(`Tutorial not found at ${mdxPath}`);
+  if (existsSync(mdxPath)) return;
+  const relativeMdxPath = relative(plan.root, mdxPath).split("\\").join("/");
+  throw new Error(`Tutorial not found at ${relativeMdxPath}.\n\nExpected one of:\n  tutorial/tutorial.mdx\n  tutorial/code/\n  tutorial/images/\n\nIf your files are at the project root, run:\n  pnpm exec interactive-code-scroll ${plan.command} --tutorial .\n\nIf your tutorial is in another folder, run:\n  pnpm exec interactive-code-scroll ${plan.command} --tutorial <folder>`);
 }
 
 export function resolveAstroBin(root) {
-  const projectAstro = join(root, "node_modules", "astro", "bin", "astro.mjs");
-  if (existsSync(projectAstro)) return projectAstro;
+  for (let dir = root; ; dir = dirname(dir)) {
+    const projectAstro = join(dir, "node_modules", "astro", "bin", "astro.mjs");
+    if (existsSync(projectAstro)) return projectAstro;
+    if (dirname(dir) === dir) break;
+  }
   return join(packageRoot, "node_modules", "astro", "bin", "astro.mjs");
+}
+
+/**
+ * @param {CliPlan} plan
+ */
+export function preflightMessage(plan) {
+  const action = plan.command === "serve" ? "preview server" : plan.command === "dev" ? "dev server" : "build";
+  const lines = [
+    `InteractiveCodeScroll ${action} starting...`,
+    `Root: ${plan.root}`,
+    `Tutorial: ${plan.tutorial}`,
+    `Expected file: ${relative(plan.root, join(plan.root, plan.tutorial, "tutorial.mdx")).split("\\").join("/")}`,
+  ];
+  if (plan.tutorialAutoDetected) lines.push('Detected root-level tutorial.mdx; using --tutorial ".".');
+  if (!existsSync(join(plan.root, "package.json"))) {
+    lines.push("", "No package.json found in the project root. If setup fails, run:", "  pnpm init", "  pnpm add -D interactive-code-scroll@alpha astro@7.3.5");
+  }
+  return lines.join("\n");
 }
 
 /**
@@ -145,6 +172,7 @@ export async function main(argv) {
   const plan = planCli(argv);
   validateProject(plan);
   writeAstroConfig(plan);
+  console.log(preflightMessage(plan));
 
   const child = spawn(process.execPath, [resolveAstroBin(plan.root), ...plan.astroArgs], {
     cwd: plan.root,

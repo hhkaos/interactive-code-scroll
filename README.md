@@ -20,6 +20,12 @@ The commands default to a `tutorial/` folder containing `tutorial.mdx`, `code/` 
 Use `--tutorial <dir>` for a different folder and pass Astro deployment options such as
 `--base`, `--site`, `--port`, `--host` or `--outDir` as needed.
 
+If your tutorial files live at the project root, use:
+
+```sh
+pnpm exec interactive-code-scroll dev --tutorial .
+```
+
 The CLI is tutorial-agnostic. Provider-specific guidance, such as OAuth redirect URI help, is outside
 the core flow unless a project opts into it explicitly.
 
