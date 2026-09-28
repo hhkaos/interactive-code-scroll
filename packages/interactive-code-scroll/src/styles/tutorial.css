@@ -143,6 +143,94 @@ body[data-docs-hidden] {
     font-size: 0.875em;
     color: var(--calcite-color-text-1);
   }
+
+  details {
+    margin-block: 1rem;
+    border: 1px solid var(--calcite-color-border-3);
+    border-radius: var(--calcite-corner-radius-round);
+    background: color-mix(in srgb, var(--calcite-color-foreground-2) 72%, transparent);
+    overflow: clip;
+
+    &[open] {
+      border-color: var(--calcite-color-border-2);
+      background: var(--calcite-color-foreground-1);
+    }
+
+    & > :not(summary) {
+      margin-inline: 1rem;
+    }
+
+    & > :last-child {
+      margin-block-end: 1rem;
+    }
+  }
+
+  summary {
+    padding: 0.625rem 1rem;
+    color: var(--calcite-color-text-1);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--calcite-color-foreground-2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--calcite-color-brand);
+      outline-offset: -2px;
+    }
+  }
+
+  pre {
+    position: relative;
+    overflow: auto;
+    margin-block: 1rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--calcite-color-border-2);
+    border-radius: var(--calcite-corner-radius-round);
+    background: var(--calcite-color-inverse);
+    color: var(--calcite-color-text-inverse);
+    font-family: var(--calcite-font-family-code);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--calcite-color-text-inverse) 50%, transparent) transparent;
+
+    code {
+      display: block;
+      min-width: max-content;
+      padding-inline-end: 3.25rem;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+    }
+  }
+
+  .docs-code-copy {
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-end: 0.5rem;
+    z-index: 1;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--calcite-color-text-inverse) 18%, transparent);
+    border-radius: var(--calcite-corner-radius-round);
+    opacity: 0;
+    background: color-mix(in srgb, var(--calcite-color-inverse) 86%, var(--calcite-color-foreground-1));
+    color: var(--calcite-color-text-inverse);
+    font: var(--calcite-font-size-xs) / 1.2 var(--calcite-font-family);
+    cursor: pointer;
+    transition: opacity 0.15s, border-color 0.15s, background-color 0.15s;
+
+    &:hover, &:focus-visible {
+      border-color: color-mix(in srgb, var(--calcite-color-text-inverse) 34%, transparent);
+      background: color-mix(in srgb, var(--calcite-color-inverse) 76%, var(--calcite-color-foreground-1));
+      outline: none;
+    }
+  }
+
+  pre:hover .docs-code-copy,
+  pre:focus-within .docs-code-copy {
+    opacity: 1;
+  }
 }
 
 .intro {
@@ -199,6 +287,18 @@ body[data-docs-hidden] {
     cursor: auto;
     background: var(--calcite-color-foreground-2);
     box-shadow: inset 3px 0 0 var(--calcite-color-brand);
+
+    :not(pre) > code {
+      border-color: var(--calcite-color-border-2);
+      background: var(--calcite-color-foreground-1);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--calcite-color-brand) 12%, transparent);
+    }
+
+    details:not([open]) {
+      border-color: var(--calcite-color-border-2);
+      background: var(--calcite-color-foreground-1);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--calcite-color-brand) 10%, transparent);
+    }
 
     & > :is(h2, h3):first-child::before {
       background: var(--calcite-color-brand);

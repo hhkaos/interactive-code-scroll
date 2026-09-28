@@ -134,6 +134,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
     <script>
       import "../client/calcite.ts";
       import type { ParsedSource } from "../markers.ts";
+      import { startDocsCodeBlocks } from "../client/docs-code.ts";
       import { keyToDelta } from "../client/navigation.ts";
       import { startTooltips } from "../client/actions.ts";
       import { startDownloads } from "../client/downloads.ts";
@@ -151,6 +152,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       };
 
       startTooltips();
+      startDocsCodeBlocks();
       startLayout();
       startPresentation();
       const engine = startStepEngine();

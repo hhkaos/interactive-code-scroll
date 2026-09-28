@@ -12,6 +12,11 @@ logo: fixture-logo.svg
 This fixture is not product documentation. It is a stable contract for E2E tests.
 Do not edit its content for narrative polish; add cases only when the framework gains behavior.
 
+```js
+const fixtureMode = "docs-code";
+console.log(`Fixture mode: ${fixtureMode}`);
+```
+
 </Intro>
 
 <Step id="load-sdk" file="index.html" region="cdn" preview="collapsed">
@@ -53,7 +58,14 @@ These fields exercise persisted values, secret masking, and runtime code replace
 
 ## Register behavior
 
-This step focuses a multi-line JavaScript region.
+This step focuses a multi-line JavaScript region and mentions `fixtureState` inline.
+
+<details>
+<summary>Why register more than one behavior?</summary>
+
+`registerOAuthInfos()` accepts an array so one app can register more than one configuration.
+
+</details>
 
 </Step>
 

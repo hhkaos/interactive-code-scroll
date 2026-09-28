@@ -34,6 +34,87 @@ test("renders <Intro> as non-step tutorial intro", async ({ page }) => {
   await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 0);
 });
 
+test("styles tutorial markdown code blocks with a hover copy control", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const block = page.locator(".intro pre");
+  const copy = block.locator(".docs-code-copy");
+
+  await expect(block).toBeVisible();
+  await expect(copy).toHaveText("Copy");
+  await expect(copy).toHaveCSS("opacity", "0");
+
+  const styles = await block.evaluate((pre) => {
+    const computed = getComputedStyle(pre);
+    return {
+      fontSize: computed.fontSize,
+      paddingTop: computed.paddingTop,
+      paddingLeft: computed.paddingLeft,
+      overflowX: computed.overflowX,
+    };
+  });
+  expect(styles).toEqual({ fontSize: "14px", paddingTop: "14px", paddingLeft: "16px", overflowX: "auto" });
+
+  await block.hover();
+  await expect(copy).toHaveCSS("opacity", "1");
+  await copy.click();
+  await expect(copy).toHaveText("Copied");
+  const text = await page.evaluate(() => navigator.clipboard.readText());
+  expect(text).toContain('const fixtureMode = "docs-code";');
+});
+
+test("styles tutorial disclosure blocks with compact spacing", async ({ page }) => {
+  const details = page.locator("section.step#oauth details");
+  const summary = details.locator("summary");
+
+  await expect(summary).toHaveText("Why register more than one behavior?");
+  await summary.click();
+  await expect(details).toHaveAttribute("open", "");
+
+  const styles = await details.evaluate((node) => {
+    const detailsStyle = getComputedStyle(node);
+    const summaryStyle = getComputedStyle(node.querySelector("summary")!);
+    return {
+      borderRadius: detailsStyle.borderRadius,
+      marginTop: detailsStyle.marginTop,
+      summaryPaddingTop: summaryStyle.paddingTop,
+      summaryPaddingLeft: summaryStyle.paddingLeft,
+    };
+  });
+  expect(styles).toEqual({ borderRadius: "4px", marginTop: "16px", summaryPaddingTop: "10px", summaryPaddingLeft: "16px" });
+});
+
+test("keeps closed disclosure blocks distinct inside the active step", async ({ page }) => {
+  await page.locator("section.step#oauth").click();
+  await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
+
+  const colors = await page.locator("section.step#oauth").evaluate((step) => {
+    const details = step.querySelector("details")!;
+    return {
+      step: getComputedStyle(step).backgroundColor,
+      details: getComputedStyle(details).backgroundColor,
+      border: getComputedStyle(details).borderColor,
+    };
+  });
+  expect(colors.details).not.toBe(colors.step);
+  expect(colors.border).not.toBe(colors.step);
+});
+
+test("keeps inline code visually distinct inside the active step", async ({ page }) => {
+  await page.locator("section.step#oauth").click();
+  await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
+
+  const colors = await page.locator("section.step#oauth").evaluate((step) => {
+    const code = step.querySelector("p code")!;
+    return {
+      step: getComputedStyle(step).backgroundColor,
+      code: getComputedStyle(code).backgroundColor,
+      border: getComputedStyle(code).borderColor,
+    };
+  });
+  expect(colors.code).not.toBe(colors.step);
+  expect(colors.border).not.toBe(colors.step);
+});
+
 test("renders each <Step> as a section with its references", async ({ page }) => {
   const config = page.locator("section.step#config");
   await expect(config).toHaveAttribute("data-file", "main.js");
