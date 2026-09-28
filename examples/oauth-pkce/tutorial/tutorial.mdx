@@ -34,34 +34,26 @@ sign-in button, so this tutorial does not need a bundler or a package install st
 
 ## Build the UI
 
-The app shell is intentionally small: a Calcite navigation bar, one sign-in button, and a status
+Now we build a simple app with a Calcite navigation bar, one sign-in button, and a status
 message.
 
 </Step>
 
-<Step id="register-app" images={["credential-type-user-alp.png", "oauth-step-1.svg", "oauth-step-2.svg"]} preview="collapsed">
+<Step id="register-app" images={["1-create-new-item.png", "2-select-developer-credentials.png", "3-select-oauth2-user-authentication.png", "4-set-the-redirect-url.png", "5-add-developer-credential-item-info.png", "6-review-and-accept.png", "7-copy-the-clientid.png"]} preview="collapsed">
 
 ## Create the Developer Credential
 
-Create OAuth credentials in your ArcGIS portal, then copy the **Client ID**. In ArcGIS Location
-Platform, open `https://location.arcgis.com`, sign in, and go to **My portal** before creating the
-developer credentials item.
+Next step is to go to [your ArcGIS portal](https://developers.arcgis.com/documentation/glossary/arcgis-portal/) to create the developer credential:
 
->  If you want to compare the account setup screens with the product documentation, keep the
-[Create OAuth credentials for user authentication](https://developers.arcgis.com/documentation/security-and-authentication/user-authentication/tutorials/create-oauth-credentials-user-auth/)
-tutorial open in another tab.
-
-Use credentials for **user authentication**, not app authentication with a client secret. Browser
-apps should keep only the Client ID in client-side code.
-
-Add a redirect URL for every place where this tutorial will run. In this project, OAuth returns to
-the preview callback page:
-
-- Local development: `http://localhost:<port>/preview/oauth-callback.html`
-- Published site: `https://<your-site>/<base-path>/preview/oauth-callback.html`
-
-The CLI will print the exact URLs to register. Until then, use the URL shown in your browser and
-append `/preview/oauth-callback.html`.
+1. Click **Content** > **My content** > **New item**
+2. Click **Developer credentials**<sup>*</sup>
+3. Select **OAuth 2.0 credentials** (For user authentication) and click **Next**
+4. Set the proper redirect URL:
+    - Local development: `http://localhost:<port>/preview/oauth-callback.html`
+    - Published site: `https://<your-site>/<base-path>/preview/oauth-callback.html`
+5. Fill the item info
+6. Review and accept
+7. Copy the **Client ID**
 
 </Step>
 
