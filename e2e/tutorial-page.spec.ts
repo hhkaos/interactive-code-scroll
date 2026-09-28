@@ -26,19 +26,34 @@ test("numbers each step's heading", async ({ page }) => {
   expect(marker).toBe("counter(step)");
 });
 
+test("renders <Intro> as non-step tutorial intro", async ({ page }) => {
+  await expect(page.locator(".intro h2")).toHaveText("Before you start");
+  await expect(page.locator(".intro")).toContainText("stable contract for E2E tests");
+  await expect(page.locator(".intro").locator("section.step")).toHaveCount(0);
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 0);
+});
+
 test("renders each <Step> as a section with its references", async ({ page }) => {
   const config = page.locator("section.step#config");
   await expect(config).toHaveAttribute("data-file", "main.js");
   await expect(config).toHaveAttribute("data-region", "config");
-  await expect(page.locator("section.step")).toHaveCount(9);
+  await expect(page.locator("section.step")).toHaveCount(8);
   await expect(page.locator("section.step#register-app template.step-media")).toHaveCount(1);
 });
 
 test("renders <VarField> as a Calcite input with the code literal as placeholder", async ({ page }) => {
   const input = page.locator('calcite-input[data-var="clientId"]');
   await expect(input).toHaveAttribute("placeholder", "YOUR_CLIENT_ID");
+  await expect(input).toHaveAttribute("data-default-value", "YOUR_CLIENT_ID");
   await expect(input).toHaveAttribute("data-secret", "");
   await expect(input).toHaveAttribute("data-persist", "");
+});
+
+test("renders custom <VarField> placeholder without changing the code default", async ({ page }) => {
+  const input = page.locator('calcite-input[data-var="portalUrl"]');
+  await expect(input).toHaveAttribute("placeholder", "https://portal.example.com");
+  await expect(input).toHaveAttribute("data-default-value", "https://fixture.example.test");
 });
 
 test("renders build-time highlighted code with markers stripped", async ({ page }) => {

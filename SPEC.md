@@ -39,6 +39,11 @@ InteractiveCodeScroll is generic. It must not assume ArcGIS, OAuth, maps, or any
 - **Line numbers**: the rendered code panel shows stable line numbers in a left gutter.
 
 ### Scroll-driven focus
+An optional `<Intro>` block can appear before the first `<Step>`. It is rendered as tutorial introduction content,
+does not count as a step, does not get a step number, and does not activate code focus. When a tutorial has an
+intro, the top of the explanations panel is a no-step state; the first real step activates only when reached by
+scrolling, clicking or step-key navigation.
+
 When a step comes into focus, its text block can:
 - highlight parts of the code (focus + gray out the rest + auto-scroll so the whole region is visible when it fits, else its start; no scroll when it is already in view),
 - switch from one file to another (`server.js`, `checkout.html`, etc.),
@@ -46,7 +51,7 @@ When a step comes into focus, its text block can:
 - A step with a `file` and no `region` shows that file with no focused lines; a text-only step (no `file`) keeps the current file visible but also clears any previous focus.
 
 ### Step navigation
-- **Free scroll**: the active step is determined by scroll position (the step crossing the center line; back at the top, the first step).
+- **Free scroll**: the active step is determined by scroll position (the step crossing the center line; back at the top, the first step unless the tutorial starts with `<Intro>`, in which case there is no active step).
 - **Click**: clicking a step (outside its links and fields) activates it; short steps and the first ones may never cross the center line.
 - **Numbered steps**: each step's heading shows its number (as in "Step N of M").
 - **Keyboard / clicker**: arrows and PageDown/PageUp jump to the next/previous step with snapping (compatible with presentation clickers).
@@ -71,6 +76,7 @@ When a step comes into focus, its text block can:
 ### Forms → variables
 - Forms defined in MDX (left panel); filling them updates code variables in real time.
 - **Default value**: the literal in the code is the single source of truth (default and field placeholder).
+- **Custom placeholder**: `<VarField placeholder="...">` can override the input placeholder without changing the code default used for clearing, downloads or Preview.
 - **localStorage persistence**: configurable per field by the author (persist or not).
 - **Secret fields**: the author can mark a field as sensitive → masked in the form and in the code, with a **visibility toggle** to reveal it when needed.
 - Entered values are included in downloads.

@@ -5,14 +5,14 @@ theme: auto
 logo: fixture-logo.svg
 ---
 
-<Step id="before-you-start">
+<Intro>
 
 ## Before you start
 
 This fixture is not product documentation. It is a stable contract for E2E tests.
 Do not edit its content for narrative polish; add cases only when the framework gains behavior.
 
-</Step>
+</Intro>
 
 <Step id="load-sdk" file="index.html" region="cdn" preview="collapsed">
 
@@ -45,7 +45,7 @@ This step switches the right panel from code to a carousel.
 These fields exercise persisted values, secret masking, and runtime code replacement.
 
 <VarField name="clientId" label="Client ID" secret persist />
-<VarField name="portalUrl" label="Portal URL" persist />
+<VarField name="portalUrl" label="Portal URL" placeholder="https://portal.example.com" persist />
 
 </Step>
 

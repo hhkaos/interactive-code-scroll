@@ -123,7 +123,7 @@ body[data-docs-hidden] {
   color: var(--calcite-color-text-2);
 
   /* Readable line length when the panel is wide. */
-  & > :not(.step), .step > * { max-width: 70ch; }
+  & > :not(.step), .intro > *, .step > * { max-width: 70ch; }
   & > :not(.step) { margin-inline: var(--gutter); }
 
   h1, h2, h3 { color: var(--calcite-color-text-1); font-weight: var(--calcite-font-weight-semibold); line-height: 1.3; }
@@ -144,6 +144,21 @@ body[data-docs-hidden] {
     color: var(--calcite-color-text-1);
   }
 }
+
+.intro {
+  padding: 0 var(--gutter) 1.5rem;
+  border-bottom: 1px solid var(--calcite-color-border-3);
+  color: var(--calcite-color-text-2);
+
+  & > :first-child { margin-top: 0; }
+  & > :last-child { margin-bottom: 0; }
+  h2, h3 {
+    margin-block: 0 0.75rem;
+    color: var(--calcite-color-text-1);
+    font-size: var(--calcite-font-size-xl);
+  }
+}
+.intro + .step { border-top: 0; }
 
 .step {
   counter-increment: step;

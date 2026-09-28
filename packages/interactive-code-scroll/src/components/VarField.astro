@@ -5,11 +5,12 @@ import { parseSource } from "../markers.ts";
 interface Props {
   name: string;
   label: string;
+  placeholder?: string;
   secret?: boolean;
   persist?: boolean;
 }
 
-const { name, label, secret = false, persist = false } = Astro.props;
+const { name, label, placeholder, secret = false, persist = false } = Astro.props;
 const defaultValue = files
   .flatMap((f) => parseSource(f.source).vars)
   .find((v) => v.name === name)?.defaultValue;
@@ -19,9 +20,10 @@ const defaultValue = files
   class="var-field"
   label-text={label}
   data-var={name}
+  data-default-value={defaultValue}
   data-persist={persist ? "" : undefined}
   data-secret={secret ? "" : undefined}
-  placeholder={defaultValue}
+  placeholder={placeholder ?? defaultValue}
   type={secret ? "password" : "text"}
 >
   {/* Calcite's `action` slot joins the reveal toggle to the input. */}

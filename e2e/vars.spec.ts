@@ -26,6 +26,14 @@ test("clearing a field restores the default from the code", async ({ page }) => 
   await expect(code(page).locator('[data-var="clientId"]')).toHaveText("YOUR_CLIENT_ID");
 });
 
+test("clearing a field with custom placeholder restores the code default", async ({ page }) => {
+  await page.goto("/#config");
+  const input = page.locator('calcite-input[data-var="portalUrl"] input');
+  await input.fill("https://example.com/portal");
+  await input.fill("");
+  await expect(code(page).locator('[data-var="portalUrl"]')).toHaveText("https://fixture.example.test");
+});
+
 test("persisted fields survive a reload", async ({ page }) => {
   await page.goto("/#config");
   await clientIdInput(page).fill("kept-id");

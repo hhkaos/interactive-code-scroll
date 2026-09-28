@@ -1,7 +1,7 @@
 import { setAction } from "./actions.ts";
 import { displayValue, readStored, valueFromInput, writeStored } from "./var-values.ts";
 
-type CalciteInput = HTMLElement & { value: string; type: string; placeholder: string };
+type CalciteInput = HTMLElement & { value: string; type: string };
 
 export interface VarsHandle {
   /** Real values (form or default) for vars that have a field. */
@@ -17,7 +17,7 @@ export function startVars(onChange: () => void = () => {}): VarsHandle {
 
   for (const input of document.querySelectorAll<CalciteInput>("calcite-input[data-var]")) {
     const name = input.dataset.var!;
-    const defaultValue = input.getAttribute("placeholder") ?? "";
+    const defaultValue = input.dataset.defaultValue ?? "";
     const persist = input.hasAttribute("data-persist");
     const secret = input.hasAttribute("data-secret");
     let revealed = false;

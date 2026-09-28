@@ -40,6 +40,7 @@ export function startStepEngine(): StepEngine {
   if (steps.length === 0) return { step: () => {} };
 
   const docs = steps[0]!.closest<HTMLElement>(".docs")!;
+  const hasIntro = !!docs.querySelector(".intro");
   const codePanel = document.querySelector<HTMLElement>(".code-panel")!;
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
   const progress = document.querySelector<HTMLElement>("#step-count");
@@ -65,6 +66,33 @@ export function startStepEngine(): StepEngine {
 
   let current = -1;
   let mediaIndex = 0;
+
+  function clearFocus(): void {
+    for (const line of $$(".code .line[data-focus]")) line.removeAttribute("data-focus");
+    for (const pane of $$(".code[data-has-focus]")) pane.removeAttribute("data-has-focus");
+  }
+
+  function clearActive(): void {
+    current = -1;
+    steps.forEach((s) => s.removeAttribute("data-active"));
+    clearFocus();
+    mediaPanel.hidden = true;
+    codePanel.hidden = false;
+    mediaPanel.replaceChildren();
+    announceMedia();
+    if (progress) progress.textContent = "";
+    if (progressBar) progressBar.value = 0;
+    if (location.hash) history.replaceState(null, "", `${location.pathname}${location.search}`);
+  }
+
+  function goToIntro(behavior: ScrollBehavior): void {
+    userNavigated = true;
+    userScrolling = false;
+    keyTarget = undefined;
+    clearTimeout(keyTargetTimer);
+    docs.scrollTo({ top: 0, behavior });
+    clearActive();
+  }
 
   /**
    * Renders the step's carousel with image `index` selected. Calcite only honours
@@ -117,8 +145,7 @@ export function startStepEngine(): StepEngine {
     mediaPanel.replaceChildren();
     announceMedia();
 
-    for (const line of $$(".code .line[data-focus]")) line.removeAttribute("data-focus");
-    for (const pane of $$(".code[data-has-focus]")) pane.removeAttribute("data-has-focus");
+    clearFocus();
 
     const { file, region } = step.dataset;
     if (!file) return; // Text-only step: keep the current file.
@@ -147,6 +174,10 @@ export function startStepEngine(): StepEngine {
   const observer = new IntersectionObserver(
     (entries) => {
       if (restoring) return;
+      if (hasIntro && userScrolling && docs.scrollTop <= 1) {
+        clearActive();
+        return;
+      }
       const entering = entries.find((e) => e.isIntersecting);
       if (!entering) return;
       const index = steps.indexOf(entering.target as HTMLElement);
@@ -189,6 +220,11 @@ export function startStepEngine(): StepEngine {
   /** Moves one step (or one carousel image) forwards/backwards, with snapping. */
   function step(delta: -1 | 1): void {
     if (moveCarousel(delta)) return;
+    if (current < 0 && delta < 0) return;
+    if (hasIntro && current === 0 && delta < 0) {
+      goToIntro("smooth");
+      return;
+    }
     goTo(clampIndex(current + delta, steps.length), { fromEnd: delta < 0 });
   }
 
@@ -225,7 +261,8 @@ export function startStepEngine(): StepEngine {
     goTo(steps.indexOf(step), { center: false });
   });
 
-  // Back at the top, the first step is active again (it cannot reach the center line there).
+  // Back at the top, intro tutorials clear the active step; otherwise the first step is active again
+  // (it cannot reach the center line there).
   // Only for scrolling done by the user: a key/click scroll towards an early step also ends at 0.
   let userScrolling = false;
   for (const type of ["wheel", "touchmove", "pointerdown"]) {
@@ -234,7 +271,9 @@ export function startStepEngine(): StepEngine {
   docs.addEventListener(
     "scroll",
     () => {
-      if (userScrolling && !restoring && docs.scrollTop <= 0) activate(0);
+      if (!userScrolling || restoring || docs.scrollTop > 1) return;
+      if (hasIntro) clearActive();
+      else activate(0);
     },
     { passive: true },
   );
@@ -255,13 +294,13 @@ export function startStepEngine(): StepEngine {
 
   // Deep link: activate now and keep the step centered while the layout settles (Calcite
   // components render late, after fetching their translations), until the user takes over.
-  const initial = indexFromHash(
-    steps.map((s) => s.id),
-    location.hash,
-  );
-  activate(initial);
+  const stepIds = steps.map((s) => s.id);
+  const hashIndex = indexFromHash(stepIds, location.hash);
+  const hasInitialStep = !hasIntro || stepIds.includes(decodeURIComponent(location.hash.replace(/^#/, "")));
+  if (hasInitialStep) activate(hashIndex);
+  else clearActive();
   const settle = new ResizeObserver(() => {
-    if (!userNavigated) showStep(initial, true, "auto");
+    if (hasInitialStep && !userNavigated) showStep(hashIndex, true, "auto");
   });
   for (const el of [docs, ...steps]) settle.observe(el);
   const takeOver = () => {

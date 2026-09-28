@@ -90,6 +90,7 @@ export function validateTutorial({ mdxFile, uses, files, images }: ValidationInp
       if (!name) report('requires a "name"');
       else if (!varNames.has(name)) report(`no "@var ${name}" found in code/`);
       if (!text("label")) report('requires a "label"');
+      text("placeholder");
     }
   }
   return errors;

@@ -111,7 +111,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 | Marker parser | build | Strips `#region` / `@var`, returns clean code + region line ranges + var positions (`src/markers.ts`) |
 | Highlighter | build | Shiki dual themes; `line` transformer tags `data-line` and `data-regions`; `decorations` put `data-var` on the literal's token |
 | Validation | build | Each `<Step>` / `<VarField>` asserts its file, region, image and var exist; build fails with a clear message |
-| MDX components | build | `<Step id file region images>`, `<VarField name label secret persist>` render static HTML |
+| MDX components | build | `<Intro>`, `<Step id file region images>`, `<VarField name label placeholder secret persist>` render static HTML |
 | Client runtime | browser | IntersectionObserver (center line of the docs panel) + keyboard + click on a step + top of the panel (first step) → activate step (file, focus lines revealed with `revealScroll`, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
 | Page shell | browser | `calcite-navigation` header (explanations toggle, title, step count, present, theme, `calcite-progress`); explanations scroll in their own panel (the page never scrolls); the whole page follows one Calcite mode (`theme` frontmatter default, viewer toggle wins); the explanations handle sits on the docs/code splitter (a rail when hidden); a second splitter sizes the Preview; the right panel has header bars for code (file tabs, copy, downloads) and preview (collapse, Run, open in tab) |
 | Preview page | browser | `preview/` page `document.write`s the assembled HTML (local scripts/styles inlined) from `localStorage`; used by iframe and new tab. Every other `code/` file is published at `preview/<path>` (e.g. the tutorial's `oauth-callback.html`) |
@@ -175,6 +175,8 @@ When adding or changing framework behavior, update this fixture to include the n
 - Source code must remain valid, runnable and lintable without the framework.
 - Markers are stripped from rendered and downloaded code.
 - `<Step file="...">` without `region` intentionally shows the whole file with no focus; text-only steps keep the current file visible but must clear any previous focused region.
+- `<Intro>` is optional introduction content before the first step; it is not numbered, does not count as a step, and leaves the tutorial in a no-step state while it is at the top.
+- `<VarField placeholder="...">` changes only the input hint; the code literal remains the default value used when the field is empty.
 
 ### Preview
 - Optional and configurable per tutorial: iframe, new tab, or both.

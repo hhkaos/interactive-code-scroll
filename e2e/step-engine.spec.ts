@@ -18,8 +18,8 @@ test("a deep link activates its step, file and region", async ({ page }) => {
   await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "main.js");
   await expect(focused(page).first()).toContainText("fixtureState");
-  await expect(page.locator("#step-count")).toHaveText("Step 6 of 9");
-  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 66.66666666666666);
+  await expect(page.locator("#step-count")).toHaveText("Step 5 of 8");
+  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 62.5);
   await expect(page).toHaveURL(/#oauth$/);
 });
 
@@ -33,11 +33,12 @@ test("keyboard and clicker keys move between steps", async ({ page }) => {
   await expect(page).toHaveURL(/#sign-in$/);
 });
 
-test("going back to a text-only step clears the focused region", async ({ page }) => {
+test("going back to the intro clears the active step and focused region", async ({ page }) => {
   await page.goto("/#load-sdk");
   await expect(focused(page)).toHaveCount(1);
   await page.keyboard.press("ArrowUp");
-  await expect(page).toHaveURL(/#before-you-start$/);
+  await expect(page).not.toHaveURL(/#/);
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
   await expect(focused(page)).toHaveCount(0);
   await expect(page.locator(".code[data-has-focus]")).toHaveCount(0);
 });
@@ -100,11 +101,21 @@ test("each step shows its whole code region when it fits", async ({ page }) => {
   }
 });
 
-test("scrolling back to the top activates the first step", async ({ page }) => {
+test("scrolling back to the top returns to the intro", async ({ page }) => {
   await page.goto("/#oauth");
   await page.locator("main.docs").hover();
-  await page.mouse.wheel(0, -5000);
-  await expect(page.locator("section.step#before-you-start")).toHaveAttribute("data-active", "");
+  await page.mouse.wheel(0, -10_000);
+  await expect.poll(() => page.locator("main.docs").evaluate((docs) => docs.scrollTop)).toBe(0);
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+  await expect(page).not.toHaveURL(/#/);
+});
+
+test("step keys enter the first step from the intro", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+  await page.keyboard.press("PageDown");
+  await expect(page.locator("section.step#load-sdk")).toHaveAttribute("data-active", "");
+  await expect(page).toHaveURL(/#load-sdk$/);
 });
 
 test("scrolling activates the step crossing the center line", async ({ page }) => {
