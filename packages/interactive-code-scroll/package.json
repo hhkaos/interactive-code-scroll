@@ -1,6 +1,6 @@
 {
   "name": "interactive-code-scroll",
-  "version": "0.1.0-alpha.7",
+  "version": "0.1.0-alpha.8",
   "description": "Build guided, interactive code tutorials from MDX and annotated source code.",
   "license": "Apache-2.0",
   "repository": {
