@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.1.0-alpha.5] - 2026-09-28
+## [0.1.0-alpha.6] - 2026-09-28
 
 ### Added
 
@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added an `<Intro>` MDX component for non-step tutorial introductions.
 - Added `placeholder` support to `<VarField>` without changing the linked code default.
 - Added package tarball smoke testing to the npm publish workflow.
+- Added package repository metadata required for npm provenance verification.
 
 ### Changed
 

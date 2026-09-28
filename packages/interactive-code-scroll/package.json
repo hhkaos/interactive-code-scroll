@@ -1,12 +1,16 @@
 {
   "name": "interactive-code-scroll",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.6",
   "description": "Build guided, interactive code tutorials from MDX and annotated source code.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hhkaos/interactive-code-scroll"
+  },
   "type": "module",
   "bin": {
-    "interactive-code-scroll": "./dist/bin/interactive-code-scroll.mjs",
-    "ics": "./dist/bin/interactive-code-scroll.mjs"
+    "interactive-code-scroll": "dist/bin/interactive-code-scroll.mjs",
+    "ics": "dist/bin/interactive-code-scroll.mjs"
   },
   "files": [
     "dist",
