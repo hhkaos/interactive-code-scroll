@@ -6,11 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0-alpha.4] - 2026-09-28
+
 ### Added
 
 - Added a GitHub Actions workflow to publish the npm package from version tags via npm trusted publishing.
 - Added an `<Intro>` MDX component for non-step tutorial introductions.
 - Added `placeholder` support to `<VarField>` without changing the linked code default.
+
+### Changed
+
+- Removed the intro block's horizontal padding so introduction content aligns with the step content column.
 
 ## [0.1.0-alpha.3] - 2026-09-27
 

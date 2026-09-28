@@ -146,7 +146,7 @@ body[data-docs-hidden] {
 }
 
 .intro {
-  padding: 0 var(--gutter) 1.5rem;
+  padding: 0 0 1.5rem;
   border-bottom: 1px solid var(--calcite-color-border-3);
   color: var(--calcite-color-text-2);
 
