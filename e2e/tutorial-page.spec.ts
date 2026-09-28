@@ -62,6 +62,21 @@ test("styles tutorial markdown code blocks with a hover copy control", async ({ 
   expect(text).toContain('const fixtureMode = "docs-code";');
 });
 
+test("styles tutorial blockquotes as notes", async ({ page }) => {
+  const quote = page.locator(".intro blockquote");
+  await expect(quote).toContainText("Fixture notes use standard Markdown blockquotes");
+
+  const styles = await quote.evaluate((node) => {
+    const computed = getComputedStyle(node);
+    return {
+      borderLeftWidth: computed.borderLeftWidth,
+      paddingLeft: computed.paddingLeft,
+      marginTop: computed.marginTop,
+    };
+  });
+  expect(styles).toEqual({ borderLeftWidth: "3px", paddingLeft: "18px", marginTop: "16px" });
+});
+
 test("styles tutorial disclosure blocks with compact spacing", async ({ page }) => {
   const details = page.locator("section.step#oauth details");
   const summary = details.locator("summary");
@@ -81,6 +96,28 @@ test("styles tutorial disclosure blocks with compact spacing", async ({ page }) 
     };
   });
   expect(styles).toEqual({ borderRadius: "4px", marginTop: "16px", summaryPaddingTop: "10px", summaryPaddingLeft: "16px" });
+});
+
+test("renders inline hints with rich tooltip content", async ({ page }) => {
+  const hint = page.locator(".hint", { hasText: "fixtureState" });
+  const label = hint.locator(".hint-label");
+  const popover = hint.locator(".hint-popover");
+
+  await expect(label).toHaveText("fixtureState");
+  await expect(label).toHaveAttribute("aria-describedby", "hint-fixture-state");
+  await expect(popover).toHaveCSS("visibility", "hidden");
+
+  await label.hover();
+  await expect(popover).toHaveCSS("visibility", "visible");
+  await expect(popover.getByRole("link", { name: "example docs" })).toHaveAttribute("href", "https://example.com/docs");
+
+  const box = await popover.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(8);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width - 8);
+
+  await popover.getByRole("link", { name: "example docs" }).hover();
+  await expect(popover).toHaveCSS("visibility", "visible");
 });
 
 test("keeps closed disclosure blocks distinct inside the active step", async ({ page }) => {
@@ -138,16 +175,19 @@ test("renders custom <VarField> placeholder without changing the code default", 
 });
 
 test("renders build-time highlighted code with markers stripped", async ({ page }) => {
+  await page.goto("/#config");
   const visibleCode = page.locator(".code:not([hidden])");
   const main = page.locator('.code[data-file="main.js"]');
   await expect(main.locator('[data-var="clientId"]')).toHaveText("YOUR_CLIENT_ID");
   await expect(visibleCode.locator(".line").first()).toHaveAttribute("data-line", "1");
-  const [first, second] = await visibleCode.locator(".line").evaluateAll((lines) =>
+  const [first, second] = await main.locator(".line").evaluateAll((lines) =>
     lines.slice(0, 2).map((line) => {
       const rect = line.getBoundingClientRect();
       return { top: rect.top, height: rect.height };
     }),
   );
+  expect(first.height).toBeGreaterThan(0);
+  expect(second.top).toBeGreaterThan(first.top);
   expect(second.top - first.top).toBeLessThan(first.height * 1.2);
   await expect(main.locator('.line[data-regions~="oauth"]').first()).toContainText("fixtureState");
   await expect(main).not.toContainText("#region");

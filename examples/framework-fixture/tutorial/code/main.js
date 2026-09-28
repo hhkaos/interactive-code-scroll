@@ -3,6 +3,8 @@ const clientId = "YOUR_CLIENT_ID"; // @var clientId
 const portalUrl = "https://fixture.example.test"; // @var portalUrl
 // #endregion
 
+const longStatusMessage = "This deliberately long fixture line verifies that the code panel can wrap long tutorial source lines without introducing a horizontal scrollbar.";
+
 // #region oauth
 const fixtureState = {
   clientId,

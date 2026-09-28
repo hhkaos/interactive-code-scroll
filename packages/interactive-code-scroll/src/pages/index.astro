@@ -1,5 +1,6 @@
 ---
 import { Content, files, frontmatter, images } from "virtual:interactive-code-scroll/tutorial";
+import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Step from "../components/Step.astro";
 import VarField from "../components/VarField.astro";
@@ -31,7 +32,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
     <title>{config.title}</title>
     {logo && <link rel="icon" href={logo} />}
   </head>
-  <body data-preview={config.preview} data-theme={config.theme}>
+  <body data-preview={config.preview} data-theme={config.theme} data-code-wrap={config.codeWrap ? "" : undefined}>
     <script is:inline>
       // Before first paint: avoid a flash of the wrong theme. Mirrors client/layout-values.ts.
       (function () {
@@ -56,7 +57,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
     </calcite-navigation>
     <div class="layout">
       <main class="docs">
-        <Content components={{ Intro, Step, VarField }} />
+        <Content components={{ Hint, Intro, Step, VarField }} />
       </main>
       <div class="gutter">
         <div
@@ -135,6 +136,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       import "../client/calcite.ts";
       import type { ParsedSource } from "../markers.ts";
       import { startDocsCodeBlocks } from "../client/docs-code.ts";
+      import { startHints } from "../client/hints.ts";
       import { keyToDelta } from "../client/navigation.ts";
       import { startTooltips } from "../client/actions.ts";
       import { startDownloads } from "../client/downloads.ts";
@@ -153,6 +155,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
 
       startTooltips();
       startDocsCodeBlocks();
+      startHints();
       startLayout();
       startPresentation();
       const engine = startStepEngine();

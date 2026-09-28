@@ -100,6 +100,21 @@ test("the splitter works with the keyboard without moving steps", async ({ page 
   await expect(page).toHaveURL(/#config$/);
 });
 
+test("code wrapping can be enabled by tutorial frontmatter", async ({ page }) => {
+  await page.goto("/#config");
+  await expect(page.locator("body")).toHaveAttribute("data-code-wrap", "");
+
+  const pane = page.locator('.code[data-file="main.js"]');
+  const overflow = await pane.evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+
+  const longLineHeight = await pane
+    .locator(".line", { hasText: "deliberately long fixture line" })
+    .evaluate((line) => line.getBoundingClientRect().height);
+  const firstLineHeight = await pane.locator(".line").first().evaluate((line) => line.getBoundingClientRect().height);
+  expect(longLineHeight).toBeGreaterThan(firstLineHeight * 1.5);
+});
+
 test.describe("high zoom", () => {
   // 1440×900 at 200 % browser zoom.
   test.use({ viewport: { width: 720, height: 450 } });

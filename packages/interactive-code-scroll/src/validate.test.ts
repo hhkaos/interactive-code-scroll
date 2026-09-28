@@ -22,6 +22,7 @@ describe("validateTutorial", () => {
         use("Step", { id: "config", file: "main.js", region: "config" }),
         use("Step", { id: "shots", images: { expression: '["a.png", "shots/b.png"]' } }),
         use("Step", { id: "text-only", preview: "collapsed" }),
+        use("Hint", { id: "redirect-uri", label: "redirect URI" }),
         use("VarField", { name: "clientId", label: "Client ID", secret: true }),
       ),
     ).toEqual([]);
@@ -38,6 +39,9 @@ describe("validateTutorial", () => {
     [use("Step", { id: "a", images: "a.png" }), '"images" must be a static array of strings'],
     [use("Step", { id: "a", file: true }), '"file" must be a string'],
     [use("Step", { id: "a", preview: "closed" }), '"preview" must be one of expanded, collapsed, keep'],
+    [use("Hint", { label: "Redirect URI" }), '<Hint> requires an "id"'],
+    [use("Hint", { id: "Redirect URI", label: "Redirect URI" }), 'id "Redirect URI" must be lowercase letters, digits and dashes'],
+    [use("Hint", { id: "redirect-uri" }), '<Hint> requires a "label"'],
     [use("VarField", { name: "nope", label: "X" }), 'no "@var nope" found in code/'],
     [use("VarField", { name: "clientId" }), '<VarField> requires a "label"'],
   ])("reports %j", (component, message) => {
@@ -49,6 +53,12 @@ describe("validateTutorial", () => {
   it("reports duplicate step ids at the second occurrence", () => {
     expect(validate(use("Step", { id: "a" }, 1), use("Step", { id: "a" }, 9))).toEqual([
       'tutorial.mdx:9:1 <Step> duplicate id "a"',
+    ]);
+  });
+
+  it("reports duplicate hint ids at the second occurrence", () => {
+    expect(validate(use("Hint", { id: "redirect-uri", label: "Redirect URI" }, 1), use("Hint", { id: "redirect-uri", label: "Redirect URI" }, 9))).toEqual([
+      'tutorial.mdx:9:1 <Hint> duplicate id "redirect-uri"',
     ]);
   });
 

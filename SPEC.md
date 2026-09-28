@@ -37,6 +37,7 @@ InteractiveCodeScroll is generic. It must not assume ArcGIS, OAuth, maps, or any
 ### Code model
 - **Final code + highlighting** (like Stripe): each file exists in its final version; steps only highlight regions. No incremental code per step.
 - **Line numbers**: the rendered code panel shows stable line numbers in a left gutter.
+- **Long lines**: tutorials may enable `codeWrap: true` in frontmatter to wrap long code lines instead of showing horizontal scrolling. It defaults to `false` so code shape is preserved unless the author opts in.
 
 ### Scroll-driven focus
 An optional `<Intro>` block can appear before the first `<Step>`. It is rendered as tutorial introduction content,
@@ -80,6 +81,10 @@ When a step comes into focus, its text block can:
 - **localStorage persistence**: configurable per field by the author (persist or not).
 - **Secret fields**: the author can mark a field as sensitive → masked in the form and in the code, with a **visibility toggle** to reveal it when needed.
 - Entered values are included in downloads.
+
+### Markdown content helpers
+- Standard Markdown blockquotes render as lightweight editorial notes.
+- `<Hint id label>...</Hint>` renders inline clarification text with a dashed underline and a hover/focus popover. The `id` is required and unique; the body may contain HTML such as links. Hints are for short contextual explanations; longer or essential content should use standard prose or `<details>`.
 
 ### Download
 - **Single file** (button on each file tab).

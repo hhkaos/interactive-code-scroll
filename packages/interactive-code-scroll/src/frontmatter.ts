@@ -9,6 +9,7 @@ export interface TutorialConfig {
   title: string;
   preview: PreviewMode;
   theme: Theme;
+  codeWrap: boolean;
   /** Image in `images/` shown in the header and used as favicon. */
   logo?: string;
 }
@@ -20,13 +21,15 @@ function oneOf<T extends string>(name: string, value: unknown, allowed: readonly
 
 /** Validates tutorial.mdx frontmatter; defaults: title "Tutorial", preview `both`, theme `auto`. */
 export function readTutorialConfig(frontmatter: Record<string, unknown>): TutorialConfig {
-  const { title = "Tutorial", preview = "both", theme = "auto", logo } = frontmatter;
+  const { title = "Tutorial", preview = "both", theme = "auto", codeWrap = false, logo } = frontmatter;
   if (typeof title !== "string") throw new Error('tutorial.mdx frontmatter: "title" must be a string');
+  if (typeof codeWrap !== "boolean") throw new Error('tutorial.mdx frontmatter: "codeWrap" must be a boolean');
   if (logo !== undefined && typeof logo !== "string") throw new Error('tutorial.mdx frontmatter: "logo" must be a string');
   return {
     title,
     preview: oneOf("preview", preview, PREVIEW_MODES),
     theme: oneOf("theme", theme, THEMES),
+    codeWrap,
     ...(logo === undefined ? {} : { logo }),
   };
 }

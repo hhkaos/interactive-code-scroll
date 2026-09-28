@@ -18,6 +18,7 @@ if (tsc.status !== 0) process.exit(tsc.status ?? 1);
 rewriteFile(join(dist, "index.js"), (text) => text.replaceAll("./preview/code-file.ts", "./preview/code-file.js"));
 
 for (const path of [
+  "src/components/Hint.astro",
   "src/components/Intro.astro",
   "src/components/Step.astro",
   "src/components/VarField.astro",
@@ -31,6 +32,7 @@ for (const path of [
   cpSync(source, target);
 }
 
+rewriteAstroImports(join(dist, "components", "Hint.astro"));
 rewriteAstroImports(join(dist, "components", "Intro.astro"));
 rewriteAstroImports(join(dist, "components", "Step.astro"));
 rewriteAstroImports(join(dist, "components", "VarField.astro"));

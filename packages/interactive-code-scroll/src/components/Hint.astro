@@ -1,0 +1,16 @@
+---
+interface Props {
+  id: string;
+  label: string;
+}
+
+const { id, label } = Astro.props;
+const tipId = `hint-${id}`;
+---
+
+<span class="hint">
+  <button type="button" class="hint-label" aria-describedby={tipId}>{label}</button>
+  <span id={tipId} class="hint-popover" role="tooltip">
+    <slot />
+  </span>
+</span>

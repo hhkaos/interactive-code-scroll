@@ -4,7 +4,7 @@ import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type 
 import { readTutorialFiles } from "./tutorial-files.ts";
 import { validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 
-const COMPONENTS = new Set(["Step", "VarField"]);
+const COMPONENTS = new Set(["Hint", "Step", "VarField"]);
 
 export class TutorialValidationError extends Error {
   constructor(readonly problems: string[]) {
@@ -23,7 +23,7 @@ function attributesOf(node: Readonly<MdxJsxFlowElement | MdxJsxTextElement>): Re
   return out;
 }
 
-/** Satteri mdast plugin: checks `<Step>` / `<VarField>` references against `code/` and `images/`. */
+/** Satteri mdast plugin: checks tutorial component references against `code/` and `images/`. */
 export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
   return (ctx) => {
     const tutorial = readTutorialFiles(tutorialDir);

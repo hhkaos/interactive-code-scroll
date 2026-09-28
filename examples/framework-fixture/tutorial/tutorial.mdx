@@ -2,6 +2,7 @@
 title: Framework Fixture Tutorial
 preview: both
 theme: auto
+codeWrap: true
 logo: fixture-logo.svg
 ---
 
@@ -11,6 +12,8 @@ logo: fixture-logo.svg
 
 This fixture is not product documentation. It is a stable contract for E2E tests.
 Do not edit its content for narrative polish; add cases only when the framework gains behavior.
+
+> Fixture notes use standard Markdown blockquotes with framework styling.
 
 ```js
 const fixtureMode = "docs-code";
@@ -58,7 +61,7 @@ These fields exercise persisted values, secret masking, and runtime code replace
 
 ## Register behavior
 
-This step focuses a multi-line JavaScript region and mentions `fixtureState` inline.
+This step focuses a multi-line JavaScript region and mentions <Hint id="fixture-state" label="fixtureState">The shared object that stores fixture values. See the <a href="https://example.com/docs">example docs</a>.</Hint> inline.
 
 <details>
 <summary>Why register more than one behavior?</summary>

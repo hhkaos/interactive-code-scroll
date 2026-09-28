@@ -3,7 +3,7 @@ import type { SourceFile } from "./tutorial-files.ts";
 
 export type AttributeValue = string | true | { expression: string };
 
-/** A `<Step>` or `<VarField>` found in the MDX, with its source position. */
+/** A tutorial component found in the MDX, with its source position. */
 export interface ComponentUse {
   name: string;
   attributes: Record<string, AttributeValue>;
@@ -19,6 +19,7 @@ export interface ValidationInput {
 }
 
 const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
+const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
 const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
@@ -41,6 +42,7 @@ export function validateTutorial({ mdxFile, uses, files, images }: ValidationInp
   }
   const varNames = new Set([...parsed.values()].flatMap((p) => p.vars.map((v) => v.name)));
   const stepIds = new Set<string>();
+  const hintIds = new Set<string>();
 
   for (const use of uses) {
     const at = `${mdxFile}:${use.line}:${use.column}`;
@@ -83,6 +85,15 @@ export function validateTutorial({ mdxFile, uses, files, images }: ValidationInp
           if (!images.includes(image)) report(`image "${image}" not found in images/`);
         }
       }
+    }
+
+    if (use.name === "Hint") {
+      const id = text("id");
+      if (!id) report('requires an "id"');
+      else if (!HINT_ID.test(id)) report(`id "${id}" must be lowercase letters, digits and dashes`);
+      else if (hintIds.has(id)) report(`duplicate id "${id}"`);
+      else hintIds.add(id);
+      if (!text("label")) report('requires a "label"');
     }
 
     if (use.name === "VarField") {
