@@ -6,17 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.1.0-alpha.4] - 2026-09-28
+## [0.1.0-alpha.5] - 2026-09-28
 
 ### Added
 
 - Added a GitHub Actions workflow to publish the npm package from version tags via npm trusted publishing.
 - Added an `<Intro>` MDX component for non-step tutorial introductions.
 - Added `placeholder` support to `<VarField>` without changing the linked code default.
+- Added package tarball smoke testing to the npm publish workflow.
 
 ### Changed
 
 - Removed the intro block's horizontal padding so introduction content aligns with the step content column.
+
+### Fixed
+
+- Fixed the npm publish workflow by pinning the pnpm version required by `pnpm/action-setup`.
 
 ## [0.1.0-alpha.3] - 2026-09-27
 
