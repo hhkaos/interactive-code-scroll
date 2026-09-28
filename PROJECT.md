@@ -138,6 +138,14 @@ When adding or changing framework behavior, update this fixture to include the n
 - No over-engineering: only what the task needs, no speculative abstractions.
 - Minimal comments: only the non-obvious why.
 
+### UI/UX workflow
+
+Subjective visual changes need a user review loop before they are treated as final. Prefer showing a screenshot or concrete layout measurements from `examples/framework-fixture`, then adjust from feedback before broad validation, publishing or tagging.
+
+### Test coverage workflow
+
+Before committing, review the actual diff and identify which introduced behaviors need tests. Add focused unit and/or E2E coverage for those behaviors; do not automatically expand to the whole E2E suite unless the change touches shared runtime behavior, cross-panel layout, navigation, packaging, or another high-risk surface.
+
 ---
 
 ## Constraints

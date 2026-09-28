@@ -20,7 +20,12 @@ If a request contradicts `SPEC.md`, flag it before implementing.
 Ask before adding any package. Justify the choice and version (recent, stable, secure).
 
 ### Tests with every feature
-Every feature ships with tests: unit (Vitest) and/or E2E (Playwright).
+Every feature ships with appropriate tests: unit (Vitest) and/or E2E (Playwright).
+
+Before committing, explicitly review the introduced changes and confirm that every behavior that should be protected by tests has focused coverage. This does not mean running or adding all possible E2E tests for every change; choose coverage based on risk and observable behavior.
+
+### UI/UX review
+For subjective UI/UX changes, do not treat the first implementation as final. Show or describe the visual result (preferably with a screenshot or concrete measurements when available) and get user approval before publishing, tagging, or running broad release validation. Focused tests are still expected once the behavior is agreed.
 
 ### Commits, TODO.md and CHANGELOG.md
 - After implementing and testing a feature (or meaningful sub-step), commit it (Conventional Commits, English).
