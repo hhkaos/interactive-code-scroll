@@ -16,7 +16,7 @@ InteractiveCodeScroll turns MDX and runnable source files into a static tutorial
 
 </Intro>
 
-<Step id="install" file="01-project-setup.sh">
+<Step id="install" file="01-project-setup.sh" region="install">
 
 ## Install the package
 
@@ -24,7 +24,7 @@ Create a project and install Astro with InteractiveCodeScroll. The package is st
 
 </Step>
 
-<Step id="scripts" file="01-project-setup.sh">
+<Step id="scripts" file="01-project-setup.sh" region="scripts">
 
 ## Add project scripts
 
@@ -32,7 +32,7 @@ The CLI can run directly, but scripts make the tutorial easier to work on and ea
 
 </Step>
 
-<Step id="folders" file="01-project-setup.sh">
+<Step id="folders" file="01-project-setup.sh" region="folders">
 
 ## Create the tutorial folders
 
@@ -40,7 +40,7 @@ A tutorial folder contains `tutorial.mdx`, runnable files in `code/` and optiona
 
 </Step>
 
-<Step id="frontmatter" images={["workflow.svg"]}>
+<Step id="frontmatter" file="tutorial.mdx" region="frontmatter">
 
 ## Configure the page
 
@@ -82,7 +82,7 @@ The field lives in the MDX step, but its default value comes from the code liter
 
 </Step>
 
-<Step id="run" file="02-run-locally.sh">
+<Step id="run" file="02-run-locally.sh" region="run">
 
 ## Run the tutorial locally
 
@@ -90,7 +90,7 @@ Use dev mode while writing, then build the static site before publishing. Valida
 
 </Step>
 
-<Step id="publish" file="03-publish.sh">
+<Step id="publish" file="03-publish.sh" region="publish">
 
 ## Build and publish
 

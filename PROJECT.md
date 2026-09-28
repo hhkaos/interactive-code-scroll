@@ -209,7 +209,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 ## Key technical patterns
 
 ### Tutorial code markup
-- Regions: `// #region <id>` … `// #endregion` (HTML/CSS equivalents).
+- Regions: `// #region <id>` … `// #endregion` (HTML/CSS equivalents, plus shell/YAML-style `# #region` comments).
 - Form variables: inline comment, e.g. `const clientId = "DEMO_ID"; // @var clientId`. The literal is the default (single source of truth).
 - Source code must remain valid, runnable and lintable without the framework.
 - Markers are stripped from rendered and downloaded code.

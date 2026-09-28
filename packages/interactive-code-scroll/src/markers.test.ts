@@ -56,6 +56,27 @@ body { font-family: "Avenir"; } /* @var font */
     });
   });
 
+  it("supports shell and YAML-style comment syntax", () => {
+    const shell = `# #region install
+npm init -y
+npm install -D astro interactive-code-scroll@alpha
+# #endregion install`;
+    expect(parseSource(shell)).toEqual({
+      code: "npm init -y\nnpm install -D astro interactive-code-scroll@alpha",
+      regions: [{ id: "install", fromLine: 1, toLine: 2 }],
+      vars: [],
+    });
+
+    const yaml = `---
+# #region frontmatter
+title: "My Tutorial"
+# #endregion frontmatter
+---`;
+    expect(parseSource(yaml)).toMatchObject({
+      regions: [{ id: "frontmatter", fromLine: 2, toLine: 2 }],
+    });
+  });
+
   it("keeps code without markers untouched", () => {
     const plain = 'const a = "x";\n// just a comment\n';
     expect(parseSource(plain)).toEqual({ code: plain, regions: [], vars: [] });

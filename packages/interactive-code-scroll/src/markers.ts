@@ -36,9 +36,9 @@ export class MarkerError extends Error {
   }
 }
 
-const REGION_START = /^\s*(?:\/\/|\/\*|<!--)\s*#region\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
-const REGION_END = /^\s*(?:\/\/|\/\*|<!--)\s*#endregion(?:\s+([\w-]+))?\s*(?:\*\/|-->)?\s*$/;
-const VAR_COMMENT = /\s*(\/\/|\/\*|<!--)\s*@var\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
+const REGION_START = /^\s*(?:#|\/\/|\/\*|<!--)\s*#region\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
+const REGION_END = /^\s*(?:#|\/\/|\/\*|<!--)\s*#endregion(?:\s+([\w-]+))?\s*(?:\*\/|-->)?\s*$/;
+const VAR_COMMENT = /\s*(#|\/\/|\/\*|<!--)\s*@var\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
 const STRING_LITERAL = /(["'])((?:\\.|(?!\1).)*)\1/;
 
 /** Strips `#region` / `@var` markers and records where they pointed. */

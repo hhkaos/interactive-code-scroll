@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added shell/YAML-style `# #region` marker support for bash commands and MDX frontmatter examples.
 - Added public authoring, CLI, deployment and upgrade documentation for tutorial authors.
 - Added a dogfooding getting-started tutorial built with InteractiveCodeScroll.
 - Added a GitHub Pages workflow to publish the getting-started tutorial on pushes to the default branch, with configurable site and base URL variables.

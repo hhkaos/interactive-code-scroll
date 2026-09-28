@@ -127,7 +127,7 @@ const title = "Checkout";
 // #endregion config
 ```
 
-HTML and CSS comments are also supported:
+HTML, CSS, shell and YAML-style comments are also supported:
 
 ```html
 <!-- #region app -->
@@ -141,6 +141,20 @@ main {
   display: grid;
 }
 /* #endregion layout */
+```
+
+```sh
+# #region setup
+npm init -y
+npm install -D astro interactive-code-scroll@alpha
+# #endregion setup
+```
+
+```yaml
+# #region frontmatter
+title: My Tutorial
+preview: tab
+# #endregion frontmatter
 ```
 
 Rules:
