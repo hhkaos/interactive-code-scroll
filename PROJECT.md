@@ -44,7 +44,7 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 ## Next Session Plan
 
-_TBD after the current CLI slice lands._
+Recommended next task: improve dev mode validation so changes under `code/` and `images/` re-run MDX reference checks without waiting for `tutorial.mdx` to change, and center the dev overlay on the failing MDX `loc`.
 
 ---
 
@@ -81,6 +81,10 @@ LICENSE             # Apache-2.0
 CLAUDE.md           # Claude Code-specific rules
 AGENTS.md           # Codex CLI-specific rules
 README.md
+docs/authoring.md  # public authoring/API reference for tutorial writers
+docs/cli.md        # public CLI reference
+docs/deployment.md # GitHub Pages/static hosting notes, including getting-started URL variables
+docs/upgrade.md    # public upgrade guide for alpha authors
 packages/interactive-code-scroll/  # core package: Astro integration
   bin/interactive-code-scroll.mjs   # generic CLI: dev, build, serve, doctor, init-scripts
   scripts/build-package.mjs         # package build: compiles TS and copies Astro/CSS assets
@@ -101,6 +105,8 @@ packages/interactive-code-scroll/  # core package: Astro integration
   test/                            # Astro build integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
+examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
+.github/workflows/publish-getting-started.yml # builds/deploys examples/getting-started on default-branch pushes
 e2e/                               # Playwright tests (against the built example)
 docs/research/technical-base-spike.md # spike findings (prototype code in git history, commit f265e61)
 ```
@@ -133,6 +139,14 @@ MDX + annotated code + images → build (validates references; fails on broken I
 `examples/framework-fixture` is the stable regression fixture for framework behavior. It is intentionally fake product content and must not be edited for tutorial narrative/design polish.
 
 When adding or changing framework behavior, update this fixture to include the new case whenever the behavior is observable through a tutorial, and add or adjust the corresponding Playwright assertions in `e2e/`. The real tutorials (for example `examples/oauth-pkce`) may change editorially; E2E tests for framework behavior should not depend on those editorial changes.
+
+### Public docs and dogfooding tutorial
+
+Public author-facing docs live in `README.md` and `docs/`. The root README is the repository entry point; `packages/interactive-code-scroll/README.md` is the npm package entry point and should stay in sync at a high level.
+
+`examples/getting-started` is the dogfooding tutorial for first-time authors. It is not the regression fixture: use it for public author experience and docs validation, while keeping framework E2E behavior coverage in `examples/framework-fixture`.
+
+The getting-started tutorial is published by `.github/workflows/publish-getting-started.yml`. The workflow defaults to GitHub Pages project-site URLs (`https://<owner>.github.io/<repo>/`) and can be configured with repository variables `ICS_GETTING_STARTED_SITE` and `ICS_GETTING_STARTED_BASE`.
 
 ---
 
@@ -263,10 +277,11 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 
 ## Deployment
 
-- GitHub Pages via GitHub Actions, on push to `main`.
-- Base path `/<repo>/`.
-- Supports one tutorial per repo or several (`/tutorials/<name>/`) with an index page.
-- Workflow details: _TBD — GitHub Pages task in `TODO.md`._
+- GitHub Pages via GitHub Actions, on push to `main` or `master`.
+- Current published site: the dogfooding getting-started tutorial (`examples/getting-started`).
+- Default Pages URL shape: `https://<owner>.github.io/<repo>/`.
+- Configurable repo variables: `ICS_GETTING_STARTED_SITE` (origin, no trailing path) and `ICS_GETTING_STARTED_BASE` (`/<repo>/` by default, `/` for custom domains or user/org pages).
+- Multi-tutorial repos with an index page are still pending in `TODO.md`.
 
 ---
 

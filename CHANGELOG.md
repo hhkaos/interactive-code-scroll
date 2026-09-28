@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - Expanded the root and package READMEs with quick-start guidance and links to tutorials built with InteractiveCodeScroll.
+- Updated shared project context to document the public docs, getting-started tutorial and GitHub Pages deployment workflow.
 - Updated the OAuth PKCE example credential setup step with a seven-image ArcGIS portal walkthrough.
 
 ## [0.1.0-alpha.8] - 2026-09-28
