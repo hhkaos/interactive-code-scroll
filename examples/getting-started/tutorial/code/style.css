@@ -1,0 +1,65 @@
+:root {
+  color-scheme: light dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: light-dark(#f6f8fb, #101418);
+  color: light-dark(#17202a, #f3f7fb);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+/* #region card */
+.demo-card {
+  width: min(100%, 42rem);
+  border: 1px solid light-dark(#d7dde5, #34414f);
+  border-radius: 8px;
+  background: light-dark(#ffffff, #192129);
+  box-shadow: 0 18px 45px rgb(0 0 0 / 12%);
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: light-dark(#00619b, #65b7ff);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.05;
+}
+
+#summary {
+  max-width: 34rem;
+  margin: 1rem 0 1.5rem;
+  color: light-dark(#4d5b68, #b8c4cf);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  background: #007ac2;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+}
+
+#steps {
+  margin: 1.5rem 0 0;
+  padding-left: 1.25rem;
+  line-height: 1.8;
+}
+/* #endregion card */

@@ -1,0 +1,196 @@
+# Authoring and API Reference
+
+This reference describes the tutorial files authors write. For implementation details, see `SPEC.md`.
+
+## Tutorial Layout
+
+A tutorial is a folder with this shape:
+
+```text
+tutorial/
+  tutorial.mdx
+  code/
+    index.html
+    main.js
+    style.css
+  images/
+    logo.svg
+    screenshot.png
+```
+
+- `tutorial.mdx` contains frontmatter, prose and MDX components.
+- `code/` contains the final runnable project files.
+- `images/` contains logos, screenshots and carousel images referenced by steps.
+
+The source code should be valid without InteractiveCodeScroll. Use comments for framework markers.
+
+## Frontmatter
+
+```yaml
+---
+title: Build a checkout page
+preview: both
+theme: auto
+codeWrap: false
+logo: logo.svg
+---
+```
+
+| Field | Values | Default | Notes |
+|---|---|---|---|
+| `title` | string | required | Rendered in the app header. Do not repeat it as an MDX `#` heading. |
+| `preview` | `off`, `iframe`, `tab`, `both` | `both` | Controls the Preview panel and open-in-tab button. |
+| `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
+| `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
+| `logo` | image path | none | Relative to `images/`. Use a square SVG or a PNG of at least 512 x 512. |
+
+## Components
+
+### `<Intro>`
+
+Optional content before the first step.
+
+```mdx
+<Intro>
+
+## Before you start
+
+Install the prerequisites and keep this page open.
+
+</Intro>
+```
+
+`<Intro>` is not numbered, does not count as a step and does not activate code focus.
+
+### `<Step>`
+
+The main tutorial block.
+
+```mdx
+<Step id="configure" file="main.js" region="config" preview="collapsed">
+
+## Configure the app
+
+Explain the change here.
+
+</Step>
+```
+
+| Prop | Required | Notes |
+|---|---:|---|
+| `id` | yes | Unique deep-link id. The generated URL uses `#id`. |
+| `file` | no | Path relative to `code/`. Shows that file in the code panel. |
+| `region` | no | Region id in `file`. Omitting it shows the whole file with no focus. |
+| `images` | no | Array of paths relative to `images/`. Shows an image carousel instead of code. |
+| `preview` | no | `expanded`, `collapsed` or `keep`. Controls iframe state when the step activates. |
+
+A text-only step keeps the current file visible and clears any previous region focus.
+
+### `<VarField>`
+
+Creates a form field linked to an `@var` marker in code.
+
+```mdx
+<VarField name="clientId" label="Client ID" secret persist />
+<VarField name="portalUrl" label="Portal URL" placeholder="https://example.com" persist />
+```
+
+| Prop | Required | Notes |
+|---|---:|---|
+| `name` | yes | Matches an `@var` name in a code file. |
+| `label` | yes | Visible field label. |
+| `placeholder` | no | Input hint. Does not change the code default. |
+| `secret` | no | Masks the input and rendered code value until revealed. |
+| `persist` | no | Stores the value in `localStorage`. |
+
+The default value is the literal in code. Empty fields restore that literal in code, Preview and downloads.
+
+### `<Hint>`
+
+Short inline clarification with a hover/focus popover.
+
+```mdx
+The Preview runs from a <Hint id="same-origin" label="same-origin page">A real URL under the generated site.</Hint>.
+```
+
+Use hints for brief side notes. Use regular prose or `<details>` for essential or longer content.
+
+## Code Markers
+
+### Regions
+
+Use `#region <id>` and `#endregion <id>` comments:
+
+```js
+// #region config
+const title = "Checkout";
+// #endregion config
+```
+
+HTML and CSS comments are also supported:
+
+```html
+<!-- #region app -->
+<main id="app"></main>
+<!-- #endregion app -->
+```
+
+```css
+/* #region layout */
+main {
+  display: grid;
+}
+/* #endregion layout */
+```
+
+Rules:
+
+- Region ids are unique per file.
+- Regions may nest.
+- Empty regions are errors.
+- A closing id, when present, must match the opened region.
+- Markers are stripped from rendered code and downloads.
+
+### Variables
+
+Use `@var <name>` on the same line as a string literal:
+
+```js
+const tutorialTitle = "InteractiveCodeScroll"; // @var tutorialTitle
+```
+
+Rules:
+
+- `@var` targets the first string literal on its line.
+- Use one `@var` per line.
+- Variable names are unique per file.
+- Runtime values are escaped for the detected context.
+
+## Preview
+
+When Preview is enabled, `code/index.html` is required. The generated site publishes every file under `code/` next to the Preview page, with markers stripped, so relative links such as `./main.js` or `./oauth-callback.html` keep working.
+
+Preview modes:
+
+- `iframe`: embedded Preview only.
+- `tab`: open-in-tab only.
+- `both`: embedded Preview and open-in-tab.
+- `off`: no Preview.
+
+Form changes refresh the Preview after a short debounce. The Run button refreshes it manually.
+
+## Validation
+
+Builds fail when MDX references unknown files, regions, variables or images, or when code markers are malformed. In dev mode, validation errors appear in Astro's browser overlay.
+
+For a package/build/runtime change, run:
+
+```sh
+CI=true pnpm preflight:package
+```
+
+For docs-only changes, run:
+
+```sh
+CI=true pnpm preflight:docs
+```

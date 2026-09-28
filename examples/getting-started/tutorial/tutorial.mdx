@@ -1,0 +1,67 @@
+---
+title: Getting Started with InteractiveCodeScroll
+preview: both
+theme: auto
+codeWrap: true
+logo: logo.svg
+---
+
+<Intro>
+
+## Build your first interactive tutorial
+
+InteractiveCodeScroll turns MDX and runnable source files into a static tutorial site. This guide uses the framework itself to show the smallest useful authoring loop: create files, mark regions, connect steps and publish the result.
+
+> The source code on the right is a complete static demo. The markers are only authoring hints; rendered and downloaded files do not include them.
+
+</Intro>
+
+<Step id="project-shape" file="index.html" region="shell" preview="collapsed">
+
+## Create the tutorial files
+
+Start with `tutorial.mdx`, a `code/` folder and an `images/` folder. The code can be plain HTML, CSS and JavaScript, or any client-side files that run without a backend.
+
+</Step>
+
+<Step id="frontmatter" images={["workflow.svg"]} preview="collapsed">
+
+## Configure the page
+
+The MDX frontmatter sets the title, Preview mode, default theme, line wrapping and optional logo. Keep these settings topic-neutral; product-specific behavior belongs in your tutorial code.
+
+</Step>
+
+<Step id="regions" file="main.js" region="render" preview="expanded">
+
+## Mark code regions
+
+Use `#region` comments around the final code you want each step to focus. Steps reference stable ids instead of fragile line numbers.
+
+</Step>
+
+<Step id="variables" file="main.js" region="config" preview="expanded">
+
+## Add editable variables
+
+Add `@var` next to a string literal, then create a matching field in MDX. Try changing this value and watch the code and Preview update.
+
+<VarField name="tutorialName" label="Tutorial name" placeholder="My first tutorial" persist />
+
+</Step>
+
+<Step id="style" file="style.css" region="card" preview="expanded">
+
+## Style the demo
+
+Your tutorial code stays ordinary code. CSS regions, HTML regions and JavaScript regions all use comment syntax native to that file type.
+
+</Step>
+
+<Step id="publish" file="index.html" preview="collapsed">
+
+## Build and publish
+
+Run `interactive-code-scroll build` to generate a static site. This repository also includes a GitHub Pages workflow that publishes this getting-started tutorial on every push to the default branch.
+
+</Step>

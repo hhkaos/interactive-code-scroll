@@ -2,34 +2,83 @@
 
 Build guided, interactive code tutorials from MDX and annotated source code.
 
-## CLI
+InteractiveCodeScroll generates a static tutorial site with synchronized prose, highlighted code regions, images, editable variables, Preview, copy and downloads. It is designed for technical writers, developer advocates and conference speakers.
 
-Run these commands from an existing tutorial project:
+> Status: early alpha. Authoring APIs may still change before v1.
 
-```sh
-npm exec -- interactive-code-scroll dev
-npm exec -- interactive-code-scroll build
-npm exec -- interactive-code-scroll serve
-```
-
-By default, the CLI expects a `tutorial/` folder with `tutorial.mdx`, `code/` and `images/`.
-Use `--tutorial <dir>` to select another tutorial folder.
-
-If your tutorial files live at the project root, use:
+## Install
 
 ```sh
-npm exec -- interactive-code-scroll dev --tutorial .
+npm install -D astro interactive-code-scroll@alpha
 ```
 
-For pnpm projects, use `pnpm exec interactive-code-scroll dev --tutorial .` or add scripts:
+## Tutorial Layout
+
+```text
+tutorial/
+  tutorial.mdx
+  code/
+    index.html
+    main.js
+    style.css
+  images/
+    logo.svg
+```
+
+## Scripts
+
+```json
+{
+  "scripts": {
+    "dev": "interactive-code-scroll dev",
+    "build": "interactive-code-scroll build",
+    "serve": "interactive-code-scroll serve"
+  }
+}
+```
+
+Run locally:
 
 ```sh
-pnpm exec interactive-code-scroll init-scripts --write
-pnpm run dev -- --tutorial .
+npm run dev
 ```
 
-Use `interactive-code-scroll doctor` to inspect the detected root, package manager, Astro binary and
-`tutorial.mdx` candidates.
+Build for static hosting:
 
-Provider-specific helpers, such as OAuth redirect URI guidance, are outside the core flow unless a
-project opts into them explicitly.
+```sh
+npm run build
+```
+
+Use `--tutorial <dir>` when the tutorial is not in the default `tutorial/` folder.
+
+## Authoring
+
+Mark stable code regions in runnable source files:
+
+```js
+// #region config
+const title = "My tutorial"; // @var title
+// #endregion config
+```
+
+Reference those regions from MDX:
+
+```mdx
+<Step id="configure" file="main.js" region="config">
+
+## Configure the demo
+
+<VarField name="title" label="Title" persist />
+
+</Step>
+```
+
+Markers are stripped from rendered and downloaded code.
+
+## Documentation
+
+- Repository: <https://github.com/hhkaos/interactive-code-scroll>
+- Authoring reference: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/authoring.md>
+- CLI reference: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/cli.md>
+- Deployment guide: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/deployment.md>
+- Upgrade guide: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/upgrade.md>
