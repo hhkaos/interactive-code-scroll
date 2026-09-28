@@ -19,6 +19,8 @@ describe("highlight", () => {
   it("maps extensions to Shiki languages", () => {
     expect(langFor("a/b.MJS")).toBe("javascript");
     expect(langFor("index.html")).toBe("html");
+    expect(langFor("setup.sh")).toBe("bash");
+    expect(langFor("tutorial.mdx")).toBe("markdown");
     expect(langFor("README")).toBe("text");
   });
 });

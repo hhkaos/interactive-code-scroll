@@ -47,12 +47,24 @@ export function parseSource(source: string, file?: string): ParsedSource {
   const regions: Region[] = [];
   const vars: VarRef[] = [];
   const open: { id: string; fromLine: number; sourceLine: number }[] = [];
+  const markdownLike = file === undefined ? false : /\.(?:md|mdx)$/i.test(file);
+  let fenced = false;
   const fail = (message: string, sourceLine: number): never => {
     throw new MarkerError(message, file, sourceLine);
   };
 
   source.split("\n").forEach((raw, index) => {
     const sourceLine = index + 1;
+
+    if (markdownLike && /^\s*(?:```|~~~)/.test(raw)) {
+      fenced = !fenced;
+      out.push(raw);
+      return;
+    }
+    if (fenced) {
+      out.push(raw);
+      return;
+    }
 
     const start = REGION_START.exec(raw);
     if (start) {

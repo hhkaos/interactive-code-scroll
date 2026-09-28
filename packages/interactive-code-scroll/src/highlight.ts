@@ -11,6 +11,11 @@ const LANGS: Record<string, string> = {
   css: "css",
   json: "json",
   md: "markdown",
+  mdx: "markdown",
+  sh: "bash",
+  bash: "bash",
+  yaml: "yaml",
+  yml: "yaml",
 };
 
 export function langFor(path: string): string {

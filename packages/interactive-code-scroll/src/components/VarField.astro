@@ -12,7 +12,7 @@ interface Props {
 
 const { name, label, placeholder, secret = false, persist = false } = Astro.props;
 const defaultValue = files
-  .flatMap((f) => parseSource(f.source).vars)
+  .flatMap((f) => parseSource(f.source, `code/${f.path}`).vars)
   .find((v) => v.name === name)?.defaultValue;
 ---
 

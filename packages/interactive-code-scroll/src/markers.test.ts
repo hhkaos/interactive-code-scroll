@@ -77,6 +77,25 @@ title: "My Tutorial"
     });
   });
 
+  it("keeps markers inside Markdown fences as authored text", () => {
+    const markdown = `# #region docs
+\`\`\`html
+<!-- #region card -->
+<main>Hi</main> <!-- @var demo -->
+<!-- #endregion card -->
+\`\`\`
+# #endregion docs`;
+    expect(parseSource(markdown, "notes.md")).toEqual({
+      code: `\`\`\`html
+<!-- #region card -->
+<main>Hi</main> <!-- @var demo -->
+<!-- #endregion card -->
+\`\`\``,
+      regions: [{ id: "docs", fromLine: 1, toLine: 5 }],
+      vars: [],
+    });
+  });
+
   it("keeps code without markers untouched", () => {
     const plain = 'const a = "x";\n// just a comment\n';
     expect(parseSource(plain)).toEqual({ code: plain, regions: [], vars: [] });

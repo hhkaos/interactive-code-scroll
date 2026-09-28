@@ -1,6 +1,6 @@
 ---
 title: Getting Started with InteractiveCodeScroll
-preview: tab
+preview: both
 theme: auto
 codeWrap: true
 logo: logo.svg
@@ -12,11 +12,11 @@ logo: logo.svg
 
 InteractiveCodeScroll turns MDX and runnable source files into a static tutorial site. This guide uses the framework itself to show the authoring loop: install the package, create the tutorial folder, write MDX steps and preview the generated result.
 
-> The code panel shows the files you would create in a new tutorial project. The Preview is available in a separate tab so the authoring files stay in focus.
+> The code panel shows the files you would create in a new tutorial project. The embedded Preview stays collapsed until the tutorial has enough files to make the result useful.
 
 </Intro>
 
-<Step id="install" file="01-project-setup.sh" region="install">
+<Step id="install" file="01-project-setup.sh" region="install" preview="collapsed">
 
 ## Install the package
 
@@ -24,7 +24,7 @@ Create a project and install Astro with InteractiveCodeScroll. The package is st
 
 </Step>
 
-<Step id="scripts" file="01-project-setup.sh" region="scripts">
+<Step id="scripts" file="01-project-setup.sh" region="scripts" preview="collapsed">
 
 ## Add project scripts
 
@@ -32,7 +32,7 @@ The CLI can run directly, but scripts make the tutorial easier to work on and ea
 
 </Step>
 
-<Step id="folders" file="01-project-setup.sh" region="folders">
+<Step id="folders" file="01-project-setup.sh" region="folders" preview="collapsed">
 
 ## Create the tutorial folders
 
@@ -40,15 +40,23 @@ A tutorial folder contains `tutorial.mdx`, runnable files in `code/` and optiona
 
 </Step>
 
-<Step id="frontmatter" file="tutorial.mdx" region="frontmatter">
+<Step id="frontmatter" file="tutorial.mdx" region="frontmatter" preview="collapsed">
 
 ## Configure the page
 
-The MDX frontmatter sets the title, Preview mode, default theme, line wrapping and optional logo. This tutorial uses `preview: tab` because the authoring files are the main subject.
+The MDX frontmatter sets the title, Preview mode, default theme and line wrapping. This example uses `preview: both`: an embedded Preview for live feedback and an open-in-tab option for full-screen checks.
 
 </Step>
 
-<Step id="first-step" file="tutorial.mdx" region="first-step">
+<Step id="intro" file="tutorial.mdx" region="intro" preview="collapsed">
+
+## Add an introduction
+
+Use `<Intro>` for context before the numbered steps begin. It is not counted as a step and it leaves the tutorial in a no-step state while readers are at the top.
+
+</Step>
+
+<Step id="first-step" file="tutorial.mdx" region="first-step" preview="collapsed">
 
 ## Write the first step
 
@@ -56,25 +64,25 @@ Use `<Step>` blocks to connect prose to a file, a region or a set of images. Thi
 
 </Step>
 
-<Step id="regions" file="index.html" region="preview-card">
+<Step id="regions" file="markers.md" region="regions" preview="expanded">
 
 ## Mark code regions
 
-Use comments native to the file type. HTML, CSS and JavaScript regions are stripped from rendered and downloaded code.
+Use comments native to the file type. Region markers are stripped from rendered and downloaded code, so this authoring note shows the marker syntax explicitly while the runnable files stay clean.
 
 </Step>
 
-<Step id="variables" file="index.html" region="title-var">
+<Step id="variables" file="markers.md" region="variables" preview="expanded">
 
 ## Add editable variables
 
-Add `@var` next to a string literal, then create a matching field in MDX. Try changing the value below and opening the Preview in a tab.
+Add `@var` next to a string literal, then create a matching field in MDX. Try changing the value below: the code panel and embedded Preview update in place.
 
 <VarField name="demoTitle" label="Demo title" placeholder="My first tutorial" persist />
 
 </Step>
 
-<Step id="field" file="tutorial.mdx" region="field">
+<Step id="field" file="tutorial.mdx" region="field" preview="expanded">
 
 ## Link the field
 
@@ -82,7 +90,15 @@ The field lives in the MDX step, but its default value comes from the code liter
 
 </Step>
 
-<Step id="run" file="02-run-locally.sh" region="run">
+<Step id="helpers" file="tutorial.mdx" region="helpers" preview="collapsed">
+
+## Add helper components
+
+Use <Hint id="getting-started-hint" label="hints">Short inline popovers for extra context.</Hint>, Markdown blockquotes for notes and `<details>` for longer optional explanations.
+
+</Step>
+
+<Step id="run" file="02-run-locally.sh" region="run" preview="collapsed">
 
 ## Run the tutorial locally
 
@@ -90,7 +106,7 @@ Use dev mode while writing, then build the static site before publishing. Valida
 
 </Step>
 
-<Step id="publish" file="03-publish.sh" region="publish">
+<Step id="publish" file="03-publish.sh" region="publish" preview="collapsed">
 
 ## Build and publish
 
