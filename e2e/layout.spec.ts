@@ -113,6 +113,16 @@ test("code wrapping can be enabled by tutorial frontmatter", async ({ page }) =>
     .evaluate((line) => line.getBoundingClientRect().height);
   const firstLineHeight = await pane.locator(".line").first().evaluate((line) => line.getBoundingClientRect().height);
   expect(longLineHeight).toBeGreaterThan(firstLineHeight * 1.5);
+
+  const blankLine = pane.locator('.line[data-line="3"]');
+  const afterBlankLine = pane.locator('.line[data-line="4"]');
+  const blankLineBox = await blankLine.evaluate((line) => {
+    const rect = line.getBoundingClientRect();
+    return { top: rect.top, bottom: rect.bottom, height: rect.height };
+  });
+  const afterBlankLineTop = await afterBlankLine.evaluate((line) => line.getBoundingClientRect().top);
+  expect(blankLineBox.height).toBeGreaterThan(firstLineHeight * 0.8);
+  expect(afterBlankLineTop).toBeGreaterThanOrEqual(blankLineBox.bottom);
 });
 
 test.describe("high zoom", () => {

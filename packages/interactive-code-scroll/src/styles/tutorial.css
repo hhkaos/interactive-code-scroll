@@ -481,6 +481,7 @@ body[data-docs-hidden] {
       position: relative;
       display: block;
       width: auto;
+      min-block-size: 1lh;
       padding-inline: 2.75rem 1.25rem;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
