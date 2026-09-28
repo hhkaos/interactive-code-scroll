@@ -1,6 +1,6 @@
 ---
 title: Getting Started with InteractiveCodeScroll
-preview: both
+preview: tab
 theme: auto
 codeWrap: true
 logo: logo.svg
@@ -10,58 +10,90 @@ logo: logo.svg
 
 ## Build your first interactive tutorial
 
-InteractiveCodeScroll turns MDX and runnable source files into a static tutorial site. This guide uses the framework itself to show the smallest useful authoring loop: create files, mark regions, connect steps and publish the result.
+InteractiveCodeScroll turns MDX and runnable source files into a static tutorial site. This guide uses the framework itself to show the authoring loop: install the package, create the tutorial folder, write MDX steps and preview the generated result.
 
-> The source code on the right is a complete static demo. The markers are only authoring hints; rendered and downloaded files do not include them.
+> The code panel shows the files you would create in a new tutorial project. The Preview is available in a separate tab so the authoring files stay in focus.
 
 </Intro>
 
-<Step id="project-shape" file="index.html" region="shell" preview="collapsed">
+<Step id="install" file="01-project-setup.sh">
 
-## Create the tutorial files
+## Install the package
 
-Start with `tutorial.mdx`, a `code/` folder and an `images/` folder. The code can be plain HTML, CSS and JavaScript, or any client-side files that run without a backend.
+Create a project and install Astro with InteractiveCodeScroll. The package is still published under the alpha tag while the authoring API settles.
 
 </Step>
 
-<Step id="frontmatter" images={["workflow.svg"]} preview="collapsed">
+<Step id="scripts" file="01-project-setup.sh">
+
+## Add project scripts
+
+The CLI can run directly, but scripts make the tutorial easier to work on and easier to document for other authors.
+
+</Step>
+
+<Step id="folders" file="01-project-setup.sh">
+
+## Create the tutorial folders
+
+A tutorial folder contains `tutorial.mdx`, runnable files in `code/` and optional visual assets in `images/`. The generated tutorial site is static.
+
+</Step>
+
+<Step id="frontmatter" images={["workflow.svg"]}>
 
 ## Configure the page
 
-The MDX frontmatter sets the title, Preview mode, default theme, line wrapping and optional logo. Keep these settings topic-neutral; product-specific behavior belongs in your tutorial code.
+The MDX frontmatter sets the title, Preview mode, default theme, line wrapping and optional logo. This tutorial uses `preview: tab` because the authoring files are the main subject.
 
 </Step>
 
-<Step id="regions" file="main.js" region="render" preview="expanded">
+<Step id="first-step" file="tutorial.mdx" region="first-step">
+
+## Write the first step
+
+Use `<Step>` blocks to connect prose to a file, a region or a set of images. This keeps authoring stable because steps reference ids instead of line numbers.
+
+</Step>
+
+<Step id="regions" file="index.html" region="preview-card">
 
 ## Mark code regions
 
-Use `#region` comments around the final code you want each step to focus. Steps reference stable ids instead of fragile line numbers.
+Use comments native to the file type. HTML, CSS and JavaScript regions are stripped from rendered and downloaded code.
 
 </Step>
 
-<Step id="variables" file="main.js" region="config" preview="expanded">
+<Step id="variables" file="index.html" region="title-var">
 
 ## Add editable variables
 
-Add `@var` next to a string literal, then create a matching field in MDX. Try changing this value and watch the code and Preview update.
+Add `@var` next to a string literal, then create a matching field in MDX. Try changing the value below and opening the Preview in a tab.
 
-<VarField name="tutorialName" label="Tutorial name" placeholder="My first tutorial" persist />
-
-</Step>
-
-<Step id="style" file="style.css" region="card" preview="expanded">
-
-## Style the demo
-
-Your tutorial code stays ordinary code. CSS regions, HTML regions and JavaScript regions all use comment syntax native to that file type.
+<VarField name="demoTitle" label="Demo title" placeholder="My first tutorial" persist />
 
 </Step>
 
-<Step id="publish" file="index.html" preview="collapsed">
+<Step id="field" file="tutorial.mdx" region="field">
+
+## Link the field
+
+The field lives in the MDX step, but its default value comes from the code literal. Clearing the field restores that literal in code, Preview and downloads.
+
+</Step>
+
+<Step id="run" file="02-run-locally.sh">
+
+## Run the tutorial locally
+
+Use dev mode while writing, then build the static site before publishing. Validation fails fast when a step references a missing file, region, image or variable.
+
+</Step>
+
+<Step id="publish" file="03-publish.sh">
 
 ## Build and publish
 
-Run `interactive-code-scroll build` to generate a static site. This repository also includes a GitHub Pages workflow that publishes this getting-started tutorial on every push to the default branch.
+Run `interactive-code-scroll build` to generate a static site. This repository includes a GitHub Pages workflow that publishes this getting-started tutorial on every push to the default branch.
 
 </Step>

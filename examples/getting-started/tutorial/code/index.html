@@ -3,19 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>InteractiveCodeScroll demo</title>
+    <title>Getting started preview</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <!-- #region shell -->
+    <!-- #region preview-card -->
     <main class="demo-card">
-      <p class="eyebrow">InteractiveCodeScroll</p>
-      <h1 id="title">Build a guided code tutorial</h1>
-      <p id="summary">Write MDX, annotate runnable source files and publish a static site.</p>
-      <button id="action" type="button">Show authoring steps</button>
-      <ol id="steps" hidden></ol>
+      <p class="eyebrow">Preview result</p>
+      <!-- #region title-var -->
+      <h1 id="title">My first tutorial</h1>
+      <script>
+        const demoTitle = "My first tutorial"; // @var demoTitle
+        document.querySelector("#title").textContent = demoTitle;
+      </script>
+      <!-- #endregion title-var -->
+      <p>This is the page your readers can open from the Preview tab.</p>
     </main>
-    <!-- #endregion shell -->
-    <script type="module" src="./main.js"></script>
+    <!-- #endregion preview-card -->
   </body>
 </html>

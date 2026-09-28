@@ -1,0 +1,36 @@
+---
+title: My First Interactive Tutorial
+preview: tab
+theme: auto
+codeWrap: true
+---
+
+<Intro>
+
+## What you will build
+
+This tutorial shows a tiny static page and explains how its source files fit together.
+
+</Intro>
+
+<!-- #region first-step -->
+<Step id="create-page" file="index.html" region="preview-card">
+
+## Create the page
+
+Start with a small HTML file. The region marker focuses the part readers should inspect.
+
+</Step>
+<!-- #endregion first-step -->
+
+<!-- #region field -->
+<Step id="customize-title" file="index.html" region="title-var">
+
+## Customize the title
+
+The field updates the linked string literal in the code, Preview and downloads.
+
+<VarField name="demoTitle" label="Demo title" placeholder="My first tutorial" persist />
+
+</Step>
+<!-- #endregion field -->
