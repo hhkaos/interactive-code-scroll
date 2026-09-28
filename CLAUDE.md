@@ -24,6 +24,16 @@ Every feature ships with appropriate tests: unit (Vitest) and/or E2E (Playwright
 
 Before committing, explicitly review the introduced changes and confirm that every behavior that should be protected by tests has focused coverage. This does not mean running or adding all possible E2E tests for every change; choose coverage based on risk and observable behavior.
 
+Prefer risk-based preflight over broad validation:
+- Docs/context only: `pnpm preflight:docs`.
+- CSS/UI only: `pnpm preflight:ui` plus user visual review; add focused E2E only for behavior/layout contracts.
+- Runtime, CLI, build or package output: `pnpm preflight:package` plus focused tests for changed behavior.
+- npm release: `pnpm preflight:release`, then tag/workflow/npm verification.
+
+In non-interactive agent runs, prefix pnpm preflight commands with `CI=true` to avoid pnpm prompts while checking dependency state.
+
+When the user wants to save tokens, prepare exact `git add`, `git commit`, `git push` and tag commands for them to run instead of executing those commands yourself. Still state which files should be staged and which preflight applies.
+
 ### UI/UX review
 For subjective UI/UX changes, do not treat the first implementation as final. Show or describe the visual result (preferably with a screenshot or concrete measurements when available) and get user approval before publishing, tagging, or running broad release validation. Focused tests are still expected once the behavior is agreed.
 

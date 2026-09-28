@@ -6,6 +6,10 @@
     "dev": "pnpm --filter example-framework-fixture dev",
     "build": "pnpm --filter example-framework-fixture build",
     "check": "pnpm --filter interactive-code-scroll build && pnpm -r check",
+    "preflight:docs": "git diff --check",
+    "preflight:ui": "pnpm check",
+    "preflight:package": "pnpm test && pnpm check && pnpm test:pack",
+    "preflight:release": "pnpm test && pnpm check && pnpm test:pack",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:pack": "node scripts/smoke-pack.mjs"

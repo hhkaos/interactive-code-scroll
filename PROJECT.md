@@ -28,10 +28,16 @@ pnpm install
 pnpm dev          # framework fixture through the generic CLI
 pnpm build        # build the framework fixture through the generic CLI
 pnpm check        # tsc (core package) + astro check (example)
+pnpm preflight:docs    # whitespace/conflict check for docs/context-only changes
+pnpm preflight:ui      # focused preflight for CSS/UI-only changes
+pnpm preflight:package # unit + check + package smoke test for CLI/build/package changes
+pnpm preflight:release # same as package preflight before tagging/publishing
 pnpm test         # Vitest unit tests
 pnpm test:pack    # pack the package, install it in a temporary project, and build that project
 pnpm test:e2e     # Playwright: builds the example and serves it on :4400
 ```
+
+For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so pnpm never prompts while checking dependency state.
 
 
 ---
@@ -145,6 +151,17 @@ Subjective visual changes need a user review loop before they are treated as fin
 ### Test coverage workflow
 
 Before committing, review the actual diff and identify which introduced behaviors need tests. Add focused unit and/or E2E coverage for those behaviors; do not automatically expand to the whole E2E suite unless the change touches shared runtime behavior, cross-panel layout, navigation, packaging, or another high-risk surface.
+
+Use risk-based preflight to keep validation useful without wasting time or tokens:
+
+| Change type | Default preflight | Notes |
+|---|---|---|
+| Docs/context only | `pnpm preflight:docs` | No app tests unless examples or generated docs behavior changed |
+| CSS/UI only | `pnpm preflight:ui` plus user visual review | Add focused E2E only when behavior or layout contracts change |
+| Runtime, CLI, build, package output | `pnpm preflight:package` | Add focused tests for the changed behavior |
+| npm release | `pnpm preflight:release` plus tag/workflow/npm verification | Use for publishable tags |
+
+When the user wants to save tokens, prefer preparing exact commit commands and a commit message for the user to run locally instead of having the agent execute `git commit`, `git push`, or tag commands. The agent should still report the files that should be staged and the preflight that was run or should be run.
 
 ---
 

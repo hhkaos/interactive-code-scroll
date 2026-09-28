@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Added risk-based preflight scripts and agent guidance to reduce validation overhead without weakening release quality.
+
 ## [0.1.0-alpha.6] - 2026-09-28
 
 ### Added
