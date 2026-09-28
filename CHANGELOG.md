@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Expanded the root and package READMEs with quick-start guidance and links to tutorials built with InteractiveCodeScroll.
 - Updated shared project context to document the public docs, getting-started tutorial and GitHub Pages deployment workflow.
 - Reworked the getting-started dogfooding tutorial to teach the authoring setup flow with shell commands, MDX steps and tab-only Preview.
+- Added a generated-result visual checkpoint to the getting-started tutorial instead of nesting a compiled tutorial inside Preview.
 - Updated the OAuth PKCE example credential setup step with a seven-image ArcGIS portal walkthrough.
 
 ## [0.1.0-alpha.8] - 2026-09-28
