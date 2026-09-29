@@ -9,13 +9,26 @@ const tooltips = new WeakMap<Element, HTMLElement>();
  */
 export function startTooltips(): void {
   for (const action of document.querySelectorAll<CalciteAction>("calcite-action:not([text-enabled])")) {
-    const tooltip = document.createElement("calcite-tooltip") as HTMLElement & { referenceElement: Element };
-    tooltip.setAttribute("placement", "bottom");
-    tooltip.referenceElement = action;
-    tooltip.textContent = action.getAttribute("text");
-    document.body.append(tooltip);
-    tooltips.set(action, tooltip);
+    setTooltip(action, action.getAttribute("text"));
   }
+}
+
+/** Adds (or updates) a tooltip for `element`; `null` removes it (e.g. its label is visible again). */
+export function setTooltip(element: Element, text: string | null): void {
+  let tooltip = tooltips.get(element);
+  if (text === null) {
+    tooltip?.remove();
+    tooltips.delete(element);
+    return;
+  }
+  if (!tooltip) {
+    tooltip = document.createElement("calcite-tooltip") as HTMLElement & { referenceElement: Element };
+    tooltip.setAttribute("placement", "bottom");
+    (tooltip as HTMLElement & { referenceElement: Element }).referenceElement = element;
+    document.body.append(tooltip);
+    tooltips.set(element, tooltip);
+  }
+  tooltip.textContent = text;
 }
 
 /** Changes an action's icon and text (accessible name and tooltip). */

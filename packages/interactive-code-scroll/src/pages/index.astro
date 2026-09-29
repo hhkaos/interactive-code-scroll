@@ -249,7 +249,7 @@ const clientData = JSON.stringify({
                 <span class="result-badge" hidden />
                 <span class="result-run-as" hidden>
                   <span id="result-run-as-label">Run as</span>
-                  <calcite-segmented-control id="result-run-as" label="Run as" scale="s" />
+                  <calcite-segmented-control id="result-run-as" label="Run as" scale="s" data-own-keys />
                 </span>
                 <calcite-action id="result-keep" icon="pin" text="Keep response" text-enabled hidden />
                 <calcite-action id="result-captured" icon="reset" text="Show captured" text-enabled hidden />
@@ -269,7 +269,7 @@ const clientData = JSON.stringify({
                   <calcite-notice id="result-error" kind="danger" icon="exclamation-mark-circle" scale="s" width="full">
                     <div slot="message" />
                   </calcite-notice>
-                  <calcite-tab-nav id="result-tabs" hidden>
+                  <calcite-tab-nav id="result-tabs" hidden data-own-keys>
                     <calcite-tab-title data-tab="body" selected>Body</calcite-tab-title>
                     <calcite-tab-title data-tab="headers">Headers</calcite-tab-title>
                   </calcite-tab-nav>

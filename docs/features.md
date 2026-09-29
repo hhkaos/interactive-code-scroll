@@ -8,11 +8,11 @@ A tutorial is a folder with `tutorial.mdx` (the explanations), `code/` (the fina
 
 - **Side-by-side layout**: explanations on the left, code on the right. Both splitters (explanations/code, code/Preview) can be dragged, and their sizes are remembered. A handle on the splitter hides or shows the explanations.
 - **Steps drive the code panel**: when a step becomes active, it can switch file, focus a region (the rest of the file turns gray and the region scrolls into view) or show images instead of code. A text-only step keeps the current file and clears the focus.
-- **Several ways to move**: scrolling (the step crossing the middle of the panel becomes active), clicking a step, arrow keys and PageUp/PageDown (presentation clickers work too).
+- **Several ways to move**: scrolling (the step crossing the middle of the panel becomes active), clicking a step, arrow keys and PageUp/PageDown (presentation clickers work too, even while the focus is in a field or the Result pane).
 - **Numbered steps, progress bar and deep links**: every step heading carries its number; `#step-id` links open the tutorial at that step.
 - **Optional introduction**: content before the first step that is not numbered and does not focus any code.
 - **Light and dark**: follows the OS by default; the author can set a default and the reader's toggle wins. The code panel and the Preview follow the page.
-- **Readable at high zoom**, with line numbers and optional wrapping of long lines.
+- **Readable at high zoom**, with line numbers and optional wrapping of long lines. The Result pane header turns long labels into icons instead of clipping them, and a short pane scrolls as a whole.
 
 See [Components](authoring.md#components).
 
@@ -67,11 +67,11 @@ See [`<Step>`](authoring.md#step).
 
 ## Presenting
 
-- **Presentation mode** hides the header; the explanations can be hidden too. Step keys and clickers keep working, including while the focus is inside the Preview.
+- **Presentation mode** hides the header; the explanations can be hidden too. Step keys and clickers keep working, including while the focus is inside the Preview, a form field or the Result pane.
 - **Maximize a pane**: the code, the Preview or the Result pane fills the window from its header icon or from a step (`maximize=`); the icon or Esc restores the layout. Step keys keep working.
 - **Serve locally** with the CLI when the venue's network is unreliable.
 
-See [CLI Reference](cli.md).
+See [Presenting a tutorial](authoring.md#presenting-a-tutorial) and [CLI Reference](cli.md).
 
 ## Writing tutorials
 

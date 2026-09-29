@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta, revealScroll } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, revealScroll } from "./navigation.ts";
 
 describe("navigation", () => {
   it.each([
@@ -21,6 +21,40 @@ describe("navigation", () => {
     expect(isEditableTag("calcite-carousel")).toBe(false);
     expect(isEditableTag("DIV", true)).toBe(true);
     expect(isEditableTag("BODY")).toBe(false);
+  });
+
+  it("treats textareas and contenteditable as multi-line", () => {
+    expect(isMultilineTag("textarea")).toBe(true);
+    expect(isMultilineTag("CALCITE-TEXT-AREA")).toBe(true);
+    expect(isMultilineTag("CALCITE-INPUT")).toBe(false);
+    expect(isMultilineTag("DIV", true)).toBe(true);
+  });
+
+  describe("movesStep", () => {
+    const page = { editable: false, multiline: false, ownsArrows: false };
+    const field = { editable: true, multiline: false, ownsArrows: false };
+    const textArea = { editable: true, multiline: true, ownsArrows: false };
+    const widget = { editable: false, multiline: false, ownsArrows: true };
+
+    it("moves steps with any step key from the page", () => {
+      for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "PageDown", "PageUp"]) expect(movesStep(key, page)).toBe(true);
+      expect(movesStep("Enter", page)).toBe(false);
+    });
+
+    it("lets clicker keys through fields and widgets that own arrows, but not multi-line text", () => {
+      for (const key of ["PageDown", "PageUp"]) {
+        expect(movesStep(key, field)).toBe(true);
+        expect(movesStep(key, widget)).toBe(true);
+        expect(movesStep(key, textArea)).toBe(false);
+      }
+    });
+
+    it("leaves arrows to fields and widgets that use them", () => {
+      for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]) {
+        expect(movesStep(key, field)).toBe(false);
+        expect(movesStep(key, widget)).toBe(false);
+      }
+    });
   });
 
   it("clamps indexes", () => {

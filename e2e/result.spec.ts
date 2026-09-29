@@ -104,6 +104,18 @@ test("the JSON tree follows tree keyboard semantics and keeps arrows from moving
   await expect(page.locator("#request")).toHaveAttribute("data-active", "");
 });
 
+test("clicker keys move steps from the JSON tree; its arrows do not", async ({ page }) => {
+  await page.goto("/#request");
+  const first = body(page).getByRole("treeitem").first();
+  await first.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#request")).toHaveAttribute("data-active", "");
+  await page.keyboard.press("PageDown");
+  await expect(page.locator("#client")).toHaveAttribute("data-active", "");
+  await page.keyboard.press("PageUp");
+  await expect(page.locator("#request")).toHaveAttribute("data-active", "");
+});
+
 test("long JSON arrays show 100 entries and a Show more action", async ({ page }) => {
   await page.goto("/#request");
   const ids = treeItem(page, '"ids"');
@@ -174,6 +186,28 @@ test("Run as switches to the step's other request, which gets values as is in it
   await runButton(page).click();
   await expect(badge(page)).toHaveAttribute("data-state", "live");
   expect(calls).toMatchObject([{ method: "POST", url: "https://api.fixture.test/v1/items", body: '{ "token": "a b&c" }' }]);
+});
+
+test("arrows stay with the Body/Headers tabs and Run as; clicker keys still move steps", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/#request");
+  const runAs = page.locator("#result-run-as");
+  await runAs.locator('calcite-segmented-control-item[value="list-items"]').focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(requestLine(page)).toHaveText("POST https://api.fixture.test/v1/items");
+  await expect(page.locator("#request")).toHaveAttribute("data-active", "");
+
+  await runButton(page).click();
+  await expect(badge(page)).toHaveAttribute("data-state", "live");
+  await page.locator('#result-tabs calcite-tab-title[data-tab="body"]').focus();
+  // Calcite tabs: arrows move the focus, Enter selects.
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator('#result-tabs calcite-tab-title[data-tab="headers"]')).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator('#result-tabs calcite-tab-title[data-tab="headers"]')).toHaveAttribute("selected", "");
+  await expect(page.locator("#request")).toHaveAttribute("data-active", "");
+  await page.keyboard.press("PageDown");
+  await expect(page.locator("#client")).toHaveAttribute("data-active", "");
 });
 
 test("a network failure falls back to the captured output and says so", async ({ page }) => {

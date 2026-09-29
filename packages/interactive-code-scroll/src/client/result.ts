@@ -2,12 +2,12 @@ import { matchError, type ErrorRule, type ServiceError } from "../error-rule.ts"
 import { outputKind } from "../output.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import type { RunnerRequest } from "../requests.ts";
-import { setAction } from "./actions.ts";
+import { setAction, setTooltip } from "./actions.ts";
 import { renderJsonTree } from "./json-tree.ts";
 import { parseJson, type JsonValue } from "./json-tree-values.ts";
 import { terminalSegments } from "./terminal-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
-import { lastResult, stepOutput, stepRequests, type StepResult } from "./result-values.ts";
+import { headerLevel, lastResult, stepOutput, stepRequests, type HeaderLevel, type StepResult } from "./result-values.ts";
 import {
   displayLine,
   failureMessage,
@@ -310,6 +310,8 @@ export function startResult({ files, outputUrl, variants, requests, errorRule, v
   function setBadge(state: string | undefined, label = ""): void {
     badge.hidden = state === undefined;
     badge.textContent = label;
+    // The badge text is cut when even the compact header does not fit.
+    badge.title = label;
     if (state === undefined) delete badge.dataset.state;
     else badge.dataset.state = state;
   }
@@ -523,6 +525,60 @@ export function startResult({ files, outputUrl, variants, requests, errorRule, v
     revealButton.toggleAttribute("active", revealed);
     refreshRequest();
   });
+
+  // Compact header (high zoom, narrow pane): long labels become icons with tooltips, one row.
+  const header = section.querySelector<HTMLElement>(".panel-header")!;
+  const maximizeButton = section.querySelector<HTMLElement>("#result-maximize")!;
+  const RUN_LABEL = "Run request";
+  const compactable = [
+    { element: keepButton, level: 1 },
+    { element: capturedButton, level: 1 },
+    { element: runButton, level: 2 },
+  ] as const;
+  const fullWidths = new Map<HTMLElement, number>();
+  let level: HeaderLevel = 0;
+  const outerWidth = (element: HTMLElement) => {
+    const style = getComputedStyle(element);
+    return element.offsetWidth + parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+  };
+
+  function setLevel(next: HeaderLevel): void {
+    if (next === level) return;
+    level = next;
+    for (const button of [keepButton, capturedButton]) {
+      button.toggleAttribute("text-enabled", level < 1);
+      setTooltip(button, level < 1 ? null : button.getAttribute("text"));
+    }
+    runButton.textContent = level < 2 ? RUN_LABEL : "";
+    runButton.setAttribute("label", RUN_LABEL);
+    setTooltip(runButton, level < 2 ? null : RUN_LABEL);
+  }
+
+  function fitHeader(): void {
+    const shown = compactable.filter(({ element }) => !element.hidden);
+    // Labelled widths are measured while labelled (Calcite renders late: keep the largest seen).
+    for (const { element, level: from } of shown) {
+      if (level < from) fullWidths.set(element, Math.max(fullWidths.get(element) ?? 0, outerWidth(element)));
+    }
+    if (shown.some(({ element }) => !fullWidths.has(element))) return setLevel(0);
+    const gap = parseFloat(getComputedStyle(header).columnGap) || 0;
+    const fixed = [...header.children].filter(
+      (child): child is HTMLElement => child instanceof HTMLElement && !child.hidden && !shown.some(({ element }) => element === child),
+    );
+    const style = getComputedStyle(header);
+    const base =
+      parseFloat(style.paddingLeft) +
+      parseFloat(style.paddingRight) +
+      gap * (fixed.length + shown.length - 1) +
+      // The badge's auto margin is free space, not width: count its text instead.
+      fixed.reduce((sum, child) => sum + (child === badge ? badge.scrollWidth : outerWidth(child)), 0);
+    const icon = maximizeButton.offsetWidth;
+    const items = shown.map(({ element, level: from }) => ({ level: from, full: fullWidths.get(element)!, icon }));
+    setLevel(headerLevel(header.clientWidth, base, items));
+  }
+
+  const headerObserver = new ResizeObserver(fitHeader);
+  for (const element of [header, badge, runAs, ...compactable.map(({ element }) => element)]) headerObserver.observe(element);
 
   document.addEventListener(STEP_EVENT, (event) => {
     active = (event as CustomEvent<HTMLElement | null>).detail;

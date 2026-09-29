@@ -49,3 +49,12 @@ test("persisted fields survive a reload", async ({ page }) => {
   await expect(clientIdInput(page)).toHaveValue("kept-id");
   await expect(code(page).locator('[data-var="clientId"]')).toHaveText("•••••••");
 });
+
+test("clicker keys move steps from a field; arrows stay in it", async ({ page }) => {
+  await page.goto("/#config");
+  await clientIdInput(page).focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#config")).toHaveAttribute("data-active", "");
+  await page.keyboard.press("PageDown");
+  await expect(page.locator("#oauth")).toHaveAttribute("data-active", "");
+});

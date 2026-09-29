@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lastResult, stepOutput, stepRequests, type StepResult } from "./result-values.ts";
+import { headerLevel, lastResult, stepOutput, stepRequests, type StepResult } from "./result-values.ts";
 
 describe("lastResult", () => {
   const single: StepResult[] = [{}, { output: "a.json" }, {}, { requests: ["list"] }, {}];
@@ -38,5 +38,34 @@ describe("stepOutput and stepRequests", () => {
     expect(stepRequests(step, "curl")).toEqual(["get", "post"]);
     expect(stepRequests(step, "python")).toEqual([]);
     expect(stepRequests({ requests: ["get"] })).toEqual(["get"]);
+  });
+});
+
+describe("headerLevel", () => {
+  // Keep and Show captured (level 1), Run request (level 2); icons are 32 px.
+  const items = [
+    { level: 1, full: 120, icon: 32 },
+    { level: 1, full: 120, icon: 32 },
+    { level: 2, full: 110, icon: 32 },
+  ] as const;
+
+  it("keeps every label while the header fits", () => {
+    expect(headerLevel(600, 250, items)).toBe(0);
+    expect(headerLevel(300, 250, [])).toBe(0);
+  });
+
+  it("turns Keep and Show captured into icons first", () => {
+    expect(headerLevel(599, 250, items)).toBe(1);
+    expect(headerLevel(424, 250, items)).toBe(1);
+  });
+
+  it("then Run request, however narrow the header is", () => {
+    expect(headerLevel(423, 250, items)).toBe(2);
+    expect(headerLevel(100, 250, items)).toBe(2);
+  });
+
+  it("only counts the controls that are shown", () => {
+    expect(headerLevel(360, 250, [items[2]])).toBe(0);
+    expect(headerLevel(359, 250, [items[2]])).toBe(2);
   });
 });

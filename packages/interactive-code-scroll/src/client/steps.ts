@@ -1,4 +1,4 @@
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta, revealScroll, type RevealOptions } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, revealScroll, type RevealOptions } from "./navigation.ts";
 import { MEDIA_EVENT } from "./image-viewer.ts";
 import { MAXIMIZE_EVENT } from "./maximize-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
@@ -294,10 +294,15 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     "keydown",
     (event) => {
       const target = event.target instanceof HTMLElement ? event.target : undefined;
-      // Fields, and widgets marked `data-own-keys` (e.g. the splitter), keep their keys.
-      if (target && (isEditableTag(target.tagName, target.isContentEditable) || target.closest("[data-own-keys]"))) return;
+      // Fields, and widgets marked `data-own-keys` (e.g. the splitter), keep their arrow keys;
+      // clicker keys move steps from everywhere but multi-line text.
+      const focus = {
+        editable: !!target && isEditableTag(target.tagName, target.isContentEditable),
+        multiline: !!target && isMultilineTag(target.tagName, target.isContentEditable),
+        ownsArrows: !!target?.closest("[data-own-keys]"),
+      };
       const delta = keyToDelta(event.key);
-      if (!delta || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (!delta || !movesStep(event.key, focus) || event.altKey || event.ctrlKey || event.metaKey) return;
       event.preventDefault();
       event.stopPropagation();
       step(delta);

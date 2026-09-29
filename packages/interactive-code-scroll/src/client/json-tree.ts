@@ -142,7 +142,7 @@ export function renderJsonTree(value: JsonValue, ariaLabel: string): HTMLUListEl
   tree.className = "json-tree";
   tree.setAttribute("role", "tree");
   tree.setAttribute("aria-label", ariaLabel);
-  // Arrow keys move in the tree, not between steps.
+  // Arrow keys move in the tree, not between steps (clicker keys still do).
   tree.dataset.ownKeys = "";
   const root = item(0, undefined, value, true);
   root.tabIndex = 0;

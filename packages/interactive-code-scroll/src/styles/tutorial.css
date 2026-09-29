@@ -740,8 +740,22 @@ body[data-maximized="code"] .media-panel:not([hidden]) ~ .media-restore {
   flex: 1;
   min-height: 0;
   display: flex;
+  /* Short or narrow pane (high zoom): the request bar gives the body its room back. */
+  container: result-frame / size;
 
   &[hidden] { display: none; }
+}
+
+@container result-frame (max-height: 16rem) {
+  .result-request .result-request-line { max-height: calc(2lh + 0.75rem); }
+  /* Request bar, notices and body scroll together, so the body is never squeezed out of reach. */
+  .result-frame > .result-live { overflow-y: auto; }
+  .result-frame > .result-live > * { flex-shrink: 0; }
+  .result-live > .result-body { flex: none; overflow: visible; }
+}
+
+@container result-frame (max-width: 32rem) {
+  .result-request .result-request-source { display: none; }
 }
 
 .result-body {

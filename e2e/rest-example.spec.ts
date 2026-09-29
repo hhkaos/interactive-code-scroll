@@ -71,3 +71,41 @@ test("with the service unreachable the step falls back to its captured output", 
   await expect(page.locator("#result-notice [slot=message]")).toContainText("network error");
   await expect(badge(page)).toHaveText("Captured (fallback) · output/geocode.json");
 });
+
+test.describe("presenting at 200 % zoom", () => {
+  // 1440×900 at 200 % browser zoom.
+  test.use({ viewport: { width: 720, height: 450 } });
+
+  test("the Result header fits on one row, the body stays reachable and clicker keys walk the steps", async ({ page }) => {
+    await mockService(page, GEOCODE, { body: '{ "error": { "code": 498, "message": "Invalid Token", "details": [] } }' });
+    await page.goto("/?variant=python#request");
+    await page.locator("#present-toggle").click();
+    await runButton(page).click();
+    await expect(badge(page)).toHaveText("Error 498 · HTTP 200");
+    await expect(badge(page)).toHaveAttribute("title", "Error 498 · HTTP 200");
+
+    // Compact header: the long labels become icons, nothing is clipped.
+    await expect(page.locator("#result-keep")).not.toHaveAttribute("text-enabled");
+    const header = page.locator("section.result .panel-header");
+    await expect.poll(() => header.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+    await expect(runButton(page)).toBeInViewport({ ratio: 1 });
+    await expect(page.locator("#result-maximize")).toBeInViewport({ ratio: 1 });
+
+    // The error notice and request line do not squeeze the body out: the pane scrolls as a whole.
+    const tree = body(page).getByRole("tree", { name: "JSON response of geocode-get" });
+    await tree.scrollIntoViewIfNeeded();
+    await expect(tree).toBeInViewport();
+
+    // The focus stays in the Result pane; clicker keys still move steps.
+    await tree.getByRole("treeitem").first().focus();
+    await page.keyboard.press("PageDown");
+    await expect(page.locator("#results")).toHaveAttribute("data-active", "");
+    await expect(badge(page)).toHaveText("Captured · output/candidates.txt");
+    await page.locator("#result-maximize").click();
+    await page.keyboard.press("PageDown");
+    await expect(page.locator("#header")).toHaveAttribute("data-active", "");
+    await expect(badge(page)).toHaveText("Captured · output/geocode.json");
+    // Maximized, the header has room for its labels again.
+    await expect(page.locator("#result-run")).toHaveText("Run request");
+  });
+});

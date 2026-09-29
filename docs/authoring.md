@@ -264,6 +264,17 @@ Esc goes one level at a time: an open image viewer, then the maximized pane, the
 
 Build errors: `maximize="preview"` together with `preview="collapsed"`, and `maximize="preview"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
 
+### Presenting a tutorial
+
+A checklist for talks and workshops:
+
+- **Presentation mode**: the header's presentation icon enters browser full screen with a compact toolbar; the handle on the explanations splitter hides the explanations so the code gets the full width. Esc leaves.
+- **Zoom for the room**: increase the browser zoom (CMD/Ctrl + "+") until the back row can read the code. At high zoom the Result pane header turns "Keep response", "Show captured" and then "Run request" into icons (their names show as tooltips), and a short Result pane scrolls as a whole: request line, notices and body.
+- **Clickers**: PageDown/PageUp move steps wherever the focus is: a form field, the JSON tree, the Result pane's tabs and controls, or the Preview. Only multi-line text keeps them. Arrow keys also move steps, except inside fields and widgets that use them (JSON tree, Body/Headers tabs, "Run as", splitters).
+- **Big results**: use `maximize="preview"` on the step that shows a result and `maximize="none"` on the next one (see [Maximized panes](#maximized-panes)).
+- **Offline fallback**: give request steps a captured `output=`. If the venue's network or CORS blocks a live request, the pane falls back to it and says so. Serve the site locally with the CLI (`serve`) when the network is unreliable.
+- **Secrets on screen**: secret fields and the request line stay masked; "Show secrets" is off on every page load.
+
 ## Result Pane
 
 Code that cannot run in the browser (scripts, native apps, HTTP requests) shows its result in the Result pane, which takes the Preview's place under the code, with the same splitter height and a collapsible header. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`.
@@ -278,7 +289,7 @@ Code that cannot run in the browser (scripts, native apps, HTTP requests) shows 
 
 - **Captured output**: files under `output/`. A step's `output="name"` looks up `output/<variant id>/name` first (a per-variant override), then `output/name`; it must resolve for every non-web variant the step covers.
 - **Types**: `.json` (JSON viewer, below), `.txt` and `.log` (terminal style: prompt lines such as `$ cmd`, `> cmd`, `>>> cmd` or `PS C:\> cmd` are colored, and ANSI color codes become colors; other escape sequences are removed), `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` and `.svg` (image). Any other type is a build error.
-- **JSON viewer**: a collapsible tree with colored keys, strings, numbers and punctuation (light and dark). The root and the next two levels start expanded; deeper objects and arrays start collapsed with a count (`3 keys`, `12 items`). Objects and arrays with more than 100 entries show the first 100 and a "Show more" button that adds 100 at a time. Click a row or use the keyboard: arrow keys move and expand/collapse, Enter/Space toggle, Home/End jump; arrow keys inside the tree do not change steps. Numbers keep their source text (large ids are not rounded). A `.json` file that does not parse is shown as plain text.
+- **JSON viewer**: a collapsible tree with colored keys, strings, numbers and punctuation (light and dark). The root and the next two levels start expanded; deeper objects and arrays start collapsed with a count (`3 keys`, `12 items`). Objects and arrays with more than 100 entries show the first 100 and a "Show more" button that adds 100 at a time. Click a row or use the keyboard: arrow keys move and expand/collapse, Enter/Space toggle, Home/End jump; arrow keys inside the tree do not change steps (PageDown/PageUp still do). Numbers keep their source text (large ids are not rounded). A `.json` file that does not parse is shown as plain text.
 - **Keeps the last result**: a step without `output` or `request` shows the result of the nearest earlier step that has one for the active variant, whether the reader scrolled, used step keys or opened a deep link. Before the first output the pane shows an empty state.
 - **Published, not embedded**: outputs are published under `output/` on the site and fetched when shown, so the page stays small and works offline. They are rendered as text (or an image), never as HTML.
 - **Credentials**: outputs are committed and published. The build warns (without failing) when one looks like it holds a credential: `token=`, `"token":`, `apiKey` or `Authorization: Bearer` followed by a value that is not a var default. Replace real values with the var's default (the demo value in the code) before publishing.

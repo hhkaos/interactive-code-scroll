@@ -50,7 +50,7 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer, 4a `.http` parser + validation + `requests/` in every ZIP, 4b runner UI, 5 error rule + Body/Headers tabs, 6 REST example (`examples/rest-geocode`). Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
+Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer, 4a `.http` parser + validation + `requests/` in every ZIP, 4b runner UI, 5 error rule + Body/Headers tabs, 6 REST example (`examples/rest-geocode`), 7 presentation fit. Phase 1 is complete. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
 
 Result pane code: `src/output.ts` (types, `output/<variant>/` lookup, credential scan), `src/result/output-file.ts` (publishes `output/`), `stepOutputs()` in `src/variants.ts`, `src/client/result.ts` + `result-values.ts` (pane, last-result rule), `STEP_EVENT` from `src/client/steps.ts`. JSON viewer: `src/client/json-tree.ts` (DOM, keyboard) + `json-tree-values.ts` (parse, depth rule, paging, key map); reuse `renderJsonTree()` for the runner's Body tab.
 
@@ -60,7 +60,9 @@ Error rule: `src/error-rule.ts` (`readErrorRule()` validates `requests/errors.js
 
 Maximized panes: `src/client/maximize.ts` (state on `body[data-maximized]`, CSS pins the pane with `position: fixed`, no DOM moves) + `maximize-values.ts`; steps dispatch `MAXIMIZE_EVENT` after the Preview state.
 
-Recommended next task: **7 Presentation fit**. Note: the JSON tree owns all keys (`data-own-keys`), so PageUp/PageDown clickers do not move steps while it has focus; task 7 revisits this.
+Step keys: `movesStep()` in `src/client/navigation.ts` (PageDown/PageUp from any focus but multi-line text; `data-own-keys` now means "owns arrow keys": JSON tree, splitters, `#result-tabs`, `#result-run-as`). Result header compact mode: `headerLevel()` in `result-values.ts` + ResizeObserver in `result.ts` (`setTooltip()` in `actions.ts`); short/narrow pane rules are `@container result-frame` queries in `tutorial.css`.
+
+Recommended next task: **Phase 1 go/no-go review** (`docs/research/arcgis-multi-sdk-plan.md`), then plan Phase 2.
 
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
@@ -290,7 +292,8 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 |---|---|---|---|
 | ArcGIS OAuth sign-in | Inside iframe: expected to be blocked (X-Frame-Options) — **unverified** | Popup from the Preview iframe: **verified** (PKCE S256, real Client ID) | The SDK shows its own "Please sign in" dialog first: the popup needs a user gesture |
 | OAuth redirect URI | GitHub Pages | localhost (served locally) | Both must be registered in the app by the author; the CLI prints the exact URIs |
-| Keys inside widgets vs step keys | `stopPropagation()` in a widget's own `keydown` handler: does not help | `data-own-keys` on the widget (or an ancestor): step keys ignored | The step key listener runs on `window` in the capture phase, before any widget handler; `data-own-keys` owns every key, so PageUp/PageDown clickers do not move steps while such a widget has focus |
+| Keys inside widgets vs step keys | `stopPropagation()` in a widget's own `keydown` handler: does not help | `data-own-keys` on the widget (or an ancestor): step keys ignored | The step key listener runs on `window` in the capture phase, before any widget handler; `data-own-keys` owns arrow keys only: PageUp/PageDown (clickers) still move steps (`movesStep()` in `navigation.ts`) |
+| Calcite `calcite-tab-title` keyboard | Arrow keys: move the focus between tabs only | Enter/Space: select the focused tab | Manual activation; E2E must press Enter after the arrow before asserting `selected` |
 | Preview `redirect_uri` | `srcdoc` / blob iframe: SDK builds it from `location` → `about://null/oauth-callback.html` (`<base href>` ignored) | Real same-origin preview page: correct URI | Preview (iframe and tab) must load a real URL; `oauth-callback.html` must sit next to that page |
 | Preview sandbox | Without `allow-same-origin`: opaque origin, no Referer (OSM tiles 403, referrer-restricted API keys fail), callback cannot reach `window.opener` | With `allow-same-origin`: works | Preview can read the tutorial's `localStorage` (author-trusted code) |
 | Keyboard step navigation | Focus in page: works | Focus inside Preview iframe: keys go to the map | Forward keys from the preview page (same origin) |

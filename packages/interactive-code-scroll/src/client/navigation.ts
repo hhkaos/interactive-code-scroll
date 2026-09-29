@@ -1,6 +1,8 @@
 const NEXT_KEYS = new Set(["ArrowDown", "ArrowRight", "PageDown"]);
 const PREVIOUS_KEYS = new Set(["ArrowUp", "ArrowLeft", "PageUp"]);
 const EDITABLE_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT", "CALCITE-INPUT"]);
+const MULTILINE_TAGS = new Set(["TEXTAREA", "CALCITE-TEXT-AREA"]);
+const CLICKER_KEYS = new Set(["PageDown", "PageUp"]);
 
 /** Step delta for a key (keyboard or presentation clicker); 0 when the key is not a step key. */
 export function keyToDelta(key: string): -1 | 0 | 1 {
@@ -12,6 +14,31 @@ export function keyToDelta(key: string): -1 | 0 | 1 {
 /** Keys typed into fields must not move steps. (Carousels do not count: SPEC keeps arrows for steps.) */
 export function isEditableTag(tagName: string, isContentEditable = false): boolean {
   return isContentEditable || EDITABLE_TAGS.has(tagName.toUpperCase());
+}
+
+/** Multi-line text keeps PageUp/PageDown (they move its caret). */
+export function isMultilineTag(tagName: string, isContentEditable = false): boolean {
+  return isContentEditable || MULTILINE_TAGS.has(tagName.toUpperCase());
+}
+
+export interface KeyFocus {
+  /** A field (see `isEditableTag`). */
+  editable: boolean;
+  /** Multi-line text (see `isMultilineTag`). */
+  multiline: boolean;
+  /** Inside a widget that uses arrow keys (`data-own-keys`: JSON tree, tabs, splitters). */
+  ownsArrows: boolean;
+}
+
+/**
+ * Whether `key` moves steps from the focused element. Clicker keys (PageUp/PageDown) do from
+ * everywhere but multi-line text, so a presenter never has to move the focus first; arrows
+ * stay with fields and with widgets that use them.
+ */
+export function movesStep(key: string, focus: KeyFocus): boolean {
+  if (!keyToDelta(key)) return false;
+  if (CLICKER_KEYS.has(key)) return !focus.multiline;
+  return !focus.editable && !focus.ownsArrows;
 }
 
 export function clampIndex(index: number, count: number): number {
