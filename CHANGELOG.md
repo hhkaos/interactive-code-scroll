@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added syntax highlighting for Python, Kotlin, Gradle, Swift, Java, C#, XML/XAML, C++, QML, Dart, TOML, INI, SQL, Lua, PowerShell, `.http`, JSX/TSX, Vue and GeoJSON files, plus a `languages` frontmatter map to override the language per extension.
+- Added native region markers scoped by file type: C# `#region` in `.cs`, `# region` in `.py`, and `-- #region` in `.sql`/`.lua`.
 - Added shell/YAML-style `# #region` marker support for bash commands and MDX frontmatter examples.
 - Added Markdown/MDX fenced-code handling so marker examples can be shown literally in authoring tutorials.
 - Added public authoring, CLI, deployment and upgrade documentation for tutorial authors.

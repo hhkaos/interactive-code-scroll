@@ -13,7 +13,7 @@ import "../styles/tutorial.css";
 const config = readTutorialConfig(frontmatter);
 const logo = config.logo === undefined ? undefined : images[config.logo];
 const parsed = files.map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
-const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: await highlight(f.parsed, f.path) })));
+const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: await highlight(f.parsed, f.path, config.languages) })));
 const withIframe = config.preview === "iframe" || config.preview === "both";
 const withTab = config.preview === "tab" || config.preview === "both";
 // Escape "<" so embedded code containing </script> cannot close the data block.

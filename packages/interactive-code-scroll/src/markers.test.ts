@@ -115,6 +115,41 @@ title: "My Tutorial"
   });
 });
 
+describe("parseSource native region styles", () => {
+  it.each([
+    ["Program.cs", "#region config\nvar key = 1;\n#endregion"],
+    ["Program.cs", "    #region config\n    var key = 1;\n    #endregion config"],
+    ["geocode.py", "# region config\nkey = 1\n# endregion"],
+    ["query.sql", "-- #region config\nSELECT 1;\n-- #endregion config"],
+    ["init.lua", "-- #region config\nlocal key = 1\n-- #endregion"],
+  ])("recognizes the native style in %s", (file, source) => {
+    const { code, regions } = parseSource(source, `code/${file}`);
+    expect(code.trim()).not.toContain("region");
+    expect(regions).toEqual([{ id: "config", fromLine: 1, toLine: 1 }]);
+  });
+
+  it("still accepts the shared comment styles in those files", () => {
+    expect(parseSource("# #region a\nkey = 1\n# #endregion", "code/geocode.py").regions).toEqual([{ id: "a", fromLine: 1, toLine: 1 }]);
+    expect(parseSource("// #region a\nvar k = 1;\n// #endregion", "code/Program.cs").regions).toEqual([{ id: "a", fromLine: 1, toLine: 1 }]);
+  });
+
+  it.each([
+    ["setup.sh", "#region config\necho hi\n#endregion"],
+    ["config.yaml", "# region config\nkey: 1\n# endregion"],
+    ["main.js", "-- #region config\nx();\n-- #endregion"],
+    ["geocode.py", "#region config\nkey = 1\n#endregion"],
+    ["Program.cs", "# region config\nvar k = 1;\n# endregion"],
+  ])("keeps other files' look-alike comments as code (%s)", (file, source) => {
+    const { code, regions } = parseSource(source, `code/${file}`);
+    expect(regions).toEqual([]);
+    expect(code).toBe(source);
+  });
+
+  it("reports native-style errors with file and line", () => {
+    expect(() => parseSource("#region a\nvar k = 1;", "code/Program.cs")).toThrow(/code\/Program\.cs:1: unclosed #region "a"/);
+  });
+});
+
 describe("applyVars", () => {
   it("replaces literals and falls back to defaults", () => {
     expect(applyVars(parseSource(js), { clientId: "abc" }).split("\n").slice(0, 2)).toEqual([

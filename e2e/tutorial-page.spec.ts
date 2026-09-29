@@ -192,5 +192,18 @@ test("renders build-time highlighted code with markers stripped", async ({ page 
   await expect(main.locator('.line[data-regions~="oauth"]').first()).toContainText("fixtureState");
   await expect(main).not.toContainText("#region");
   await expect(main).not.toContainText("@var");
-  await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "oauth-callback.html", "style.css"]);
+  await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "oauth-callback.html", "report.py", "style.css"]);
+});
+
+test("highlights Python and strips its native region markers", async ({ page }) => {
+  await page.locator('calcite-tab-title[data-file="report.py"]').click();
+  const pane = page.locator('.code[data-file="report.py"]');
+  await expect(pane).toBeVisible();
+  await expect(pane).not.toContainText("region");
+  await expect(pane.locator('.line[data-regions~="summary"]')).toHaveCount(2);
+  const colors = await pane.locator(".line").first().locator("span").evaluateAll((spans) =>
+    Object.fromEntries(spans.map((s) => [s.textContent?.trim(), (s as HTMLElement).style.getPropertyValue("--shiki-light")])),
+  );
+  expect(colors.def).toBeTruthy();
+  expect(colors.def).not.toBe(colors.summary);
 });

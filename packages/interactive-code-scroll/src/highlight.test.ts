@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { highlight, langFor } from "./highlight.ts";
+import { extensionOf } from "./file-types.ts";
+import { highlight, isKnownLanguage, langFor } from "./highlight.ts";
 import { parseSource } from "./markers.ts";
 
 describe("highlight", () => {
@@ -22,5 +23,42 @@ describe("highlight", () => {
     expect(langFor("setup.sh")).toBe("bash");
     expect(langFor("tutorial.mdx")).toBe("markdown");
     expect(langFor("README")).toBe("text");
+  });
+
+  it.each([
+    ["geocode.py", "python"],
+    ["MainActivity.kt", "kotlin"],
+    ["app/build.gradle.kts", "kotlin"],
+    ["build.gradle", "groovy"],
+    ["ContentView.swift", "swift"],
+    ["MainPage.xaml.cs", "csharp"],
+    ["MainPage.xaml", "xml"],
+    ["Main.java", "java"],
+    ["main.cpp", "cpp"],
+    ["Main.qml", "qml"],
+    ["main.dart", "dart"],
+    ["pyproject.toml", "toml"],
+    ["query.sql", "sql"],
+    ["geocode.http", "http"],
+    ["data.geojson", "json"],
+    ["setup.ps1", "powershell"],
+  ])("highlights %s as %s", (path, lang) => {
+    expect(langFor(path)).toBe(lang);
+    expect(isKnownLanguage(lang)).toBe(true);
+  });
+
+  it("lets frontmatter overrides win over the built-in map", () => {
+    expect(langFor("notes.qmd", { qmd: "markdown" })).toBe("markdown");
+    expect(langFor("main.js", { js: "text" })).toBe("text");
+  });
+
+  it("reads extensions without the dot, ignoring dotfiles", () => {
+    expect(extensionOf("a/b/Main.KT")).toBe("kt");
+    expect(extensionOf(".env")).toBe("");
+    expect(extensionOf("Makefile")).toBe("");
+  });
+
+  it("rejects unknown languages", () => {
+    expect(isKnownLanguage("snake")).toBe(false);
   });
 });

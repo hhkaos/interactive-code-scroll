@@ -1,3 +1,5 @@
+import { extensionOf } from "./file-types.ts";
+
 export interface Region {
   id: string;
   /** 1-based, inclusive, in the cleaned code. */
@@ -38,6 +40,17 @@ export class MarkerError extends Error {
 
 const REGION_START = /^\s*(?:#|\/\/|\/\*|<!--)\s*#region\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
 const REGION_END = /^\s*(?:#|\/\/|\/\*|<!--)\s*#endregion(?:\s+([\w-]+))?\s*(?:\*\/|-->)?\s*$/;
+const DASH_REGION = [/^\s*--\s*#region\s+([\w-]+)\s*$/, /^\s*--\s*#endregion(?:\s+([\w-]+))?\s*$/] as const;
+/**
+ * Native region styles, only in their own file types so existing comments elsewhere
+ * (e.g. a bare `#region` line in a shell script) never change meaning.
+ */
+const NATIVE_REGION: Record<string, readonly [RegExp, RegExp]> = {
+  cs: [/^\s*#region\s+([\w-]+)\s*$/, /^\s*#endregion(?:\s+([\w-]+))?\s*$/],
+  py: [/^\s*#\s+region\s+([\w-]+)\s*$/, /^\s*#\s+endregion(?:\s+([\w-]+))?\s*$/],
+  sql: DASH_REGION,
+  lua: DASH_REGION,
+};
 const VAR_COMMENT = /\s*(#|\/\/|\/\*|<!--)\s*@var\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
 const STRING_LITERAL = /(["'])((?:\\.|(?!\1).)*)\1/;
 
@@ -48,6 +61,7 @@ export function parseSource(source: string, file?: string): ParsedSource {
   const vars: VarRef[] = [];
   const open: { id: string; fromLine: number; sourceLine: number }[] = [];
   const markdownLike = file === undefined ? false : /\.(?:md|mdx)$/i.test(file);
+  const native = file === undefined ? undefined : NATIVE_REGION[extensionOf(file)];
   let fenced = false;
   const fail = (message: string, sourceLine: number): never => {
     throw new MarkerError(message, file, sourceLine);
@@ -66,7 +80,7 @@ export function parseSource(source: string, file?: string): ParsedSource {
       return;
     }
 
-    const start = REGION_START.exec(raw);
+    const start = REGION_START.exec(raw) ?? native?.[0].exec(raw);
     if (start) {
       const id = start[1]!;
       if (open.some((r) => r.id === id) || regions.some((r) => r.id === id)) fail(`duplicate #region "${id}"`, sourceLine);
@@ -74,7 +88,7 @@ export function parseSource(source: string, file?: string): ParsedSource {
       return;
     }
 
-    const end = REGION_END.exec(raw);
+    const end = REGION_END.exec(raw) ?? native?.[1].exec(raw);
     if (end) {
       const region = open.pop() ?? fail("#endregion without a matching #region", sourceLine);
       if (end[1] && end[1] !== region.id) fail(`#endregion "${end[1]}" closes #region "${region.id}"`, sourceLine);

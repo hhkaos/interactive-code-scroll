@@ -43,6 +43,9 @@ logo: logo.svg
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | `logo` | image path | none | Relative to `images/`. Use a square SVG or a PNG of at least 512 x 512. |
+| `languages` | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
+
+Highlighting is chosen by file extension. Built in: JavaScript/TypeScript (`js`, `mjs`, `cjs`, `jsx`, `ts`, `tsx`), `vue`, `html`, `css`, `json`/`geojson`, Markdown (`md`, `mdx`), shell (`sh`, `bash`), `ps1`, `yaml`/`yml`, `toml`, `ini`, `http`, Python (`py`), Kotlin (`kt`, `kts`), Gradle Groovy (`gradle`), `swift`, `java`, C# (`cs`), XML/XAML (`xml`, `xaml`), C++ (`cpp`, `h`, `hpp`), `qml`, `dart`, `sql` and `lua`. Other files show as plain text.
 
 ## Components
 
@@ -155,6 +158,20 @@ npm install -D astro interactive-code-scroll@alpha
 title: My Tutorial
 preview: tab
 # #endregion frontmatter
+```
+
+A few languages also accept their own region style. Each one works only in its own file type, so the same text in any other file stays an ordinary comment:
+
+| Files | Style |
+|---|---|
+| `.cs` | C# `#region id` / `#endregion` |
+| `.py` | `# region id` / `# endregion` (VS Code folding style) |
+| `.sql`, `.lua` | `-- #region id` / `-- #endregion` |
+
+```python
+# region geocode
+response = requests.get(url, params=params)
+# endregion geocode
 ```
 
 Rules:

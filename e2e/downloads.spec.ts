@@ -34,6 +34,7 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
     `${folder}/index.html`,
     `${folder}/main.js`,
     `${folder}/oauth-callback.html`,
+    `${folder}/report.py`,
     `${folder}/style.css`,
   ]);
   const main = execFileSync("unzip", ["-p", zip, `${folder}/main.js`], { encoding: "utf8" });

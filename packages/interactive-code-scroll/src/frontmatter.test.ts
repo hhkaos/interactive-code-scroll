@@ -3,7 +3,7 @@ import { FrontmatterError, frontmatterKeyLines, readTutorialConfig } from "./fro
 
 describe("readTutorialConfig", () => {
   it("applies defaults", () => {
-    expect(readTutorialConfig({})).toEqual({ title: "Tutorial", preview: "both", theme: "auto", codeWrap: false });
+    expect(readTutorialConfig({})).toEqual({ title: "Tutorial", preview: "both", theme: "auto", codeWrap: false, languages: {} });
   });
 
   it("accepts valid values", () => {
@@ -12,6 +12,7 @@ describe("readTutorialConfig", () => {
       preview: "iframe",
       theme: "dark",
       codeWrap: true,
+      languages: {},
     });
   });
 
@@ -25,6 +26,18 @@ describe("readTutorialConfig", () => {
     expect(() => readTutorialConfig({ title: 3 })).toThrow(/"title" must be a string/);
     expect(() => readTutorialConfig({ codeWrap: "yes" })).toThrow(/"codeWrap" must be a boolean/);
     expect(() => readTutorialConfig({ logo: true })).toThrow(/"logo" must be a string/);
+  });
+
+  it("accepts language overrides by extension", () => {
+    expect(readTutorialConfig({ languages: { qmd: "markdown", conf: "text" } })).toMatchObject({
+      languages: { qmd: "markdown", conf: "text" },
+    });
+  });
+
+  it("rejects invalid language overrides", () => {
+    expect(() => readTutorialConfig({ languages: ["py"] })).toThrow(/"languages" must map file extensions/);
+    expect(() => readTutorialConfig({ languages: { ".py": "python" } })).toThrow(/key "\.py" must be a lowercase file extension/);
+    expect(() => readTutorialConfig({ languages: { py: "snake" } })).toThrow(/"languages\.py" must be a Shiki language id/);
   });
 
   it("names the invalid key", () => {

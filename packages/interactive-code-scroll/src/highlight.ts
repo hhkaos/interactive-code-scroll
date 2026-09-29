@@ -1,25 +1,57 @@
-import { codeToHtml } from "shiki";
+import { bundledLanguages, codeToHtml } from "shiki";
+import { extensionOf } from "./file-types.ts";
 import type { ParsedSource } from "./markers.ts";
 
 const LANGS: Record<string, string> = {
   js: "javascript",
   mjs: "javascript",
   cjs: "javascript",
+  jsx: "jsx",
   ts: "typescript",
+  tsx: "tsx",
+  vue: "vue",
   html: "html",
   htm: "html",
   css: "css",
   json: "json",
+  geojson: "json",
   md: "markdown",
   mdx: "markdown",
   sh: "bash",
   bash: "bash",
+  ps1: "powershell",
   yaml: "yaml",
   yml: "yaml",
+  toml: "toml",
+  ini: "ini",
+  http: "http",
+  py: "python",
+  kt: "kotlin",
+  kts: "kotlin",
+  gradle: "groovy",
+  swift: "swift",
+  java: "java",
+  cs: "csharp",
+  xaml: "xml",
+  xml: "xml",
+  cpp: "cpp",
+  h: "cpp",
+  hpp: "cpp",
+  qml: "qml",
+  dart: "dart",
+  sql: "sql",
+  lua: "lua",
 };
 
-export function langFor(path: string): string {
-  return LANGS[path.split(".").pop()!.toLowerCase()] ?? "text";
+/** `text` (no highlighting) or a language Shiki bundles. */
+export function isKnownLanguage(lang: string): boolean {
+  return lang === "text" || lang in bundledLanguages;
+}
+
+/** Shiki language for a file; `overrides` (frontmatter `languages`) win over the built-in map. */
+export function langFor(path: string, overrides: Readonly<Record<string, string>> = {}): string {
+  const ext = extensionOf(path);
+  return overrides[ext] ?? LANGS[ext] ?? "text";
 }
 
 /**
@@ -27,9 +59,13 @@ export function langFor(path: string): string {
  * `data-line` and `data-regions`; each `@var` literal's token gets `data-var`
  * for in-place substitution.
  */
-export function highlight({ code, regions, vars }: ParsedSource, path: string): Promise<string> {
+export function highlight(
+  { code, regions, vars }: ParsedSource,
+  path: string,
+  languages: Readonly<Record<string, string>> = {},
+): Promise<string> {
   return codeToHtml(code, {
-    lang: langFor(path),
+    lang: langFor(path, languages),
     themes: { light: "github-light-default", dark: "github-dark-default" },
     defaultColor: false,
     decorations: vars
