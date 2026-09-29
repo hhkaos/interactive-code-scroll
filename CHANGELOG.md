@@ -31,6 +31,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added a generated-result visual checkpoint to the getting-started tutorial instead of nesting a compiled tutorial inside Preview.
 - Updated the OAuth PKCE example credential setup step with a seven-image ArcGIS portal walkthrough.
 
+### Fixed
+
+- Resizing the explanations panel no longer switches the active step (and the URL hash) while its text reflows; the active step stays centered.
+
 ## [0.1.0-alpha.8] - 2026-09-28
 
 ### Fixed

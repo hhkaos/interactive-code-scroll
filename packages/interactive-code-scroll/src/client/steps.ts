@@ -244,14 +244,27 @@ export function startStepEngine(): StepEngine {
     { capture: true },
   );
 
-  // Explanations shown again: bring the active step's text back to the center line.
-  document.addEventListener(DOCS_TOGGLE_EVENT, (event) => {
-    if ((event as CustomEvent<{ hidden: boolean }>).detail.hidden || current < 0) return;
+  /** Re-centers the active step after a layout change; the observer may not switch steps meanwhile. */
+  function keepActiveCentered(): void {
+    if (current < 0) return;
     keyTarget = current;
     clearTimeout(keyTargetTimer);
     keyTargetTimer = setTimeout(endKeyScroll, 1500);
     showStep(current, true, "auto");
+  }
+
+  // Explanations shown again: bring the active step's text back to the center line.
+  document.addEventListener(DOCS_TOGGLE_EVENT, (event) => {
+    if (!(event as CustomEvent<{ hidden: boolean }>).detail.hidden) keepActiveCentered();
   });
+
+  // Resizing the explanations (splitter, window) reflows their text: keep the active step, never switch.
+  let docsWidth = docs.clientWidth;
+  new ResizeObserver(() => {
+    if (docs.clientWidth === docsWidth) return;
+    docsWidth = docs.clientWidth;
+    if (!restoring && docsWidth > 0) keepActiveCentered();
+  }).observe(docs);
 
   // Clicking a step activates it (short steps and the first ones may never cross the center line).
   docs.addEventListener("click", (event) => {

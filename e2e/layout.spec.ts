@@ -50,6 +50,9 @@ test("dragging the splitter resizes the panels and is remembered", async ({ page
   await page.mouse.move(900, 300, { steps: 5 });
   await page.mouse.up();
   await expect.poll(() => docsWidth(page)).toBeGreaterThan(880);
+  // The explanations reflow while resizing; the active step must not change.
+  await expect(page).toHaveURL(/#ui$/);
+  await expect(page.locator("section.step#ui")).toHaveAttribute("data-active", "");
 
   await page.reload();
   await expect.poll(() => docsWidth(page)).toBeGreaterThan(880);

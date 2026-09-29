@@ -30,7 +30,7 @@ It targets tutorials in any programming language and toolchain, not only browser
 
 ### Layout
 - **Side-by-side**: documentation (left) and code (right).
-- **Resizable splitters** between docs and code, and between code and Preview; sizes are remembered. A handle on the docs/code splitter hides/shows the explanations.
+- **Resizable splitters** between docs and code, and between code and Preview; sizes are remembered. Resizing the explanations (splitter or window) keeps the active step centered and never switches steps while the text reflows. A handle on the docs/code splitter hides/shows the explanations.
 - **Logo** (optional, `logo` frontmatter, a file in `images/`): shown in the header and used as favicon. Square SVG, or PNG of at least 512×512.
 - **Light + Dark** with a manual toggle (remembered). The author sets the tutorial's default with the `theme` frontmatter (`auto` = `prefers-color-scheme`, the default; `light`; `dark`). The code panel and the Preview iframe follow the page mode (the iframe's `prefers-color-scheme` follows it, so apps using `calcite-mode-auto` match).
 - **Look and feel**: Esri corporate (Calcite Design System). Calcite components are styled only through their tokens, props and slots.
