@@ -11,6 +11,8 @@ declare module "virtual:interactive-code-scroll/tutorial" {
   export const outputs: string[];
   /** Absolute path of the tutorial's `output/` folder (build time only). */
   export const outputDir: string;
+  /** Text files under `requests/`, relative to it (binaries there are validation errors). */
+  export const requests: import("./tutorial-files.ts").SourceFile[];
   /** Image path (relative to `images/`) → public URL. */
   export const images: Record<string, string>;
 }

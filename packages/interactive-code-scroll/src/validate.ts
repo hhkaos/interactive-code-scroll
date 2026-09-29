@@ -2,6 +2,7 @@ import { FrontmatterError, readTutorialConfig, type TutorialConfig, type Variant
 import { parseSource, type ParsedSource } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
+import { parseHttpFile, requestIndex, type HttpFile } from "./requests.ts";
 import { variantVisible } from "./variants.ts";
 import { globToRegExp, selectVisible } from "./visible-files.ts";
 import type { SourceFile } from "./tutorial-files.ts";
@@ -25,6 +26,10 @@ export interface ValidationInput {
   images: string[];
   /** Captured outputs, relative to `output/`. */
   outputs?: string[];
+  /** Text files under `requests/`. */
+  requests?: SourceFile[];
+  /** Binary files under `requests/`. */
+  requestBinaries?: string[];
   /** Parsed frontmatter of the MDX file (empty when it has none). */
   frontmatter?: Record<string, unknown>;
   /** 1-based line of each frontmatter key, to position frontmatter errors. */
@@ -42,7 +47,10 @@ export function parseStringArray(expression: string): string[] | undefined {
   return [...expression.matchAll(/"([^"\\]*)"|'([^'\\]*)'/g)].map((m) => m[1] ?? m[2]!);
 }
 
-/** One form field feeds every file that marks the same var, so all of them must agree on its default. */
+/**
+ * One form field feeds every file that marks the same var, so all of them must agree on its default.
+ * `parsed` is keyed by the path shown in errors (`code/…`, `requests/…`).
+ */
 function inconsistentDefaults(parsed: ReadonlyMap<string, ParsedSource>): string[] {
   const byName = new Map<string, { path: string; value: string }[]>();
   for (const [path, source] of parsed) {
@@ -55,7 +63,7 @@ function inconsistentDefaults(parsed: ReadonlyMap<string, ParsedSource>): string
   const errors: string[] = [];
   for (const [name, uses] of byName) {
     if (new Set(uses.map((u) => u.value)).size < 2) continue;
-    const listed = uses.map((u) => `code/${u.path} ${JSON.stringify(u.value)}`).join(", ");
+    const listed = uses.map((u) => `${u.path} ${JSON.stringify(u.value)}`).join(", ");
     errors.push(`@var "${name}" must have the same default in every file: ${listed}`);
   }
   return errors;
@@ -125,6 +133,8 @@ export function validateTutorial({
   binaries = [],
   images,
   outputs = [],
+  requests = [],
+  requestBinaries = [],
   frontmatter = {},
   frontmatterLines = {},
 }: ValidationInput): string[] {
@@ -183,7 +193,33 @@ export function validateTutorial({
     embedded.add(PREVIEW_ENTRY);
   }
 
-  const varNames = new Set([...parsed.values()].flatMap((p) => p.vars.map((v) => v.name)));
+  // requests/: the runner's sources, zipped next to the project; their file variables are vars too.
+  const requestSources = new Map<string, ParsedSource>();
+  const httpFiles: HttpFile[] = [];
+  for (const path of requestBinaries) errors.push(`requests/${path}: binary files are not allowed in requests/`);
+  for (const file of requests) {
+    try {
+      requestSources.set(`requests/${file.path}`, parseSource(file.source, `requests/${file.path}`));
+    } catch (error) {
+      errors.push((error as Error).message);
+    }
+    if (!file.path.endsWith(".http")) continue;
+    const http = parseHttpFile(file.source, file.path);
+    errors.push(...http.errors);
+    httpFiles.push(http.file);
+  }
+  const requestNames = requestIndex(httpFiles);
+  errors.push(...requestNames.errors);
+  if (requests.length + requestBinaries.length > 0 && !skipFileChecks) {
+    // Every ZIP holds requests/ at its root, next to the project (a variant's folder contents).
+    const roots = variants ? variants.map((v) => `${v.dir}/`) : [""];
+    for (const root of roots) {
+      const clash = [...files.map((f) => f.path), ...binaries].find((path) => path.startsWith(`${root}requests/`));
+      if (clash) errors.push(`code/${clash}: code/${root}requests/ would overwrite requests/ in the ZIP; rename the folder`);
+    }
+  }
+
+  const varNames = new Set([...parsed.values(), ...requestSources.values()].flatMap((p) => p.vars.map((v) => v.name)));
   // The page embeds only tabbed files (plus the Preview entry); others reach the ZIP unchanged, so they cannot hold vars.
   for (const [path, source] of parsed) {
     if (skipFileChecks || visibleSet.has(path) || embedded.has(path)) continue;
@@ -192,7 +228,7 @@ export function validateTutorial({
       errors.push(`code/${path}: @var "${v.name}" is in a file not shown in tabs; add the file to ${where} or remove the marker`);
     }
   }
-  errors.push(...inconsistentDefaults(parsed));
+  errors.push(...inconsistentDefaults(new Map([...[...parsed].map(([path, source]) => [`code/${path}`, source] as const), ...requestSources])));
   const stepIds = new Set<string>();
   const hintIds = new Set<string>();
 
@@ -223,6 +259,8 @@ export function validateTutorial({
       const only = text("only");
       const output = text("output");
       if (output !== undefined && !skipFileChecks) checkOutput(output, only, report);
+      const request = text("request");
+      if (request !== undefined) checkRequest(request, only, report);
       if (variants) {
         checkVariantStep(variants, only, file, region, report);
       } else if (!skipFileChecks) {
@@ -282,16 +320,36 @@ export function validateTutorial({
       } else if (!outputs.includes(output)) report(`output "${output}" not found in output/`);
       return;
     }
-    const ids = only?.split(/\s+/).filter(Boolean);
-    const covered = ids ? variants.filter((v) => ids.includes(v.id)) : variants;
-    const targets = covered.filter((v) => !v.web);
-    if (covered.length > 0 && targets.length === 0) {
-      report(`output "${output}" has no effect: every variant of the step is web code, which shows the Preview`);
-    }
-    for (const variant of targets) {
+    for (const variant of resultVariants(variants, only, `output "${output}"`, report)) {
       if (resolveOutput(output, outputs, variant.id) === undefined) {
         report(`output "${output}" not found for variant "${variant.id}" (output/${variant.id}/${output} or output/${output})`);
       }
+    }
+  }
+
+  /** Non-web variants a step covers: they show its result; reports a step whose variants are all web code. */
+  function resultVariants(all: readonly VariantFiles[], only: string | undefined, what: string, report: (message: string) => void): VariantFiles[] {
+    const ids = only?.split(/\s+/).filter(Boolean);
+    const covered = ids ? all.filter((v) => ids.includes(v.id)) : all;
+    const targets = covered.filter((v) => !v.web);
+    if (covered.length > 0 && targets.length === 0) {
+      report(`${what} has no effect: every variant of the step is web code, which shows the Preview`);
+    }
+    return targets;
+  }
+
+  /** `request="a b"`: named requests of requests/, the first being the default "Run as" choice. */
+  function checkRequest(request: string, only: string | undefined, report: (message: string) => void): void {
+    const names = request.split(/\s+/).filter(Boolean);
+    if (names.length === 0) report('"request" must list request names');
+    for (const [index, name] of names.entries()) {
+      if (names.indexOf(name) !== index) report(`request "${name}" is listed twice`);
+      else if (!requestNames.names.has(name)) report(`request "${name}" not found in requests/ (# @name ${name})`);
+    }
+    if (names.length === 0 || skipFileChecks) return;
+    if (variants) resultVariants(variants, only, `request "${request}"`, report);
+    else if (files.some((f) => f.path === PREVIEW_ENTRY)) {
+      report(`request "${request}" has no effect: code/${PREVIEW_ENTRY} makes the tutorial web code, which shows the Preview`);
     }
   }
 

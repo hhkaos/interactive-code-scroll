@@ -1,5 +1,5 @@
 ---
-import { files } from "virtual:interactive-code-scroll/tutorial";
+import { files, requests } from "virtual:interactive-code-scroll/tutorial";
 import { parseSource } from "../markers.ts";
 
 interface Props {
@@ -11,8 +11,12 @@ interface Props {
 }
 
 const { name, label, placeholder, secret = false, persist = false } = Astro.props;
-const defaultValue = files
-  .flatMap((f) => parseSource(f.source, `code/${f.path}`).vars)
+// Validation guarantees every file that marks the var (code/ or requests/) has the same default.
+const defaultValue = [
+  ...files.map((f) => parseSource(f.source, `code/${f.path}`)),
+  ...requests.map((f) => parseSource(f.source, `requests/${f.path}`)),
+]
+  .flatMap((parsed) => parsed.vars)
   .find((v) => v.name === name)?.defaultValue;
 ---
 

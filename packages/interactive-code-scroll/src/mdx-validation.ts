@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type MdxJsxTextElement } from "satteri";
 import { frontmatterKeyLines } from "./frontmatter.ts";
+import { parseSource } from "./markers.ts";
 import { credentialWarnings, isTextOutput } from "./output.ts";
 import { readTutorialFiles } from "./tutorial-files.ts";
 import { validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
@@ -53,7 +54,7 @@ function frontmatterOf(data: Readonly<Record<string, unknown>>): Record<string, 
 
 /**
  * Satteri mdast plugin: checks the frontmatter and component references against `code/`,
- * `images/` and `output/`; `warn` gets problems that do not fail the build.
+ * `images/`, `output/` and `requests/`; `warn` gets problems that do not fail the build.
  */
 export function tutorialValidation(tutorialDir: string, warn: (message: string) => void = console.warn): MdastPluginEntry {
   return (ctx) => {
@@ -82,11 +83,14 @@ export function tutorialValidation(tutorialDir: string, warn: (message: string) 
           binaries: tutorial.binaries,
           images: tutorial.images,
           outputs: tutorial.outputs,
+          requests: tutorial.requests,
+          requestBinaries: tutorial.requestBinaries,
           frontmatter,
           frontmatterLines: frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8")),
         });
         if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
-        const defaults = new Set([...parsedFiles(tutorial.files).values()].flatMap((p) => p.vars.map((v) => v.defaultValue)));
+        const sources = [...parsedFiles(tutorial.files).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
+        const defaults = new Set(sources.flatMap((p) => p.vars.map((v) => v.defaultValue)));
         const texts = tutorial.outputs
           .filter(isTextOutput)
           .map((path) => ({ path, text: readFileSync(join(tutorial.outputDir, path), "utf8") }));

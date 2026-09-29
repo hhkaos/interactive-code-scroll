@@ -49,11 +49,13 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
+Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer, 4a `.http` parser + validation + `requests/` in every ZIP. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
 
 Result pane code: `src/output.ts` (types, `output/<variant>/` lookup, credential scan), `src/result/output-file.ts` (publishes `output/`), `stepOutputs()` in `src/variants.ts`, `src/client/result.ts` + `result-values.ts` (pane, last-result rule), `STEP_EVENT` from `src/client/steps.ts`. JSON viewer: `src/client/json-tree.ts` (DOM, keyboard) + `json-tree-values.ts` (parse, depth rule, paging, key map); reuse `renderJsonTree()` for the runner's Body tab.
 
-Recommended next task: **4a `.http` parser and build validation** (SPEC "Supported `.http` syntax"; `requests/` folder, `request=` names). Pending decision carried over: `requests/` goes into every variant's ZIP in task 4a. Then (agreed, before task 7): **Maximize pane** (SPEC Presentation mode + `maximize=` step attribute). Note: the JSON tree owns all keys (`data-own-keys`), so PageUp/PageDown clickers do not move steps while it has focus; task 7 revisits this.
+Requests code: `src/requests.ts` (`parseHttpFile()` → `HttpFile` with file variables and `HttpRequest`s, placeholders unresolved; `requestIndex()` for names), `requests`/`requestBinaries` in `src/tutorial-files.ts`, `checkRequest()` in `src/validate.ts`, `requests` in the virtual module and `clientData.requests` (parsed sources, used by the ZIP). The fixture binds `request="list-items"` (`requests/items.http`) with no runner yet.
+
+Recommended next task: **4b `.http` runner UI** (Run, "Run as", URL-encoded query values, masking + "Show secrets", 30 s timeout, captured-output fallback): reuse `parseHttpFile()` client-side or embed parsed requests in `clientData`; `hasResult` in `src/pages/index.astro` must also count `request=` steps. Then (agreed, before task 7): **Maximize pane** (SPEC Presentation mode + `maximize=` step attribute). Note: the JSON tree owns all keys (`data-own-keys`), so PageUp/PageDown clickers do not move steps while it has focus; task 7 revisits this.
 
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
@@ -110,8 +112,9 @@ packages/interactive-code-scroll/  # core package: Astro integration
   scripts/build-package.mjs         # package build: compiles TS and copies Astro/CSS assets
   dist/                             # generated package output (ignored; built by prepack)
   src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
-  src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**, output/**
+  src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**, output/**, requests/**
   src/output.ts                    # captured output types, per-variant lookup, credential warnings
+  src/requests.ts                  # .http parser (supported subset) + request name index
   src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images) + dev revalidation hook
   src/markers.ts                   # #region / @var parser + applyVars
   src/validate.ts                  # reference validation (pure)

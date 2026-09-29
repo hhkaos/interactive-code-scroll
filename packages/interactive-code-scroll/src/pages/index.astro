@@ -1,5 +1,5 @@
 ---
-import { binaries, Content, files, frontmatter, images, outputs } from "virtual:interactive-code-scroll/tutorial";
+import { binaries, Content, files, frontmatter, images, outputs, requests } from "virtual:interactive-code-scroll/tutorial";
 import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Step from "../components/Step.astro";
@@ -45,11 +45,14 @@ const highlighted = new Map(
 const initialFile = groups[0]!.entry ?? visible[0];
 const selectedIn = (group: (typeof groups)[number]) => group.entry ?? group.paths[0];
 const fetched = [...files.map((f) => f.path).filter((path) => !embedded.has(path)), ...binaries].sort();
+// requests/ goes into every ZIP next to the project, with form values applied to its file variables.
+const requestFiles = requests.map((f) => ({ path: f.path, parsed: parseSource(f.source, `requests/${f.path}`) }));
 // Files in each ZIP (a variant's ZIP holds its own folder) and how many of them have no tab.
 const allPaths = [...textPaths, ...binaries];
 const zipCountsFor = (inZip: (path: string) => boolean) => {
   const paths = allPaths.filter(inZip);
-  return { total: paths.length, withoutTab: paths.filter((path) => !visible.includes(path)).length };
+  const withoutTab = paths.filter((path) => !visible.includes(path)).length + requests.length;
+  return { total: paths.length + requests.length, withoutTab };
 };
 const zipCounts = variants && Object.fromEntries(variants.map((v) => [v.id, zipCountsFor((path) => path.startsWith(`${v.dir}/`))]));
 const initialZip = zipCounts ? zipCounts[variants![0]!.id]! : zipCountsFor(() => true);
@@ -62,6 +65,7 @@ const clientData = JSON.stringify({
   preview,
   files: parsed,
   fetched,
+  requests: requestFiles,
   zipCounts,
   variants: clientVariants,
   otherVariantSteps: config.otherVariantSteps,
@@ -266,6 +270,7 @@ const clientData = JSON.stringify({
         preview: "off" | "iframe" | "tab" | "both";
         files: { path: string; parsed: ParsedSource }[];
         fetched: string[];
+        requests: { path: string; parsed: ParsedSource }[];
         zipCounts?: Record<string, { total: number; withoutTab: number }>;
         variants?: VariantInfo[];
         otherVariantSteps: "notice" | "hide";
@@ -286,6 +291,7 @@ const clientData = JSON.stringify({
       startDownloads({
         files: data.files,
         fetched: data.fetched,
+        requests: data.requests,
         previewUrl: pageUrl,
         values: vars.values,
         title: data.title,

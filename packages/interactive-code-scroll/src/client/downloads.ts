@@ -18,6 +18,8 @@ function flash(action: HTMLElement, icon: string, text: string): void {
 
 export interface DownloadsOptions {
   files: ParsedFile[];
+  /** `requests/` files: every ZIP holds them in `requests/`, next to the project. */
+  requests: ParsedFile[];
   /** `code/` files the page does not embed (no tab, binaries): fetched from `previewUrl` for the ZIP. */
   fetched: string[];
   previewUrl: string;
@@ -36,7 +38,7 @@ async function fetchBytes(url: string): Promise<Uint8Array> {
 }
 
 /** Copy / download the visible file, or download the whole project as a ZIP (form values included). */
-export function startDownloads({ files, fetched, previewUrl, values, title, variants, zipCounts }: DownloadsOptions): void {
+export function startDownloads({ files, requests, fetched, previewUrl, values, title, variants, zipCounts }: DownloadsOptions): void {
   const zipAction = document.querySelector<HTMLElement>("#download-zip");
   const showZipCount = () => {
     const counts = variants && zipCounts?.[variants.active().id];
@@ -79,7 +81,10 @@ export function startDownloads({ files, fetched, previewUrl, values, title, vari
     const toFetch = variant ? fetched.filter((path) => path.startsWith(`${variant.dir}/`)) : fetched;
     try {
       const extra = await Promise.all(toFetch.map(async (path) => [path, await fetchBytes(publishedUrl(previewUrl, path))] as const));
-      const content = own({ ...projectFiles(files, values()), ...Object.fromEntries(extra) });
+      const content = {
+        ...own({ ...projectFiles(files, values()), ...Object.fromEntries(extra) }),
+        ...Object.fromEntries(Object.entries(projectFiles(requests, values())).map(([path, text]) => [`requests/${path}`, text])),
+      };
       save(`${folder}.zip`, await buildZip(content, folder), "application/zip");
     } catch {
       flash(button, "exclamation-mark-triangle", "Download failed");

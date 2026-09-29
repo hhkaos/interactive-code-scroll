@@ -18,6 +18,7 @@ it("fails the Astro build with MDX file:line for every broken reference and fron
   await expect(run).rejects.toThrow(/tutorial\.mdx:3:1 frontmatter logo "missing\.svg" not found in images\//);
   await expect(run).rejects.toThrow(/tutorial\.mdx:6:1 <Step> region "nope" not found in code\/main\.js/);
   await expect(run).rejects.toThrow(/tutorial\.mdx:10:1 <VarField> no "@var missing" found in code\//);
+  await expect(run).rejects.toThrow(/tutorial\.mdx:12:1 <Step> request "missing-request" not found in requests\//);
 }, 60_000);
 
 it("publishes captured outputs as is and warns about outputs that look like they hold a credential", async () => {

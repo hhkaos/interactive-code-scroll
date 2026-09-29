@@ -76,7 +76,7 @@ const VAR_COMMENT = /\s*(#|\/\/|\/\*|<!--)\s*@var\s+([\w-]+)\s*(?:\*\/|-->)?\s*$
 const DASH_VAR_COMMENT = /\s*(--)\s*@var\s+([\w-]+)\s*$/;
 const STRING_LITERAL = /(["'])((?:\\.|(?!\1).)*)\1/;
 /** `.http` file variable: `@name = value`. */
-const HTTP_VARIABLE = /^(\s*@([\w-]+)\s*=\s*)(.*?)\s*$/;
+export const HTTP_VARIABLE = /^(\s*@([\w-]+)\s*=\s*)(.*?)\s*$/;
 
 const DOLLAR_TEMPLATES = new Set(["kt", "kts", "dart", "gradle", "groovy"]);
 const SHELLS = new Set(["sh", "bash", "zsh"]);

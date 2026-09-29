@@ -1,0 +1,6 @@
+@fixtureToken = DEMO_TOKEN
+@baseUrl = https://api.fixture.test/v1
+
+# @name list-items
+GET {{baseUrl}}/items
+  ?token={{fixtureToken}}

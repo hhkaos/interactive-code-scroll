@@ -18,12 +18,15 @@ tutorial/
     screenshot.png
   output/            # optional: captured results for the Result pane
     geocode.json
+  requests/          # optional: .http requests, zipped with the project
+    geocode.http
 ```
 
 - `tutorial.mdx` contains frontmatter, prose and MDX components.
 - `code/` contains the final runnable project files. Large projects can keep everything here (Gradle wrappers, asset catalogs, binaries) and pick the files that get tabs with the `files` frontmatter.
 - `images/` contains logos, screenshots and carousel images referenced by steps.
 - `output/` (optional) contains captured results of code that cannot run in the browser, shown by steps with `output=` in the [Result pane](#result-pane).
+- `requests/` (optional) contains [HTTP requests](#http-requests) (`.http` files) bound by steps with `request=`, plus supporting files; it is added to every ZIP.
 
 The source code should be valid without InteractiveCodeScroll. Use comments for framework markers.
 
@@ -93,6 +96,7 @@ Explain the change here.
 | `only` | no | With `variants`: space-separated variant ids the step applies to, e.g. `only="python curl"`. |
 | `images` | no | Array of paths relative to `images/`. Shows an image carousel instead of code. |
 | `output` | no | Captured output under `output/` shown in the [Result pane](#result-pane), e.g. `output="geocode.json"`. |
+| `request` | no | Space-separated [request names](#http-requests) from `requests/`, e.g. `request="geocode-get geocode-post"`; the first is the default. |
 | `preview` | no | `expanded`, `collapsed` or `keep`. Controls iframe state (or the Result pane) when the step activates. |
 
 A text-only step keeps the current file visible and clears any previous region focus.
@@ -221,7 +225,7 @@ Literals that cannot hold an arbitrary value are build errors: Python f-strings,
 
 ### `.http` file variables
 
-In `.http` files (VS Code REST Client / JetBrains HTTP Client syntax), every file variable line is a variable with the rest of the line as its default. No `@var` marker is needed:
+In `.http` files (VS Code REST Client / JetBrains HTTP Client syntax), every file variable line is a variable with the rest of the line as its default. No `@var` marker is needed. This applies to `.http` files in `code/` and in [`requests/`](#http-requests); a `<VarField>` can target either, and a var used in both needs the same default:
 
 ```http
 @accessToken = YOUR_ACCESS_TOKEN
@@ -264,6 +268,46 @@ Code that cannot run in the browser (scripts, native apps, HTTP requests) shows 
 - **Credentials**: outputs are committed and published. The build warns (without failing) when one looks like it holds a credential: `token=`, `"token":`, `apiKey` or `Authorization: Bearer` followed by a value that is not a var default. Replace real values with the var's default (the demo value in the code) before publishing.
 - `output=` in web code is a build error: web code shows the Preview.
 - `output/` is not part of the ZIP.
+
+## HTTP Requests
+
+Requests live in `.http` files under `requests/` (VS Code REST Client / JetBrains HTTP Client syntax), so they stay runnable in those tools. They are not code tabs or variants: they are the source of the Result pane's request runner (coming in a later release) and are included in every ZIP as `requests/`, with form values applied. A `.http` file under `code/` is an ordinary code file and is never run.
+
+```http
+@serviceUrl = https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer
+@accessToken = YOUR_ACCESS_TOKEN
+
+# @name geocode-get
+GET {{serviceUrl}}/findAddressCandidates
+  ?singleLine=380 New York St, Redlands
+  &f=json
+  &token={{accessToken}}
+
+###
+
+# @name geocode-post
+POST {{serviceUrl}}/findAddressCandidates
+Content-Type: application/x-www-form-urlencoded
+X-Esri-Authorization: Bearer {{accessToken}}
+
+singleLine=380 New York St, Redlands&f=json
+```
+
+```mdx
+<Step id="geocode" region="geocode" request="geocode-get geocode-post">
+```
+
+Supported syntax:
+
+- `###` separates requests.
+- `# @name x` or `// @name x` names the next request (letters, digits, `_` and `-`). Unnamed requests are allowed but cannot be bound by `request=`.
+- File variables `@x = value` anywhere in the file; `{{x}}` uses them within the same file.
+- A request line `METHOD URL` (optional `HTTP/x` suffix) with `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` or `OPTIONS`, optionally continued by lines starting with `?` or `&`; then headers (`Name: value`), a blank line and the body.
+- Comments (`#`, `//`) outside the body.
+
+Build errors: request variables (`{{name.response…}}`), system variables (`{{$guid}}`…), `< file` bodies, pre-request and response handler scripts (`< {% %}`, `> {% %}`, `>> file`), `{{x}}` with no file variable `x`, a request line without a supported method, a request name defined twice across `requests/`, a `request=` name that does not exist or is listed twice, `request=` on a step whose variants are all web code (or in a tutorial with `code/index.html`), binary files in `requests/`, and a `code/requests/` (or `code/<variant dir>/requests/`) folder that would overwrite `requests/` in the ZIP.
+
+Other text files in `requests/` (for example a README) are zipped as is.
 
 ## Files Not Shown in Tabs
 
@@ -352,7 +396,7 @@ Region ids are the contract between variants. Give the same region the same id i
 
 - A variant is web code when its folder has `index.html`. Only web variants show the Preview; other variants show the [Result pane](#result-pane) instead when the tutorial has captured outputs. `preview` in the frontmatter applies to the web variants, and a tutorial without any web variant needs no `index.html`.
 - A web variant's Preview runs from its own page, `preview/<dir>/index.html`, with every file of the variant published next to it, so relative references such as `./main.js` or an OAuth callback page resolve inside the variant folder.
-- The ZIP holds only the active variant: its folder becomes the root of the archive, named `<tutorial>-<variant id>.zip`. The ZIP badge and tooltip count that variant's files.
+- The ZIP holds only the active variant: its folder becomes the root of the archive, named `<tutorial>-<variant id>.zip`, plus `requests/` when the tutorial has it. The ZIP badge and tooltip count those files.
 
 ## Validation
 

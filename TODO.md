@@ -17,7 +17,6 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
 
-- [ ] 4a `.http` parser and build validation (`requests/`, supported subset, `request=` names); include `requests/` in every variant's ZIP.
 - [ ] 4b `.http` runner UI: Run, "Run as" picker, URL-encoded query values, masking + "Show secrets", 30 s timeout, captured-output fallback.
 - [ ] 5 Error rule + help table (`requests/errors.json`) + Headers tab.
 - [ ] 6 REST example tutorial (cURL / Python / JavaScript, GET + POST) + playground `requests/`; E2E blocks every called host.

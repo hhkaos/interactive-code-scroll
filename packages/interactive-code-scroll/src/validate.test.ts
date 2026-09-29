@@ -357,3 +357,74 @@ describe("validateTutorial captured output", () => {
     ]);
   });
 });
+
+describe("validateTutorial requests", () => {
+  const script = [{ path: "main.py", source: 'TOKEN = "DEMO"  # @var token\n' }];
+  const http = {
+    path: "geocode.http",
+    source: "@token = DEMO\n\n# @name geocode-get\nGET https://x.test/?token={{token}}\n\n###\n# @name geocode-post\nPOST https://x.test/\n",
+  };
+  const run = (
+    uses: ComponentUse[],
+    options: { files?: { path: string; source: string }[]; requests?: { path: string; source: string }[]; requestBinaries?: string[]; frontmatter?: Record<string, unknown> } = {},
+  ) =>
+    validateTutorial({
+      mdxFile: "tutorial.mdx",
+      uses,
+      files: options.files ?? script,
+      images,
+      requests: options.requests ?? [http, { path: "errors.json", source: "{}" }],
+      requestBinaries: options.requestBinaries,
+      frontmatter: options.frontmatter ?? { preview: "off" },
+    });
+
+  it("accepts named requests, VarFields for file variables and supporting files", () => {
+    expect(
+      run([
+        use("Step", { id: "a", request: "geocode-get geocode-post" }),
+        use("VarField", { name: "token", label: "Token" }),
+      ]),
+    ).toEqual([]);
+    expect(run([use("VarField", { name: "token", label: "Token" })], { files: [{ path: "main.py", source: "print(1)" }] })).toEqual([]);
+  });
+
+  it.each([
+    ["geocode-put", 'request "geocode-put" not found in requests/ (# @name geocode-put)'],
+    ["geocode-get geocode-get", 'request "geocode-get" is listed twice'],
+    [" ", '"request" must list request names'],
+  ])("reports request=%j", (request, message) => {
+    expect(run([use("Step", { id: "a", request })])).toEqual([`tutorial.mdx:3:1 <Step> ${message}`]);
+  });
+
+  it("reports .http syntax errors, binaries and a default that differs from code/", () => {
+    const broken = { path: "broken.http", source: "@token = OTHER\nGET https://x.test/?id={{$guid}}\n" };
+    expect(run([], { requests: [broken], requestBinaries: ["logo.png"] })).toEqual([
+      "requests/logo.png: binary files are not allowed in requests/",
+      "requests/broken.http:2: system variable {{$guid}} is not supported; use a file variable",
+      '@var "token" must have the same default in every file: code/main.py "DEMO", requests/broken.http "OTHER"',
+    ]);
+  });
+
+  it("reports request= in web code, which shows the Preview", () => {
+    const web = [...files, { path: "main.py", source: "" }];
+    expect(run([use("Step", { id: "a", request: "geocode-get" })], { files: web })).toEqual([
+      'tutorial.mdx:3:1 <Step> request "geocode-get" has no effect: code/index.html makes the tutorial web code, which shows the Preview',
+    ]);
+    const variants = [{ id: "web", label: "Web", dir: "web", entry: "index.html" }];
+    const variantFiles = [{ path: "web/index.html", source: "<p>hi</p>" }];
+    expect(run([use("Step", { id: "a", request: "geocode-get" })], { files: variantFiles, frontmatter: { variants } })).toEqual([
+      'tutorial.mdx:3:1 <Step> request "geocode-get" has no effect: every variant of the step is web code, which shows the Preview',
+    ]);
+  });
+
+  it("reports a code/ requests folder that would overwrite requests/ in the ZIP", () => {
+    expect(run([], { files: [...script, { path: "requests/old.http", source: "" }] })).toEqual([
+      "code/requests/old.http: code/requests/ would overwrite requests/ in the ZIP; rename the folder",
+    ]);
+    const variants = [{ id: "py", label: "Python", dir: "py", entry: "main.py" }];
+    const variantFiles = [{ path: "py/main.py", source: "" }, { path: "py/requests/a.txt", source: "" }];
+    expect(run([], { files: variantFiles, frontmatter: { variants } })).toEqual([
+      "code/py/requests/a.txt: code/py/requests/ would overwrite requests/ in the ZIP; rename the folder",
+    ]);
+  });
+});
