@@ -334,6 +334,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | Calcite sizes late | Measuring a Calcite container once (or observing only it) on load | Its children (`calcite-tab-title`, `calcite-segmented-control`) grow after they render, while the container keeps its size | Observe the children too (`ResizeObserver`); see `client/variants.ts` |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 | Per-tutorial context for MDX components (Astro 7) | Values set on `Astro.locals` in a page's frontmatter: visible to MDX components that page renders (`<Content components>`), one value per route in a static build | A module-level "current tutorial" variable: shared by every route, unsafe if pages render concurrently (not verified) | Series sites use `setCurrentTutorial()`/`currentTutorial()` (`src/tutorial-data.ts`). A static route (`/`) may export `getStaticPaths` (returning `[{ params: {} }]`) without warning, so one entrypoint serves both `/` and `/[tutorial]` |
+| `calcite-navigation-logo` with `description` on phones | Default: the navigation slot does not constrain the logo; the heading/description do not ellipsize and widen the page (414 px at 390 px) | `max-width` + `overflow: hidden` on the logo host: no page overflow, text clipped (no ellipsis) | `styles/series.css`; E2E guards the index at 390 px. Tutorial headers have no description, so they are unaffected so far |
 
 ---
 
