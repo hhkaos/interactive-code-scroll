@@ -52,6 +52,7 @@ Recommended next task: **Phase 1 plan-mode pass** (REST vertical slice: variants
 Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
 - UI changes: show screenshots before committing. Save them under `test-results/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
+- Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
 - Full E2E was green (61/61) at `c559d8c`; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 
 ---
@@ -99,7 +100,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   dist/                             # generated package output (ignored; built by prepack)
   src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
   src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**
-  src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images)
+  src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images) + dev revalidation hook
   src/markers.ts                   # #region / @var parser + applyVars
   src/validate.ts                  # reference validation (pure)
   src/mdx-validation.ts            # Sätteri mdast plugin that runs validate.ts with MDX positions
@@ -110,7 +111,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitter), presentation.ts, preview.ts, downloads.ts
   src/pages/index.astro            # injected tutorial page
   src/preview/                     # preview page, code/ files published under preview/, HTML builder
-  test/                            # Astro build integration tests + fixtures
+  test/                            # Astro build + dev-server (revalidation, overlay loc) integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
 examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
@@ -131,7 +132,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 |---|---|---|
 | Marker parser | build | Strips `#region` / `@var`, returns clean code + region line ranges + var positions (`src/markers.ts`) |
 | Highlighter | build | Shiki dual themes; `line` transformer tags `data-line` and `data-regions`; `decorations` put `data-var` on the literal's token |
-| Validation | build | Each `<Step>` / `<VarField>` / `<Hint>` asserts its file, region, image and var exist, and the frontmatter is checked in the same pass (read from `ctx.data.astro.frontmatter`, errors positioned at the key's line); build fails with a clear message |
+| Validation | build | Each `<Step>` / `<VarField>` / `<Hint>` asserts its file, region, image and var exist, and the frontmatter is checked in the same pass (read from `ctx.data.astro.frontmatter`, errors positioned at the key's line); build fails with a clear message. In dev, a `hotUpdate` hook in `tutorial-module.ts` recompiles `tutorial.mdx` when `code/`, `images/`, `requests/` or `output/` change; the error's `line`/`column` becomes the overlay `loc` |
 | MDX components | build | `<Intro>`, `<Step id file region images>`, `<VarField name label placeholder secret persist>` render static HTML |
 | Client runtime | browser | IntersectionObserver (center line of the docs panel) + keyboard + click on a step + top of the panel (first step) → activate step (file, focus lines revealed with `revealScroll`, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
 | Page shell | browser | `calcite-navigation` header (explanations toggle, title, step count, present, theme, `calcite-progress`); explanations scroll in their own panel (the page never scrolls); the whole page follows one Calcite mode (`theme` frontmatter default, viewer toggle wins); the explanations handle sits on the docs/code splitter (a rail when hidden); a second splitter sizes the Preview; the right panel has header bars for code (file tabs, copy, downloads) and preview (collapse, Run, open in tab) |
