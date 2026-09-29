@@ -1,4 +1,11 @@
 ---
+import type { GetStaticPaths } from "astro";
+import { series, tutorials } from "virtual:interactive-code-scroll/tutorial";
+
+// `/preview` of a single tutorial, `/<slug>/preview` of each tutorial of a series.
+export const getStaticPaths = (() => (series ? tutorials.map((t) => ({ params: { tutorial: t.slug } })) : [{ params: {} }])) satisfies GetStaticPaths;
+
+const slug = Astro.params.tutorial ?? "";
 ---
 
 <!doctype html>
@@ -7,11 +14,11 @@
     <meta charset="utf-8" />
     <title>Preview</title>
   </head>
-  <body>
+  <body data-tutorial={slug}>
     <script>
       import { renderStoredPreview } from "../client/preview.ts";
 
-      renderStoredPreview();
+      renderStoredPreview(document.body.dataset.tutorial);
     </script>
   </body>
 </html>

@@ -47,6 +47,25 @@ describe("interactiveCodeScroll", () => {
     const root = mkdtempSync(join(tmpdir(), "ics-"));
     expect(() => runSetup(root)).toThrow(/tutorial not found at .*tutorial\.mdx/);
   });
+
+  it("injects an index and every tutorial route under /<slug>/ for a series", () => {
+    const root = projectWithTutorial("tutorials/alpha");
+    mkdirSync(join(root, "tutorials", "beta"));
+    writeFileSync(join(root, "tutorials", "beta", "tutorial.mdx"), "# Beta\n");
+    const { injectRoute, updateConfig } = runSetup(root, { tutorials: "tutorials" });
+    const patterns = injectRoute.mock.calls.map(([route]) => route.pattern);
+    expect(patterns).toEqual(["/", "/[tutorial]", "/[tutorial]/preview", "/[tutorial]/preview/[...file]", "/[tutorial]/output/[...file]"]);
+    expect(injectRoute.mock.calls[0]![0].entrypoint.href).toMatch(/pages\/series-index\.astro$/);
+    const plugin = updateConfig.mock.calls[0]![0].vite.plugins[0] as ReturnType<typeof tutorialModule>;
+    const code = plugin.load(plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
+    expect(code).toContain("export const series = true;");
+    expect(code).toContain('slug: "alpha"');
+    expect(code).toContain('slug: "beta"');
+  });
+
+  it("rejects tutorial and tutorials together", () => {
+    expect(() => runSetup(projectWithTutorial(), { tutorial: "tutorial", tutorials: "tutorials" })).toThrow(/either "tutorial".*or "tutorials"/);
+  });
 });
 
 describe("tutorialModule", () => {
@@ -56,37 +75,50 @@ describe("tutorialModule", () => {
     mkdirSync(join(root, "tutorial", "images"));
     writeFileSync(join(root, "tutorial", "code", "js", "main.js"), 'const a = "1";\n');
     writeFileSync(join(root, "tutorial", "images", "shot.png"), "");
-    const plugin = tutorialModule(join(root, "tutorial"));
+    const plugin = tutorialModule([{ slug: "", dir: join(root, "tutorial") }]);
 
     const code = plugin.load(plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
-    expect(code).toContain(`export { Content, frontmatter } from ${JSON.stringify(join(root, "tutorial", "tutorial.mdx"))};`);
-    expect(code).toContain('export const files = [{"path":"js/main.js","source":"const a = \\"1\\";\\n"}];');
-    expect(code).toContain(`import image0 from ${JSON.stringify(join(root, "tutorial", "images", "shot.png") + "?url")};`);
-    expect(code).toContain('export const images = {"images/shot.png": image0};'.replace("images/", ""));
+    expect(code).toContain(`import * as mdx0 from ${JSON.stringify(join(root, "tutorial", "tutorial.mdx"))};`);
+    expect(code).toContain("export const series = false;");
+    expect(code).toContain('slug: "",\nContent: mdx0.Content,\nfrontmatter: mdx0.frontmatter,');
+    expect(code).toContain('files: [{"path":"js/main.js","source":"const a = \\"1\\";\\n"}],');
+    expect(code).toContain(`import image0_0 from ${JSON.stringify(join(root, "tutorial", "images", "shot.png") + "?url")};`);
+    expect(code).toContain('images: {"shot.png": image0_0},');
     expect(plugin.resolveId("other")).toBeUndefined();
     expect(plugin.load("other")).toBeUndefined();
   });
 
-  it("re-validates tutorial.mdx in dev when a watched folder changes", () => {
-    const tutorialDir = join(projectWithTutorial(), "tutorial");
-    const plugin = tutorialModule(tutorialDir);
+  it("re-validates the owning tutorial.mdx in dev when a watched folder changes", () => {
+    const root = projectWithTutorial("tutorials/alpha");
+    const alpha = join(root, "tutorials", "alpha");
+    const beta = join(root, "tutorials", "beta");
+    const plugin = tutorialModule([
+      { slug: "alpha", dir: alpha },
+      { slug: "beta", dir: beta },
+    ]);
     const add = vi.fn();
     plugin.configureServer({ watcher: { add } });
-    expect(add).toHaveBeenCalledWith(["code", "images", "requests", "output"].map((folder) => join(tutorialDir, folder)));
+    const folders = ["code", "images", "requests", "output"];
+    expect(add).toHaveBeenCalledWith([...folders.map((folder) => join(alpha, folder)), ...folders.map((folder) => join(beta, folder))]);
 
-    const mdx = { id: "mdx" };
+    const alphaMdx = { id: "alpha" };
+    const betaMdx = { id: "beta" };
     const virtual = { id: "virtual" };
     const changed = { id: "changed" };
+    const byFile = new Map([
+      [join(alpha, "tutorial.mdx"), new Set([alphaMdx])],
+      [join(beta, "tutorial.mdx"), new Set([betaMdx])],
+    ]);
     const environment = {
       moduleGraph: {
-        getModulesByFile: (file: string) => (file === join(tutorialDir, "tutorial.mdx") ? new Set([mdx]) : undefined),
+        getModulesByFile: (file: string) => byFile.get(file),
         getModuleById: (id: string) => (id === `\0${TUTORIAL_MODULE_ID}` ? virtual : undefined),
       },
     };
     const update = (file: string, modules: unknown[] = []) => plugin.hotUpdate.call({ environment }, { file, modules });
-    expect(update(join(tutorialDir, "images", "new.png"))).toEqual([mdx, virtual]);
-    expect(update(join(tutorialDir, "code", "main.js"), [changed, mdx])).toEqual([changed, mdx, virtual]);
-    expect(update(join(tutorialDir, "notes.md"))).toBeUndefined();
-    expect(update(join(tutorialDir, "code-old", "main.js"))).toBeUndefined();
+    expect(update(join(alpha, "images", "new.png"))).toEqual([alphaMdx, virtual]);
+    expect(update(join(beta, "code", "main.js"), [changed, betaMdx])).toEqual([changed, betaMdx, virtual]);
+    expect(update(join(alpha, "notes.md"))).toBeUndefined();
+    expect(update(join(alpha, "code-old", "main.js"))).toBeUndefined();
   });
 });

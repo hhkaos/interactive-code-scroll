@@ -85,5 +85,5 @@ See [Validation](authoring.md#validation).
 
 These are specified and being built; see `SPEC.md` and `TODO.md`:
 
-- Sites with several tutorials and an index page; sibling tutorials per language.
+- Sites with several tutorials: each tutorial is published under its own URL with a basic index page ([Series sites](authoring.md#series-sites)); a customizable index with cards and a tag filter, the `--tutorials` CLI option and sibling tutorials per language are next.
 - Custom result views through renderer plugins (e.g. "Preview on map", "Show as table"): write or install a renderer, register it, and choose per step in the MDX which views appear and with what label. A plugin guide will explain how to create, install and use them.

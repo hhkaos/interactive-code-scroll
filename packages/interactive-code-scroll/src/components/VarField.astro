@@ -1,6 +1,6 @@
 ---
-import { files, requests } from "virtual:interactive-code-scroll/tutorial";
 import { parseSource } from "../markers.ts";
+import { currentTutorial } from "../tutorial-data.ts";
 
 interface Props {
   name: string;
@@ -11,6 +11,7 @@ interface Props {
 }
 
 const { name, label, placeholder, secret = false, persist = false } = Astro.props;
+const { files, requests } = currentTutorial(Astro.locals);
 // Validation guarantees every file that marks the var (code/ or requests/) has the same default.
 const defaultValue = [
   ...files.map((f) => parseSource(f.source, `code/${f.path}`)),

@@ -30,6 +30,33 @@ tutorial/
 
 The source code should be valid without InteractiveCodeScroll. Use comments for framework markers.
 
+### Series Sites
+
+A repo can publish several tutorials as one site. Put each tutorial folder (the shape above) under a series folder:
+
+```text
+tutorials/
+  display-map/       # published at /display-map/
+    tutorial.mdx
+    code/
+  geocode/           # published at /geocode/
+    tutorial.mdx
+    code/
+  _drafts/           # ignored: starts with "_"
+```
+
+Enable it in `astro.config.mjs` (CLI support is coming):
+
+```js
+interactiveCodeScroll({ tutorials: "tutorials" })
+```
+
+- The folder name is the tutorial's URL, so it must use lowercase letters, digits and `-` (build error otherwise).
+- Folders starting with `_` or `.` are ignored; other folders without `tutorial.mdx` are skipped with a warning.
+- `/` is an index page that links every tutorial. Each tutorial's Preview, published code and captured outputs live under its own URL.
+- `tutorial` and `tutorials` cannot be combined.
+- Persisted `<VarField>` values are shared by every tutorial on the site (enter a key once); a Preview never shows another tutorial's code.
+
 ## Frontmatter
 
 ```yaml

@@ -1,0 +1,31 @@
+---
+title: Alpha Series Tutorial
+preview: iframe
+---
+
+<Intro>
+
+## Before you start
+
+This fixture is not product documentation. It is a stable contract for the E2E tests of series sites.
+Do not edit its content for narrative polish; add cases only when the framework gains behavior.
+
+</Intro>
+
+<Step id="config" file="main.js" region="config">
+
+## Configure
+
+The token field is persisted, so the beta tutorial on the same site shows the same value.
+
+<VarField name="seriesToken" label="Series token" persist />
+
+</Step>
+
+<Step id="render" file="main.js" region="render">
+
+## Render
+
+The Preview shows the alpha app.
+
+</Step>

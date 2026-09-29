@@ -25,6 +25,7 @@ for (const path of [
   "src/components/Step.astro",
   "src/components/VarField.astro",
   "src/pages/index.astro",
+  "src/pages/series-index.astro",
   "src/preview/page.astro",
   "src/styles/tutorial.css",
 ]) {
@@ -39,6 +40,7 @@ rewriteAstroImports(join(dist, "components", "Intro.astro"));
 rewriteAstroImports(join(dist, "components", "Step.astro"));
 rewriteAstroImports(join(dist, "components", "VarField.astro"));
 rewriteAstroImports(join(dist, "pages", "index.astro"));
+rewriteAstroImports(join(dist, "pages", "series-index.astro"));
 rewriteAstroImports(join(dist, "preview", "page.astro"));
 
 mkdirSync(join(dist, "bin"), { recursive: true });

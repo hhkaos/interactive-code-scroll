@@ -2,16 +2,19 @@ export const PREVIEW_ENTRY = "index.html";
 
 export type PreviewTarget = "iframe" | "tab";
 
-/** Where the tutorial page leaves the assembled HTML for the preview page; one slot per code variant. */
-export const previewStorageKey = (target: PreviewTarget, variant?: string) =>
-  variant === undefined ? `ics:preview:${target}` : `ics:preview:${target}:${variant}`;
+/**
+ * Where the tutorial page leaves the assembled HTML for the preview page; one slot per code variant
+ * and, in a series site, per tutorial (every tutorial shares the origin's localStorage).
+ */
+export const previewStorageKey = (target: PreviewTarget, variant?: string, tutorial = "") =>
+  ["ics:preview", ...(tutorial === "" ? [] : [tutorial]), target, ...(variant === undefined ? [] : [variant])].join(":");
 
 /**
  * Preview page of a web code variant, published at `preview/<dir>/` so the variant's relative
  * references resolve next to it. Same job as `preview/page.astro`, with an inline script.
  */
-export function variantPreviewPage(variant: string): string {
-  const keys = JSON.stringify({ iframe: previewStorageKey("iframe", variant), tab: previewStorageKey("tab", variant) });
+export function variantPreviewPage(variant: string, tutorial = ""): string {
+  const keys = JSON.stringify({ iframe: previewStorageKey("iframe", variant, tutorial), tab: previewStorageKey("tab", variant, tutorial) });
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Preview</title></head>

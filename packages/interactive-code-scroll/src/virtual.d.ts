@@ -1,18 +1,7 @@
 /// <reference types="astro/client" />
 declare module "virtual:interactive-code-scroll/tutorial" {
-  export const Content: import("astro").MDXContent;
-  export const frontmatter: Record<string, unknown>;
-  export const files: import("./tutorial-files.ts").SourceFile[];
-  /** Binary files under `code/`, relative to it. */
-  export const binaries: string[];
-  /** Absolute path of the tutorial's `code/` folder (build time only). */
-  export const codeDir: string;
-  /** Captured outputs, relative to `output/`. */
-  export const outputs: string[];
-  /** Absolute path of the tutorial's `output/` folder (build time only). */
-  export const outputDir: string;
-  /** Text files under `requests/`, relative to it (binaries there are validation errors). */
-  export const requests: import("./tutorial-files.ts").SourceFile[];
-  /** Image path (relative to `images/`) → public URL. */
-  export const images: Record<string, string>;
+  /** True when the site publishes several tutorials, each under `/<slug>/`. */
+  export const series: boolean;
+  /** Every tutorial of the site (one, with slug `""`, for a single-tutorial site). */
+  export const tutorials: import("./tutorial-data.ts").TutorialData[];
 }

@@ -1,5 +1,6 @@
 ---
-import { binaries, Content, files, frontmatter, images, outputs, requests } from "virtual:interactive-code-scroll/tutorial";
+import type { GetStaticPaths } from "astro";
+import { series, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Step from "../components/Step.astro";
@@ -14,8 +15,16 @@ import { variantVisible } from "../variants.ts";
 import { selectVisible } from "../visible-files.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "../error-rule.ts";
 import { parseHttpFile, runnerRequests } from "../requests.ts";
+import { setCurrentTutorial, tutorialBase, tutorialFor } from "../tutorial-data.ts";
 import "../styles/tutorial.css";
 
+// Served at `/` for a single tutorial and at `/<slug>/` for each tutorial of a series.
+export const getStaticPaths = (() => (series ? tutorials.map((t) => ({ params: { tutorial: t.slug } })) : [{ params: {} }])) satisfies GetStaticPaths;
+
+const tutorial = tutorialFor(tutorials, Astro.params.tutorial);
+// <Step> and <VarField> inside the MDX read the tutorial they belong to.
+setCurrentTutorial(Astro.locals, tutorial);
+const { binaries, Content, files, frontmatter, images, outputs, requests, slug } = tutorial;
 // Frontmatter and references are validated at MDX compile time (mdx-validation.ts).
 const config = readTutorialConfig(frontmatter);
 const logo = config.logo === undefined ? undefined : images[config.logo];
@@ -70,6 +79,9 @@ const clientVariants = variants?.map(({ id, label, dir, entry }) => ({ id, label
 // Escape "<" so embedded code containing </script> cannot close the data block.
 const clientData = JSON.stringify({
   title: config.title,
+  // Where this tutorial's Preview page, published code and outputs live.
+  base: tutorialBase(import.meta.env.BASE_URL, slug),
+  tutorial: slug,
   preview,
   files: parsed,
   fetched,
@@ -309,6 +321,8 @@ const clientData = JSON.stringify({
 
       const data = JSON.parse(document.querySelector("#ics-data")!.textContent!) as {
         title: string;
+        base: string;
+        tutorial: string;
         preview: "off" | "iframe" | "tab" | "both";
         files: { path: string; parsed: ParsedSource }[];
         fetched: string[];
@@ -336,7 +350,7 @@ const clientData = JSON.stringify({
         refreshPreview();
         refreshRequest();
       });
-      const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+      const { base } = data;
       const pageUrl = `${base}preview/`;
       startDownloads({
         files: data.files,
@@ -349,7 +363,7 @@ const clientData = JSON.stringify({
         zipCounts: data.zipCounts,
       });
       if (data.preview !== "off") {
-        refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl, variants }).refresh;
+        refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl, variants, tutorial: data.tutorial }).refresh;
       }
       refreshRequest = startResult({ files: data.files, outputUrl: `${base}output/`, variants, requests: data.runner, errorRule: data.errorRule, vars }).refreshRequest;
 

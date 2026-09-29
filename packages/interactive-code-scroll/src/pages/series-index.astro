@@ -1,0 +1,33 @@
+---
+import { tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { readTutorialConfig } from "../frontmatter.ts";
+import { tutorialBase } from "../tutorial-data.ts";
+
+// Index of a series site: one link per tutorial (frontmatter was validated at MDX compile time).
+const entries = tutorials
+  .map((t) => ({ href: tutorialBase(import.meta.env.BASE_URL, t.slug), title: readTutorialConfig(t.frontmatter).title }))
+  .sort((a, b) => a.title.localeCompare(b.title));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tutorials</title>
+  </head>
+  <body>
+    <main>
+      <h1>Tutorials</h1>
+      <ul class="series-list">
+        {
+          entries.map((e) => (
+            <li>
+              <a href={e.href}>{e.title}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </main>
+  </body>
+</html>

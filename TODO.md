@@ -7,7 +7,8 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).
 - [ ] `pnpm create interactive-code-scroll` scaffolder.
-- [ ] Multi-tutorial repos with index page; GitHub Pages workflow.
+- [ ] Multi-tutorial repos (2.1): customizable index page (cards, `TutorialList`, tag filter, `index.mdx`, custom page, metadata frontmatter, back-to-index action), CLI `--tutorials` + auto-detection. Series routes and the basic index are done.
+- [ ] GitHub Pages workflow for a series site (2.4).
 - [ ] Sibling tutorials: frontmatter `family` + `familyLabel`, header switcher that navigates to the same step id in the chosen tutorial (needs multi-tutorial repos).
 - [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.
 

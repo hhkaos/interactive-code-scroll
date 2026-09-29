@@ -53,6 +53,8 @@ describe("variant preview pages", () => {
   it("keep one storage slot per variant and target", () => {
     expect(previewStorageKey("iframe")).toBe("ics:preview:iframe");
     expect(previewStorageKey("tab", "web")).toBe("ics:preview:tab:web");
+    expect(previewStorageKey("iframe", undefined, "rest")).toBe("ics:preview:rest:iframe");
+    expect(previewStorageKey("tab", "web", "rest")).toBe("ics:preview:rest:tab:web");
   });
 
   it("read the variant's slot for the requested target", () => {
@@ -60,5 +62,6 @@ describe("variant preview pages", () => {
     expect(page).toContain('"iframe":"ics:preview:iframe:web"');
     expect(page).toContain('"tab":"ics:preview:tab:web"');
     expect(page).toContain("document.write(html)");
+    expect(variantPreviewPage("web", "rest")).toContain('"iframe":"ics:preview:rest:iframe:web"');
   });
 });

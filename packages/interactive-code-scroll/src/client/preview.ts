@@ -16,20 +16,22 @@ export interface PreviewOptions {
   pageUrl: string;
   /** With code variants, only web variants (with `index.html`) have a Preview, each on its own page. */
   variants?: VariantsHandle;
+  /** Slug of the tutorial in a series site (`""` otherwise): its Preview has its own storage slot. */
+  tutorial?: string;
 }
 
 /**
  * Both the iframe and the new tab load a real same-origin page (not srcdoc/blob):
  * the ArcGIS SDK derives the OAuth redirect_uri from `location`.
  */
-function store(html: string, target: PreviewTarget, pageUrl: string, variant?: string): string {
-  localStorage.setItem(previewStorageKey(target, variant), html);
+function store(html: string, target: PreviewTarget, pageUrl: string, variant: string | undefined, tutorial: string): string {
+  localStorage.setItem(previewStorageKey(target, variant, tutorial), html);
   const url = new URL(pageUrl, location.href);
   url.searchParams.set("target", target);
   return url.href;
 }
 
-export function startPreview({ mode, files, values, pageUrl, variants }: PreviewOptions): { refresh(): void } {
+export function startPreview({ mode, files, values, pageUrl, variants, tutorial = "" }: PreviewOptions): { refresh(): void } {
   const section = document.querySelector<HTMLElement>("section.preview");
   const frame = document.querySelector<HTMLElement>(".preview-frame");
   const iframe = frame?.querySelector("iframe");
@@ -44,7 +46,7 @@ export function startPreview({ mode, files, values, pageUrl, variants }: Preview
   };
   const open = (kind: PreviewTarget) => {
     const current = target();
-    return current && store(buildPreviewHtml(current.files), kind, current.page, current.variant);
+    return current && store(buildPreviewHtml(current.files), kind, current.page, current.variant, tutorial);
   };
 
   const run = () => {
@@ -96,10 +98,10 @@ export function startPreview({ mode, files, values, pageUrl, variants }: Preview
   };
 }
 
-/** Runs on the standalone preview page. */
-export function renderStoredPreview(): void {
+/** Runs on the standalone preview page of a tutorial (`tutorial` is its slug in a series site). */
+export function renderStoredPreview(tutorial = ""): void {
   const target = new URLSearchParams(location.search).get("target") === "iframe" ? "iframe" : "tab";
-  const html = localStorage.getItem(previewStorageKey(target));
+  const html = localStorage.getItem(previewStorageKey(target, undefined, tutorial));
   if (html === null) {
     document.body.textContent = "No preview available. Open it from the tutorial.";
     return;

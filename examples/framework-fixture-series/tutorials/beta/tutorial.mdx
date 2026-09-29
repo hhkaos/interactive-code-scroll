@@ -1,0 +1,33 @@
+---
+title: Beta Series Tutorial
+preview: iframe
+variants:
+  - { id: web, label: Browser, dir: web, entry: main.js }
+  - { id: python, label: Python, dir: python, entry: main.py }
+---
+
+<Intro>
+
+## Before you start
+
+This fixture is not product documentation. It is a stable contract for the E2E tests of series sites.
+
+</Intro>
+
+<Step id="config" region="config">
+
+## Configure
+
+Same persisted field as the alpha tutorial.
+
+<VarField name="seriesToken" label="Series token" persist />
+
+</Step>
+
+<Step id="render" region="render" output="run.txt">
+
+## Render
+
+The browser variant shows the beta app; the Python variant shows a captured output.
+
+</Step>

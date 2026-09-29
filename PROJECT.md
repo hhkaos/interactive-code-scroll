@@ -62,7 +62,7 @@ Maximized panes: `src/client/maximize.ts` (state on `body[data-maximized]`, CSS 
 
 Step keys: `movesStep()` in `src/client/navigation.ts` (PageDown/PageUp from any focus but multi-line text; `data-own-keys` now means "owns arrow keys": JSON tree, splitters, `#result-tabs`, `#result-run-as`). Result header compact mode: `headerLevel()` in `result-values.ts` + ResizeObserver in `result.ts` (`setTooltip()` in `actions.ts`); short/narrow pane rules are `@container result-frame` queries in `tutorial.css`.
 
-Phase 1 go/no-go review: GO (2026-09-30, in the plan). Recommended next task: **Phase 2 task 2.1, commit 2** (series model, routes, per-tutorial context via `Astro.locals` — spike first — and per-tutorial Preview storage keys). Rules in `SPEC.md` (Authoring and DX, series layout); commit order in the plan (Phase 2 task 2.1 plan-mode pass).
+Phase 1 go/no-go review: GO (2026-09-30, in the plan). Phase 2 task 2.1 (rules in `SPEC.md`, Authoring and DX; commit order in the plan's 2.1 plan-mode pass): commit 2 done: series model (`src/series.ts` `discoverTutorials()`), virtual module exports `series` + `tutorials[]` (`TutorialData` in `src/tutorial-data.ts`), MDX components read their tutorial from `Astro.locals` (`setCurrentTutorial()`/`currentTutorial()`), routes prefixed with `/[tutorial]` in a series, basic `src/pages/series-index.astro`, per-tutorial Preview storage keys, client `base` from `clientData`. Recommended next task: **commit 3**, index page (cards, `TutorialList`, tag filter, `tutorials/index.mdx`, metadata frontmatter, back-to-index action) with screenshots for review. The series fixture uses `astro build/preview` until the CLI gets `--tutorials` (commit 5).
 
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
@@ -70,9 +70,9 @@ Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
 - UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
-- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, the rest → :4400).
+- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, `series.spec.ts` → `examples/framework-fixture-series` on :4404, the rest → :4400).
 - E2E blocks every non-local host (`e2e/fixtures.ts`); mock services with `mockService()` (page routes win over the context route).
-- Full E2E was green (113/113) after the maximized panes work; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
+- Full E2E was green (121/121) after task 2.1 commit 2; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 - Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
 
 ---
@@ -141,6 +141,7 @@ examples/oauth-pkce/               # example project: astro.config.mjs + tutoria
 examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
 examples/framework-fixture-variants/      # stable fake tutorial with code variants (`notice` mode) and captured outputs; E2E in e2e/variants.spec.ts, e2e/result.spec.ts, e2e/maximize-steps.spec.ts
 examples/framework-fixture-variants-hide/ # same, with `otherVariantSteps: hide`; E2E in e2e/variants-hide.spec.ts
+examples/framework-fixture-series/        # stable series site (tutorials alpha, beta, gamma + skipped folders); E2E in e2e/series.spec.ts
 examples/rest-geocode/              # public REST example (cURL / Python / JavaScript variants, requests/, output/, ArcGIS errors.json); `pnpm rest`; smoke E2E in e2e/rest-example.spec.ts (:4403)
 examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
 examples/multi-sdk-playground/      # local hands-on tutorial for multi-SDK features (Python, Kotlin, C#, SQL); `pnpm playground`; no E2E, grows with each plan task

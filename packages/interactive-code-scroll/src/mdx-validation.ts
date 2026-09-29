@@ -53,13 +53,17 @@ function frontmatterOf(data: Readonly<Record<string, unknown>>): Record<string, 
 }
 
 /**
- * Satteri mdast plugin: checks the frontmatter and component references against `code/`,
- * `images/`, `output/` and `requests/`; `warn` gets problems that do not fail the build.
+ * Satteri mdast plugin: checks each tutorial's frontmatter and component references against its
+ * `code/`, `images/`, `output/` and `requests/`; `warn` gets problems that do not fail the build.
  */
-export function tutorialValidation(tutorialDir: string, warn: (message: string) => void = console.warn): MdastPluginEntry {
+export function tutorialValidation(tutorialDirs: string | readonly string[], warn: (message: string) => void = console.warn): MdastPluginEntry {
+  const dirs = typeof tutorialDirs === "string" ? [tutorialDirs] : tutorialDirs;
   return (ctx) => {
+    if (!ctx.fileURL) return null;
+    const mdxPath = fileURLToPath(ctx.fileURL);
+    const tutorialDir = dirs.find((dir) => join(dir, "tutorial.mdx") === mdxPath);
+    if (tutorialDir === undefined) return null;
     const tutorial = readTutorialFiles(tutorialDir);
-    if (!ctx.fileURL || fileURLToPath(ctx.fileURL) !== tutorial.mdxPath) return null;
     const frontmatter = frontmatterOf(ctx.data);
 
     const uses: ComponentUse[] = [];
