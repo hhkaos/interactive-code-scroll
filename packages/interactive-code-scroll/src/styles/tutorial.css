@@ -397,7 +397,7 @@ body[data-docs-hidden] {
   }
 }
 
-/* ——— Right panel (code, images, preview) ——— */
+/* ——— Right panel (code, images, preview, result) ——— */
 
 .right {
   min-width: 0;
@@ -570,23 +570,91 @@ body[data-docs-hidden] {
   height: auto;
 }
 
-.preview {
+/* The Result pane takes the Preview's place (same splitter height) for code that is not web. */
+:is(.preview, .result) {
   /* Height set with the preview splitter (--preview-split on .right). */
   flex: 0 0 var(--preview-split, 50%);
   min-height: 0;
   display: flex;
   flex-direction: column;
 
-  /* Code variants without web code have no Preview. */
+  /* Code variants without web code have no Preview; web code has no Result pane. */
   &[hidden] { display: none; }
   /* Collapsed: only the header remains (no splitter). */
-  &:not(:has(.preview-frame:not([hidden]))) {
+  &:not(:has(:is(.preview-frame, .result-frame):not([hidden]))) {
     flex: none;
     border-top: 1px solid var(--calcite-color-border-3);
     .preview-splitter { display: none; }
   }
   .panel-header { gap: 0.25rem; }
-  :is(#preview-toggle, .panel-title) { margin-inline-end: auto; }
+  :is(#preview-toggle, .panel-title, .result-badge) { margin-inline-end: auto; }
+}
+
+/* Where the shown output comes from (captured file; live runs come with the request runner). */
+.result-badge {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.125rem 0.625rem;
+  border-radius: 1rem;
+  font-size: var(--calcite-font-size-xs);
+  font-weight: var(--calcite-font-weight-medium);
+  background: var(--calcite-color-foreground-3);
+  color: var(--calcite-color-text-2);
+
+  &[hidden] { display: none; }
+}
+
+.result-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+
+  &[hidden] { display: none; }
+}
+
+.result-body {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+
+  &:focus-visible { outline: 2px solid var(--calcite-color-brand); outline-offset: -2px; }
+  pre {
+    flex: 1;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    font: var(--calcite-font-size-sm) / 1.6 var(--calcite-font-family-code);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  pre[data-error] { color: var(--calcite-color-status-danger); font-family: var(--calcite-font-family); }
+}
+
+/* Captured program output: a terminal in both modes. */
+.result-terminal {
+  background: #1b1b1b;
+  color: #e6e6e6;
+}
+
+.result-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  object-fit: contain;
+}
+
+.result-empty {
+  margin: auto;
+  padding: 1rem;
+  text-align: center;
+  font-size: var(--calcite-font-size-sm);
+  color: var(--calcite-color-text-3);
 }
 
 .preview-frame {

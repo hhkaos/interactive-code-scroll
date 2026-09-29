@@ -49,9 +49,11 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`). Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
+Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
 
-Recommended next task: **2 Result pane + captured output** (SPEC "Result pane": `output/` folder, `<Step output>`, per-variant `output/<variant>/` override, pane replaces the Preview for non-web code, keeps the last result, text/terminal + image rendering, JSON as `<pre>` until task 3, build warning for credentials). Start in plan mode: it adds a `tutorial-files.ts` folder, a validation rule, a published route and new UI (screenshot review against the mockup's `ResultStates` artboard). Pending decision carried over: `requests/` goes into every variant's ZIP in task 4a.
+Result pane code: `src/output.ts` (types, `output/<variant>/` lookup, credential scan), `src/result/output-file.ts` (publishes `output/`), `stepOutputs()` in `src/variants.ts`, `src/client/result.ts` + `result-values.ts` (pane, last-result rule), `STEP_EVENT` from `src/client/steps.ts`. JSON is a `<pre class="result-json">` today.
+
+Recommended next task: **3 Collapsible JSON viewer** (SPEC "JSON viewer": text nodes only, nodes deeper than two levels collapsed, 100-entry "Show more", tree keyboard semantics); it replaces the `result-json` `<pre>` in `src/client/result.ts`. Mockup state A of `ResultStates` shows the tree. Pending decision carried over: `requests/` goes into every variant's ZIP in task 4a.
 
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
@@ -59,7 +61,7 @@ Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
 - UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
-- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, the rest → :4400).
+- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, the rest → :4400).
 - Full E2E was green (76/76) at `da9f036`; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 - Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
 
@@ -108,7 +110,8 @@ packages/interactive-code-scroll/  # core package: Astro integration
   scripts/build-package.mjs         # package build: compiles TS and copies Astro/CSS assets
   dist/                             # generated package output (ignored; built by prepack)
   src/index.ts                     # interactiveCodeScroll() integration (MDX + Sätteri validation, injects /)
-  src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**
+  src/tutorial-files.ts            # reads tutorial.mdx, code/**, images/**, output/**
+  src/output.ts                    # captured output types, per-variant lookup, credential warnings
   src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images) + dev revalidation hook
   src/markers.ts                   # #region / @var parser + applyVars
   src/validate.ts                  # reference validation (pure)
@@ -117,13 +120,14 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/frontmatter.ts               # title / preview config
   src/downloads.ts                 # project files with values applied, ZIP (fflate)
   src/components/                  # Step.astro, VarField.astro
-  src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitter), presentation.ts, preview.ts, downloads.ts
+  src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitters), presentation.ts, preview.ts, result.ts + result-values.ts (Result pane), downloads.ts
   src/pages/index.astro            # injected tutorial page
   src/preview/                     # preview page, code/ files published under preview/, HTML builder
+  src/result/                      # output/ files published under output/
   test/                            # Astro build + dev-server (revalidation, overlay loc) integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
-examples/framework-fixture-variants/      # stable fake tutorial with code variants (`notice` mode); E2E in e2e/variants.spec.ts
+examples/framework-fixture-variants/      # stable fake tutorial with code variants (`notice` mode) and captured outputs; E2E in e2e/variants.spec.ts, e2e/result.spec.ts
 examples/framework-fixture-variants-hide/ # same, with `otherVariantSteps: hide`; E2E in e2e/variants-hide.spec.ts
 examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
 examples/multi-sdk-playground/      # local hands-on tutorial for multi-SDK features (Python, Kotlin, C#, SQL); `pnpm playground`; no E2E, grows with each plan task
@@ -294,6 +298,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |
 | Calcite runtime assets | Online: components wait for t9n JSON from `js.arcgis.com` before first render (~1 s, more under load) | Offline / CDN blocked: render once the fetch fails, but no icons or translated labels | Matters for the "serve locally" plan B; tests block the CDN (`e2e/fixtures.ts`). Neither `customElements.whenDefined` nor `componentOnReady()` guarantees final layout online: observe sizes instead (`ResizeObserver`) |
 | Calcite mode classes | `calcite-mode-light` / `-dark` set Calcite tokens | They do not set `color-scheme` | Set it ourselves: `light-dark()` (Shiki colors) and native scrollbars follow the nearest mode class (the code panel's own class) |
+| Local servers on fixture ports | Fresh `astro preview` of a just-built fixture | An older `astro dev` left running (e.g. from an earlier session) keeps the port and serves a stale virtual module (e.g. `outputs` undefined → 500 in `index.astro`) | Before manual checks or screenshots, run `lsof -nP -iTCP -sTCP:LISTEN` and use a free port; `astro preview` silently moves to the next port when one is taken. Do not kill servers you did not start |
 | `calcite-input` `action` slot | Slotted `calcite-action` renders next to the field without a border | Reads as a separate button | Give the action host the input border token (`--calcite-color-border-input`), no start border |
 | Stray `~/node_modules` | `tsc` and Node resolve packages up the tree, outside the repo (`@types/node`, `cookie`) | Fresh clone / CI: missing | Declare what we use (`@types/node` dev dependency); validate with a clean worktree outside the home folder |
 | Preview theme | Iframe: `prefers-color-scheme` inside follows the `<iframe>` element's `color-scheme` (verified in Chromium) | New tab: follows the OS | Tutorial apps opt in with `calcite-mode-auto`; the framework never rewrites tutorial code. E2E: Playwright emulates `colorScheme: "light"` by default and forces it on every frame; use `colorScheme: null` to observe this |

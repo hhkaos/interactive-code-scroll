@@ -1,0 +1,5 @@
+{
+  "items": [{ "id": 1, "name": "First item" }],
+  "note": "<b>shown as text</b>",
+  "next": "https://api.fixture.test/v1/items?page=2&token=DEMO_TOKEN"
+}

@@ -18,7 +18,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
   return {
     name: "interactive-code-scroll",
     hooks: {
-      "astro:config:setup": ({ config, updateConfig, injectRoute }) => {
+      "astro:config:setup": ({ config, updateConfig, injectRoute, logger }) => {
         const tutorialDir = fileURLToPath(new URL(`${options.tutorial ?? "tutorial"}/`, config.root));
         const mdxPath = join(tutorialDir, "tutorial.mdx");
         if (!existsSync(mdxPath)) throw new Error(`interactive-code-scroll: tutorial not found at ${mdxPath}`);
@@ -26,7 +26,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         // MDX gets its own Sätteri processor (inheriting the project's options) plus reference validation.
         const markdown = config.markdown.processor;
         const base = markdown && isSatteriProcessor(markdown) ? markdown.options : undefined;
-        const processor = satteri({ ...base, mdastPlugins: [...(base?.mdastPlugins ?? []), tutorialValidation(tutorialDir)] });
+        const processor = satteri({ ...base, mdastPlugins: [...(base?.mdastPlugins ?? []), tutorialValidation(tutorialDir, (message) => logger.warn(message))] });
 
         updateConfig({
           integrations: [mdx({ processor })],
@@ -39,6 +39,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         injectRoute({ pattern: "/", entrypoint: new URL("./pages/index.astro", import.meta.url) });
         injectRoute({ pattern: "/preview", entrypoint: new URL("./preview/page.astro", import.meta.url) });
         injectRoute({ pattern: "/preview/[...file]", entrypoint: new URL("./preview/code-file.ts", import.meta.url) });
+        injectRoute({ pattern: "/output/[...file]", entrypoint: new URL("./result/output-file.ts", import.meta.url) });
       },
     },
   };

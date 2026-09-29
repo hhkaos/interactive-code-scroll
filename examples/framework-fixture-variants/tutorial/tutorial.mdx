@@ -28,7 +28,7 @@ Every variant defines the `config` region, each in its own file.
 
 </Step>
 
-<Step id="request" region="request">
+<Step id="request" region="request" output="request.json">
 
 ## Send the request
 
@@ -44,7 +44,7 @@ Only Python and Node.js have a client wrapper.
 
 </Step>
 
-<Step id="flags" region="flags" only="curl">
+<Step id="flags" region="flags" only="curl" output="flags.log">
 
 ## Quiet output
 
@@ -52,7 +52,7 @@ Only cURL has flags.
 
 </Step>
 
-<Step id="deps" file="requirements.txt" only="python">
+<Step id="deps" file="requirements.txt" only="python" output="deps.png">
 
 ## Install dependencies
 
@@ -64,6 +64,6 @@ A whole-file step that only Python has.
 
 ## Summary
 
-A text-only step keeps the current file.
+A text-only step keeps the current file and the last result.
 
 </Step>

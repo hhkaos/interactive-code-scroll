@@ -10,6 +10,7 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] Multi-tutorial repos with index page; GitHub Pages workflow.
 - [ ] Sibling tutorials: frontmatter `family` + `familyLabel`, header switcher that navigates to the same step id in the chosen tutorial (needs multi-tutorial repos).
 - [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.
+- [ ] Low priority: ANSI color codes in `.txt`/`.log` captured output (most outputs are JSON). Safe rendering only: parse the escape codes into `<span>` elements with classes and `textContent`, never HTML from the output; strip unsupported codes.
 
 ## Multi-SDK support
 
@@ -17,8 +18,7 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
 
-- [ ] 2 Result pane replacing Preview for non-web code; captured output (`output/` folder, `<Step output>`, per-variant override); keeps the last result; build warning for credentials in outputs.
-- [ ] 3 Collapsible JSON viewer (text-only rendering, 100-entry truncation, keyboard).
+- [ ] 3 Collapsible JSON viewer (text-only rendering, token colors for keys/strings/numbers/punctuation as in the mockup via classes + `textContent`, light and dark, 100-entry truncation, keyboard).
 - [ ] 4a `.http` parser and build validation (`requests/`, supported subset, `request=` names); include `requests/` in every variant's ZIP.
 - [ ] 4b `.http` runner UI: Run, "Run as" picker, URL-encoded query values, masking + "Show secrets", 30 s timeout, captured-output fallback.
 - [ ] 5 Error rule + help table (`requests/errors.json`) + Headers tab.

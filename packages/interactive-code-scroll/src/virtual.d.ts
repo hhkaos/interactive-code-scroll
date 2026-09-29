@@ -7,6 +7,10 @@ declare module "virtual:interactive-code-scroll/tutorial" {
   export const binaries: string[];
   /** Absolute path of the tutorial's `code/` folder (build time only). */
   export const codeDir: string;
+  /** Captured outputs, relative to `output/`. */
+  export const outputs: string[];
+  /** Absolute path of the tutorial's `output/` folder (build time only). */
+  export const outputDir: string;
   /** Image path (relative to `images/`) → public URL. */
   export const images: Record<string, string>;
 }

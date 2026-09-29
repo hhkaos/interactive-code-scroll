@@ -1,7 +1,8 @@
 ---
-import { files, frontmatter, images as imageUrls } from "virtual:interactive-code-scroll/tutorial";
+import { files, frontmatter, images as imageUrls, outputs } from "virtual:interactive-code-scroll/tutorial";
 import { readTutorialConfig } from "../frontmatter.ts";
-import { parsedFiles, stepFiles } from "../variants.ts";
+import { PREVIEW_ENTRY } from "../preview/build-html.ts";
+import { parsedFiles, stepFiles, stepOutputs } from "../variants.ts";
 
 // References are validated at MDX compile time (mdx-validation.ts).
 interface Props {
@@ -12,12 +13,17 @@ interface Props {
   preview?: "expanded" | "collapsed" | "keep";
   /** Space-separated variant ids the step applies to. */
   only?: string;
+  /** Captured output under `output/` shown in the Result pane (per-variant override in `output/<variant>/`). */
+  output?: string;
 }
 
-const { id, file, region, images, preview, only } = Astro.props;
+const { id, file, region, images, preview, only, output } = Astro.props;
 const { variants } = readTutorialConfig(frontmatter);
 // With variants, `file` is relative to each variant folder and a lone `region` names a file per variant.
 const variantFiles = variants && stepFiles(variants, parsedFiles(files), { file, region, only });
+// Web code shows the Preview: validation rejects `output` there without variants, and web variants get none.
+const webDirs = new Set(variants?.filter((v) => files.some((f) => f.path === `${v.dir}/${PREVIEW_ENTRY}`)).map((v) => v.dir));
+const variantOutputs = variants && output !== undefined ? stepOutputs(variants, outputs, webDirs, { output, only }) : undefined;
 ---
 
 <section
@@ -28,6 +34,8 @@ const variantFiles = variants && stepFiles(variants, parsedFiles(files), { file,
   data-only={variants ? only : undefined}
   data-region={region}
   data-preview={preview}
+  data-output={variants ? undefined : output}
+  data-outputs={variantOutputs && Object.keys(variantOutputs).length > 0 ? JSON.stringify(variantOutputs) : undefined}
 >
   <slot />
   {

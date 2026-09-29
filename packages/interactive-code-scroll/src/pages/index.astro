@@ -1,5 +1,5 @@
 ---
-import { binaries, Content, files, frontmatter, images } from "virtual:interactive-code-scroll/tutorial";
+import { binaries, Content, files, frontmatter, images, outputs } from "virtual:interactive-code-scroll/tutorial";
 import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Step from "../components/Step.astro";
@@ -28,6 +28,11 @@ const visible = groups.flatMap((g) => g.paths);
 const previewEntries = variants ? variants.map((v) => `${v.dir}/${PREVIEW_ENTRY}`).filter((path) => textPaths.includes(path)) : [PREVIEW_ENTRY];
 const preview = previewEntries.length > 0 ? config.preview : "off";
 const firstIsWeb = !variants || previewEntries.includes(`${variants[0]!.dir}/${PREVIEW_ENTRY}`);
+// Code that is not web (a variant without index.html, or a tutorial without it) shows captured
+// outputs in the Result pane instead; the client hides it unless some step has an `output`.
+const hasResult =
+  outputs.length > 0 && (variants ? previewEntries.length < variants.length : !textPaths.includes(PREVIEW_ENTRY));
+const resultFirst = variants ? !firstIsWeb : true;
 // The page embeds tabbed files plus the Preview entries; the ZIP fetches everything else from preview/.
 const embedded = new Set([...visible, ...previewEntries]);
 const parsed = files.filter((f) => embedded.has(f.path)).map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
@@ -207,6 +212,32 @@ const clientData = JSON.stringify({
             </section>
           )
         }
+        {
+          hasResult && (
+            <section class="result" aria-label="Result" hidden={!resultFirst || undefined}>
+              {/* Shares its size (and remembered height) with the Preview: layout.ts drives both splitters together. */}
+              <div
+                class="preview-splitter"
+                role="separator"
+                tabindex="0"
+                aria-orientation="horizontal"
+                aria-label="Resize result"
+                aria-valuemin="15"
+                aria-valuemax="85"
+                data-own-keys
+              />
+              <div class="panel-header">
+                <calcite-action id="result-toggle" icon="chevron-down" text="Result" text-enabled />
+                <span class="result-badge" hidden />
+              </div>
+              <div class="result-frame">
+                <div class="result-body" tabindex="0" role="region" aria-label="Result output">
+                  <p class="result-empty">No result yet. Steps with a captured output show it here.</p>
+                </div>
+              </div>
+            </section>
+          )
+        }
       </aside>
     </div>
     <calcite-dialog id="image-viewer" modal placement="cover" heading="Image">
@@ -225,6 +256,7 @@ const clientData = JSON.stringify({
       import { startLayout } from "../client/layout.ts";
       import { startPresentation } from "../client/presentation.ts";
       import { startPreview } from "../client/preview.ts";
+      import { startResult } from "../client/result.ts";
       import { startStepEngine } from "../client/steps.ts";
       import { startVars } from "../client/vars.ts";
       import { startVariants, type VariantInfo } from "../client/variants.ts";
@@ -249,7 +281,8 @@ const clientData = JSON.stringify({
       startImageViewer();
       let refreshPreview = () => {};
       const vars = startVars(() => refreshPreview());
-      const pageUrl = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}preview/`;
+      const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+      const pageUrl = `${base}preview/`;
       startDownloads({
         files: data.files,
         fetched: data.fetched,
@@ -262,6 +295,7 @@ const clientData = JSON.stringify({
       if (data.preview !== "off") {
         refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl, variants }).refresh;
       }
+      startResult({ files: data.files, outputUrl: `${base}output/`, variants });
 
       // Clicker keys pressed while the preview has focus.
       addEventListener("message", (event) => {

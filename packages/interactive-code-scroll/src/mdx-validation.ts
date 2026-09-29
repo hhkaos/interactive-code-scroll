@@ -1,10 +1,12 @@
 import { readFileSync } from "node:fs";
-import { relative } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type MdxJsxTextElement } from "satteri";
 import { frontmatterKeyLines } from "./frontmatter.ts";
+import { credentialWarnings, isTextOutput } from "./output.ts";
 import { readTutorialFiles } from "./tutorial-files.ts";
 import { validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
+import { parsedFiles } from "./variants.ts";
 
 const COMPONENTS = new Set(["Hint", "Step", "VarField"]);
 
@@ -49,8 +51,11 @@ function frontmatterOf(data: Readonly<Record<string, unknown>>): Record<string, 
   return typeof frontmatter === "object" && frontmatter !== null ? (frontmatter as Record<string, unknown>) : {};
 }
 
-/** Satteri mdast plugin: checks the frontmatter and component references against `code/` and `images/`. */
-export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
+/**
+ * Satteri mdast plugin: checks the frontmatter and component references against `code/`,
+ * `images/` and `output/`; `warn` gets problems that do not fail the build.
+ */
+export function tutorialValidation(tutorialDir: string, warn: (message: string) => void = console.warn): MdastPluginEntry {
   return (ctx) => {
     const tutorial = readTutorialFiles(tutorialDir);
     if (!ctx.fileURL || fileURLToPath(ctx.fileURL) !== tutorial.mdxPath) return null;
@@ -76,10 +81,16 @@ export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
           files: tutorial.files,
           binaries: tutorial.binaries,
           images: tutorial.images,
+          outputs: tutorial.outputs,
           frontmatter,
           frontmatterLines: frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8")),
         });
         if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
+        const defaults = new Set([...parsedFiles(tutorial.files).values()].flatMap((p) => p.vars.map((v) => v.defaultValue)));
+        const texts = tutorial.outputs
+          .filter(isTextOutput)
+          .map((path) => ({ path, text: readFileSync(join(tutorial.outputDir, path), "utf8") }));
+        for (const warning of credentialWarnings(texts, defaults)) warn(warning);
       },
     });
   };

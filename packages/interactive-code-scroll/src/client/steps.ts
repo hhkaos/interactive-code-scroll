@@ -8,6 +8,9 @@ import { VARIANT_EVENT, type VariantChange, type VariantsHandle } from "./varian
 
 type TabTitle = HTMLElement & { selected: boolean };
 
+/** Fired on every step change; detail: the active step, or `null` when none is (intro). */
+export const STEP_EVENT = "ics:step";
+
 const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => [
   ...root.querySelectorAll<T>(selector),
 ];
@@ -66,12 +69,14 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   const progress = document.querySelector<HTMLElement>("#step-count");
   const progressBar = document.querySelector<HTMLElement & { value: number }>("#progress-bar");
 
+  /** Applies to the Preview and to the Result pane, whichever the active variant shows. */
   function setPreviewState(state: string | undefined): void {
     if (state !== "expanded" && state !== "collapsed") return;
     const frame = document.querySelector<HTMLElement>(".preview-frame");
-    if (!frame) return;
-    frame.hidden = state === "collapsed";
-    setAction(document.querySelector("#preview-toggle"), frame.hidden ? "chevron-right" : "chevron-down", "Preview");
+    if (frame) {
+      frame.hidden = state === "collapsed";
+      setAction(document.querySelector("#preview-toggle"), frame.hidden ? "chevron-right" : "chevron-down", "Preview");
+    }
     document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
   }
 
@@ -125,6 +130,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     codePanel.hidden = false;
     mediaPanel.replaceChildren();
     announceMedia();
+    document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: null }));
     if (progress) progress.textContent = "";
     if (progressBar) progressBar.value = 0;
     if (location.hash) history.replaceState(null, "", `${location.pathname}${location.search}`);
@@ -179,6 +185,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
     if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
     setPreviewState(step.dataset.preview);
+    document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: step }));
 
     const media = step.querySelector<HTMLTemplateElement>("template.step-media");
     mediaPanel.hidden = !media;

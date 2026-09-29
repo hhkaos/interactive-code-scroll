@@ -42,6 +42,14 @@ See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables
 
 See [Preview](authoring.md#preview).
 
+## Result pane
+
+- Takes the Preview's place for code that cannot run in the browser (scripts, native apps): a step with `output="geocode.json"` shows a captured result from `output/`, with per-language overrides in `output/<variant>/`.
+- JSON and text (terminal style) are shown as text, images as images. Steps without an output keep the last result. Works offline.
+- The build warns when a captured output looks like it contains a real credential.
+
+See [Result Pane](authoring.md#result-pane).
+
 ## Images
 
 - A step can show one image or a carousel instead of code. Step keys page through the images first; clicking an image opens a full-screen viewer.
@@ -71,5 +79,5 @@ See [Validation](authoring.md#validation).
 
 These are specified and being built; see `SPEC.md` and `TODO.md`:
 
-- A Result pane for code that cannot run in the browser: captured output (JSON, text, images) and a live runner for `.http` requests, with secret masking, error explanations and an offline fallback.
+- A collapsible JSON viewer for the Result pane, and a live runner for `.http` requests, with secret masking, error explanations and a fallback to the captured output.
 - Sites with several tutorials and an index page; sibling tutorials per language.

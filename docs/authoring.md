@@ -16,11 +16,14 @@ tutorial/
   images/
     logo.svg
     screenshot.png
+  output/            # optional: captured results for the Result pane
+    geocode.json
 ```
 
 - `tutorial.mdx` contains frontmatter, prose and MDX components.
 - `code/` contains the final runnable project files. Large projects can keep everything here (Gradle wrappers, asset catalogs, binaries) and pick the files that get tabs with the `files` frontmatter.
 - `images/` contains logos, screenshots and carousel images referenced by steps.
+- `output/` (optional) contains captured results of code that cannot run in the browser, shown by steps with `output=` in the [Result pane](#result-pane).
 
 The source code should be valid without InteractiveCodeScroll. Use comments for framework markers.
 
@@ -89,7 +92,8 @@ Explain the change here.
 | `region` | no | Region id in `file`. Omitting it shows the whole file with no focus. With `variants`, `region` alone is enough: it names one file per variant. |
 | `only` | no | With `variants`: space-separated variant ids the step applies to, e.g. `only="python curl"`. |
 | `images` | no | Array of paths relative to `images/`. Shows an image carousel instead of code. |
-| `preview` | no | `expanded`, `collapsed` or `keep`. Controls iframe state when the step activates. |
+| `output` | no | Captured output under `output/` shown in the [Result pane](#result-pane), e.g. `output="geocode.json"`. |
+| `preview` | no | `expanded`, `collapsed` or `keep`. Controls iframe state (or the Result pane) when the step activates. |
 
 A text-only step keeps the current file visible and clears any previous region focus.
 
@@ -240,6 +244,26 @@ Preview modes:
 
 Form changes refresh the Preview after a short debounce. The Run button refreshes it manually.
 
+## Result Pane
+
+Code that cannot run in the browser (scripts, native apps, HTTP requests) shows its result in the Result pane, which takes the Preview's place under the code, with the same splitter height and a collapsible header. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=`.
+
+```mdx
+<Step id="request" region="request" output="geocode.json">
+
+## Send the request
+
+</Step>
+```
+
+- **Captured output**: files under `output/`. A step's `output="name"` looks up `output/<variant id>/name` first (a per-variant override), then `output/name`; it must resolve for every non-web variant the step covers.
+- **Types**: `.json` (shown as text until the JSON viewer lands), `.txt` and `.log` (terminal style), `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` and `.svg` (image). Any other type is a build error.
+- **Keeps the last result**: a step without `output` shows the output of the nearest earlier step that has one for the active variant, whether the reader scrolled, used step keys or opened a deep link. Before the first output the pane shows an empty state.
+- **Published, not embedded**: outputs are published under `output/` on the site and fetched when shown, so the page stays small and works offline. They are rendered as text (or an image), never as HTML.
+- **Credentials**: outputs are committed and published. The build warns (without failing) when one looks like it holds a credential: `token=`, `"token":`, `apiKey` or `Authorization: Bearer` followed by a value that is not a var default. Replace real values with the var's default (the demo value in the code) before publishing.
+- `output=` in web code is a build error: web code shows the Preview.
+- `output/` is not part of the ZIP.
+
 ## Files Not Shown in Tabs
 
 - Binary files (images, fonts, jars, archives, anything with a NUL byte) never get a tab. They are published under `preview/` and added to the ZIP byte for byte.
@@ -325,13 +349,13 @@ Region ids are the contract between variants. Give the same region the same id i
 
 ### Preview and downloads
 
-- A variant is web code when its folder has `index.html`. Only web variants show the Preview; for other variants the Preview panel disappears. `preview` in the frontmatter applies to the web variants, and a tutorial without any web variant needs no `index.html`.
+- A variant is web code when its folder has `index.html`. Only web variants show the Preview; other variants show the [Result pane](#result-pane) instead when the tutorial has captured outputs. `preview` in the frontmatter applies to the web variants, and a tutorial without any web variant needs no `index.html`.
 - A web variant's Preview runs from its own page, `preview/<dir>/index.html`, with every file of the variant published next to it, so relative references such as `./main.js` or an OAuth callback page resolve inside the variant folder.
 - The ZIP holds only the active variant: its folder becomes the root of the archive, named `<tutorial>-<variant id>.zip`. The ZIP badge and tooltip count that variant's files.
 
 ## Validation
 
-Builds fail when MDX references unknown files, regions, variables or images, when code markers are malformed, or when a frontmatter field is invalid (for example an unknown `theme`, a `logo` missing from `images/`, or Preview enabled without `code/index.html`). Every error names the MDX file, line and column; frontmatter errors point at the offending key. In dev mode, validation re-runs whenever `tutorial.mdx` or a file under `code/` or `images/` changes, and errors appear in Astro's browser overlay at the first failing MDX line.
+Builds fail when MDX references unknown files, regions, variables or images, when code markers are malformed, or when a frontmatter field is invalid (for example an unknown `theme`, a `logo` missing from `images/`, or Preview enabled without `code/index.html`). Every error names the MDX file, line and column; frontmatter errors point at the offending key. In dev mode, validation re-runs whenever `tutorial.mdx` or a file under `code/`, `images/`, `requests/` or `output/` changes, and errors appear in Astro's browser overlay at the first failing MDX line.
 
 For a package/build/runtime change, run:
 

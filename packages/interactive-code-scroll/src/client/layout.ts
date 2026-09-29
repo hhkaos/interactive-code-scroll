@@ -37,7 +37,8 @@ function applyMode(mode: Mode): void {
 }
 
 interface SplitterOptions {
-  splitter: HTMLElement;
+  /** Several splitters may drive one size (the Preview and the Result pane share theirs). */
+  splitters: HTMLElement[];
   /** Element whose size the percentage refers to; gets `cssVar` and `data-resizing`. */
   container: HTMLElement;
   cssVar: string;
@@ -48,46 +49,49 @@ interface SplitterOptions {
 }
 
 /** Pointer and keyboard resizing (Shift for bigger steps), remembered in localStorage. */
-function startSplitter({ splitter, container, cssVar, range, axis, fromEnd = false }: SplitterOptions): void {
+function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = false }: SplitterOptions): void {
+  let value = 0;
   const set = (percent: number, persist: boolean) => {
-    const value = clampSplit(percent, range);
+    value = clampSplit(percent, range);
     container.style.setProperty(cssVar, `${value}%`);
-    splitter.setAttribute("aria-valuenow", String(value));
+    for (const splitter of splitters) splitter.setAttribute("aria-valuenow", String(value));
     if (persist) write(range.key, String(value));
   };
-  const current = () => Number(splitter.getAttribute("aria-valuenow"));
   set(parseStoredSplit(read(range.key), range), false);
+  for (const splitter of splitters) listen(splitter);
 
-  splitter.addEventListener("pointerdown", (event) => {
-    splitter.setPointerCapture(event.pointerId);
-    container.toggleAttribute("data-resizing", true);
-  });
-  splitter.addEventListener("pointermove", (event) => {
-    if (!splitter.hasPointerCapture(event.pointerId)) return;
-    const box = container.getBoundingClientRect();
-    const percent =
-      axis === "x"
-        ? splitFromPointer(event.clientX, box.left, box.width, range)
-        : splitFromPointer(event.clientY, box.top, box.height, range);
-    set(fromEnd ? 100 - percent : percent, false);
-  });
-  const endDrag = (event: PointerEvent) => {
-    if (!splitter.hasPointerCapture(event.pointerId)) return;
-    splitter.releasePointerCapture(event.pointerId);
-    container.removeAttribute("data-resizing");
-    set(current(), true);
-  };
-  splitter.addEventListener("pointerup", endDrag);
-  splitter.addEventListener("pointercancel", endDrag);
+  function listen(splitter: HTMLElement): void {
+    splitter.addEventListener("pointerdown", (event) => {
+      splitter.setPointerCapture(event.pointerId);
+      container.toggleAttribute("data-resizing", true);
+    });
+    splitter.addEventListener("pointermove", (event) => {
+      if (!splitter.hasPointerCapture(event.pointerId)) return;
+      const box = container.getBoundingClientRect();
+      const percent =
+        axis === "x"
+          ? splitFromPointer(event.clientX, box.left, box.width, range)
+          : splitFromPointer(event.clientY, box.top, box.height, range);
+      set(fromEnd ? 100 - percent : percent, false);
+    });
+    const endDrag = (event: PointerEvent) => {
+      if (!splitter.hasPointerCapture(event.pointerId)) return;
+      splitter.releasePointerCapture(event.pointerId);
+      container.removeAttribute("data-resizing");
+      set(value, true);
+    };
+    splitter.addEventListener("pointerup", endDrag);
+    splitter.addEventListener("pointercancel", endDrag);
 
-  const [less, more] = axis === "x" ? ["ArrowLeft", "ArrowRight"] : fromEnd ? ["ArrowDown", "ArrowUp"] : ["ArrowUp", "ArrowDown"];
-  splitter.addEventListener("keydown", (event) => {
-    const step = event.shiftKey ? 10 : 2;
-    const delta = event.key === less ? -step : event.key === more ? step : 0;
-    if (!delta) return;
-    event.preventDefault();
-    set(current() + delta, true);
-  });
+    const [less, more] = axis === "x" ? ["ArrowLeft", "ArrowRight"] : fromEnd ? ["ArrowDown", "ArrowUp"] : ["ArrowUp", "ArrowDown"];
+    splitter.addEventListener("keydown", (event) => {
+      const step = event.shiftKey ? 10 : 2;
+      const delta = event.key === less ? -step : event.key === more ? step : 0;
+      if (!delta) return;
+      event.preventDefault();
+      set(value + delta, true);
+    });
+  }
 }
 
 /** Light/dark toggle (remembered) and the resizable docs/code and code/preview splitters (remembered). */
@@ -103,13 +107,13 @@ export function startLayout(): void {
   const layout = document.querySelector<HTMLElement>(".layout");
   const docsSplitter = document.querySelector<HTMLElement>(".layout .splitter");
   if (layout && docsSplitter) {
-    startSplitter({ splitter: docsSplitter, container: layout, cssVar: "--split", range: DOCS_SPLIT, axis: "x" });
+    startSplitter({ splitters: [docsSplitter], container: layout, cssVar: "--split", range: DOCS_SPLIT, axis: "x" });
   }
   const right = document.querySelector<HTMLElement>(".right");
-  const previewSplitter = document.querySelector<HTMLElement>(".preview-splitter");
-  if (right && previewSplitter) {
+  const previewSplitters = [...document.querySelectorAll<HTMLElement>(".preview-splitter")];
+  if (right && previewSplitters.length > 0) {
     startSplitter({
-      splitter: previewSplitter,
+      splitters: previewSplitters,
       container: right,
       cssVar: "--preview-split",
       range: PREVIEW_SPLIT,

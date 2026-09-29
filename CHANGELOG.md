@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added the Result pane with captured output: for code that is not web (a variant or tutorial without `index.html`) it takes the Preview's place, with the same splitter and a collapsible header. `<Step output="name">` shows `output/<variant>/name` or `output/name` (JSON and text as text, `.txt`/`.log` in terminal style, images as images), steps without an output keep the nearest earlier result, outputs are published under `output/` and fetched when shown, and the build warns when an output looks like it holds a credential.
 - Added Preview and downloads per code variant: web variants (with `index.html`) run the Preview from their own page at `preview/<dir>/index.html` and other variants hide it; the ZIP holds the active variant's folder as `<tutorial>-<variant>.zip`, and its badge counts that variant's files.
 - Added code variants to the tutorial page: a language switcher before the file tabs (segmented control for up to four variants whose tabs fit, dropdown otherwise), `?variant=` deep links and a remembered choice, per-variant tabs, steps that focus the same region in each variant's file, and `only=` steps shown with a notice (`otherVariantSteps: notice`) or hidden (`hide`).
 - Added `examples/framework-fixture-variants` and `examples/framework-fixture-variants-hide` with their own Playwright web servers.

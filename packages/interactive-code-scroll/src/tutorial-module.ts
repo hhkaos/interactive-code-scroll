@@ -43,6 +43,8 @@ export function tutorialModule(tutorialDir: string): TutorialModulePlugin {
         `export const files = ${JSON.stringify(tutorial.files)};`,
         `export const binaries = ${JSON.stringify(tutorial.binaries)};`,
         `export const codeDir = ${JSON.stringify(tutorial.codeDir)};`,
+        `export const outputs = ${JSON.stringify(tutorial.outputs)};`,
+        `export const outputDir = ${JSON.stringify(tutorial.outputDir)};`,
         `export const images = {${tutorial.images.map((image, i) => `${JSON.stringify(image)}: image${i}`).join(", ")}};`,
       ].join("\n");
     },

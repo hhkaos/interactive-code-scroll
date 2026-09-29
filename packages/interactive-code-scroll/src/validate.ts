@@ -1,5 +1,6 @@
 import { FrontmatterError, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
+import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
 import { variantVisible } from "./variants.ts";
 import { globToRegExp, selectVisible } from "./visible-files.ts";
@@ -22,6 +23,8 @@ export interface ValidationInput {
   /** Binary files under `code/`. */
   binaries?: string[];
   images: string[];
+  /** Captured outputs, relative to `output/`. */
+  outputs?: string[];
   /** Parsed frontmatter of the MDX file (empty when it has none). */
   frontmatter?: Record<string, unknown>;
   /** 1-based line of each frontmatter key, to position frontmatter errors. */
@@ -64,6 +67,8 @@ interface VariantFiles extends Variant {
   visible: Set<string>;
   /** Region id → the file that defines it (region ids are unique within a variant). */
   regions: Map<string, string>;
+  /** Web code (has `index.html`): shows the Preview, never the Result pane. */
+  web: boolean;
 }
 
 const inFolder = (dir: string, path: string) => path.startsWith(`${dir}/`);
@@ -108,7 +113,7 @@ function checkVariants(
         else errors.push(`code/${path}: region "${region.id}" is also defined in code/${other}; region ids must be unique within ${label}`);
       }
     }
-    return { ...variant, visible: visibleSet, regions };
+    return { ...variant, visible: visibleSet, regions, web: own.includes(`${variant.dir}/${PREVIEW_ENTRY}`) };
   });
 }
 
@@ -119,6 +124,7 @@ export function validateTutorial({
   files,
   binaries = [],
   images,
+  outputs = [],
   frontmatter = {},
   frontmatterLines = {},
 }: ValidationInput): string[] {
@@ -215,6 +221,8 @@ export function validateTutorial({
         report('"preview" must be one of expanded, collapsed, keep');
       }
       const only = text("only");
+      const output = text("output");
+      if (output !== undefined && !skipFileChecks) checkOutput(output, only, report);
       if (variants) {
         checkVariantStep(variants, only, file, region, report);
       } else if (!skipFileChecks) {
@@ -261,6 +269,31 @@ export function validateTutorial({
     }
   }
   return errors;
+
+  /** Web code shows the Preview, so only the non-web variants a step covers must resolve its output. */
+  function checkOutput(output: string, only: string | undefined, report: (message: string) => void): void {
+    if (!outputKind(output)) {
+      report(`output "${output}" must be a ${OUTPUT_EXTENSIONS.map((ext) => `.${ext}`).join(", ")} file`);
+      return;
+    }
+    if (!variants) {
+      if (files.some((f) => f.path === PREVIEW_ENTRY)) {
+        report(`output "${output}" has no effect: code/${PREVIEW_ENTRY} makes the tutorial web code, which shows the Preview`);
+      } else if (!outputs.includes(output)) report(`output "${output}" not found in output/`);
+      return;
+    }
+    const ids = only?.split(/\s+/).filter(Boolean);
+    const covered = ids ? variants.filter((v) => ids.includes(v.id)) : variants;
+    const targets = covered.filter((v) => !v.web);
+    if (covered.length > 0 && targets.length === 0) {
+      report(`output "${output}" has no effect: every variant of the step is web code, which shows the Preview`);
+    }
+    for (const variant of targets) {
+      if (resolveOutput(output, outputs, variant.id) === undefined) {
+        report(`output "${output}" not found for variant "${variant.id}" (output/${variant.id}/${output} or output/${output})`);
+      }
+    }
+  }
 
   function checkVariantStep(
     all: readonly VariantFiles[],

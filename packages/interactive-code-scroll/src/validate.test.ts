@@ -188,7 +188,7 @@ describe("validateTutorial variants", () => {
     { id: "web", label: "JavaScript", dir: "web", entry: "main.js" },
   ];
   const run = (
-    options: { frontmatter?: Record<string, unknown>; files?: typeof variantFiles; binaries?: string[] },
+    options: { frontmatter?: Record<string, unknown>; files?: typeof variantFiles; binaries?: string[]; outputs?: string[] },
     ...uses: ComponentUse[]
   ) =>
     validateTutorial({
@@ -197,6 +197,7 @@ describe("validateTutorial variants", () => {
       files: options.files ?? variantFiles,
       binaries: options.binaries ?? [],
       images,
+      outputs: options.outputs,
       frontmatter: options.frontmatter ?? { variants, preview: "both" },
       frontmatterLines: { variants: 2, files: 9 },
     });
@@ -212,6 +213,23 @@ describe("validateTutorial variants", () => {
         use("VarField", { name: "clientId", label: "Token" }),
       ),
     ).toEqual([]);
+  });
+
+  it("resolves output= for every covered variant that is not web code, per-variant file first", () => {
+    const outputs = ["geocode.json", "curl/geocode.json", "python/only.txt"];
+    expect(
+      run(
+        { outputs },
+        use("Step", { id: "a", output: "geocode.json" }),
+        use("Step", { id: "b", output: "only.txt", only: "python web" }),
+      ),
+    ).toEqual([]);
+    expect(run({ outputs }, use("Step", { id: "a", output: "only.txt" }))).toEqual([
+      'tutorial.mdx:3:1 <Step> output "only.txt" not found for variant "curl" (output/curl/only.txt or output/only.txt)',
+    ]);
+    expect(run({ outputs }, use("Step", { id: "a", output: "geocode.json", only: "web" }))).toEqual([
+      'tutorial.mdx:3:1 <Step> output "geocode.json" has no effect: every variant of the step is web code, which shows the Preview',
+    ]);
   });
 
   it("does not require index.html for the Preview", () => {
@@ -304,5 +322,38 @@ describe("parseStringArray", () => {
     ['["a" + "b"]', undefined],
   ])("%s", (expression, expected) => {
     expect(parseStringArray(expression)).toEqual(expected);
+  });
+});
+
+describe("validateTutorial captured output", () => {
+  const script = [{ path: "main.py", source: "print(1)" }];
+  const run = (outputs: string[], output: ComponentUse["attributes"][string], code = script) =>
+    validateTutorial({
+      mdxFile: "tutorial.mdx",
+      uses: [use("Step", { id: "a", output })],
+      files: code,
+      images,
+      outputs,
+      frontmatter: { preview: "off" },
+    });
+
+  it("accepts every supported type found in output/", () => {
+    for (const name of ["a.json", "b.txt", "c.log", "shots/d.png", "e.jpg", "f.jpeg", "g.gif", "h.webp", "i.svg"]) {
+      expect(run([name], name)).toEqual([]);
+    }
+  });
+
+  it.each([
+    [["a.json"], "b.json", 'output "b.json" not found in output/'],
+    [["a.csv"], "a.csv", 'output "a.csv" must be a .json, .txt, .log, .png, .jpg, .jpeg, .gif, .webp, .svg file'],
+    [["a.json"], true, '"output" must be a string'],
+  ] as const)("reports %j → %j", (outputs, output, message) => {
+    expect(run([...outputs], output)[0]).toContain(message);
+  });
+
+  it("reports output= in web code, which shows the Preview", () => {
+    expect(run(["a.json"], "a.json", files)).toEqual([
+      'tutorial.mdx:3:1 <Step> output "a.json" has no effect: code/index.html makes the tutorial web code, which shows the Preview',
+    ]);
   });
 });

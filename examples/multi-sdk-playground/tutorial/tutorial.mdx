@@ -44,15 +44,15 @@ Shell strings escape differently: try an access token containing `"`, `$` or a b
 
 </Step>
 
-<Step id="request" file="python/geocode.py" region="request">
+<Step id="request" file="python/geocode.py" region="request" output="geocode.json">
 
 ## Python: send the request
 
-`requests.get` calls `findAddressCandidates` with the address as `singleLine`.
+`requests.get` calls `findAddressCandidates` with the address as `singleLine`. The Result pane shows a captured response from `output/geocode.json`; the next steps keep it until another step has an output.
 
 </Step>
 
-<Step id="results" file="python/geocode.py" region="results">
+<Step id="results" file="python/geocode.py" region="results" output="candidates.txt">
 
 ## Python: print the candidates
 

@@ -1,5 +1,6 @@
 import type { Variant } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
+import { resolveOutput } from "./output.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 import { selectVisible } from "./visible-files.ts";
 
@@ -44,6 +45,26 @@ export function stepFiles(
         break;
       }
     }
+  }
+  return out;
+}
+
+/**
+ * Variant id → captured output (relative to `output/`) a step shows. Only non-web variants the
+ * step covers get one: web variants (`webDirs`) show the Preview.
+ */
+export function stepOutputs(
+  variants: readonly Variant[],
+  outputs: readonly string[],
+  webDirs: ReadonlySet<string>,
+  { output, only }: { output: string; only?: string },
+): Record<string, string> {
+  const ids = only?.split(/\s+/).filter(Boolean);
+  const out: Record<string, string> = {};
+  for (const variant of variants) {
+    if ((ids && !ids.includes(variant.id)) || webDirs.has(variant.dir)) continue;
+    const path = resolveOutput(output, outputs, variant.id);
+    if (path !== undefined) out[variant.id] = path;
   }
   return out;
 }
