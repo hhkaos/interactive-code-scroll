@@ -7,6 +7,7 @@ import "@esri/calcite-components/components/calcite-dialog";
 import "@esri/calcite-components/components/calcite-dropdown";
 import "@esri/calcite-components/components/calcite-dropdown-group";
 import "@esri/calcite-components/components/calcite-dropdown-item";
+import "@esri/calcite-components/components/calcite-icon";
 import "@esri/calcite-components/components/calcite-input";
 import "@esri/calcite-components/components/calcite-link";
 import "@esri/calcite-components/components/calcite-navigation";

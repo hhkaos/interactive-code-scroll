@@ -1,5 +1,5 @@
 import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
-import { FrontmatterError, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
+import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
@@ -150,8 +150,8 @@ export function validateTutorial({
     if (!(error instanceof FrontmatterError)) throw error;
     reportFrontmatter(error.key, error.detail);
   }
-  if (config?.logo !== undefined && !images.includes(config.logo)) {
-    reportFrontmatter("logo", `logo "${config.logo}" not found in images/`);
+  if (config?.logo !== undefined && !isRemoteLogo(config.logo) && !images.includes(config.logo)) {
+    reportFrontmatter("logo", `logo "${config.logo}" not found in images/ (or use an https:// URL)`);
   }
   // With variants, the Preview applies to web variants only, so no variant is required to have it.
   if (config && !config.variants && config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
@@ -405,4 +405,49 @@ export function validateTutorial({
       }
     }
   }
+}
+
+export interface SeriesIndexInput {
+  mdxFile: string;
+  /** Every JSX component in the MDX (not only tutorial components). */
+  uses: ComponentUse[];
+  /** Files in the series folder's `images/`. */
+  images: string[];
+  frontmatter?: Record<string, unknown>;
+  frontmatterLines?: Readonly<Record<string, number>>;
+}
+
+const TUTORIAL_LIST_ATTRIBUTES = new Set(["tags", "level"]);
+
+/** Validates a series `index.mdx`: its frontmatter, logo, `<TutorialList>` uses and one `<TutorialFilter>` at most (the only components it may use). */
+export function validateSeriesIndex({ mdxFile, uses, images, frontmatter = {}, frontmatterLines = {} }: SeriesIndexInput): string[] {
+  const errors: string[] = [];
+  try {
+    const config = readIndexConfig(frontmatter);
+    if (config.logo !== undefined && !isRemoteLogo(config.logo) && !images.includes(config.logo)) {
+      errors.push(`${mdxFile}:${frontmatterLines.logo ?? 1}:1 frontmatter logo "${config.logo}" not found in images/ (or use an https:// URL)`);
+    }
+  } catch (error) {
+    if (!(error instanceof FrontmatterError)) throw error;
+    errors.push(`${mdxFile}:${frontmatterLines[error.key] ?? 1}:1 frontmatter ${error.detail}`);
+  }
+  let filters = 0;
+  for (const use of uses) {
+    const at = `${mdxFile}:${use.line}:${use.column}`;
+    if (use.name === "TutorialFilter") {
+      filters += 1;
+      if (filters > 1) errors.push(`${at} <TutorialFilter> can appear only once (it filters every list on the page)`);
+      for (const name of Object.keys(use.attributes)) errors.push(`${at} <TutorialFilter> takes no attributes (got "${name}")`);
+      continue;
+    }
+    if (use.name !== "TutorialList") {
+      errors.push(`${at} <${use.name}> is not available in index.mdx (use <TutorialList> or <TutorialFilter>)`);
+      continue;
+    }
+    for (const [name, value] of Object.entries(use.attributes)) {
+      if (!TUTORIAL_LIST_ATTRIBUTES.has(name)) errors.push(`${at} <TutorialList> unknown attribute "${name}" (use tags or level)`);
+      else if (typeof value !== "string" || value.trim() === "") errors.push(`${at} <TutorialList> ${name} must be a non-empty string`);
+    }
+  }
+  return errors;
 }

@@ -23,11 +23,14 @@ for (const path of [
   "src/components/Hint.astro",
   "src/components/Intro.astro",
   "src/components/Step.astro",
+  "src/components/TutorialFilter.astro",
+  "src/components/TutorialList.astro",
   "src/components/VarField.astro",
   "src/pages/index.astro",
   "src/pages/series-index.astro",
   "src/preview/page.astro",
   "src/styles/tutorial.css",
+  "src/styles/series.css",
 ]) {
   const source = join(packageRoot, path);
   const target = join(dist, path.replace(/^src\//, ""));
@@ -38,6 +41,8 @@ for (const path of [
 rewriteAstroImports(join(dist, "components", "Hint.astro"));
 rewriteAstroImports(join(dist, "components", "Intro.astro"));
 rewriteAstroImports(join(dist, "components", "Step.astro"));
+rewriteAstroImports(join(dist, "components", "TutorialFilter.astro"));
+rewriteAstroImports(join(dist, "components", "TutorialList.astro"));
 rewriteAstroImports(join(dist, "components", "VarField.astro"));
 rewriteAstroImports(join(dist, "pages", "index.astro"));
 rewriteAstroImports(join(dist, "pages", "series-index.astro"));

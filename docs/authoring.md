@@ -53,9 +53,48 @@ interactiveCodeScroll({ tutorials: "tutorials" })
 
 - The folder name is the tutorial's URL, so it must use lowercase letters, digits and `-` (build error otherwise).
 - Folders starting with `_` or `.` are ignored; other folders without `tutorial.mdx` are skipped with a warning.
-- `/` is an index page that links every tutorial. Each tutorial's Preview, published code and captured outputs live under its own URL.
+- Each tutorial's Preview, published code and captured outputs live under its own URL. Its header gets an "All tutorials" link back to the index.
 - `tutorial` and `tutorials` cannot be combined.
 - Persisted `<VarField>` values are shared by every tutorial on the site (enter a key once); a Preview never shows another tutorial's code.
+
+#### Index page
+
+`/` lists every tutorial as a card: title, `description`, `level`, `duration` and `tags` from each tutorial's [frontmatter](#frontmatter), ordered by `order` (lower first; tutorials without it follow, by title). When any tutorial has tags, a tag filter shows only the cards with any of the selected tags.
+
+To customize the index, add `tutorials/index.mdx`:
+
+```mdx
+---
+title: ArcGIS tutorials
+description: Build apps with ArcGIS, from REST to native SDKs.
+logo: logo.svg
+theme: auto
+---
+
+Start with the REST tutorials if you are new to location services.
+
+<TutorialFilter />
+
+## Web apps
+
+<TutorialList tags="JavaScript, Web" />
+
+## Scripts
+
+<TutorialList tags="Python" level="Beginner" />
+```
+
+| Field | Values | Default | Notes |
+|---|---|---|---|
+| `title` | string | `Tutorials` | Header heading and page title. |
+| `description` | string | none | Shown under the title in the header and as the page's meta description (clipped on narrow screens). |
+| `logo` | image path or `https://` URL | none | Relative to `tutorials/images/` (that folder is never a tutorial), or an absolute `https://` URL. |
+| `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered site-wide. |
+
+- The body is free MDX prose. Only two components are available; anything else is a build error.
+- `<TutorialList>` renders a section of cards. `tags="A, B"` (comma-separated, since a tag may contain spaces) keeps tutorials with any of those tags; `level="Beginner"` keeps that exact level; both combine. Without attributes it lists every tutorial. A tag or level no tutorial uses fails the build.
+- `<TutorialFilter>` renders the tag filter where you place it; it filters every list on the page and counts tutorials once even when they appear in several sections. At most one per page, no attributes. Leave it out to show no filter.
+- Without `index.mdx`, the index is the filter plus one list of every tutorial.
 
 ## Frontmatter
 
@@ -75,11 +114,16 @@ logo: logo.svg
 | `preview` | `off`, `iframe`, `tab`, `both` | `both` | Controls the Preview panel and open-in-tab button. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
-| `logo` | image path | none | Relative to `images/`. Use a square SVG or a PNG of at least 512 x 512. |
+| `logo` | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. |
 | `files` | list of paths/globs | all text files | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
 | `variants` | list | none | Code variants: the same steps in several languages. See [Code Variants](#code-variants). |
 | `otherVariantSteps` | `notice`, `hide` | `notice` | How steps limited with `only=` look to readers of another variant. See [Code Variants](#code-variants). |
 | `languages` | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
+| `description` | string | none | One sentence: the page's meta description and, in a [series site](#series-sites), the index card text. |
+| `tags` | list of strings | none | Series index card tags and filter values, e.g. `[REST, Python]`. No commas inside a tag. |
+| `level` | string | none | Series index card, e.g. `Beginner`; `<TutorialList level>` matches it exactly. |
+| `duration` | string | none | Series index card, e.g. `20 min`. |
+| `order` | number | none | Series index position: lower first; tutorials without it come after, by title. |
 
 Highlighting is chosen by file extension. Built in: JavaScript/TypeScript (`js`, `mjs`, `cjs`, `jsx`, `ts`, `tsx`), `vue`, `html`, `css`, `json`/`geojson`, Markdown (`md`, `mdx`), shell (`sh`, `bash`), `ps1`, `yaml`/`yml`, `toml`, `ini`, `http`, Python (`py`), Kotlin (`kt`, `kts`), Gradle Groovy (`gradle`), `swift`, `java`, C# (`cs`), XML/XAML (`xml`, `xaml`), C++ (`cpp`, `h`, `hpp`), `qml`, `dart`, `sql` and `lua`. Other files show as plain text.
 

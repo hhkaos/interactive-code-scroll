@@ -5,7 +5,7 @@ import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Step from "../components/Step.astro";
 import VarField from "../components/VarField.astro";
-import { readTutorialConfig } from "../frontmatter.ts";
+import { logoUrl, readTutorialConfig } from "../frontmatter.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
 import { zipBadge, zipLabel } from "../downloads.ts";
@@ -27,7 +27,7 @@ setCurrentTutorial(Astro.locals, tutorial);
 const { binaries, Content, files, frontmatter, images, outputs, requests, slug } = tutorial;
 // Frontmatter and references are validated at MDX compile time (mdx-validation.ts).
 const config = readTutorialConfig(frontmatter);
-const logo = config.logo === undefined ? undefined : images[config.logo];
+const logo = logoUrl(config.logo, images);
 const textPaths = files.map((f) => f.path);
 const { variants } = config;
 // Each variant's tabs, in order; a tutorial without variants is one unnamed group.
@@ -100,6 +100,7 @@ const clientData = JSON.stringify({
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{config.title}</title>
+    {config.description && <meta name="description" content={config.description} />}
     {logo && <link rel="icon" href={logo} />}
   </head>
   <body data-preview={preview} data-theme={config.theme} data-code-wrap={config.codeWrap ? "" : undefined}>
@@ -116,6 +117,13 @@ const clientData = JSON.stringify({
       })();
     </script>
     <calcite-navigation class="app-header">
+      {
+        series && (
+          <a slot="navigation-action" class="series-home" href={tutorialBase(import.meta.env.BASE_URL, "")} aria-label="All tutorials" data-tooltip>
+            <calcite-icon icon="apps" scale="s" />
+          </a>
+        )
+      }
       {/* The page's h1: tutorial.mdx should not repeat the title. */}
       <calcite-navigation-logo slot="logo" heading={config.title} heading-level="1" thumbnail={logo} />
       <div slot="content-end" class="header-actions">

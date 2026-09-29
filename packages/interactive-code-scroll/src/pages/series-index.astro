@@ -1,12 +1,17 @@
 ---
-import { tutorials } from "virtual:interactive-code-scroll/tutorial";
-import { readTutorialConfig } from "../frontmatter.ts";
-import { tutorialBase } from "../tutorial-data.ts";
+import { seriesImages, seriesIndex } from "virtual:interactive-code-scroll/tutorial";
+import TutorialFilter from "../components/TutorialFilter.astro";
+import TutorialList from "../components/TutorialList.astro";
+import { logoUrl, readIndexConfig } from "../frontmatter.ts";
+import "../styles/tutorial.css";
+import "../styles/series.css";
 
-// Index of a series site: one link per tutorial (frontmatter was validated at MDX compile time).
-const entries = tutorials
-  .map((t) => ({ href: tutorialBase(import.meta.env.BASE_URL, t.slug), title: readTutorialConfig(t.frontmatter).title }))
-  .sort((a, b) => a.title.localeCompare(b.title));
+// Index of a series site: `index.mdx` (optional) gives the title, description, logo and prose with
+// `<TutorialFilter>` and `<TutorialList>` sections; without it, the page shows the filter and every
+// tutorial. Validated at MDX compile time.
+const config = readIndexConfig(seriesIndex?.frontmatter ?? {});
+const logo = logoUrl(config.logo, seriesImages);
+const Content = seriesIndex?.Content;
 ---
 
 <!doctype html>
@@ -14,20 +19,62 @@ const entries = tutorials
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tutorials</title>
+    <title>{config.title}</title>
+    {config.description && <meta name="description" content={config.description} />}
+    {logo && <link rel="icon" href={logo} />}
   </head>
-  <body>
-    <main>
-      <h1>Tutorials</h1>
-      <ul class="series-list">
+  <body class="series-page" data-theme={config.theme}>
+    <script is:inline>
+      // Before first paint: avoid a flash of the wrong theme. Mirrors client/layout-values.ts.
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem("ics:theme");
+        } catch (e) {}
+        var choice = stored === "light" || stored === "dark" ? stored : document.body.dataset.theme;
+        var dark = choice === "dark" || (choice !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.body.className = "series-page " + (dark ? "calcite-mode-dark" : "calcite-mode-light");
+      })();
+    </script>
+    <calcite-navigation class="app-header">
+      <calcite-navigation-logo slot="logo" heading={config.title} description={config.description} thumbnail={logo} />
+      <div slot="content-end" class="header-actions">
+        <calcite-action id="theme-toggle" icon="moon" text="Toggle theme" />
+      </div>
+    </calcite-navigation>
+    <main class="series-main">
+      {/* The header logo is not a heading; the page keeps its h1 for screen readers. */}
+      <h1 class="visually-hidden">{config.title}</h1>
+      <div class="series-content">
         {
-          entries.map((e) => (
-            <li>
-              <a href={e.href}>{e.title}</a>
-            </li>
-          ))
+          Content ? (
+            <Content components={{ TutorialFilter, TutorialList }} />
+          ) : (
+            <>
+              <TutorialFilter />
+              <h2 class="visually-hidden">All tutorials</h2>
+              <TutorialList />
+            </>
+          )
         }
-      </ul>
+      </div>
     </main>
+    <script>
+      import "@esri/calcite-components/main.css";
+      import "@esri/calcite-components/components/calcite-action";
+      import "@esri/calcite-components/components/calcite-chip";
+      import "@esri/calcite-components/components/calcite-chip-group";
+      import "@esri/calcite-components/components/calcite-icon";
+      import "@esri/calcite-components/components/calcite-navigation";
+      import "@esri/calcite-components/components/calcite-navigation-logo";
+      import "@esri/calcite-components/components/calcite-tooltip";
+      import { startTooltips } from "../client/actions.ts";
+      import { startLayout } from "../client/layout.ts";
+      import { startSeriesFilter } from "../client/series.ts";
+
+      startTooltips();
+      startLayout();
+      startSeriesFilter();
+    </script>
   </body>
 </html>

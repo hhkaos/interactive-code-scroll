@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { discoverTutorials } from "./series.ts";
+import { allTags, discoverTutorials, parseTagList, selectCards, sortCards } from "./series.ts";
 
 function seriesWith(folders: Record<string, boolean>): string {
   const dir = mkdtempSync(join(tmpdir(), "ics-series-"));
@@ -15,7 +15,7 @@ function seriesWith(folders: Record<string, boolean>): string {
 
 describe("discoverTutorials", () => {
   it("lists subfolders with tutorial.mdx by slug, skipping the rest", () => {
-    const dir = seriesWith({ rest: true, "a-2": true, shared: false, _drafts: true, ".cache": true });
+    const dir = seriesWith({ rest: true, "a-2": true, shared: false, images: false, _drafts: true, ".cache": true });
     writeFileSync(join(dir, "index.mdx"), "# Index\n");
     const warn = vi.fn();
     expect(discoverTutorials(dir, warn)).toEqual([
@@ -34,5 +34,31 @@ describe("discoverTutorials", () => {
   it("fails when the folder is missing or holds no tutorial", () => {
     expect(() => discoverTutorials(join(tmpdir(), "ics-missing-series"))).toThrow(/tutorials folder not found/);
     expect(() => discoverTutorials(seriesWith({ empty: false }), () => {})).toThrow(/no tutorial found/);
+  });
+});
+
+describe("index cards", () => {
+  const cards = [
+    { title: "Gamma", tags: ["Web"] },
+    { title: "Beta", tags: ["Web", "Python"], level: "Intermediate", order: 2 },
+    { title: "Alpha", tags: ["Web", "JavaScript"], level: "Beginner", order: 1 },
+    { title: "Delta", tags: [] },
+  ];
+
+  it("sorts by order, then by title", () => {
+    expect(sortCards(cards).map((c) => c.title)).toEqual(["Alpha", "Beta", "Delta", "Gamma"]);
+  });
+
+  it("selects any of the tags and the exact level", () => {
+    expect(parseTagList(" Python, JavaScript ,,Python")).toEqual(["Python", "JavaScript"]);
+    expect(parseTagList(undefined)).toEqual([]);
+    expect(selectCards(cards, { tags: ["Python", "JavaScript"] }).map((c) => c.title)).toEqual(["Beta", "Alpha"]);
+    expect(selectCards(cards, { level: "Beginner" }).map((c) => c.title)).toEqual(["Alpha"]);
+    expect(selectCards(cards, { tags: ["Web"], level: "Intermediate" }).map((c) => c.title)).toEqual(["Beta"]);
+    expect(selectCards(cards, {})).toHaveLength(4);
+  });
+
+  it("lists every tag once in first-seen order", () => {
+    expect(allTags(cards)).toEqual(["Web", "Python", "JavaScript"]);
   });
 });

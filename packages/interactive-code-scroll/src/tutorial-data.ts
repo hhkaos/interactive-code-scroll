@@ -1,4 +1,6 @@
 import type { MDXContent } from "astro";
+import { readTutorialConfig } from "./frontmatter.ts";
+import { sortCards, type SeriesCard } from "./series.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 
 /** One tutorial as the virtual module exposes it to the injected pages. */
@@ -49,4 +51,23 @@ export function tutorialFor(tutorials: readonly TutorialData[], slug: string | u
 export function tutorialBase(base: string, slug: string): string {
   const root = base.replace(/\/?$/, "/");
   return slug === "" ? root : `${root}${slug}/`;
+}
+
+/** Index cards of a series, in index order (frontmatter was validated at MDX compile time). */
+export function seriesCards(tutorials: readonly TutorialData[], base: string): SeriesCard[] {
+  return sortCards(
+    tutorials.map(({ slug, frontmatter }) => {
+      const { title, description, tags, level, duration, order } = readTutorialConfig(frontmatter);
+      return {
+        slug,
+        href: tutorialBase(base, slug),
+        title,
+        tags,
+        ...(description === undefined ? {} : { description }),
+        ...(level === undefined ? {} : { level }),
+        ...(duration === undefined ? {} : { duration }),
+        ...(order === undefined ? {} : { order }),
+      };
+    }),
+  );
 }

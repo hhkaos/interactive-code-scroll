@@ -4,4 +4,8 @@ declare module "virtual:interactive-code-scroll/tutorial" {
   export const series: boolean;
   /** Every tutorial of the site (one, with slug `""`, for a single-tutorial site). */
   export const tutorials: import("./tutorial-data.ts").TutorialData[];
+  /** A series' optional `index.mdx`. */
+  export const seriesIndex: { Content: import("astro").MDXContent; frontmatter: Record<string, unknown> } | undefined;
+  /** Image path (relative to the series folder's `images/`) → public URL. */
+  export const seriesImages: Record<string, string>;
 }

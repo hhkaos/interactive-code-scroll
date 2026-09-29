@@ -5,8 +5,9 @@ import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type 
 import { frontmatterKeyLines } from "./frontmatter.ts";
 import { parseSource } from "./markers.ts";
 import { credentialWarnings, isTextOutput } from "./output.ts";
-import { readTutorialFiles } from "./tutorial-files.ts";
-import { validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
+import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
+import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
+import { validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 import { parsedFiles } from "./variants.ts";
 
 const COMPONENTS = new Set(["Hint", "Step", "VarField"]);
@@ -44,6 +45,40 @@ function attributesOf(node: Readonly<MdxJsxFlowElement | MdxJsxTextElement>): Re
   return out;
 }
 
+/** Collects every JSX component of an MDX file with its position. */
+function componentCollector(accept: (name: string) => boolean) {
+  const uses: ComponentUse[] = [];
+  const collect = (node: Readonly<MdxJsxFlowElement | MdxJsxTextElement>) => {
+    if (!node.name || !accept(node.name)) return;
+    const start = node.position?.start;
+    uses.push({ name: node.name, attributes: attributesOf(node), line: start?.line ?? 0, column: start?.column ?? 0 });
+  };
+  return { uses, collect };
+}
+
+/** A series `index.mdx`: frontmatter, logo and `<TutorialList>`; other components (capitalized) are errors. */
+function seriesIndexValidation(data: Readonly<Record<string, unknown>>, mdxPath: string, seriesDir: string) {
+  const frontmatter = frontmatterOf(data);
+  const { uses, collect } = componentCollector((name) => /^[A-Z]/.test(name));
+  return defineMdastPlugin({
+    name: "interactive-code-scroll:validate-index",
+    options: { position: true },
+    mdxJsxFlowElement: collect,
+    mdxJsxTextElement: collect,
+    after() {
+      const mdxFile = relative(process.cwd(), mdxPath);
+      const problems = validateSeriesIndex({
+        mdxFile,
+        uses,
+        images: listFiles(join(seriesDir, SERIES_IMAGES)),
+        frontmatter,
+        frontmatterLines: frontmatterKeyLines(readFileSync(mdxPath, "utf8")),
+      });
+      if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
+    },
+  });
+}
+
 /** Astro parses the frontmatter before the MDX compile and seeds it as `ctx.data.astro.frontmatter`. */
 function frontmatterOf(data: Readonly<Record<string, unknown>>): Record<string, unknown> {
   const astro = data.astro;
@@ -56,22 +91,22 @@ function frontmatterOf(data: Readonly<Record<string, unknown>>): Record<string, 
  * Satteri mdast plugin: checks each tutorial's frontmatter and component references against its
  * `code/`, `images/`, `output/` and `requests/`; `warn` gets problems that do not fail the build.
  */
-export function tutorialValidation(tutorialDirs: string | readonly string[], warn: (message: string) => void = console.warn): MdastPluginEntry {
+export function tutorialValidation(
+  tutorialDirs: string | readonly string[],
+  warn: (message: string) => void = console.warn,
+  seriesDir?: string,
+): MdastPluginEntry {
   const dirs = typeof tutorialDirs === "string" ? [tutorialDirs] : tutorialDirs;
   return (ctx) => {
     if (!ctx.fileURL) return null;
     const mdxPath = fileURLToPath(ctx.fileURL);
+    if (seriesDir !== undefined && mdxPath === join(seriesDir, SERIES_INDEX)) return seriesIndexValidation(ctx.data, mdxPath, seriesDir);
     const tutorialDir = dirs.find((dir) => join(dir, "tutorial.mdx") === mdxPath);
     if (tutorialDir === undefined) return null;
     const tutorial = readTutorialFiles(tutorialDir);
     const frontmatter = frontmatterOf(ctx.data);
 
-    const uses: ComponentUse[] = [];
-    const collect = (node: Readonly<MdxJsxFlowElement | MdxJsxTextElement>) => {
-      if (!node.name || !COMPONENTS.has(node.name)) return;
-      const start = node.position?.start;
-      uses.push({ name: node.name, attributes: attributesOf(node), line: start?.line ?? 0, column: start?.column ?? 0 });
-    };
+    const { uses, collect } = componentCollector((name) => COMPONENTS.has(name));
 
     return defineMdastPlugin({
       name: "interactive-code-scroll:validate",

@@ -61,6 +61,34 @@ describe("interactiveCodeScroll", () => {
     expect(code).toContain("export const series = true;");
     expect(code).toContain('slug: "alpha"');
     expect(code).toContain('slug: "beta"');
+    expect(code).toContain("export const seriesIndex = undefined;");
+  });
+
+  it("exposes a series' index.mdx and its images", () => {
+    const root = projectWithTutorial("tutorials/alpha");
+    mkdirSync(join(root, "tutorials", "images"));
+    writeFileSync(join(root, "tutorials", "index.mdx"), "# Index\n");
+    writeFileSync(join(root, "tutorials", "images", "logo.svg"), "<svg/>");
+    const seriesDir = join(root, "tutorials");
+    const plugin = tutorialModule([{ slug: "alpha", dir: join(seriesDir, "alpha") }], seriesDir);
+    const code = plugin.load(plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
+    expect(code).toContain(`import * as seriesIndexMdx from ${JSON.stringify(join(seriesDir, "index.mdx"))};`);
+    expect(code).toContain("export const seriesIndex = { Content: seriesIndexMdx.Content, frontmatter: seriesIndexMdx.frontmatter };");
+    expect(code).toContain(`import seriesImage0 from ${JSON.stringify(join(seriesDir, "images", "logo.svg") + "?url")};`);
+    expect(code).toContain('export const seriesImages = {"logo.svg": seriesImage0};');
+
+    const add = vi.fn();
+    plugin.configureServer({ watcher: { add } });
+    expect(add.mock.calls[0]![0]).toContain(join(seriesDir, "images"));
+    const indexMdx = { id: "index" };
+    const virtual = { id: "virtual" };
+    const environment = {
+      moduleGraph: {
+        getModulesByFile: (file: string) => (file === join(seriesDir, "index.mdx") ? new Set([indexMdx]) : undefined),
+        getModuleById: (id: string) => (id === `\0${TUTORIAL_MODULE_ID}` ? virtual : undefined),
+      },
+    };
+    expect(plugin.hotUpdate.call({ environment }, { file: join(seriesDir, "images", "new.svg"), modules: [] })).toEqual([indexMdx, virtual]);
   });
 
   it("rejects tutorial and tutorials together", () => {

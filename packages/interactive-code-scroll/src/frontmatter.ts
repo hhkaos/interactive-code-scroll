@@ -28,7 +28,7 @@ export interface TutorialConfig {
   preview: PreviewMode;
   theme: Theme;
   codeWrap: boolean;
-  /** Image in `images/` shown in the header and used as favicon. */
+  /** Image in `images/` (or an `https://` URL) shown in the header and used as favicon. */
   logo?: string;
   /** File extension (no dot) → Shiki language, overriding the built-in map. */
   languages: Record<string, string>;
@@ -37,6 +37,22 @@ export interface TutorialConfig {
   /** Code variants; absent for a single-project tutorial. */
   variants?: Variant[];
   otherVariantSteps: OtherVariantSteps;
+  /** Series metadata (optional everywhere): shown on the index cards; `description` is also the page's meta description. */
+  description?: string;
+  tags: string[];
+  level?: string;
+  duration?: string;
+  /** Index position: lower first; tutorials without it come after, by title. */
+  order?: number;
+}
+
+/** Frontmatter of a series site's optional `index.mdx`. */
+export interface IndexConfig {
+  title: string;
+  description?: string;
+  /** Image in the series folder's `images/` (or an `https://` URL), shown in the header and used as favicon. */
+  logo?: string;
+  theme: Theme;
 }
 
 /** An invalid frontmatter field; `key` lets validation point at its line. */
@@ -119,6 +135,29 @@ function readVariants(value: unknown): Variant[] | undefined {
   return variants;
 }
 
+/** A `logo` given as an absolute `https://` URL is used as is; any other value is a path in `images/`. */
+export const isRemoteLogo = (logo: string) => /^https:\/\/\S+$/i.test(logo);
+
+/** URL of a logo: remote as is, local through the image map (undefined when missing). */
+export function logoUrl(logo: string | undefined, images: Readonly<Record<string, string>>): string | undefined {
+  if (logo === undefined) return undefined;
+  return isRemoteLogo(logo) ? logo : images[logo];
+}
+
+function optionalText(name: string, value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.trim() === "") throw new FrontmatterError(name, `"${name}" must be a non-empty string`);
+  return value;
+}
+
+function readTags(value: unknown): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || !value.every((v) => typeof v === "string" && v.trim() !== "" && !v.includes(","))) {
+    throw new FrontmatterError("tags", '"tags" must be a list of non-empty strings without commas, e.g. [REST, Python]');
+  }
+  return [...new Set(value.map((v: string) => v.trim()))];
+}
+
 function oneOf<T extends string>(name: string, value: unknown, allowed: readonly T[]): T {
   if (allowed.includes(value as T)) return value as T;
   throw new FrontmatterError(name, `"${name}" must be one of ${allowed.join(", ")} (got ${JSON.stringify(value)})`);
@@ -126,11 +165,26 @@ function oneOf<T extends string>(name: string, value: unknown, allowed: readonly
 
 /** Validates tutorial.mdx frontmatter; defaults: title "Tutorial", preview `both`, theme `auto`. */
 export function readTutorialConfig(frontmatter: Record<string, unknown>): TutorialConfig {
-  const { title = "Tutorial", preview = "both", theme = "auto", codeWrap = false, logo, languages, files, variants, otherVariantSteps = "notice" } =
-    frontmatter;
+  const {
+    title = "Tutorial",
+    preview = "both",
+    theme = "auto",
+    codeWrap = false,
+    logo,
+    languages,
+    files,
+    variants,
+    otherVariantSteps = "notice",
+    description,
+    tags,
+    level,
+    duration,
+    order,
+  } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
   if (logo !== undefined && typeof logo !== "string") throw new FrontmatterError("logo", '"logo" must be a string');
+  if (order !== undefined && (typeof order !== "number" || !Number.isFinite(order))) throw new FrontmatterError("order", '"order" must be a number');
   const variantList = readVariants(variants);
   if (variantList !== undefined && files !== undefined) {
     throw new FrontmatterError("files", '"files" cannot be used with "variants"; set "files" on each variant instead');
@@ -145,6 +199,31 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     ...(files === undefined ? {} : { files: readFiles(files) }),
     ...(variantList === undefined ? {} : { variants: variantList }),
     otherVariantSteps: oneOf("otherVariantSteps", otherVariantSteps, OTHER_VARIANT_STEPS),
+    ...optionalEntry("description", optionalText("description", description)),
+    tags: readTags(tags),
+    ...optionalEntry("level", optionalText("level", level)),
+    ...optionalEntry("duration", optionalText("duration", duration)),
+    ...(order === undefined ? {} : { order: order as number }),
+  };
+}
+
+function optionalEntry<K extends string>(key: K, value: string | undefined): Partial<Record<K, string>> {
+  return value === undefined ? {} : ({ [key]: value } as Record<K, string>);
+}
+
+const INDEX_KEYS = new Set(["title", "description", "logo", "theme"]);
+
+/** Validates a series `index.mdx` frontmatter; defaults: title "Tutorials", theme `auto`. */
+export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConfig {
+  const { title = "Tutorials", description, logo, theme = "auto" } = frontmatter;
+  const unknown = Object.keys(frontmatter).find((key) => !INDEX_KEYS.has(key));
+  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme)`);
+  if (typeof title !== "string" || title.trim() === "") throw new FrontmatterError("title", '"title" must be a non-empty string');
+  return {
+    title,
+    ...optionalEntry("description", optionalText("description", description)),
+    ...optionalEntry("logo", optionalText("logo", logo)),
+    theme: oneOf("theme", theme, THEMES),
   };
 }
 

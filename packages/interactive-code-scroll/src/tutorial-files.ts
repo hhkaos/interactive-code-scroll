@@ -28,7 +28,7 @@ export interface TutorialFiles {
   requestBinaries: string[];
 }
 
-function listFiles(dir: string): string[] {
+export function listFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { recursive: true, encoding: "utf8" })
     .filter((path) => !basename(path).startsWith(".") && statSync(join(dir, path)).isFile())

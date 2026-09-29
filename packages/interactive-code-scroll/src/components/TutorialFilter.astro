@@ -1,0 +1,24 @@
+---
+import { tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { allTags } from "../series.ts";
+import { seriesCards } from "../tutorial-data.ts";
+
+// Tag chips that filter every <TutorialList> on the page (client/series.ts); nothing when no tutorial has tags.
+const tags = allTags(seriesCards(tutorials, import.meta.env.BASE_URL));
+---
+
+{
+  tags.length > 0 && (
+    <div class="series-filter">
+      <span class="series-filter-label">Filter by tag</span>
+      <calcite-chip-group id="series-filter" label="Filter by tag" selection-mode="multiple" scale="s">
+        {tags.map((tag) => (
+          <calcite-chip value={tag} label={tag}>
+            {tag}
+          </calcite-chip>
+        ))}
+      </calcite-chip-group>
+      <span id="series-count" class="series-count" aria-live="polite" />
+    </div>
+  )
+}

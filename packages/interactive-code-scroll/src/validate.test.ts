@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseStringArray, validateTutorial, type ComponentUse } from "./validate.ts";
+import { parseStringArray, validateSeriesIndex, validateTutorial, type ComponentUse } from "./validate.ts";
 
 const files = [
   { path: "main.js", source: '// #region config\nconst clientId = "ID"; // @var clientId\n// #endregion' },
@@ -162,7 +162,7 @@ describe("validateTutorial frontmatter", () => {
   });
 
   it("reports a logo missing from images/", () => {
-    expect(withFrontmatter({ logo: "logo.svg" })).toEqual(['tutorial.mdx:4:1 frontmatter logo "logo.svg" not found in images/']);
+    expect(withFrontmatter({ logo: "logo.svg" })).toEqual(['tutorial.mdx:4:1 frontmatter logo "logo.svg" not found in images/ (or use an https:// URL)']);
   });
 
   it("requires code/index.html unless preview is off", () => {
@@ -451,5 +451,43 @@ describe("validateTutorial requests", () => {
     expect(run([], { files: variantFiles, frontmatter: { variants } })).toEqual([
       "code/py/requests/a.txt: code/py/requests/ would overwrite requests/ in the ZIP; rename the folder",
     ]);
+  });
+});
+
+describe("validateSeriesIndex", () => {
+  const index = (uses: ComponentUse[], frontmatter: Record<string, unknown> = {}) =>
+    validateSeriesIndex({ mdxFile: "tutorials/index.mdx", uses, images: ["logo.svg"], frontmatter, frontmatterLines: { logo: 3, preview: 4 } });
+
+  it("accepts an https logo without checking images/", () => {
+    expect(index([], { logo: "https://example.com/logo.png" })).toEqual([]);
+    expect(index([], { logo: "http://example.com/logo.png" })).toEqual([
+      'tutorials/index.mdx:3:1 frontmatter logo "http://example.com/logo.png" not found in images/ (or use an https:// URL)',
+    ]);
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", uses: [], files, images, frontmatter: { logo: "https://example.com/l.png", preview: "off" } })).toEqual([]);
+  });
+
+  it("accepts TutorialList sections and a logo from images/", () => {
+    expect(
+      index([use("TutorialFilter", {}), use("TutorialList", {}), use("TutorialList", { tags: "REST, Python", level: "Beginner" }, 9)], { logo: "logo.svg" }),
+    ).toEqual([]);
+  });
+
+  it("reports frontmatter, other components and bad attributes by position", () => {
+    expect(
+      index(
+        [use("Step", { id: "a" }, 5), use("TutorialList", { tag: "REST" }, 7), use("TutorialList", { level: { expression: "x" } }, 8)],
+        { logo: "missing.svg" },
+      ),
+    ).toEqual([
+      'tutorials/index.mdx:3:1 frontmatter logo "missing.svg" not found in images/ (or use an https:// URL)',
+      "tutorials/index.mdx:5:1 <Step> is not available in index.mdx (use <TutorialList> or <TutorialFilter>)",
+      'tutorials/index.mdx:7:1 <TutorialList> unknown attribute "tag" (use tags or level)',
+      "tutorials/index.mdx:8:1 <TutorialList> level must be a non-empty string",
+    ]);
+    expect(index([use("TutorialFilter", { tags: "Web" }, 2), use("TutorialFilter", {}, 6)])).toEqual([
+      'tutorials/index.mdx:2:1 <TutorialFilter> takes no attributes (got "tags")',
+      "tutorials/index.mdx:6:1 <TutorialFilter> can appear only once (it filters every list on the page)",
+    ]);
+    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme)']);
   });
 });

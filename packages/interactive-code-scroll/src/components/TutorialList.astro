@@ -1,0 +1,65 @@
+---
+import { tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { parseTagList, selectCards } from "../series.ts";
+import { seriesCards } from "../tutorial-data.ts";
+
+// Attributes were validated at MDX compile time (index.mdx); tag and level values are checked here,
+// where the tutorials' metadata is known.
+interface Props {
+  /** Comma-separated tags: the list shows tutorials with any of them. */
+  tags?: string;
+  /** Exact level: the list shows tutorials with that level. */
+  level?: string;
+}
+
+const { tags, level } = Astro.props;
+const cards = seriesCards(tutorials, import.meta.env.BASE_URL);
+const wanted = parseTagList(tags);
+const unknownTags = wanted.filter((tag) => !cards.some((card) => card.tags.includes(tag)));
+if (unknownTags.length > 0) {
+  throw new Error(`index.mdx <TutorialList tags="${tags}">: no tutorial has the tag(s) ${unknownTags.map((t) => `"${t}"`).join(", ")}`);
+}
+if (level !== undefined && !cards.some((card) => card.level === level)) {
+  throw new Error(`index.mdx <TutorialList level="${level}">: no tutorial has that level`);
+}
+const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : { level }) });
+---
+
+<div class="series-list">
+  <ul class="series-cards">
+    {
+      shown.map((card) => (
+        <li class="series-card-item" data-slug={card.slug} data-tags={JSON.stringify(card.tags)}>
+          <a class="series-card" href={card.href}>
+            <h3 class="series-card-title">{card.title}</h3>
+            {card.description && <p class="series-card-description">{card.description}</p>}
+            {(card.level || card.duration) && (
+              <p class="series-card-meta">
+                {card.level && (
+                  <span>
+                    <calcite-icon icon="gauge" scale="s" aria-hidden="true" />
+                    <span class="visually-hidden">Level:</span> {card.level}
+                  </span>
+                )}
+                {card.duration && (
+                  <span>
+                    <calcite-icon icon="clock" scale="s" aria-hidden="true" />
+                    <span class="visually-hidden">Duration:</span> {card.duration}
+                  </span>
+                )}
+              </p>
+            )}
+            {card.tags.length > 0 && (
+              <ul class="series-card-tags" aria-label="Tags">
+                {card.tags.map((tag) => (
+                  <li>{tag}</li>
+                ))}
+              </ul>
+            )}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="series-empty" hidden>No tutorials match the selected tags.</p>
+</div>

@@ -2,13 +2,52 @@ import { expect, test, type Page } from "./fixtures.ts";
 
 const previewOutput = (page: Page) => page.frameLocator(".preview iframe").locator("#output");
 
-test("the index links every tutorial and skips folders that are not tutorials", async ({ page }) => {
+test("index.mdx gives the index its title, prose and TutorialList sections in order", async ({ page }) => {
   await page.goto("/");
-  const links = page.locator(".series-list a");
-  await expect(links).toHaveText(["Alpha Series Tutorial", "Beta Series Tutorial", "Gamma Series Tutorial"]);
-  await links.first().click();
+  await expect(page).toHaveTitle("Series Fixture");
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", "A stable contract for the E2E tests of series sites.");
+  await expect(page.locator("calcite-navigation-logo")).toHaveAttribute("heading", "Series Fixture");
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", /logo.*\.png$/);
+  const lists = page.locator(".series-list");
+  // `order` first (alpha 1, beta 2), then by title; the Python section only lists beta.
+  await expect(lists.nth(0).locator(".series-card-title")).toHaveText(["Alpha Series Tutorial", "Beta Series Tutorial", "Gamma Series Tutorial"]);
+  await expect(lists.nth(1).locator(".series-card-title")).toHaveText(["Beta Series Tutorial"]);
+  const alpha = lists.nth(0).locator(".series-card").first();
+  await expect(alpha.locator(".series-card-description")).toHaveText("A web app with a persisted token field and a Preview.");
+  await expect(alpha.locator(".series-card-meta")).toContainText("Beginner");
+  await expect(alpha.locator(".series-card-meta")).toContainText("10 min");
+  await expect(alpha.locator(".series-card-tags li")).toHaveText(["Web", "JavaScript"]);
+});
+
+test("the tag filter hides cards without a selected tag and counts tutorials", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#series-count")).toHaveText("3 tutorials");
+  await page.locator('calcite-chip[value="Python"]').click();
+  await expect(page.locator(".series-list").nth(0).locator(".series-card-title:visible")).toHaveText(["Beta Series Tutorial"]);
+  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await page.locator('calcite-chip[value="JavaScript"]').click();
+  await expect(page.locator("#series-count")).toHaveText("2 of 3 tutorials");
+  await page.locator('calcite-chip[value="Python"]').click();
+  await page.locator('calcite-chip[value="JavaScript"]').click();
+  await expect(page.locator("#series-count")).toHaveText("3 tutorials");
+});
+
+test("the index fits a phone without horizontal scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator(".series-card").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test("cards open their tutorial and the header links back to the index", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".series-card", { hasText: "Alpha Series Tutorial" }).first().click();
   await expect(page).toHaveURL(/\/alpha\/$/);
   await expect(page.locator("calcite-navigation-logo")).toHaveAttribute("heading", "Alpha Series Tutorial");
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", "A web app with a persisted token field and a Preview.");
+  await page.getByRole("link", { name: "All tutorials" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator("calcite-navigation-logo")).toHaveAttribute("heading", "Series Fixture");
 });
 
 test("each tutorial runs its Preview from its own URL and storage slot", async ({ page, baseURL }) => {

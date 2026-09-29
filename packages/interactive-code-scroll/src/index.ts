@@ -28,9 +28,10 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         if (options.tutorial !== undefined && options.tutorials !== undefined) {
           throw new Error('interactive-code-scroll: use either "tutorial" (one tutorial) or "tutorials" (a series site), not both');
         }
-        const series = options.tutorials !== undefined;
+        const seriesDir = options.tutorials === undefined ? undefined : fileURLToPath(new URL(`${options.tutorials}/`, config.root));
+        const series = seriesDir !== undefined;
         const sources: TutorialSource[] = series
-          ? discoverTutorials(fileURLToPath(new URL(`${options.tutorials}/`, config.root)), (message) => logger.warn(message))
+          ? discoverTutorials(seriesDir, (message) => logger.warn(message))
           : [{ slug: "", dir: singleTutorial(config.root, options.tutorial ?? "tutorial") }];
 
         // MDX gets its own Sätteri processor (inheriting the project's options) plus reference validation.
@@ -39,13 +40,14 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         const validation = tutorialValidation(
           sources.map((s) => s.dir),
           (message) => logger.warn(message),
+          seriesDir,
         );
         const processor = satteri({ ...base, mdastPlugins: [...(base?.mdastPlugins ?? []), validation] });
 
         updateConfig({
           integrations: [mdx({ processor })],
           vite: {
-            plugins: [tutorialModule(sources, series)],
+            plugins: [tutorialModule(sources, seriesDir)],
             // pnpm does not hoist `cookie`; bundle it so Node never resolves a stray copy up the tree.
             environments: { prerender: { resolve: { noExternal: ["cookie"] } } },
           },

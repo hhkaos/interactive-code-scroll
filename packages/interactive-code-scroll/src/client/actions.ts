@@ -11,6 +11,8 @@ export function startTooltips(): void {
   for (const action of document.querySelectorAll<CalciteAction>("calcite-action:not([text-enabled])")) {
     setTooltip(action, action.getAttribute("text"));
   }
+  // Icon-only links (e.g. back to the series index) use their accessible name.
+  for (const link of document.querySelectorAll("a[data-tooltip]")) setTooltip(link, link.getAttribute("aria-label"));
 }
 
 /** Adds (or updates) a tooltip for `element`; `null` removes it (e.g. its label is visible again). */

@@ -898,3 +898,18 @@ body[data-maximized="code"] .media-panel:not([hidden]) ~ .media-restore {
     object-fit: contain;
   }
 }
+
+/* ——— Series: back to the index (icon link before the title) ——— */
+
+.series-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 3rem;
+  color: var(--calcite-color-text-3);
+  border-inline-end: 1px solid var(--calcite-color-border-3);
+
+  &:hover { color: var(--calcite-color-text-1); background: var(--calcite-color-foreground-2); }
+  &:focus-visible { outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand)); outline-offset: -2px; }
+}

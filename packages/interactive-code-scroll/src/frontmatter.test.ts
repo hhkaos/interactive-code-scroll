@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FrontmatterError, frontmatterKeyLines, readTutorialConfig } from "./frontmatter.ts";
+import { FrontmatterError, frontmatterKeyLines, isRemoteLogo, logoUrl, readIndexConfig, readTutorialConfig } from "./frontmatter.ts";
 
 describe("readTutorialConfig", () => {
   it("applies defaults", () => {
@@ -10,6 +10,7 @@ describe("readTutorialConfig", () => {
       codeWrap: false,
       languages: {},
       otherVariantSteps: "notice",
+      tags: [],
     });
   });
 
@@ -21,6 +22,7 @@ describe("readTutorialConfig", () => {
       codeWrap: true,
       languages: {},
       otherVariantSteps: "notice",
+      tags: [],
     });
   });
 
@@ -125,5 +127,58 @@ describe("frontmatterKeyLines", () => {
 
   it("is empty without a leading frontmatter block", () => {
     expect(frontmatterKeyLines("# Title\ntitle: x\n")).toEqual({});
+  });
+});
+
+describe("series metadata", () => {
+  it("reads description, tags, level, duration and order", () => {
+    expect(
+      readTutorialConfig({ description: "Geocode an address.", tags: ["REST", " Python", "REST"], level: "Beginner", duration: "20 min", order: 2 }),
+    ).toMatchObject({ description: "Geocode an address.", tags: ["REST", "Python"], level: "Beginner", duration: "20 min", order: 2 });
+  });
+
+  it("rejects invalid metadata with the key", () => {
+    const keyOf = (frontmatter: Record<string, unknown>) => {
+      try {
+        readTutorialConfig(frontmatter);
+      } catch (error) {
+        return (error as FrontmatterError).key;
+      }
+    };
+    expect(keyOf({ description: "" })).toBe("description");
+    expect(keyOf({ tags: "REST" })).toBe("tags");
+    expect(keyOf({ tags: ["a, b"] })).toBe("tags");
+    expect(keyOf({ level: 1 })).toBe("level");
+    expect(keyOf({ duration: [] })).toBe("duration");
+    expect(keyOf({ order: "1" })).toBe("order");
+  });
+});
+
+describe("readIndexConfig", () => {
+  it("applies defaults and reads the index fields", () => {
+    expect(readIndexConfig({})).toEqual({ title: "Tutorials", theme: "auto" });
+    expect(readIndexConfig({ title: "ArcGIS", description: "All SDKs.", logo: "logo.svg", theme: "dark" })).toEqual({
+      title: "ArcGIS",
+      description: "All SDKs.",
+      logo: "logo.svg",
+      theme: "dark",
+    });
+  });
+
+  it("rejects tutorial-only and invalid fields", () => {
+    expect(() => readIndexConfig({ preview: "off" })).toThrow(/"preview" is not an index\.mdx field/);
+    expect(() => readIndexConfig({ title: "" })).toThrow(/"title" must be a non-empty string/);
+    expect(() => readIndexConfig({ theme: "blue" })).toThrow(/"theme" must be one of/);
+  });
+});
+
+describe("logo", () => {
+  it("uses https URLs as is and resolves other values in images/", () => {
+    expect(isRemoteLogo("https://example.com/logo.png")).toBe(true);
+    expect(isRemoteLogo("http://example.com/logo.png")).toBe(false);
+    expect(isRemoteLogo("logo.png")).toBe(false);
+    expect(logoUrl("https://example.com/logo.png", {})).toBe("https://example.com/logo.png");
+    expect(logoUrl("logo.png", { "logo.png": "/_astro/logo.123.png" })).toBe("/_astro/logo.123.png");
+    expect(logoUrl(undefined, {})).toBeUndefined();
   });
 });
