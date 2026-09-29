@@ -28,7 +28,7 @@ Every variant defines the `config` region, each in its own file.
 
 </Step>
 
-<Step id="request" region="request" output="request.json" request="list-items">
+<Step id="request" region="request" output="request.json" request="list-items list-items-post">
 
 ## Send the request
 
@@ -65,5 +65,13 @@ A whole-file step that only Python has.
 ## Summary
 
 A text-only step keeps the current file and the last result.
+
+</Step>
+
+<Step id="create" only="node" request="list-items-post">
+
+## Create an item
+
+A Node.js-only request step without a captured output.
 
 </Step>

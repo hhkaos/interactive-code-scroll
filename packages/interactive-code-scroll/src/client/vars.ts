@@ -6,6 +6,8 @@ type CalciteInput = HTMLElement & { value: string; type: string };
 export interface VarsHandle {
   /** Real values (form or default) for vars that have a field. */
   values(): Record<string, string>;
+  /** Names of the vars whose field is `secret`. */
+  secrets(): ReadonlySet<string>;
 }
 
 /**
@@ -14,6 +16,7 @@ export interface VarsHandle {
  */
 export function startVars(onChange: () => void = () => {}): VarsHandle {
   const values: Record<string, string> = {};
+  const secrets = new Set<string>();
 
   for (const input of document.querySelectorAll<CalciteInput>("calcite-input[data-var]")) {
     const name = input.dataset.var!;
@@ -21,6 +24,7 @@ export function startVars(onChange: () => void = () => {}): VarsHandle {
     const persist = input.hasAttribute("data-persist");
     const secret = input.hasAttribute("data-secret");
     let revealed = false;
+    if (secret) secrets.add(name);
 
     const render = () => {
       const text = displayValue(values[name]!, defaultValue, secret, revealed);
@@ -47,5 +51,5 @@ export function startVars(onChange: () => void = () => {}): VarsHandle {
     });
   }
 
-  return { values: () => ({ ...values }) };
+  return { values: () => ({ ...values }), secrets: () => secrets };
 }

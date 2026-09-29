@@ -4,3 +4,11 @@
 # @name list-items
 GET {{baseUrl}}/items
   ?token={{fixtureToken}}
+
+###
+
+# @name list-items-post
+POST {{baseUrl}}/items
+Content-Type: application/json
+
+{ "token": "{{fixtureToken}}" }

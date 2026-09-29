@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseHttpFile, requestIndex } from "./requests.ts";
+import { parseHttpFile, requestIndex, runnerRequests } from "./requests.ts";
 
 const parse = (source: string) => parseHttpFile(source, "geocode.http");
 
@@ -88,5 +88,24 @@ describe("requestIndex", () => {
     const { names, errors } = requestIndex([a, b]);
     expect(names).toEqual(new Map([["search", { path: "a.http", line: 2 }]]));
     expect(errors).toEqual(['requests/sub/b.http:5: request name "search" is also defined in requests/a.http:2']);
+  });
+});
+
+describe("runnerRequests", () => {
+  it("indexes named requests with their file's variables and leaves unnamed ones out", () => {
+    const { file } = parse(`@base = https://example.com
+
+# @name list
+GET {{base}}/items
+
+###
+POST {{base}}/items
+Content-Type: application/json
+
+{}
+`);
+    expect(runnerRequests([file])).toEqual({
+      list: { path: "geocode.http", name: "list", method: "GET", url: "{{base}}/items", headers: [], variables: { base: "https://example.com" } },
+    });
   });
 });

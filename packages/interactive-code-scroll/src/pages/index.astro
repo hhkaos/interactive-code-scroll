@@ -12,6 +12,7 @@ import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { MAX_SEGMENTED } from "../client/variant-values.ts";
 import { variantVisible } from "../variants.ts";
 import { selectVisible } from "../visible-files.ts";
+import { parseHttpFile, runnerRequests } from "../requests.ts";
 import "../styles/tutorial.css";
 
 // Frontmatter and references are validated at MDX compile time (mdx-validation.ts).
@@ -29,9 +30,10 @@ const previewEntries = variants ? variants.map((v) => `${v.dir}/${PREVIEW_ENTRY}
 const preview = previewEntries.length > 0 ? config.preview : "off";
 const firstIsWeb = !variants || previewEntries.includes(`${variants[0]!.dir}/${PREVIEW_ENTRY}`);
 // Code that is not web (a variant without index.html, or a tutorial without it) shows captured
-// outputs in the Result pane instead; the client hides it unless some step has an `output`.
+// outputs and runs requests in the Result pane instead; the client hides it unless some step has
+// an `output` or a `request`.
 const hasResult =
-  outputs.length > 0 && (variants ? previewEntries.length < variants.length : !textPaths.includes(PREVIEW_ENTRY));
+  (outputs.length > 0 || requests.length > 0) && (variants ? previewEntries.length < variants.length : !textPaths.includes(PREVIEW_ENTRY));
 const resultFirst = variants ? !firstIsWeb : true;
 // The page embeds tabbed files plus the Preview entries; the ZIP fetches everything else from preview/.
 const embedded = new Set([...visible, ...previewEntries]);
@@ -47,6 +49,8 @@ const selectedIn = (group: (typeof groups)[number]) => group.entry ?? group.path
 const fetched = [...files.map((f) => f.path).filter((path) => !embedded.has(path)), ...binaries].sort();
 // requests/ goes into every ZIP next to the project, with form values applied to its file variables.
 const requestFiles = requests.map((f) => ({ path: f.path, parsed: parseSource(f.source, `requests/${f.path}`) }));
+// The Result pane's runner gets the named requests already parsed (validation reported any error).
+const runner = runnerRequests(requests.filter((f) => f.path.endsWith(".http")).map((f) => parseHttpFile(f.source, f.path).file));
 // Files in each ZIP (a variant's ZIP holds its own folder) and how many of them have no tab.
 const allPaths = [...textPaths, ...binaries];
 const zipCountsFor = (inZip: (path: string) => boolean) => {
@@ -66,6 +70,7 @@ const clientData = JSON.stringify({
   files: parsed,
   fetched,
   requests: requestFiles,
+  runner,
   zipCounts,
   variants: clientVariants,
   otherVariantSteps: config.otherVariantSteps,
@@ -233,10 +238,27 @@ const clientData = JSON.stringify({
               <div class="panel-header">
                 <calcite-action id="result-toggle" icon="chevron-down" text="Result" text-enabled />
                 <span class="result-badge" hidden />
+                <span class="result-run-as" hidden>
+                  <span id="result-run-as-label">Run as</span>
+                  <calcite-segmented-control id="result-run-as" label="Run as" scale="s" />
+                </span>
+                <calcite-action id="result-keep" icon="pin" text="Keep response" text-enabled hidden />
+                <calcite-action id="result-captured" icon="reset" text="Show captured" text-enabled hidden />
+                <calcite-button id="result-run" icon-start="play" scale="s" hidden>Run request</calcite-button>
               </div>
               <div class="result-frame">
-                <div class="result-body" tabindex="0" role="region" aria-label="Result output">
-                  <p class="result-empty">No result yet. Steps with a captured output show it here.</p>
+                <div class="result-live">
+                  <div class="result-request" hidden>
+                    <code class="result-request-line" />
+                    <span class="result-request-source" />
+                    <calcite-action id="result-reveal" icon="view-visible" text="Show secrets" scale="s" />
+                  </div>
+                  <calcite-notice id="result-notice" kind="warning" icon="exclamation-mark-triangle" scale="s" width="full">
+                    <div slot="message" />
+                  </calcite-notice>
+                  <div class="result-body" tabindex="0" role="region" aria-label="Result output">
+                    <p class="result-empty">No result yet. Steps with a captured output show it here, and steps with a request can run it.</p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -251,6 +273,7 @@ const clientData = JSON.stringify({
     <script>
       import "../client/calcite.ts";
       import type { ParsedSource } from "../markers.ts";
+      import type { RunnerRequest } from "../requests.ts";
       import { startDocsCodeBlocks } from "../client/docs-code.ts";
       import { startHints } from "../client/hints.ts";
       import { keyToDelta } from "../client/navigation.ts";
@@ -271,6 +294,7 @@ const clientData = JSON.stringify({
         files: { path: string; parsed: ParsedSource }[];
         fetched: string[];
         requests: { path: string; parsed: ParsedSource }[];
+        runner: Record<string, RunnerRequest>;
         zipCounts?: Record<string, { total: number; withoutTab: number }>;
         variants?: VariantInfo[];
         otherVariantSteps: "notice" | "hide";
@@ -285,7 +309,11 @@ const clientData = JSON.stringify({
       const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
       startImageViewer();
       let refreshPreview = () => {};
-      const vars = startVars(() => refreshPreview());
+      let refreshRequest = () => {};
+      const vars = startVars(() => {
+        refreshPreview();
+        refreshRequest();
+      });
       const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
       const pageUrl = `${base}preview/`;
       startDownloads({
@@ -301,7 +329,7 @@ const clientData = JSON.stringify({
       if (data.preview !== "off") {
         refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl, variants }).refresh;
       }
-      startResult({ files: data.files, outputUrl: `${base}output/`, variants });
+      refreshRequest = startResult({ files: data.files, outputUrl: `${base}output/`, variants, requests: data.runner, vars }).refreshRequest;
 
       // Clicker keys pressed while the preview has focus.
       addEventListener("message", (event) => {

@@ -47,7 +47,8 @@ See [Preview](authoring.md#preview).
 - Takes the Preview's place for code that cannot run in the browser (scripts, native apps): a step with `output="geocode.json"` shows a captured result from `output/`, with per-language overrides in `output/<variant>/`.
 - JSON is shown as a collapsible, colored tree (keyboard navigable, long lists paged by 100), text in terminal style (colored prompt lines and ANSI colors), images as images. Steps without an output keep the last result. Works offline.
 - The build warns when a captured output looks like it contains a real credential.
-- HTTP requests live in `.http` files under `requests/` (VS Code REST Client / JetBrains syntax): steps bind them with `request="geocode-get geocode-post"`, the build validates the supported syntax and names, and every ZIP includes `requests/` with form values applied. The Run button comes with the request runner.
+- HTTP requests live in `.http` files under `requests/` (VS Code REST Client / JetBrains syntax): steps bind them with `request="geocode-get geocode-post"`, the build validates the supported syntax and names, and every ZIP includes `requests/` with form values applied.
+- A Run request button sends the step's request live from the browser with the reader's form values (a "Run as" picker when the step offers several, e.g. GET and POST), shows the status, time and response body, masks secrets in the request line (with a "Show secrets" toggle), gives up after 30 s and falls back to the captured output when the network or CORS fails. Readers can keep a live response for the session; Show captured returns to the captured one.
 
 See [Result Pane](authoring.md#result-pane).
 
@@ -80,5 +81,5 @@ See [Validation](authoring.md#validation).
 
 These are specified and being built; see `SPEC.md` and `TODO.md`:
 
-- A collapsible JSON viewer for the Result pane, and a live runner for `.http` requests, with secret masking, error explanations and a fallback to the captured output.
+- Error explanations for service errors inside HTTP 200 responses, and a Headers tab for live responses.
 - Sites with several tutorials and an index page; sibling tutorials per language.

@@ -49,20 +49,21 @@ export function stepFiles(
   return out;
 }
 
-/**
- * Variant id → captured output (relative to `output/`) a step shows. Only non-web variants the
- * step covers get one: web variants (`webDirs`) show the Preview.
- */
+/** Variants whose Result pane a step feeds: the ones it covers (`only`) that are not web code (`webDirs` show the Preview). */
+export function resultVariants(variants: readonly Variant[], webDirs: ReadonlySet<string>, only?: string): Variant[] {
+  const ids = only?.split(/\s+/).filter(Boolean);
+  return variants.filter((variant) => (!ids || ids.includes(variant.id)) && !webDirs.has(variant.dir));
+}
+
+/** Variant id → captured output (relative to `output/`) a step shows, for its `resultVariants`. */
 export function stepOutputs(
   variants: readonly Variant[],
   outputs: readonly string[],
   webDirs: ReadonlySet<string>,
   { output, only }: { output: string; only?: string },
 ): Record<string, string> {
-  const ids = only?.split(/\s+/).filter(Boolean);
   const out: Record<string, string> = {};
-  for (const variant of variants) {
-    if ((ids && !ids.includes(variant.id)) || webDirs.has(variant.dir)) continue;
+  for (const variant of resultVariants(variants, webDirs, only)) {
     const path = resolveOutput(output, outputs, variant.id);
     if (path !== undefined) out[variant.id] = path;
   }

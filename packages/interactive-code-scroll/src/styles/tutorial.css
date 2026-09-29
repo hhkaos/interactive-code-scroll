@@ -588,9 +588,11 @@ body[data-docs-hidden] {
   }
   .panel-header { gap: 0.25rem; }
   :is(#preview-toggle, .panel-title, .result-badge) { margin-inline-end: auto; }
+  /* Runner controls are shown only when the shown step has a request (Calcite hosts set their own display). */
+  .panel-header > [hidden], .result-request > [hidden] { display: none; }
 }
 
-/* Where the shown output comes from (captured file; live runs come with the request runner). */
+/* Where the shown result comes from: a captured file, a live (or kept) response, or a fallback. */
 .result-badge {
   min-width: 0;
   overflow: hidden;
@@ -604,7 +606,63 @@ body[data-docs-hidden] {
   color: var(--calcite-color-text-2);
 
   &[hidden] { display: none; }
+  &[data-state="running"] { background: light-dark(#e2eff9, #0d2a40); color: light-dark(#00619b, #79c0ff); }
+  &:is([data-state="live"], [data-state="kept"]) {
+    background: light-dark(#e3f2e5, #1b3a22);
+    color: light-dark(#24692e, #7ee787);
+  }
+  &[data-state="fallback"] { background: light-dark(#fff4d6, #3d3007); color: light-dark(#5c4300, #e3b341); }
+  &[data-state="error"] { background: light-dark(#fdecea, #3d1512); color: light-dark(#b3261e, #ff7b72); }
 }
+
+.result-run-as {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-end: 0.25rem;
+  font-size: var(--calcite-font-size-sm);
+  color: var(--calcite-color-text-2);
+  white-space: nowrap;
+}
+
+#result-run { margin-inline: 0.25rem 0.5rem; }
+
+/* Column inside the frame: request line, fallback notice, then the result itself. */
+.result-live {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The request the Run button sends, with secret values masked. */
+.result-request {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.125rem 0.5rem 0.125rem 1rem;
+  background: var(--calcite-color-foreground-2);
+  border-bottom: 1px solid var(--calcite-color-border-3);
+  font-size: var(--calcite-font-size-xs);
+  color: var(--calcite-color-text-2);
+
+  &[hidden] { display: none; }
+  /* Wraps (the query string matters most); past four lines it scrolls. */
+  .result-request-line {
+    flex: 1;
+    min-width: 0;
+    max-height: calc(4lh + 0.75rem);
+    overflow-y: auto;
+    padding-block: 0.375rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    font-family: var(--calcite-font-family-code);
+  }
+  .result-request-source { padding-block: 0.375rem; line-height: 1.5; white-space: nowrap; color: var(--calcite-color-text-3); }
+}
+
+#result-notice { flex: none; }
 
 .result-frame {
   flex: 1;
@@ -631,6 +689,7 @@ body[data-docs-hidden] {
     overflow-wrap: anywhere;
   }
   pre[data-error] { color: var(--calcite-color-status-danger); font-family: var(--calcite-font-family); }
+  pre.result-message { flex: none; font-family: var(--calcite-font-family); color: var(--calcite-color-text-2); }
 }
 
 /* JSON viewer: text-only tree; token colors follow the GitHub themes used for code. */

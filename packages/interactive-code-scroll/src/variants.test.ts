@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseSource } from "./markers.ts";
-import { stepFiles, variantVisible } from "./variants.ts";
+import { resultVariants, stepFiles, variantVisible } from "./variants.ts";
 
 const variants = [
   { id: "python", label: "Python", dir: "python", entry: "main.py", files: ["main.py", "*.txt"] },
@@ -35,5 +35,14 @@ describe("stepFiles", () => {
 
   it("is empty for text-only steps", () => {
     expect(stepFiles(variants, parsed, {})).toEqual({});
+  });
+});
+
+describe("resultVariants", () => {
+  it("keeps the covered variants that are not web code", () => {
+    const ids = (list: { id: string }[]) => list.map((v) => v.id);
+    expect(ids(resultVariants(variants, new Set()))).toEqual(["python", "node"]);
+    expect(ids(resultVariants(variants, new Set(["node"])))).toEqual(["python"]);
+    expect(ids(resultVariants(variants, new Set(), "node"))).toEqual(["node"]);
   });
 });

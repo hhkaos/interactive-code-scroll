@@ -17,7 +17,6 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
 
-- [ ] 4b `.http` runner UI: Run, "Run as" picker, URL-encoded query values, masking + "Show secrets", 30 s timeout, captured-output fallback.
 - [ ] 5 Error rule + help table (`requests/errors.json`) + Headers tab.
 - [ ] 6 REST example tutorial (cURL / Python / JavaScript, GET + POST) + playground `requests/`; E2E blocks every called host.
 - [ ] Maximize pane: maximize icon on the code panel, web Preview and Result pane headers (fills the window; icon or Esc restores the layout and splitter sizes; one pane at a time; step keys keep working; not remembered), `maximize="code|preview|none"` per step (build error with `preview="collapsed"`).

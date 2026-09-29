@@ -115,3 +115,138 @@ test("long JSON arrays show 100 entries and a Show more action", async ({ page }
   await expect(ids.getByRole("button")).toBeHidden();
   await expect(entries.last()).toHaveText("105");
 });
+
+const API = "https://api.fixture.test/v1/**";
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*" };
+const runButton = (page: Page) => page.locator("#result-run");
+const requestLine = (page: Page) => page.locator(".result-request-line");
+const tokenInput = (page: Page) => page.locator('calcite-input[data-var="fixtureToken"] input');
+
+/** Answers the fixture API (and its CORS preflight); returns the requests it got. */
+async function mockApi(page: Page, reply: { status?: number; body?: string } = {}) {
+  const calls: { method: string; url: string; body: string | null }[] = [];
+  await page.route(API, (route) => {
+    const request = route.request();
+    if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
+    calls.push({ method: request.method(), url: request.url(), body: request.postData() });
+    return route.fulfill({ status: reply.status ?? 200, headers: { ...CORS, "Content-Type": "application/json" }, body: reply.body ?? '{ "items": ["live"] }' });
+  });
+  return calls;
+}
+
+test("request steps show a Run button; activating steps never sends a request", async ({ page }) => {
+  const calls = await mockApi(page);
+  await page.goto("/#config");
+  await expect(runButton(page)).toBeHidden();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#request")).toHaveAttribute("data-active", "");
+  await expect(runButton(page)).toBeVisible();
+  await expect(requestLine(page)).toHaveText("GET https://api.fixture.test/v1/items?token=DEMO_TOKEN");
+  await expect(page.locator(".result-request-source")).toHaveText("requests/items.http · list-items");
+  await expect(badge(page)).toHaveText("Captured · output/request.json");
+  await page.keyboard.press("ArrowDown");
+  expect(calls).toEqual([]);
+});
+
+test("Run sends the request with query values URL-encoded and shows the live response as text", async ({ page }) => {
+  const calls = await mockApi(page, { body: '{ "note": "<b>live</b>" }' });
+  await page.goto("/#request");
+  await tokenInput(page).fill("a b&c");
+  await runButton(page).click();
+  await expect(badge(page)).toHaveText(/^Live · 200( OK)? · \d+ ms$/);
+  await expect(badge(page)).toHaveAttribute("data-state", "live");
+  expect(calls).toEqual([{ method: "GET", url: "https://api.fixture.test/v1/items?token=a%20b%26c", body: null }]);
+  await expect(body(page).getByRole("tree", { name: "JSON response of list-items" })).toContainText('"note": "<b>live</b>"');
+  await expect(body(page).locator("b")).toHaveCount(0);
+});
+
+test("secret values are masked in the request line until Show secrets, which is not remembered", async ({ page }) => {
+  await page.goto("/#request");
+  await expect(page.locator("#result-reveal")).toBeHidden();
+  await tokenInput(page).fill("s3cret");
+  await expect(requestLine(page)).toHaveText("GET https://api.fixture.test/v1/items?token=••••••");
+  await page.locator("#result-reveal").click();
+  await expect(requestLine(page)).toHaveText("GET https://api.fixture.test/v1/items?token=s3cret");
+  await page.reload();
+  await tokenInput(page).fill("s3cret");
+  await expect(requestLine(page)).toHaveText("GET https://api.fixture.test/v1/items?token=••••••");
+});
+
+test("Run as switches to the step's other request, which gets values as is in its body", async ({ page }) => {
+  const calls = await mockApi(page);
+  await page.goto("/#request");
+  const runAs = page.locator("#result-run-as");
+  await expect(runAs.locator("calcite-segmented-control-item")).toHaveText(["GET", "POST"]);
+  await tokenInput(page).fill("a b&c");
+  await runAs.locator('calcite-segmented-control-item[value="list-items-post"]').click();
+  await expect(requestLine(page)).toHaveText("POST https://api.fixture.test/v1/items");
+  await runButton(page).click();
+  await expect(badge(page)).toHaveAttribute("data-state", "live");
+  expect(calls).toEqual([{ method: "POST", url: "https://api.fixture.test/v1/items", body: '{ "token": "a b&c" }' }]);
+});
+
+test("a network failure falls back to the captured output and says so", async ({ page }) => {
+  await page.route(API, (route) => route.abort());
+  await page.goto("/#request");
+  await runButton(page).click();
+  await expect(page.locator("#result-notice")).toHaveAttribute("open", "");
+  await expect(page.locator("#result-notice [slot=message]")).toHaveText(
+    "Live request failed: network error (offline or blocked by CORS). Showing the captured output instead.",
+  );
+  await expect(badge(page)).toHaveText("Captured (fallback) · output/request.json");
+  await expect(body(page).getByRole("tree", { name: "JSON output/request.json" })).toBeVisible();
+});
+
+test("a request with no answer is aborted after 30 s; without captured output only the notice shows", async ({ page }) => {
+  await page.clock.install();
+  await page.route(API, () => {});
+  await page.goto("/?variant=node#create");
+  await expect(badge(page)).toBeHidden();
+  await runButton(page).click();
+  await expect(badge(page)).toHaveText("Sending…");
+  await page.clock.runFor(30_000);
+  await expect(page.locator("#result-notice [slot=message]")).toHaveText(
+    "Live request failed: no response after 30 s. This step has no captured output.",
+  );
+  await expect(body(page)).toContainText("No result yet");
+});
+
+test("a live response is dropped when another result is shown, unless the reader keeps it", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/?variant=curl#request");
+  await runButton(page).click();
+  await expect(badge(page)).toHaveAttribute("data-state", "live");
+  await page.locator("section.step#flags h2").click();
+  await expect(badge(page)).toHaveText("Captured · output/flags.log");
+  await page.locator("section.step#request h2").click();
+  await expect(badge(page)).toHaveText("Captured · output/curl/request.json");
+
+  await runButton(page).click();
+  await page.locator("#result-keep").click();
+  await expect(badge(page)).toHaveText(/^Kept · 200/);
+  await expect(page.locator("#result-keep")).toBeHidden();
+  await page.locator("section.step#flags h2").click();
+  await page.locator("section.step#request h2").click();
+  await expect(badge(page)).toHaveText(/^Kept · 200/);
+  await expect(body(page)).toContainText('"live"');
+  await page.locator("#result-captured").click();
+  await expect(badge(page)).toHaveText("Captured · output/curl/request.json");
+  await page.locator("section.step#flags h2").click();
+  await page.locator("section.step#request h2").click();
+  await expect(badge(page)).toHaveText("Captured · output/curl/request.json");
+});
+
+test("a long request line wraps instead of hiding the query string", async ({ page }) => {
+  await page.goto("/#request");
+  await tokenInput(page).fill("x".repeat(160));
+  await page.locator("#result-reveal").click();
+  const line = requestLine(page);
+  await expect(line).toHaveText(`GET https://api.fixture.test/v1/items?token=${"x".repeat(160)}`);
+  const { height, lineHeight, overflows } = await line.evaluate((el) => ({
+    height: el.clientHeight,
+    lineHeight: parseFloat(getComputedStyle(el).lineHeight),
+    overflows: el.scrollWidth > el.clientWidth,
+  }));
+  expect(height).toBeGreaterThan(lineHeight * 1.5);
+  expect(overflows).toBe(false);
+});

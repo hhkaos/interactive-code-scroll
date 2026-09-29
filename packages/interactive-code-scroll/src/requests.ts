@@ -144,3 +144,28 @@ export function requestIndex(files: readonly HttpFile[]): { names: Map<string, {
   }
   return { names, errors };
 }
+
+/** A named request as the browser runner gets it: placeholders unresolved, with its file's variables. */
+export interface RunnerRequest {
+  /** Path relative to `requests/`. */
+  path: string;
+  name: string;
+  method: string;
+  url: string;
+  headers: HttpHeader[];
+  body?: string;
+  /** File variable defaults of the request's file. */
+  variables: Record<string, string>;
+}
+
+/** Request name → runner entry; unnamed requests cannot be bound, so they are left out. */
+export function runnerRequests(files: readonly HttpFile[]): Record<string, RunnerRequest> {
+  const out: Record<string, RunnerRequest> = {};
+  for (const { path, variables, requests } of files) {
+    for (const { name, method, url, headers, body } of requests) {
+      if (name === undefined || name in out) continue;
+      out[name] = { path, name, method, url, headers, ...(body !== undefined && { body }), variables };
+    }
+  }
+  return out;
+}

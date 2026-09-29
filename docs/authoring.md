@@ -250,7 +250,7 @@ Form changes refresh the Preview after a short debounce. The Run button refreshe
 
 ## Result Pane
 
-Code that cannot run in the browser (scripts, native apps, HTTP requests) shows its result in the Result pane, which takes the Preview's place under the code, with the same splitter height and a collapsible header. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=`.
+Code that cannot run in the browser (scripts, native apps, HTTP requests) shows its result in the Result pane, which takes the Preview's place under the code, with the same splitter height and a collapsible header. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`.
 
 ```mdx
 <Step id="request" region="request" output="geocode.json">
@@ -263,7 +263,7 @@ Code that cannot run in the browser (scripts, native apps, HTTP requests) shows 
 - **Captured output**: files under `output/`. A step's `output="name"` looks up `output/<variant id>/name` first (a per-variant override), then `output/name`; it must resolve for every non-web variant the step covers.
 - **Types**: `.json` (JSON viewer, below), `.txt` and `.log` (terminal style: prompt lines such as `$ cmd`, `> cmd`, `>>> cmd` or `PS C:\> cmd` are colored, and ANSI color codes become colors; other escape sequences are removed), `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` and `.svg` (image). Any other type is a build error.
 - **JSON viewer**: a collapsible tree with colored keys, strings, numbers and punctuation (light and dark). The root and the next two levels start expanded; deeper objects and arrays start collapsed with a count (`3 keys`, `12 items`). Objects and arrays with more than 100 entries show the first 100 and a "Show more" button that adds 100 at a time. Click a row or use the keyboard: arrow keys move and expand/collapse, Enter/Space toggle, Home/End jump; arrow keys inside the tree do not change steps. Numbers keep their source text (large ids are not rounded). A `.json` file that does not parse is shown as plain text.
-- **Keeps the last result**: a step without `output` shows the output of the nearest earlier step that has one for the active variant, whether the reader scrolled, used step keys or opened a deep link. Before the first output the pane shows an empty state.
+- **Keeps the last result**: a step without `output` or `request` shows the result of the nearest earlier step that has one for the active variant, whether the reader scrolled, used step keys or opened a deep link. Before the first output the pane shows an empty state.
 - **Published, not embedded**: outputs are published under `output/` on the site and fetched when shown, so the page stays small and works offline. They are rendered as text (or an image), never as HTML.
 - **Credentials**: outputs are committed and published. The build warns (without failing) when one looks like it holds a credential: `token=`, `"token":`, `apiKey` or `Authorization: Bearer` followed by a value that is not a var default. Replace real values with the var's default (the demo value in the code) before publishing.
 - `output=` in web code is a build error: web code shows the Preview.
@@ -271,7 +271,7 @@ Code that cannot run in the browser (scripts, native apps, HTTP requests) shows 
 
 ## HTTP Requests
 
-Requests live in `.http` files under `requests/` (VS Code REST Client / JetBrains HTTP Client syntax), so they stay runnable in those tools. They are not code tabs or variants: they are the source of the Result pane's request runner (coming in a later release) and are included in every ZIP as `requests/`, with form values applied. A `.http` file under `code/` is an ordinary code file and is never run.
+Requests live in `.http` files under `requests/` (VS Code REST Client / JetBrains HTTP Client syntax), so they stay runnable in those tools. They are not code tabs or variants: they are the source of the Result pane's [request runner](#request-runner) and are included in every ZIP as `requests/`, with form values applied. A `.http` file under `code/` is an ordinary code file and is never run.
 
 ```http
 @serviceUrl = https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer
@@ -308,6 +308,18 @@ Supported syntax:
 Build errors: request variables (`{{name.response…}}`), system variables (`{{$guid}}`…), `< file` bodies, pre-request and response handler scripts (`< {% %}`, `> {% %}`, `>> file`), `{{x}}` with no file variable `x`, a request line without a supported method, a request name defined twice across `requests/`, a `request=` name that does not exist or is listed twice, `request=` on a step whose variants are all web code (or in a tutorial with `code/index.html`), binary files in `requests/`, and a `code/requests/` (or `code/<variant dir>/requests/`) folder that would overwrite `requests/` in the ZIP.
 
 Other text files in `requests/` (for example a README) are zipped as is.
+
+### Request runner
+
+A step with `request=` gets a **Run request** button in the Result pane. Nothing is sent until the reader presses it: activating a step never sends a request.
+
+- **Run as**: when a step lists several requests, a picker labeled with each request's method (or its name when two share a method) chooses which one to send. The first is the default each time the step is shown.
+- **Values**: every `{{x}}` takes the reader's `<VarField>` value, else the file variable's default; file variables may use other file variables. Values substituted in the query string (after `?`) are URL-encoded; in the path, headers and body they are inserted as is.
+- **Request line**: above the result, the method and URL that will be sent, with the request file and name; long URLs wrap at `/`, `?` and `&`. Values of `secret` vars are masked (as in the code) unless the reader presses **Show secrets**, which is off on every page load and never remembered. Headers and body are not shown.
+- **Response**: the badge shows status and time (`Live · 200 OK · 318 ms`); the body is shown in the JSON viewer when it parses, else as plain text, never as HTML. Non-2xx statuses are shown the same way, with a red badge.
+- **Keep response**: a live response lasts while the pane shows that step's result (steps without a result keep it too) and is dropped when the reader moves to another result, switches variant or picks another request. **Keep response** keeps it in memory until the page reloads, so coming back shows it (`Kept · …`); **Show captured** discards it.
+- **Failures**: a request is aborted after 30 s. On a timeout or a network/CORS failure the pane says so and shows the step's captured output instead (or only the notice when the step has none). A request the browser cannot build (an invalid URL, a body on `GET`/`HEAD`) is reported and not sent.
+- **CORS**: requests are sent with `fetch` from the reader's browser without cookies, so the service must allow cross-origin requests; browsers drop headers they forbid (such as `Host` or `Cookie`). Give such steps a captured `output=` so they still show a result.
 
 ## Files Not Shown in Tabs
 
