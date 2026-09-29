@@ -44,7 +44,7 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 ## Next Session Plan
 
-Recommended next task: Phase 0, item 1 of the multi-SDK plan (`docs/research/arcgis-multi-sdk-plan.md`, `TODO.md`): make MDX validation config-aware by parsing the frontmatter in the validation plugin, so frontmatter-dependent rules report MDX positions. UI work in later phases follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
+Recommended next task: Phase 0 of the multi-SDK plan (`docs/research/arcgis-multi-sdk-plan.md`, `TODO.md`), next open item in order (0.1 config-aware validation is done). UI work in later phases follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 
 ---
 
@@ -122,7 +122,7 @@ Implemented in `packages/interactive-code-scroll` (first proven in the spike):
 |---|---|---|
 | Marker parser | build | Strips `#region` / `@var`, returns clean code + region line ranges + var positions (`src/markers.ts`) |
 | Highlighter | build | Shiki dual themes; `line` transformer tags `data-line` and `data-regions`; `decorations` put `data-var` on the literal's token |
-| Validation | build | Each `<Step>` / `<VarField>` asserts its file, region, image and var exist; build fails with a clear message |
+| Validation | build | Each `<Step>` / `<VarField>` / `<Hint>` asserts its file, region, image and var exist, and the frontmatter is checked in the same pass (read from `ctx.data.astro.frontmatter`, errors positioned at the key's line); build fails with a clear message |
 | MDX components | build | `<Intro>`, `<Step id file region images>`, `<VarField name label placeholder secret persist>` render static HTML |
 | Client runtime | browser | IntersectionObserver (center line of the docs panel) + keyboard + click on a step + top of the panel (first step) → activate step (file, focus lines revealed with `revealScroll`, carousel, hash, progress); var inputs → swap `textContent` of `[data-var]` spans + `localStorage` |
 | Page shell | browser | `calcite-navigation` header (explanations toggle, title, step count, present, theme, `calcite-progress`); explanations scroll in their own panel (the page never scrolls); the whole page follows one Calcite mode (`theme` frontmatter default, viewer toggle wins); the explanations handle sits on the docs/code splitter (a rail when hidden); a second splitter sizes the Preview; the right panel has header bars for code (file tabs, copy, downloads) and preview (collapse, Run, open in tab) |
