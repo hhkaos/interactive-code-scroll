@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
 import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type MdxJsxTextElement } from "satteri";
+import { frontmatterKeyLines } from "./frontmatter.ts";
 import { readTutorialFiles } from "./tutorial-files.ts";
 import { validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 
@@ -23,11 +25,20 @@ function attributesOf(node: Readonly<MdxJsxFlowElement | MdxJsxTextElement>): Re
   return out;
 }
 
-/** Satteri mdast plugin: checks tutorial component references against `code/` and `images/`. */
+/** Astro parses the frontmatter before the MDX compile and seeds it as `ctx.data.astro.frontmatter`. */
+function frontmatterOf(data: Readonly<Record<string, unknown>>): Record<string, unknown> {
+  const astro = data.astro;
+  if (typeof astro !== "object" || astro === null) return {};
+  const frontmatter = (astro as { frontmatter?: unknown }).frontmatter;
+  return typeof frontmatter === "object" && frontmatter !== null ? (frontmatter as Record<string, unknown>) : {};
+}
+
+/** Satteri mdast plugin: checks the frontmatter and component references against `code/` and `images/`. */
 export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
   return (ctx) => {
     const tutorial = readTutorialFiles(tutorialDir);
     if (!ctx.fileURL || fileURLToPath(ctx.fileURL) !== tutorial.mdxPath) return null;
+    const frontmatter = frontmatterOf(ctx.data);
 
     const uses: ComponentUse[] = [];
     const collect = (node: Readonly<MdxJsxFlowElement | MdxJsxTextElement>) => {
@@ -47,6 +58,8 @@ export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
           uses,
           files: tutorial.files,
           images: tutorial.images,
+          frontmatter,
+          frontmatterLines: frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8")),
         });
         if (problems.length > 0) throw new TutorialValidationError(problems);
       },

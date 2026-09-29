@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Frontmatter is now validated together with MDX references at compile time: invalid fields, a missing `logo` image and Preview without `code/index.html` report `tutorial.mdx:line:column` at the offending key instead of failing later during page rendering.
 - Expanded the root and package READMEs with quick-start guidance and links to tutorials built with InteractiveCodeScroll.
 - Updated shared project context to document the public docs, getting-started tutorial and GitHub Pages deployment workflow.
 - Reworked the getting-started dogfooding tutorial to teach the authoring setup flow with shell commands, MDX steps and tab-only Preview.

@@ -14,17 +14,28 @@ export interface TutorialConfig {
   logo?: string;
 }
 
+/** An invalid frontmatter field; `key` lets validation point at its line. */
+export class FrontmatterError extends Error {
+  constructor(
+    readonly key: string,
+    readonly detail: string,
+  ) {
+    super(`tutorial.mdx frontmatter: ${detail}`);
+    this.name = "FrontmatterError";
+  }
+}
+
 function oneOf<T extends string>(name: string, value: unknown, allowed: readonly T[]): T {
   if (allowed.includes(value as T)) return value as T;
-  throw new Error(`tutorial.mdx frontmatter: "${name}" must be one of ${allowed.join(", ")} (got ${JSON.stringify(value)})`);
+  throw new FrontmatterError(name, `"${name}" must be one of ${allowed.join(", ")} (got ${JSON.stringify(value)})`);
 }
 
 /** Validates tutorial.mdx frontmatter; defaults: title "Tutorial", preview `both`, theme `auto`. */
 export function readTutorialConfig(frontmatter: Record<string, unknown>): TutorialConfig {
   const { title = "Tutorial", preview = "both", theme = "auto", codeWrap = false, logo } = frontmatter;
-  if (typeof title !== "string") throw new Error('tutorial.mdx frontmatter: "title" must be a string');
-  if (typeof codeWrap !== "boolean") throw new Error('tutorial.mdx frontmatter: "codeWrap" must be a boolean');
-  if (logo !== undefined && typeof logo !== "string") throw new Error('tutorial.mdx frontmatter: "logo" must be a string');
+  if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
+  if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
+  if (logo !== undefined && typeof logo !== "string") throw new FrontmatterError("logo", '"logo" must be a string');
   return {
     title,
     preview: oneOf("preview", preview, PREVIEW_MODES),
@@ -32,4 +43,16 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     codeWrap,
     ...(logo === undefined ? {} : { logo }),
   };
+}
+
+/** 1-based line of each top-level key in the file's leading `---` block (for error positions). */
+export function frontmatterKeyLines(source: string): Record<string, number> {
+  const lines = source.split("\n");
+  const out: Record<string, number> = {};
+  if (lines[0]?.trim() !== "---") return out;
+  for (let index = 1; index < lines.length && lines[index]!.trim() !== "---"; index += 1) {
+    const key = /^([A-Za-z_][\w-]*)\s*:/.exec(lines[index]!)?.[1];
+    if (key !== undefined && !(key in out)) out[key] = index + 1;
+  }
+  return out;
 }

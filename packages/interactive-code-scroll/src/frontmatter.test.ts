@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readTutorialConfig } from "./frontmatter.ts";
+import { FrontmatterError, frontmatterKeyLines, readTutorialConfig } from "./frontmatter.ts";
 
 describe("readTutorialConfig", () => {
   it("applies defaults", () => {
@@ -25,5 +25,30 @@ describe("readTutorialConfig", () => {
     expect(() => readTutorialConfig({ title: 3 })).toThrow(/"title" must be a string/);
     expect(() => readTutorialConfig({ codeWrap: "yes" })).toThrow(/"codeWrap" must be a boolean/);
     expect(() => readTutorialConfig({ logo: true })).toThrow(/"logo" must be a string/);
+  });
+
+  it("names the invalid key", () => {
+    const error = (() => {
+      try {
+        readTutorialConfig({ theme: "blue" });
+      } catch (e) {
+        return e;
+      }
+    })();
+    expect(error).toBeInstanceOf(FrontmatterError);
+    expect(error).toMatchObject({ key: "theme", detail: '"theme" must be one of auto, light, dark (got "blue")' });
+  });
+});
+
+describe("frontmatterKeyLines", () => {
+  it("maps top-level keys to their 1-based lines", () => {
+    expect(frontmatterKeyLines("---\ntitle: T\n  nested: x\npreview: off\n---\n\nlogo: not-frontmatter\n")).toEqual({
+      title: 2,
+      preview: 4,
+    });
+  });
+
+  it("is empty without a leading frontmatter block", () => {
+    expect(frontmatterKeyLines("# Title\ntitle: x\n")).toEqual({});
   });
 });

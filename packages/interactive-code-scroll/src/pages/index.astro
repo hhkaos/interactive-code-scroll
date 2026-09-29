@@ -7,15 +7,11 @@ import VarField from "../components/VarField.astro";
 import { readTutorialConfig } from "../frontmatter.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
-import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import "../styles/tutorial.css";
 
+// Frontmatter and references are validated at MDX compile time (mdx-validation.ts).
 const config = readTutorialConfig(frontmatter);
-if (config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
-  throw new Error(`tutorial.mdx frontmatter: preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
-}
 const logo = config.logo === undefined ? undefined : images[config.logo];
-if (config.logo !== undefined && !logo) throw new Error(`tutorial.mdx frontmatter: logo "${config.logo}" not found in images/`);
 const parsed = files.map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
 const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: await highlight(f.parsed, f.path) })));
 const withIframe = config.preview === "iframe" || config.preview === "both";

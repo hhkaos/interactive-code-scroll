@@ -8,13 +8,14 @@ import { interactiveCodeScroll } from "../src/index.ts";
 
 const fixture = (name: string) => fileURLToPath(new URL(`./fixtures/${name}/`, import.meta.url));
 
-it("fails the Astro build with MDX file:line for every broken reference", async () => {
+it("fails the Astro build with MDX file:line for every broken reference and frontmatter field", async () => {
   const run = build({
     root: fixture("broken"),
     outDir: mkdtempSync(join(tmpdir(), "ics-build-")),
     integrations: [interactiveCodeScroll()],
     logLevel: "silent",
   });
-  await expect(run).rejects.toThrow(/tutorial\.mdx:5:1 <Step> region "nope" not found in code\/main\.js/);
-  await expect(run).rejects.toThrow(/tutorial\.mdx:9:1 <VarField> no "@var missing" found in code\//);
+  await expect(run).rejects.toThrow(/tutorial\.mdx:3:1 frontmatter logo "missing\.svg" not found in images\//);
+  await expect(run).rejects.toThrow(/tutorial\.mdx:6:1 <Step> region "nope" not found in code\/main\.js/);
+  await expect(run).rejects.toThrow(/tutorial\.mdx:10:1 <VarField> no "@var missing" found in code\//);
 }, 60_000);

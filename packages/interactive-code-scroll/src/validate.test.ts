@@ -74,6 +74,44 @@ describe("validateTutorial", () => {
   });
 });
 
+describe("validateTutorial frontmatter", () => {
+  const withFrontmatter = (frontmatter: Record<string, unknown>, inputFiles = files) =>
+    validateTutorial({
+      mdxFile: "tutorial.mdx",
+      uses: [],
+      files: inputFiles,
+      images,
+      frontmatter,
+      frontmatterLines: { title: 2, theme: 3, logo: 4, preview: 5 },
+    });
+
+  it("accepts valid frontmatter", () => {
+    expect(withFrontmatter({ title: "T", theme: "dark", logo: "a.png", preview: "both" })).toEqual([]);
+  });
+
+  it("reports invalid values at the key's line", () => {
+    expect(withFrontmatter({ theme: "blue" })).toEqual([
+      'tutorial.mdx:3:1 frontmatter "theme" must be one of auto, light, dark (got "blue")',
+    ]);
+  });
+
+  it("reports a logo missing from images/", () => {
+    expect(withFrontmatter({ logo: "logo.svg" })).toEqual(['tutorial.mdx:4:1 frontmatter logo "logo.svg" not found in images/']);
+  });
+
+  it("requires code/index.html unless preview is off", () => {
+    const noEntry = files.filter((f) => f.path !== "index.html");
+    expect(withFrontmatter({ preview: "tab" }, noEntry)).toEqual([
+      'tutorial.mdx:5:1 frontmatter preview "tab" needs code/index.html (or set preview: off)',
+    ]);
+    expect(withFrontmatter({ preview: "off" }, noEntry)).toEqual([]);
+  });
+
+  it("falls back to line 1 for a key without a known line", () => {
+    expect(withFrontmatter({ codeWrap: "yes" })).toEqual(['tutorial.mdx:1:1 frontmatter "codeWrap" must be a boolean']);
+  });
+});
+
 describe("parseStringArray", () => {
   it.each([
     ['["a.png", \'b.png\']', ["a.png", "b.png"]],

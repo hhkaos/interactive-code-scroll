@@ -1,4 +1,6 @@
+import { FrontmatterError, readTutorialConfig, type TutorialConfig } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
+import { PREVIEW_ENTRY } from "./preview/build-html.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 
 export type AttributeValue = string | true | { expression: string };
@@ -16,6 +18,10 @@ export interface ValidationInput {
   uses: ComponentUse[];
   files: SourceFile[];
   images: string[];
+  /** Parsed frontmatter of the MDX file (empty when it has none). */
+  frontmatter?: Record<string, unknown>;
+  /** 1-based line of each frontmatter key, to position frontmatter errors. */
+  frontmatterLines?: Readonly<Record<string, number>>;
 }
 
 const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
@@ -30,8 +36,31 @@ export function parseStringArray(expression: string): string[] | undefined {
 }
 
 /** Returns every broken reference as `file:line:column message`; empty when valid. */
-export function validateTutorial({ mdxFile, uses, files, images }: ValidationInput): string[] {
+export function validateTutorial({
+  mdxFile,
+  uses,
+  files,
+  images,
+  frontmatter = {},
+  frontmatterLines = {},
+}: ValidationInput): string[] {
   const errors: string[] = [];
+  const reportFrontmatter = (key: string, detail: string) =>
+    errors.push(`${mdxFile}:${frontmatterLines[key] ?? 1}:1 frontmatter ${detail}`);
+  let config: TutorialConfig | undefined;
+  try {
+    config = readTutorialConfig(frontmatter);
+  } catch (error) {
+    if (!(error instanceof FrontmatterError)) throw error;
+    reportFrontmatter(error.key, error.detail);
+  }
+  if (config?.logo !== undefined && !images.includes(config.logo)) {
+    reportFrontmatter("logo", `logo "${config.logo}" not found in images/`);
+  }
+  if (config && config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
+    reportFrontmatter("preview", `preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
+  }
+
   const parsed = new Map<string, ParsedSource>();
   for (const file of files) {
     try {
