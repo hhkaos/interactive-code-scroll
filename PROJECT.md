@@ -62,7 +62,7 @@ Maximized panes: `src/client/maximize.ts` (state on `body[data-maximized]`, CSS 
 
 Step keys: `movesStep()` in `src/client/navigation.ts` (PageDown/PageUp from any focus but multi-line text; `data-own-keys` now means "owns arrow keys": JSON tree, splitters, `#result-tabs`, `#result-run-as`). Result header compact mode: `headerLevel()` in `result-values.ts` + ResizeObserver in `result.ts` (`setTooltip()` in `actions.ts`); short/narrow pane rules are `@container result-frame` queries in `tutorial.css`.
 
-Phase 1 go/no-go review: GO (2026-09-30, in the plan). Recommended next task: **Phase 2 task 2.1 multi-tutorial repos** (plan mode first; update `SPEC.md` before code).
+Phase 1 go/no-go review: GO (2026-09-30, in the plan). Recommended next task: **Phase 2 task 2.1, commit 2** (series model, routes, per-tutorial context via `Astro.locals` — spike first — and per-tutorial Preview storage keys). Rules in `SPEC.md` (Authoring and DX, series layout); commit order in the plan (Phase 2 task 2.1 plan-mode pass).
 
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
