@@ -40,6 +40,7 @@ export interface ValidationInput {
 const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
 const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
 const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
+const MAXIMIZE_STATES = new Set(["code", "preview", "none"]);
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -235,6 +236,11 @@ export function validateTutorial({
   errors.push(...inconsistentDefaults(new Map([...[...parsed].map(([path, source]) => [`code/${path}`, source] as const), ...requestSources])));
   const stepIds = new Set<string>();
   const hintIds = new Set<string>();
+  // `maximize="preview"` needs a pane under the code: the iframe Preview or the Result pane (a step with a result).
+  const hasPane =
+    config?.preview === "iframe" ||
+    config?.preview === "both" ||
+    uses.some((u) => u.name === "Step" && (u.attributes.output !== undefined || u.attributes.request !== undefined));
 
   for (const use of uses) {
     const at = `${mdxFile}:${use.line}:${use.column}`;
@@ -259,6 +265,14 @@ export function validateTutorial({
       const preview = text("preview");
       if (preview !== undefined && !PREVIEW_STATES.has(preview)) {
         report('"preview" must be one of expanded, collapsed, keep');
+      }
+      const maximize = text("maximize");
+      if (maximize !== undefined && !MAXIMIZE_STATES.has(maximize)) {
+        report('"maximize" must be one of code, preview, none');
+      } else if (maximize === "preview" && preview === "collapsed") {
+        report('maximize="preview" conflicts with preview="collapsed"');
+      } else if (maximize === "preview" && config && !hasPane) {
+        report('maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result');
       }
       const only = text("only");
       const output = text("output");

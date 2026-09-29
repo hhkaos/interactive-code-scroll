@@ -68,6 +68,7 @@ See [`<Step>`](authoring.md#step).
 ## Presenting
 
 - **Presentation mode** hides the header; the explanations can be hidden too. Step keys and clickers keep working, including while the focus is inside the Preview.
+- **Maximize a pane**: the code, the Preview or the Result pane fills the window from its header icon or from a step (`maximize=`); the icon or Esc restores the layout. Step keys keep working.
 - **Serve locally** with the CLI when the venue's network is unreliable.
 
 See [CLI Reference](cli.md).

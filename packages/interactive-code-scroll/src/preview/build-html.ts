@@ -27,8 +27,11 @@ else { document.open(); document.write(html); document.close(); }
 `;
 }
 
-/** Forwards clicker keys from the preview to the tutorial (arrows stay with the app, e.g. map panning). */
-const KEY_FORWARDER = `<script>addEventListener("keydown",function(e){if((e.key==="PageDown"||e.key==="PageUp")&&parent!==window){parent.postMessage({type:"ics:step-key",key:e.key},location.origin)}})</script>`;
+/**
+ * Forwards clicker keys from the preview to the tutorial (arrows stay with the app, e.g. map panning),
+ * and an Esc the app did not handle (it restores a maximized pane).
+ */
+const KEY_FORWARDER = `<script>addEventListener("keydown",function(e){if((e.key==="PageDown"||e.key==="PageUp"||(e.key==="Escape"&&!e.defaultPrevented))&&parent!==window){parent.postMessage({type:"ics:step-key",key:e.key},location.origin)}})</script>`;
 
 function resolveLocal(files: Readonly<Record<string, string>>, reference: string): string | undefined {
   if (/^(?:[a-z]+:)?\/\//i.test(reference) || reference.startsWith("/")) return undefined;

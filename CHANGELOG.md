@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added maximized panes: a maximize icon on the code panel, iframe Preview and Result pane headers fills the window with that pane (the carousel, with a floating restore action, on image steps); the icon or Esc restores the layout and its splitter sizes. One pane at a time, step keys keep working, the Preview iframe does not reload, and the state is not remembered. `<Step maximize="code|preview|none">` maximizes or restores when the step activates; `maximize="preview"` with `preview="collapsed"`, or without any pane to maximize, is a build error. Esc goes one level at a time (dialog, pane, presentation), also from inside the Preview.
+
 - Added `examples/rest-geocode` (`pnpm rest`): a REST tutorial that geocodes an address with the ArcGIS REST API in cURL, Python and JavaScript (Node.js), with a GET step (token in the query) and a POST step (form body, token in the `X-Esri-Authorization` header), each running the request its code shows, captured outputs and an ArcGIS error rule with help for codes 400, 403, 498 and 499; covered by its own E2E project.
 - Moved the playground's `geocode.http` to `requests/` and bound it to the Python request step, so it runs from the Result pane.
 - E2E tests now block every external host by default (not only the Esri CDN); `mockService()` in `e2e/fixtures.ts` mocks a cross-origin service and its CORS preflight.

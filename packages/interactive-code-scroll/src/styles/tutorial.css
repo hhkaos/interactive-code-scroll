@@ -592,6 +592,35 @@ body[data-docs-hidden] {
   .panel-header > [hidden], .result-request > [hidden] { display: none; }
 }
 
+/* ——— Maximized pane (client/maximize.ts) ———
+   Pinned over the page, not moved: the Preview iframe keeps its state, the explanations stay laid out
+   for the step engine, and the splitter sizes are untouched. Below Calcite tooltips and dialogs. */
+body[data-maximized="code"] :is(.code-panel, .media-panel):not([hidden]),
+body[data-maximized="preview"] :is(.preview, .result):not([hidden]) {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--calcite-color-foreground-1);
+  .preview-splitter { display: none; }
+}
+/* Keeps the code panel's size under a maximized Preview/Result pane, so its scroll position still fits on restore. */
+body[data-maximized="preview"] .right::after {
+  content: "";
+  flex: 0 0 var(--preview-split, 50%);
+}
+/* Images have no header: a floating restore action while they are maximized. */
+.media-restore { display: none; }
+body[data-maximized="code"] .media-panel:not([hidden]) ~ .media-restore {
+  display: flex;
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 11;
+  background: var(--calcite-color-foreground-1);
+  border-radius: var(--calcite-corner-radius-round);
+  box-shadow: var(--calcite-shadow-sm);
+}
+
 /* Where the shown result comes from: a captured file, a live (or kept) response, or a fallback. */
 .result-badge {
   min-width: 0;

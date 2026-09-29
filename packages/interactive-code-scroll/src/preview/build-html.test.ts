@@ -35,6 +35,7 @@ describe("buildPreviewHtml", () => {
   it("injects the clicker key forwarder first in <head>", () => {
     expect(html).toMatch(/<head>\n<script>addEventListener\("keydown"/);
     expect(html).toContain('"ics:step-key"');
+    expect(html).toContain('e.key==="Escape"&&!e.defaultPrevented');
   });
 
   it("leaves unknown local references as they are", () => {

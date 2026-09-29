@@ -3,7 +3,7 @@ import { defineConfig } from "@playwright/test";
 /** Each fixture tutorial is built and served on its own port. */
 const fixtures = [
   { name: "fixture", filter: "example-framework-fixture", port: 4400, specs: undefined },
-  { name: "variants", filter: "example-framework-fixture-variants", port: 4401, specs: /\/(variants|result)\.spec\.ts$/ },
+  { name: "variants", filter: "example-framework-fixture-variants", port: 4401, specs: /\/(variants|result|maximize-steps)\.spec\.ts$/ },
   { name: "variants-hide", filter: "example-framework-fixture-variants-hide", port: 4402, specs: /\/variants-hide\.spec\.ts$/ },
   { name: "rest", filter: "example-rest-geocode", port: 4403, specs: /\/rest-example\.spec\.ts$/ },
 ];

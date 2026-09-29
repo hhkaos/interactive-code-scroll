@@ -1,5 +1,6 @@
 import { carouselTarget, clampIndex, indexFromHash, isEditableTag, keyToDelta, revealScroll, type RevealOptions } from "./navigation.ts";
 import { MEDIA_EVENT } from "./image-viewer.ts";
+import { MAXIMIZE_EVENT } from "./maximize-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
 import { setAction } from "./actions.ts";
@@ -186,6 +187,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
     if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
     setPreviewState(step.dataset.preview);
+    // After the Preview state: maximizing the pane expands it; `none` restores the layout.
+    if (step.dataset.maximize) document.dispatchEvent(new CustomEvent<string>(MAXIMIZE_EVENT, { detail: step.dataset.maximize }));
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: step }));
 
     const media = step.querySelector<HTMLTemplateElement>("template.step-media");

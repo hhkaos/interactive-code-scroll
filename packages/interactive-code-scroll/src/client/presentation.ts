@@ -38,7 +38,8 @@ export function startPresentation(): void {
     "keydown",
     (event) => {
       if (event.key !== "Escape" || !body.hasAttribute("data-presenting")) return;
-      if (document.querySelector("calcite-dialog[open]")) return;
+      // An open dialog, then a maximized pane (maximize.ts), take Esc first.
+      if (document.querySelector("calcite-dialog[open]") || body.hasAttribute("data-maximized")) return;
       setPresenting(false);
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     },

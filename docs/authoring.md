@@ -98,6 +98,7 @@ Explain the change here.
 | `output` | no | Captured output under `output/` shown in the [Result pane](#result-pane), e.g. `output="geocode.json"`. |
 | `request` | no | Space-separated [request names](#http-requests) from `requests/`, e.g. `request="geocode-get geocode-post"`; the first is the default. |
 | `preview` | no | `expanded`, `collapsed` or `keep`. Controls iframe state (or the Result pane) when the step activates. |
+| `maximize` | no | `code`, `preview` or `none`. Maximizes the code area (code or images) or the pane under it (the Preview or the Result pane, whichever the active variant shows) when the step activates; `none` restores the layout; omitted keeps the current state. See [Maximized panes](#maximized-panes). |
 
 A text-only step keeps the current file visible and clears any previous region focus.
 
@@ -247,6 +248,21 @@ Preview modes:
 - `off`: no Preview.
 
 Form changes refresh the Preview after a short debounce. The Run button refreshes it manually.
+
+### Maximized panes
+
+The code panel, the iframe Preview and the Result pane each have a maximize icon in their header. A maximized pane fills the browser window (the whole screen in presentation mode); its icon or Esc restores the layout with the same splitter sizes. One pane is maximized at a time, and step keys keep moving steps underneath. On a step with images, the maximized code area shows the carousel with a floating restore action. Maximizing a collapsed Preview or Result pane expands it; collapsing it restores the layout. The state is not remembered across reloads.
+
+Steps can drive it for a talk:
+
+```mdx
+<Step id="run-it" maximize="preview">…</Step>
+<Step id="back" maximize="none">…</Step>
+```
+
+Esc goes one level at a time: an open image viewer, then the maximized pane, then presentation mode. In browser full screen, the browser takes the first Esc to leave full screen (and presentation mode); the pane stays maximized until the next Esc.
+
+Build errors: `maximize="preview"` together with `preview="collapsed"`, and `maximize="preview"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
 
 ## Result Pane
 

@@ -181,6 +181,7 @@ const clientData = JSON.stringify({
             <span class="zip-action" data-count={zipBadge(initialZip.total)}>
               <calcite-action id="download-zip" icon="file-zip" text={zipLabel(initialZip.total, initialZip.withoutTab)} />
             </span>
+            <calcite-action id="code-maximize" data-maximize="code" icon="maximize" text="Maximize code" />
           </div>
           {
             variants && (
@@ -193,6 +194,8 @@ const clientData = JSON.stringify({
           {visible.map((path) => <div class="code" data-file={path} hidden={path !== initialFile} set:html={highlighted.get(path)} />)}
         </div>
         <div class="media-panel" hidden></div>
+        {/* Outside .media-panel (the step engine replaces its children); shown while the images are maximized. */}
+        <calcite-action id="media-restore" class="media-restore" data-maximize="code" icon="maximize" text="Maximize images" />
         {
           preview !== "off" && (
             <section class="preview" aria-label="Preview" hidden={!firstIsWeb || undefined}>
@@ -216,6 +219,7 @@ const clientData = JSON.stringify({
                 )}
                 {withIframe && <calcite-action id="preview-run" icon="refresh" text="Run" text-enabled />}
                 {withTab && <calcite-action id="preview-open" icon="launch" text="Open in new tab" text-enabled />}
+                {withIframe && <calcite-action id="preview-maximize" data-maximize="preview" icon="maximize" text="Maximize preview" />}
               </div>
               {withIframe && (
                 <div class="preview-frame">
@@ -250,6 +254,7 @@ const clientData = JSON.stringify({
                 <calcite-action id="result-keep" icon="pin" text="Keep response" text-enabled hidden />
                 <calcite-action id="result-captured" icon="reset" text="Show captured" text-enabled hidden />
                 <calcite-button id="result-run" icon-start="play" scale="s" hidden>Run request</calcite-button>
+                <calcite-action id="result-maximize" data-maximize="preview" icon="maximize" text="Maximize result" />
               </div>
               <div class="result-frame">
                 <div class="result-live">
@@ -294,6 +299,7 @@ const clientData = JSON.stringify({
       import { startDownloads } from "../client/downloads.ts";
       import { startImageViewer } from "../client/image-viewer.ts";
       import { startLayout } from "../client/layout.ts";
+      import { MAXIMIZE_EVENT, startMaximize } from "../client/maximize.ts";
       import { startPresentation } from "../client/presentation.ts";
       import { startPreview } from "../client/preview.ts";
       import { startResult } from "../client/result.ts";
@@ -318,6 +324,8 @@ const clientData = JSON.stringify({
       startDocsCodeBlocks();
       startHints();
       startLayout();
+      // Before presentation: Esc restores a maximized pane before it leaves presentation mode.
+      startMaximize();
       startPresentation();
       const variants = data.variants && startVariants(data.variants);
       const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
@@ -345,9 +353,10 @@ const clientData = JSON.stringify({
       }
       refreshRequest = startResult({ files: data.files, outputUrl: `${base}output/`, variants, requests: data.runner, errorRule: data.errorRule, vars }).refreshRequest;
 
-      // Clicker keys pressed while the preview has focus.
+      // Clicker keys (and Esc) pressed while the preview has focus.
       addEventListener("message", (event) => {
         if (event.origin !== location.origin || event.data?.type !== "ics:step-key") return;
+        if (event.data.key === "Escape") document.dispatchEvent(new CustomEvent(MAXIMIZE_EVENT, { detail: "none" }));
         const delta = keyToDelta(String(event.data.key));
         if (delta) engine.step(delta);
       });
