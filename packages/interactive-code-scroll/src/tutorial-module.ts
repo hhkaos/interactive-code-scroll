@@ -24,7 +24,7 @@ export function tutorialModule(tutorialDir: string): TutorialModulePlugin {
     load(id) {
       if (id !== RESOLVED_ID) return undefined;
       const tutorial = readTutorialFiles(tutorialDir);
-      for (const file of tutorial.files) this.addWatchFile(join(tutorial.codeDir, file.path));
+      for (const path of [...tutorial.files.map((f) => f.path), ...tutorial.binaries]) this.addWatchFile(join(tutorial.codeDir, path));
       const imports = tutorial.images.map(
         (image, i) => `import image${i} from ${JSON.stringify(`${join(tutorial.imagesDir, image)}?url`)};`,
       );
@@ -32,6 +32,8 @@ export function tutorialModule(tutorialDir: string): TutorialModulePlugin {
         `export { Content, frontmatter } from ${JSON.stringify(tutorial.mdxPath)};`,
         ...imports,
         `export const files = ${JSON.stringify(tutorial.files)};`,
+        `export const binaries = ${JSON.stringify(tutorial.binaries)};`,
+        `export const codeDir = ${JSON.stringify(tutorial.codeDir)};`,
         `export const images = {${tutorial.images.map((image, i) => `${JSON.stringify(image)}: image${i}`).join(", ")}};`,
       ].join("\n");
     },

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "./fixtures.ts";
 
 const frame = (page: Page) => page.frameLocator(".preview iframe");
@@ -62,6 +63,12 @@ test("clicker keys pressed inside the preview move the tutorial", async ({ page 
   await frame(page).locator("body").click({ position: { x: 5, y: 5 } });
   await page.keyboard.press("PageDown");
   await expect(page).toHaveURL(/#oauth$/);
+});
+
+test("binary code/ files are published byte for byte with their media type", async ({ request }) => {
+  const response = await request.get("/preview/assets/pixel.png");
+  expect(response.headers()["content-type"]).toBe("image/png");
+  expect((await response.body()).equals(readFileSync("examples/framework-fixture/tutorial/code/assets/pixel.png"))).toBe(true);
 });
 
 test("code/ files are published next to the preview page, markers stripped", async ({ request }) => {

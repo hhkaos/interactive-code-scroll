@@ -94,6 +94,47 @@ describe("validateTutorial shared vars", () => {
   });
 });
 
+describe("validateTutorial visible files", () => {
+  const extra = [
+    { path: "README.md", source: "# Notes" },
+    { path: "config.py", source: 'KEY = "ID"  # @var clientId' },
+  ];
+  const run = (frontmatter: Record<string, unknown>, ...uses: ComponentUse[]) =>
+    validateTutorial({
+      mdxFile: "tutorial.mdx",
+      uses,
+      files: [...files, ...extra],
+      binaries: ["assets/logo.png"],
+      images,
+      frontmatter,
+      frontmatterLines: { files: 4 },
+    });
+
+  it("accepts steps on tabbed files and vars in tabbed files or index.html", () => {
+    expect(run({ files: ["main.js", "*.py"] }, use("Step", { id: "a", file: "config.py" }))).toEqual([]);
+  });
+
+  it("reports vars in files not shown in tabs", () => {
+    expect(run({ files: ["main.js"] })).toEqual([
+      'code/config.py: @var "clientId" is in a file not shown in tabs; add the file to frontmatter "files" or remove the marker',
+    ]);
+  });
+
+  it("reports steps on files not shown in tabs or on binaries", () => {
+    expect(run({ files: ["main.js", "config.py"] }, use("Step", { id: "a", file: "README.md" }), use("Step", { id: "b", file: "assets/logo.png" }))).toEqual([
+      'tutorial.mdx:3:1 <Step> file "README.md" is not shown in tabs; add it to frontmatter "files"',
+      'tutorial.mdx:3:1 <Step> file "assets/logo.png" is binary and cannot be shown',
+    ]);
+  });
+
+  it("reports patterns that match nothing, or only binaries", () => {
+    expect(run({ files: ["main.js", "config.py", "*.kt", "assets/*"] })).toEqual([
+      'tutorial.mdx:4:1 frontmatter files "*.kt" matches no text file in code/',
+      'tutorial.mdx:4:1 frontmatter files "assets/*" matches only binary files, which cannot be shown as tabs',
+    ]);
+  });
+});
+
 describe("validateTutorial frontmatter", () => {
   const withFrontmatter = (frontmatter: Record<string, unknown>, inputFiles = files) =>
     validateTutorial({

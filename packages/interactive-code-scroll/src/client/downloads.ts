@@ -1,4 +1,4 @@
-import { buildZip, projectFiles, slugify, type ParsedFile } from "../downloads.ts";
+import { buildZip, projectFiles, publishedUrl, slugify, type ParsedFile } from "../downloads.ts";
 import { setAction } from "./actions.ts";
 
 function save(name: string, data: BlobPart, type: string): void {
@@ -17,12 +17,22 @@ function flash(action: HTMLElement, icon: string, text: string): void {
 
 export interface DownloadsOptions {
   files: ParsedFile[];
+  /** `code/` files the page does not embed (no tab, binaries): fetched from `previewUrl` for the ZIP. */
+  fetched: string[];
+  previewUrl: string;
   values: () => Record<string, string>;
   title: string;
 }
 
+async function fetchBytes(url: string): Promise<Uint8Array> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+  return new Uint8Array(await response.arrayBuffer());
+}
+
 /** Copy / download the visible file, or download the whole project as a ZIP (form values included). */
-export function startDownloads({ files, values, title }: DownloadsOptions): void {
+export function startDownloads({ files, fetched, previewUrl, values, title }: DownloadsOptions): void {
+
   const current = () => {
     const path = document.querySelector<HTMLElement>(".code:not([hidden])")?.dataset.file;
     const text = path === undefined ? undefined : projectFiles(files, values())[path];
@@ -46,8 +56,15 @@ export function startDownloads({ files, values, title }: DownloadsOptions): void
     if (file) save(file.path.split("/").pop()!, file.text, "text/plain;charset=utf-8");
   });
 
-  document.querySelector("#download-zip")?.addEventListener("click", async () => {
+  document.querySelector<HTMLElement>("#download-zip")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget as HTMLElement;
     const folder = slugify(title);
-    save(`${folder}.zip`, await buildZip(projectFiles(files, values()), folder), "application/zip");
+    try {
+      const extra = await Promise.all(fetched.map(async (path) => [path, await fetchBytes(publishedUrl(previewUrl, path))] as const));
+      const content = { ...projectFiles(files, values()), ...Object.fromEntries(extra) };
+      save(`${folder}.zip`, await buildZip(content, folder), "application/zip");
+    } catch {
+      flash(button, "exclamation-mark-triangle", "Download failed");
+    }
   });
 }

@@ -21,8 +21,20 @@ export function slugify(title: string): string {
   return slug || "tutorial";
 }
 
-/** ZIP with every file under a single top-level folder. */
-export async function buildZip(files: Readonly<Record<string, string>>, folder: string): Promise<Uint8Array<ArrayBuffer>> {
+/** ZIP with every file under a single top-level folder; text is UTF-8, bytes are stored as is. */
+export async function buildZip(
+  files: Readonly<Record<string, string | Uint8Array>>,
+  folder: string,
+): Promise<Uint8Array<ArrayBuffer>> {
   const { strToU8, zipSync } = await import("fflate");
-  return zipSync(Object.fromEntries(Object.entries(files).map(([path, text]) => [`${folder}/${path}`, strToU8(text)])));
+  return zipSync(
+    Object.fromEntries(
+      Object.entries(files).map(([path, content]) => [`${folder}/${path}`, typeof content === "string" ? strToU8(content) : content]),
+    ),
+  );
+}
+
+/** URL of a `code/` file published next to the preview page (each path segment encoded). */
+export function publishedUrl(previewUrl: string, path: string): string {
+  return previewUrl + path.split("/").map(encodeURIComponent).join("/");
 }

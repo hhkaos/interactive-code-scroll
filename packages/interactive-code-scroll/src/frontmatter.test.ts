@@ -40,6 +40,14 @@ describe("readTutorialConfig", () => {
     expect(() => readTutorialConfig({ languages: { py: "snake" } })).toThrow(/"languages\.py" must be a Shiki language id/);
   });
 
+  it("accepts a files list and rejects other shapes", () => {
+    expect(readTutorialConfig({ files: ["index.html", "src/*.js"] })).toMatchObject({ files: ["index.html", "src/*.js"] });
+    expect(readTutorialConfig({})).not.toHaveProperty("files");
+    for (const files of ["main.js", [], [""], [3]]) {
+      expect(() => readTutorialConfig({ files })).toThrow(/"files" must be a non-empty list/);
+    }
+  });
+
   it("names the invalid key", () => {
     const error = (() => {
       try {

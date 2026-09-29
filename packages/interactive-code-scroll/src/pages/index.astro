@@ -1,5 +1,5 @@
 ---
-import { Content, files, frontmatter, images } from "virtual:interactive-code-scroll/tutorial";
+import { binaries, Content, files, frontmatter, images } from "virtual:interactive-code-scroll/tutorial";
 import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Step from "../components/Step.astro";
@@ -7,17 +7,32 @@ import VarField from "../components/VarField.astro";
 import { readTutorialConfig } from "../frontmatter.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
+import { PREVIEW_ENTRY } from "../preview/build-html.ts";
+import { selectVisible } from "../visible-files.ts";
 import "../styles/tutorial.css";
 
 // Frontmatter and references are validated at MDX compile time (mdx-validation.ts).
 const config = readTutorialConfig(frontmatter);
 const logo = config.logo === undefined ? undefined : images[config.logo];
-const parsed = files.map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
-const panes = await Promise.all(parsed.map(async (f) => ({ path: f.path, html: await highlight(f.parsed, f.path, config.languages) })));
+const { visible } = selectVisible(
+  files.map((f) => f.path),
+  config.files,
+);
+// The page embeds tabbed files plus the Preview entry; the ZIP fetches everything else from preview/.
+const embedded = new Set([...visible, PREVIEW_ENTRY]);
+const parsed = files.filter((f) => embedded.has(f.path)).map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
+const panes = await Promise.all(
+  visible.map(async (path) => ({ path, html: await highlight(parsed.find((f) => f.path === path)!.parsed, path, config.languages) })),
+);
+const fetched = [...files.map((f) => f.path).filter((path) => !embedded.has(path)), ...binaries].sort();
+const withoutTab = [...files.map((f) => f.path).filter((path) => !visible.includes(path)), ...binaries].sort();
+const zipTotal = files.length + binaries.length;
+const plural = (n: number) => `${n} ${n === 1 ? "file" : "files"}`;
+const zipText = `Download project (ZIP) · ${plural(zipTotal)}${withoutTab.length > 0 ? ` (${withoutTab.length} not shown in tabs)` : ""}`;
 const withIframe = config.preview === "iframe" || config.preview === "both";
 const withTab = config.preview === "tab" || config.preview === "both";
 // Escape "<" so embedded code containing </script> cannot close the data block.
-const clientData = JSON.stringify({ title: config.title, preview: config.preview, files: parsed }).replace(/</g, "\\u003c");
+const clientData = JSON.stringify({ title: config.title, preview: config.preview, files: parsed, fetched }).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -84,7 +99,10 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
             </calcite-tab-nav>
             <calcite-action id="copy-file" icon="copy-to-clipboard" text="Copy file" />
             <calcite-action id="download-file" icon="download" text="Download file" />
-            <calcite-action id="download-zip" icon="file-zip" text="Download project (ZIP)" />
+            {/* Our own count badge: Calcite has no numeric badge, and its `indicator` dot fails to render without t9n files (offline). */}
+            <span class="zip-action" data-count={zipTotal > 99 ? "99+" : String(zipTotal)}>
+              <calcite-action id="download-zip" icon="file-zip" text={zipText} />
+            </span>
           </div>
           {panes.map((p, i) => <div class="code" data-file={p.path} hidden={i !== 0} set:html={p.html} />)}
         </div>
@@ -147,6 +165,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
         title: string;
         preview: "off" | "iframe" | "tab" | "both";
         files: { path: string; parsed: ParsedSource }[];
+        fetched: string[];
       };
 
       startTooltips();
@@ -158,9 +177,9 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       startImageViewer();
       let refreshPreview = () => {};
       const vars = startVars(() => refreshPreview());
-      startDownloads({ files: data.files, values: vars.values, title: data.title });
+      const pageUrl = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}preview/`;
+      startDownloads({ files: data.files, fetched: data.fetched, previewUrl: pageUrl, values: vars.values, title: data.title });
       if (data.preview !== "off") {
-        const pageUrl = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}preview/`;
         refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl }).refresh;
       }
 

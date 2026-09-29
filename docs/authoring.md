@@ -19,7 +19,7 @@ tutorial/
 ```
 
 - `tutorial.mdx` contains frontmatter, prose and MDX components.
-- `code/` contains the final runnable project files.
+- `code/` contains the final runnable project files. Large projects can keep everything here (Gradle wrappers, asset catalogs, binaries) and pick the files that get tabs with the `files` frontmatter.
 - `images/` contains logos, screenshots and carousel images referenced by steps.
 
 The source code should be valid without InteractiveCodeScroll. Use comments for framework markers.
@@ -43,6 +43,7 @@ logo: logo.svg
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | `logo` | image path | none | Relative to `images/`. Use a square SVG or a PNG of at least 512 x 512. |
+| `files` | list of paths/globs | all text files | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
 | `languages` | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
 
 Highlighting is chosen by file extension. Built in: JavaScript/TypeScript (`js`, `mjs`, `cjs`, `jsx`, `ts`, `tsx`), `vue`, `html`, `css`, `json`/`geojson`, Markdown (`md`, `mdx`), shell (`sh`, `bash`), `ps1`, `yaml`/`yml`, `toml`, `ini`, `http`, Python (`py`), Kotlin (`kt`, `kts`), Gradle Groovy (`gradle`), `swift`, `java`, C# (`cs`), XML/XAML (`xml`, `xaml`), C++ (`cpp`, `h`, `hpp`), `qml`, `dart`, `sql` and `lua`. Other files show as plain text.
@@ -235,6 +236,13 @@ Preview modes:
 - `off`: no Preview.
 
 Form changes refresh the Preview after a short debounce. The Run button refreshes it manually.
+
+## Files Not Shown in Tabs
+
+- Binary files (images, fonts, jars, archives, anything with a NUL byte) never get a tab. They are published under `preview/` and added to the ZIP byte for byte.
+- With `files` set, text files that match no pattern are also left out of the code panel and the page, and still go into the ZIP.
+- Files not shown in tabs cannot contain `@var` markers, and a `<Step file>` must point at a file shown in a tab.
+- `index.html` is always available to the Preview, whether or not it is shown in a tab.
 
 ## Validation
 

@@ -1,6 +1,7 @@
 import { FrontmatterError, readTutorialConfig, type TutorialConfig } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
+import { globToRegExp, selectVisible } from "./visible-files.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 
 export type AttributeValue = string | true | { expression: string };
@@ -17,6 +18,8 @@ export interface ValidationInput {
   mdxFile: string;
   uses: ComponentUse[];
   files: SourceFile[];
+  /** Binary files under `code/`. */
+  binaries?: string[];
   images: string[];
   /** Parsed frontmatter of the MDX file (empty when it has none). */
   frontmatter?: Record<string, unknown>;
@@ -59,6 +62,7 @@ export function validateTutorial({
   mdxFile,
   uses,
   files,
+  binaries = [],
   images,
   frontmatter = {},
   frontmatterLines = {},
@@ -79,6 +83,20 @@ export function validateTutorial({
   if (config && config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
     reportFrontmatter("preview", `preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
   }
+  const { visible, unmatched } = selectVisible(
+    files.map((f) => f.path),
+    config?.files,
+  );
+  for (const pattern of unmatched) {
+    const regex = globToRegExp(pattern);
+    reportFrontmatter(
+      "files",
+      binaries.some((path) => regex.test(path))
+        ? `files "${pattern}" matches only binary files, which cannot be shown as tabs`
+        : `files "${pattern}" matches no text file in code/`,
+    );
+  }
+  const visibleSet = new Set(visible);
 
   const parsed = new Map<string, ParsedSource>();
   for (const file of files) {
@@ -89,6 +107,13 @@ export function validateTutorial({
     }
   }
   const varNames = new Set([...parsed.values()].flatMap((p) => p.vars.map((v) => v.name)));
+  // The page embeds only tabbed files (plus the Preview entry); others reach the ZIP unchanged, so they cannot hold vars.
+  for (const [path, source] of parsed) {
+    if (visibleSet.has(path) || path === PREVIEW_ENTRY) continue;
+    for (const v of source.vars) {
+      errors.push(`code/${path}: @var "${v.name}" is in a file not shown in tabs; add the file to frontmatter "files" or remove the marker`);
+    }
+  }
   errors.push(...inconsistentDefaults(parsed));
   const stepIds = new Set<string>();
   const hintIds = new Set<string>();
@@ -118,7 +143,11 @@ export function validateTutorial({
         report('"preview" must be one of expanded, collapsed, keep');
       }
       const source = file === undefined ? undefined : parsed.get(file);
-      if (file !== undefined && !files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
+      if (file !== undefined) {
+        if (binaries.includes(file)) report(`file "${file}" is binary and cannot be shown`);
+        else if (!files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
+        else if (!visibleSet.has(file)) report(`file "${file}" is not shown in tabs; add it to frontmatter "files"`);
+      }
       if (region !== undefined) {
         if (file === undefined) report(`region "${region}" requires a "file"`);
         else if (source && !source.regions.some((r) => r.id === region)) {

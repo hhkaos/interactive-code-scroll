@@ -3,6 +3,7 @@ title: Multi-SDK Playground
 preview: off
 theme: auto
 codeWrap: true
+files: ["python/*.py", "geocode.sh", "geocode.http", "android/MainActivity.kt", "dotnet/Program.cs", "*.sql"]
 ---
 
 <Intro>
@@ -15,7 +16,7 @@ A local tutorial that grows with each step of the multi-SDK plan (`docs/research
 
 </Intro>
 
-<Step id="token" file="geocode.py" region="config">
+<Step id="token" file="python/geocode.py" region="config">
 
 ## Python: configure the request
 
@@ -43,7 +44,7 @@ Shell strings escape differently: try an access token containing `"`, `$` or a b
 
 </Step>
 
-<Step id="request" file="geocode.py" region="request">
+<Step id="request" file="python/geocode.py" region="request">
 
 ## Python: send the request
 
@@ -51,11 +52,19 @@ Shell strings escape differently: try an access token containing `"`, `$` or a b
 
 </Step>
 
-<Step id="results" file="geocode.py" region="results">
+<Step id="results" file="python/geocode.py" region="results">
 
 ## Python: print the candidates
 
 Each candidate has an address and a score from 0 to 100.
+
+</Step>
+
+<Step id="kotlin-project" file="android/MainActivity.kt">
+
+## Kotlin: a real project
+
+The Android folder also holds `build.gradle.kts` and a Gradle wrapper jar. They are not listed in `files:`, so they get no tab; the "+N files in ZIP" chip counts them and the ZIP includes them.
 
 </Step>
 

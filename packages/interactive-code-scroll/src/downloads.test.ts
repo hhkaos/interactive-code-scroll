@@ -1,6 +1,6 @@
 import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
-import { buildZip, projectFiles, slugify } from "./downloads.ts";
+import { buildZip, projectFiles, publishedUrl, slugify } from "./downloads.ts";
 import { parseSource } from "./markers.ts";
 
 const files = [
@@ -36,5 +36,17 @@ describe("buildZip", () => {
     const zip = unzipSync(await buildZip(projectFiles(files, { clientId: "real" }), "oauth"));
     expect(Object.keys(zip).sort()).toEqual(["oauth/index.html", "oauth/js/main.js"]);
     expect(strFromU8(zip["oauth/js/main.js"]!)).toBe('const id = "real";');
+  });
+
+  it("stores binary files byte for byte", async () => {
+    const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 255]);
+    const zip = unzipSync(await buildZip({ "assets/logo.png": bytes, "a.txt": "x" }, "p"));
+    expect([...zip["p/assets/logo.png"]!]).toEqual([...bytes]);
+  });
+});
+
+describe("publishedUrl", () => {
+  it("encodes each path segment, keeping the folders", () => {
+    expect(publishedUrl("/base/preview/", "my docs/read me.md")).toBe("/base/preview/my%20docs/read%20me.md");
   });
 });

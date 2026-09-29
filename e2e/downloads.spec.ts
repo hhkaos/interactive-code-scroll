@@ -31,12 +31,16 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
   const zip = (await download.path())!;
   const listing = execFileSync("unzip", ["-Z1", zip], { encoding: "utf8" }).trim().split("\n").sort();
   expect(listing).toEqual([
+    `${folder}/README.md`,
+    `${folder}/assets/pixel.png`,
     `${folder}/index.html`,
     `${folder}/main.js`,
     `${folder}/oauth-callback.html`,
     `${folder}/report.py`,
     `${folder}/style.css`,
   ]);
+  const png = execFileSync("unzip", ["-p", zip, `${folder}/assets/pixel.png`]);
+  expect(png.equals(readFileSync("examples/framework-fixture/tutorial/code/assets/pixel.png"))).toBe(true);
   const report = execFileSync("unzip", ["-p", zip, `${folder}/report.py`], { encoding: "utf8" });
   expect(report).toContain('CLIENT_ID = "secret-id"');
   expect(report).not.toMatch(/# region|@var/);

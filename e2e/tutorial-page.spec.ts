@@ -195,6 +195,19 @@ test("renders build-time highlighted code with markers stripped", async ({ page 
   await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "oauth-callback.html", "report.py", "style.css"]);
 });
 
+test("shows only the files listed in frontmatter as tabs; the ZIP action counts every file", async ({ page }) => {
+  await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "oauth-callback.html", "report.py", "style.css"]);
+  await expect(page.locator('.code[data-file="README.md"]')).toHaveCount(0);
+  const zip = page.locator("calcite-action#download-zip");
+  await expect(zip).toBeVisible();
+  await expect(zip).toHaveAttribute("text", "Download project (ZIP) · 7 files (2 not shown in tabs)");
+  const badge = await page.locator(".zip-action").evaluate((el) => getComputedStyle(el, "::after").content);
+  expect(badge).toBe('"7"');
+  const embedded = await page.locator("#ics-data").evaluate((el) => JSON.parse(el.textContent!) as { files: { path: string }[]; fetched: string[] });
+  expect(embedded.files.map((f) => f.path)).not.toContain("README.md");
+  expect(embedded.fetched).toEqual(["README.md", "assets/pixel.png"]);
+});
+
 test("highlights Python and strips its native region markers", async ({ page }) => {
   await page.locator('calcite-tab-title[data-file="report.py"]').click();
   const pane = page.locator('.code[data-file="report.py"]');

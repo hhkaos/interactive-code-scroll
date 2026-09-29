@@ -418,6 +418,33 @@ body[data-docs-hidden] {
   border-bottom: 1px solid var(--calcite-color-border-3);
 
   calcite-tab-nav { flex: 1; min-width: 0; align-self: stretch; }
+  /* Tabs give way first; header actions keep their size. */
+  & > calcite-action, & > .zip-action { flex: none; }
+}
+
+/* Quiet count badge: files in the ZIP (the action's text adds how many have no tab). */
+.zip-action {
+  position: relative;
+  display: inline-flex;
+
+  &[data-count]::after {
+    content: attr(data-count);
+    position: absolute;
+    top: 0.125rem;
+    right: 0;
+    min-width: 0.875rem;
+    height: 0.875rem;
+    padding-inline: 0.1875rem;
+    box-sizing: border-box;
+    border-radius: 0.4375rem;
+    background: var(--calcite-color-foreground-3);
+    color: var(--calcite-color-text-2);
+    box-shadow: 0 0 0 1.5px var(--calcite-color-background);
+    font: var(--calcite-font-weight-medium) 0.5625rem/0.875rem var(--calcite-font-family);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    pointer-events: none;
+  }
 }
 
 .panel-title {

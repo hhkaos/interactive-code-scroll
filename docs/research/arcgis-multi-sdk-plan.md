@@ -25,7 +25,7 @@ The core stays generic (see `PROJECT.md`). Every capability below is described i
 | React/Vue with a build step | Deferred; captured output until decided (options in `SPEC.md` open questions) |
 | Result pane vs Preview | Result pane replaces the Preview for non-web variants |
 | Service errors | HTTP 200 bodies with an error object are failures, explained with code help + reference links |
-| Large projects UI | "+N files in ZIP" chip; no file list |
+| Large projects UI | Total-count badge on the ZIP action; tooltip "X files (Y not shown in tabs)" (replaced the "+N files in ZIP" chip after visual review) |
 | Several ways to run one request | A step can bind several named requests (e.g. GET and POST); "Run as" picker only when there is more than one |
 | REST result rendering | Core: status, headers, collapsible JSON. Preset: draw results on a map |
 | Driver | No external deadline; REST (cURL / Python / JavaScript) is the first vertical slice; phases ordered by technical risk |

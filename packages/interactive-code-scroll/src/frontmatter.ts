@@ -16,6 +16,8 @@ export interface TutorialConfig {
   logo?: string;
   /** File extension (no dot) → Shiki language, overriding the built-in map. */
   languages: Record<string, string>;
+  /** Ordered globs (relative to `code/`) choosing the files that get tabs; all text files when absent. */
+  files?: string[];
 }
 
 /** An invalid frontmatter field; `key` lets validation point at its line. */
@@ -47,6 +49,14 @@ function readLanguages(value: unknown): Record<string, string> {
   return out;
 }
 
+function readFiles(value: unknown): string[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length === 0 || !value.every((v) => typeof v === "string" && v.trim() !== "")) {
+    throw new FrontmatterError("files", '"files" must be a non-empty list of paths or globs relative to code/, e.g. ["index.html", "src/*.js"]');
+  }
+  return value as string[];
+}
+
 function oneOf<T extends string>(name: string, value: unknown, allowed: readonly T[]): T {
   if (allowed.includes(value as T)) return value as T;
   throw new FrontmatterError(name, `"${name}" must be one of ${allowed.join(", ")} (got ${JSON.stringify(value)})`);
@@ -54,7 +64,7 @@ function oneOf<T extends string>(name: string, value: unknown, allowed: readonly
 
 /** Validates tutorial.mdx frontmatter; defaults: title "Tutorial", preview `both`, theme `auto`. */
 export function readTutorialConfig(frontmatter: Record<string, unknown>): TutorialConfig {
-  const { title = "Tutorial", preview = "both", theme = "auto", codeWrap = false, logo, languages } = frontmatter;
+  const { title = "Tutorial", preview = "both", theme = "auto", codeWrap = false, logo, languages, files } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
   if (logo !== undefined && typeof logo !== "string") throw new FrontmatterError("logo", '"logo" must be a string');
@@ -65,6 +75,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     codeWrap,
     languages: readLanguages(languages),
     ...(logo === undefined ? {} : { logo }),
+    ...(files === undefined ? {} : { files: readFiles(files) }),
   };
 }
 

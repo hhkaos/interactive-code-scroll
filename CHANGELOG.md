@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added a `files` frontmatter list (paths/globs) that chooses which `code/` files get tabs; other files, including binaries, are published under `preview/` and fetched into the ZIP, and the ZIP action shows a badge with the total file count; its tooltip says how many are not shown in tabs.
+- Added binary file support in `code/`: detected by extension or NUL byte, never rendered, published and zipped byte for byte.
 - Added `.http` file variables (`@name = value`) as form-editable variables, and `-- @var` comments in SQL and Lua files.
 - Added `examples/multi-sdk-playground` (`pnpm playground`), a local tutorial with Python, Kotlin, C# and SQL steps for trying multi-SDK features by hand.
 - Added syntax highlighting for Python, Kotlin, Gradle, Swift, Java, C#, XML/XAML, C++, QML, Dart, TOML, INI, SQL, Lua, PowerShell, `.http`, JSX/TSX, Vue and GeoJSON files, plus a `languages` frontmatter map to override the language per extension.

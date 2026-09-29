@@ -57,6 +57,7 @@ export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
           mdxFile: relative(process.cwd(), tutorial.mdxPath),
           uses,
           files: tutorial.files,
+          binaries: tutorial.binaries,
           images: tutorial.images,
           frontmatter,
           frontmatterLines: frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8")),

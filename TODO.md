@@ -17,7 +17,6 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 0 — language-agnostic code model (in order):
 
-- [ ] Frontmatter `files:` visible subset; no `@var` in files without a tab; binary files published byte for byte; ZIP fetches hidden and binary files from `preview/`.
 - [ ] Dev mode: re-validate when `code/`, `images/` (later `requests/`, `output/`) change; center the error overlay on the failing MDX line (`loc`).
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
