@@ -231,6 +231,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 - Referencing line numbers from MDX (fragile); use region IDs.
 - Loading the OAuth sign-in page inside the Preview iframe.
 - Adding dependencies without justification.
+- Importing `highlight.ts` (Shiki) from modules the browser bundle uses (`markers.ts`, `downloads.ts`, `client/*`): shared helpers such as `extensionOf` live in `file-types.ts`.
 - Non-English text in the repo.
 - E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the Esri CDN: SDK and Calcite assets); opt in with `test.use({ network: true })` only when testing the SDK itself.
 - Do not update E2E tests just to follow editorial changes in `examples/oauth-pkce`; while the tutorial is being polished, prefer testing framework behavior against stable fixtures.
@@ -263,6 +264,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | npm publish workflow | `pnpm/action-setup@v4` without `version` or root `packageManager` | Explicit `version` in the workflow | The action fails before install with "No pnpm version is specified" |
 | npm trusted publishing provenance | Missing or mismatched package `repository.url` | URL matching the GitHub provenance repository | Publish can fail with E422; npm may normalize the URL to `git+https://github.com/<owner>/<repo>.git` |
 | Shiki line layout | `.line` as `inline-block` inside `<pre>` | `.line` as `block` inside `<pre>` | Block line spans can make Shiki's inter-line text nodes render as extra vertical spacing; keep lines inline-level and assert adjacent line spacing in E2E |
+| MDX frontmatter in Sätteri plugins | `ctx.source` has the frontmatter blanked out (lines kept) | Astro parses it first and seeds `ctx.data.astro.frontmatter` | Read the parsed object from `ctx.data`; get key line numbers from the file on disk (`frontmatterKeyLines`) |
 | MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |
