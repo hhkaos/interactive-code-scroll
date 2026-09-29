@@ -44,7 +44,7 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 ## Next Session Plan
 
-Recommended next task: improve dev mode validation so changes under `code/` and `images/` re-run MDX reference checks without waiting for `tutorial.mdx` to change, and center the dev overlay on the failing MDX `loc`.
+Recommended next task: Phase 0, item 1 of the multi-SDK plan (`docs/research/arcgis-multi-sdk-plan.md`, `TODO.md`): make MDX validation config-aware by parsing the frontmatter in the validation plugin, so frontmatter-dependent rules report MDX positions. UI work in later phases follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 
 ---
 
@@ -271,6 +271,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | `calcite-input` `action` slot | Slotted `calcite-action` renders next to the field without a border | Reads as a separate button | Give the action host the input border token (`--calcite-color-border-input`), no start border |
 | Stray `~/node_modules` | `tsc` and Node resolve packages up the tree, outside the repo (`@types/node`, `cookie`) | Fresh clone / CI: missing | Declare what we use (`@types/node` dev dependency); validate with a clean worktree outside the home folder |
 | Preview theme | Iframe: `prefers-color-scheme` inside follows the `<iframe>` element's `color-scheme` (verified in Chromium) | New tab: follows the OS | Tutorial apps opt in with `calcite-mode-auto`; the framework never rewrites tutorial code. E2E: Playwright emulates `colorScheme: "light"` by default and forces it on every frame; use `colorScheme: null` to observe this |
+| ArcGIS REST error responses | Many endpoints answer HTTP 200 with `{ "error": { "code", "message", "details" } }` in the body (e.g. 498 invalid token) | Transport failures (network, CORS) have no body at all | Request runner must not judge success by HTTP status alone: use the declarative error rule (planned); keep ArcGIS rule/codes in the preset, not core |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 
 ---

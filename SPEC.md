@@ -22,6 +22,8 @@ A library/tool/"framework" that lets technical writers, devrels and speakers eas
 
 InteractiveCodeScroll is generic. It must not assume ArcGIS, OAuth, maps, or any specific tutorial topic in the core package, CLI, runtime, validation or public documentation. ArcGIS OAuth is an example/tutorial use case only.
 
+It targets tutorials in any programming language and toolchain, not only browser code: web apps (HTML/JS/CSS), REST APIs (`.http`, cURL), scripts (e.g. Python) and native projects (e.g. Kotlin, Swift, C#, C++, Dart). Only web code runs in the browser Preview; other code shows captured output or, for HTTP requests, a live request runner. Planned work and phasing: `docs/research/arcgis-multi-sdk-plan.md`.
+
 ---
 
 ## Core features (v1)
@@ -38,6 +40,9 @@ InteractiveCodeScroll is generic. It must not assume ArcGIS, OAuth, maps, or any
 - **Final code + highlighting** (like Stripe): each file exists in its final version; steps only highlight regions. No incremental code per step.
 - **Line numbers**: the rendered code panel shows stable line numbers in a left gutter.
 - **Long lines**: tutorials may enable `codeWrap: true` in frontmatter to wrap long code lines instead of showing horizontal scrolling. It defaults to `false` so code shape is preserved unless the author opts in.
+- **Languages** *(planned, Phase 0)*: syntax highlighting chosen by file extension for common languages (JS/TS, HTML, CSS, JSON, Markdown, shell, YAML, Python, Kotlin, Swift, C#, XAML, Java, C++, QML, Dart, XML, TOML, SQL, `.http`, …), with an optional `languages` frontmatter override (`{ extension: shikiLanguage }`).
+- **Visible files** *(planned, Phase 0)*: optional frontmatter `files:` (ordered globs relative to `code/`) selects which files get tabs. Other files are not rendered or embedded in the page, but are still published under `preview/` and included in the ZIP. Binary files are copied byte for byte and never rendered. Files without a tab may not contain `@var` markers (build error): the page does not embed them, so the ZIP fetches them, and binary files, from their published `preview/` copies when the reader downloads it.
+- **Code variants / language switcher** *(planned, Phase 1)*: a tutorial can show the same steps in several languages (e.g. cURL, Python, JavaScript). Frontmatter `variants: [{ id, label, dir, entry }]` maps each variant to `code/<dir>/`. Region ids are the contract across variants: `<Step region="auth">` resolves the region in the active variant (`file` optional; defaults to the variant's `entry`). Every step region must exist in every variant unless the step sets `only="<variant id>"`. Within a variant, region ids are unique across all its files (not only per file), so a region id identifies one file; each step carries a per-variant file map computed at build time. A variant is web code when its folder contains `index.html`: it gets the browser Preview, published under `preview/<variant>/`; other variants get the Result pane. The reader picks the variant in the code header; the choice is remembered and deep-linkable (`?variant=`). Downloads and Preview use the active variant; vars are shared across variants by name. The switcher is a segmented control at the start of the code header, before the file tabs. `.http` request files are not variants (see Result pane).
 
 ### Scroll-driven focus
 An optional `<Intro>` block can appear before the first `<Step>`. It is rendered as tutorial introduction content,
@@ -74,11 +79,18 @@ When a step comes into focus, its text block can:
 - **Refresh**: automatic after form changes (~500 ms debounce) + manual Run/Reload button.
 - **OAuth in iframe mode**: sign-in opens in a **popup** (ArcGIS Maps SDK `OAuthInfo` with `popup: true`) and returns via the tutorial's own `code/oauth-callback.html` (it is part of the tutorial: shown, explained, downloaded). Every `code/` file is published next to the preview page (`preview/<path>`, markers stripped), so relative references resolve there.
 
+### Result pane *(planned, Phase 1)*
+For code that cannot run in the browser Preview (scripts, native apps, HTTP requests). It takes the Preview's place under the code (same splitter and header bar): a variant with web code shows the browser Preview, any other variant shows the Result pane instead.
+- **Captured output**: optional `output/` folder (per-variant override in `output/<variant>/`). `<Step output="result.json">` shows it in a Result pane: collapsible JSON viewer for `.json`, terminal style for `.txt`/`.log`, image for images. Works offline.
+- **HTTP request runner**: requests live in `.http` files under an optional `requests/` folder (VS Code REST Client / JetBrains HTTP Client syntax). They are the runner's source only: not a code variant and not a code tab, but included in the ZIP. `<Step request="name">` binds a named request (`# @name`). A step may list several names for the same operation (e.g. `request="geocode-get geocode-post"` for an HTTP GET and an HTTP POST): the first is the default, and a "Run as" picker in the Result pane appears only when there is more than one. Requests bind inputs through `.http` file variables (`{{name}}`), not through parameter names, so alternative requests may carry the same input under different parameter names, headers or body fields (e.g. `?token=` on GET, an `X-Esri-Authorization` header on POST) while one form field feeds them all. A Run button sends it with `fetch` from the browser, with current var values applied, and shows status, time, headers and body. Substituted values are URL-encoded in the request line's query string and inserted as-is in headers and body. On a network/CORS failure it falls back to the step's captured output and says so. Secret vars are masked in the displayed request; a "Show secrets" toggle reveals them for debugging. Response data and captured output are rendered as text only (never as HTML): they are untrusted. The build warns when a captured output looks like it contains a credential (e.g. a `token=` value that is not the var's default).
+- **Service errors in successful responses**: some APIs (e.g. ArcGIS REST) answer HTTP 200 with an error object in the body. The runner treats a response as failed when it matches a declarative error rule (JSON path of the error object, its code and its message), shows the code and message prominently, and explains the code from an error help table (short text + reference link per code, with a fallback link for unknown codes). Core ships the mechanism only; rules and help tables come from the tutorial or a preset package (the ArcGIS preset provides the ArcGIS rule and a curated table of common codes).
+- **Result renderers** *(planned, Phase 3)*: the Result pane renders through a generic renderer API (`match(response)`, `render(element, data)`); core ships JSON, text and image renderers. Topic-specific renderers (e.g. drawing results on a map) live in optional preset packages.
+
 ### Forms → variables
 - Forms defined in MDX (left panel); filling them updates code variables in real time.
 - **Default value**: the literal in the code is the single source of truth (default and field placeholder).
 - **Custom placeholder**: `<VarField placeholder="...">` can override the input placeholder without changing the code default used for clearing, downloads or Preview.
-- **localStorage persistence**: configurable per field by the author (persist or not).
+- **localStorage persistence**: configurable per field by the author (persist or not). Persisted values are shared by every tutorial on the same site (key `ics:var:<name>`), so a credential is entered once per site; *(planned, Phase 2)* `persist="tutorial"` scopes a value to one tutorial.
 - **Secret fields**: the author can mark a field as sensitive → masked in the form and in the code, with a **visibility toggle** to reveal it when needed.
 - Entered values are included in downloads.
 
@@ -98,7 +110,7 @@ When a step comes into focus, its text block can:
 
 ### Authoring and DX
 - **Dev mode** with file watching and live updates.
-- **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server.
+- **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server. *Planned (Phase 0)*: validation also reads the frontmatter, so rules that depend on it (`files:`, `variants:`, `only=`, `request=`, `output=`) report MDX positions, and it re-runs when files under `code/`, `images/`, `requests/` or `output/` change.
 - **Serve locally**: the CLI can serve the built site on localhost (fallback if conference wifi fails; Preview/OAuth still need network — plan B: images/carousel of the result).
 - **Generic CLI**: CLI commands must work for any InteractiveCodeScroll tutorial. Topic-specific helpers, such as OAuth redirect URI printing, must be opt-in or derived from explicit tutorial/project configuration, never hard-coded into the framework.
 - Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (`/tutorials/<name>/`) with an index page.
@@ -155,7 +167,8 @@ When a step comes into focus, its text block can:
 - Incremental code per step (animated diffs).
 - Bundling npm dependencies in the Preview (see Tech constraints).
 - CMS or visual editor, for either the writer or the end user.
-- Multi-language support.
+- Multi-language UI (translating the tutorial interface or content into several human languages). Programming-language variants are in scope (see Code model).
+- Running non-web code in the browser (e.g. Pyodide, native builds): non-web code shows captured output instead.
 - Custom themes (the UI uses Esri's Calcite Design System; light/dark only).
 - Support for browsers without JavaScript.
 - Mobile-first: the experience is desktop-first.
@@ -177,6 +190,9 @@ When a step comes into focus, its text block can:
 | Form | fields | Defined in MDX |
 | Field ↔ Variable | variable name, persist (bool), secret (bool) | Variable marked with `// @var <name>`; default = code literal |
 | Image / Carousel | image files | In tutorial folders; shown instead of code; manual navigation |
+| Variant *(planned)* | id, label, dir, entry | A programming-language version of the tutorial's code under `code/<dir>/`; shares region ids and vars with the other variants |
+| Output *(planned)* | file in `output/` (optional per-variant override) | Captured result shown in the Result pane |
+| Request *(planned)* | name, `.http` file in `requests/` | Named HTTP request the runner can send; its file variables are vars. A step can bind several requests as alternative ways to run the same operation (e.g. GET and POST) |
 
 ---
 
@@ -191,12 +207,12 @@ When a step comes into focus, its text block can:
 - Tests: **unit with Vitest** (`#region`/`@var` parser, validation, variable substitution, ZIP generation) and **E2E with Playwright** (scroll/keyboard highlighting, file switching, form → code, download, presentation mode).
 - Dependencies on recent, stable and secure versions.
 - All repo content (code, comments, docs, commit messages) in English.
-- **Tutorial code without a build step**: HTML/JS/CSS runnable as-is; dependencies via CDN (script tags / import maps, e.g. `js.arcgis.com`). The downloaded ZIP works by opening `index.html` or with a static server.
-- **Code markup in comments**: tutorial source code must remain valid, runnable and lintable without the framework. Supported marker comment styles are JavaScript/TypeScript line comments (`//`), CSS block comments (`/* */`), HTML comments (`<!-- -->`) and shell/YAML-style comments (`#`).
+- **Tutorial code runs with its own standard toolchain**: the framework never adds a build step. Web code runs as-is in the Preview with dependencies via CDN (script tags / import maps, e.g. `js.arcgis.com`); its ZIP works by opening `index.html` or with a static server. Other code (scripts, native projects, `.http` requests) runs with its usual tools after download (e.g. `python`, Gradle, Xcode, VS Code REST Client); the ZIP contains the complete project, including binary files.
+- **Code markup in comments**: tutorial source code must remain valid, runnable and lintable without the framework. Supported marker comment styles are JavaScript/TypeScript line comments (`//`), CSS block comments (`/* */`), HTML comments (`<!-- -->`) and shell/YAML-style comments (`#`). *Planned (Phase 0)*, each recognized only in its own file types so existing comments never change meaning: C# native `#region id` / `#endregion` in `.cs`; `# region id` / `# endregion` (Python/VS Code folding style) in `.py`; `-- #region id` in `.sql` and `.lua`.
 - **Technical base: Astro + MDX + Shiki** (decided after a spike; see Decisions and `docs/research/technical-base-spike.md`).
 - **Tutorial folder layout**: `tutorial.mdx` + `code/` + `images/`.
 - **Code markup rules** (enforced by the build):
-  - `@var` targets the first string literal on its line; one `@var` per line; var names are unique per file. Runtime values replace the literal in place in the pre-highlighted code, escaped for its context (script string or HTML attribute).
+  - `@var` targets the first string literal on its line; one `@var` per line; var names are unique per file. A var name used in several files (or variants) must have the same default literal everywhere; otherwise the build fails naming each file. Runtime values replace the literal in place in the pre-highlighted code, escaped for its context (script string or HTML attribute). *Planned (Phase 0)*: the escaper is chosen by file type and quote style (JS-like languages, Python, shell single/double quotes, XML/XAML/HTML); literal forms that cannot be escaped safely (Python f-strings, raw and triple-quoted strings) are build errors. In `.http` files, a file-variable line `@name = value` is an unquoted var named `name` whose default is the rest of the line.
   - Region ids are unique per file; regions may nest; empty regions are errors; `#endregion <id>` (optional id) must match the region it closes.
 
 ---
@@ -243,6 +259,12 @@ When a step comes into focus, its text block can:
 - **Name: InteractiveCodeScroll** (brand, PascalCase); `interactive-code-scroll` for the repo and npm package (kebab-case).
 - **License: Apache-2.0.**
 - **Out of v1: analytics and SEO.**
+- **Multi-SDK support** (survey 2026-09-29, plan in `docs/research/arcgis-multi-sdk-plan.md`): target REST, Python, native SDKs and other web libraries; captured output + `.http` runner for non-web code; language switcher inside one tutorial; visible file subset for large projects; `.py` before `.ipynb`; standalone static sites; multi-tutorial sites early. First vertical slice: a REST tutorial (cURL / Python / JavaScript). No external deadline: phases are ordered by technical risk.
+- **Language switcher and requests** (mockup review 2026-09-29): switcher at the start of the code header; `.http` files are only the runner's source (in `requests/`), not a reader-visible variant; a request can offer several ways to run it (e.g. GET and POST) through a "Run as" picker shown only when needed; variant choice is remembered per site and deep-linkable; switching variants keeps the same region focused.
+- **Result pane** (mockup review 2026-09-29): replaces the browser Preview for non-web variants; captured output first, Run for live; secrets masked with a debugging reveal toggle; network failures fall back to captured output; error objects inside HTTP 200 responses count as failures and are explained (code, message, help link).
+- **Visible files** (mockup review 2026-09-29): only files listed in `files:` get tabs; a "+N files in ZIP" chip is enough to signal the rest; native results come from captured screenshots/video in `output/`, with no Run button.
+- **Go/no-go review** (2026-09-29, `docs/research/arcgis-multi-sdk-plan.md`): go with changes. Adopted: config-aware validation, one default per var name across files, region ids unique per variant, no `@var` in files without a tab (ZIP fetches them), web variants detected by `index.html`, marker styles scoped by file type. A step uses the same region id in every variant (`only=` for single-variant steps). The ArcGIS preset lives in this monorepo as `packages/interactive-code-scroll-arcgis`, published unscoped as `interactive-code-scroll-arcgis`.
+- **ArcGIS boundary for multi-SDK work**: the core stays generic; ArcGIS content ships as scaffolder templates and an optional preset package (e.g. map renderer for results). Nothing ArcGIS-specific enters core packages.
 
 ---
 

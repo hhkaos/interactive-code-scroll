@@ -1,6 +1,6 @@
 # Plan: tutorials for every ArcGIS SDK family
 
-Status: proposal, agreed in a survey on 2026-09-29. Not yet reflected in `SPEC.md` (see [SPEC changes](#spec-changes-required)).
+Status: proposal, agreed in a survey on 2026-09-29. `SPEC.md` updated with the planned behavior (marked *planned*); pending a go/no-go review.
 
 ## Goal
 
@@ -20,9 +20,13 @@ The core stays generic (see `PROJECT.md`). Every capability below is described i
 | Notebooks | `.py` scripts first, `.ipynb` in a later phase |
 | Variables | Language-aware escaping; one shared credential per site |
 | ArcGIS boundary | Generic core + ArcGIS scaffolder templates + optional preset package |
-| REST request source | `.http` files in `code/` (VS Code REST Client / JetBrains HTTP Client format) |
+| REST request source | `.http` files in `requests/` (VS Code REST Client / JetBrains HTTP Client format); runner source only, not a reader-visible variant |
+| Result pane vs Preview | Result pane replaces the Preview for non-web variants |
+| Service errors | HTTP 200 bodies with an error object are failures, explained with code help + reference links |
+| Large projects UI | "+N files in ZIP" chip; no file list |
+| Several ways to run one request | A step can bind several named requests (e.g. GET and POST); "Run as" picker only when there is more than one |
 | REST result rendering | Core: status, headers, collapsible JSON. Preset: draw results on a map |
-| Driver | Upcoming conference: ship a REST (cURL / Python / JavaScript) vertical slice first |
+| Driver | No external deadline; REST (cURL / Python / JavaScript) is the first vertical slice; phases ordered by technical risk |
 | Multi-tutorial site | Early phase |
 
 ## Review findings
@@ -53,24 +57,24 @@ Sizes: S ≈ 1–2 days, M ≈ 3–5 days, L ≈ 1–2 weeks. Each item ships wi
 | 0.1 Language map | S | Add `py`, `kt`, `kts`, `gradle`, `swift`, `cs`, `xaml`, `java`, `cpp`, `h`, `hpp`, `qml`, `dart`, `xml`, `toml`, `ini`, `sql`, `http`, `jsx`, `tsx`, `vue`, `geojson`, `ps1`. Optional frontmatter `languages: { ext: shikiLang }` override. |
 | 0.2 Marker syntax | S | Accept C# `#region id` / `#endregion`, `# region id` / `# endregion`, and `-- #region id`. Unit tests per comment style. |
 | 0.3 Escaping by file type | M | Replace `context: html \| script` with an escaper chosen by extension + quote: JS/TS/JSON/Kotlin/Swift/C#/Java/Dart (backslash), Python (reject raw and triple-quoted literals with a clear error), shell (single vs double quotes), XML/XAML/HTML (entities). Table-driven unit tests. |
-| 0.4 `.http` variables | S | In `.http` files, a file-variable line `@name = value` is a var named `name` whose default is the rest of the line. This is native `.http` syntax, so the source stays runnable in VS Code/JetBrains. |
+| 0.4 `.http` variables | S | In `.http` files (under `requests/`), a file-variable line `@name = value` is a var named `name` whose default is the rest of the line. This is native `.http` syntax, so the source stays runnable in VS Code/JetBrains. |
 | 0.5 Visible subset + binaries | M | Frontmatter `files:` (ordered globs) selects tabs; other files are published under `preview/` and included in the ZIP but not rendered or serialized into the page. Binary files (by extension or NUL byte) are copied as bytes. Validation: a `<Step file>` must be visible. |
 | 0.6 Dev revalidation | S | Existing TODO: re-validate MDX when `code/` or `images/` change. |
 
 Exit: a Python script tutorial and a Kotlin project tutorial (with a jar in the Gradle wrapper) build, highlight correctly and download a runnable ZIP.
 
-### Phase 1 — Conference slice: REST tutorial in cURL / Python / JavaScript
+### Phase 1 — REST vertical slice: cURL / Python / JavaScript
 
 | Item | Size | Scope |
 |---|---|---|
 | 1.1 Code variants | L | Frontmatter `variants: [{ id, label, dir, entry }]` maps to `code/<dir>/`. Region ids are the cross-language contract: `<Step region="auth">` resolves the region in the active variant (file optional; `entry` is the default file). Validation: every step region exists in every variant, unless the step sets `only="python"`. Switcher (`calcite-segmented-control`) in the code header, remembered in `localStorage` and `?variant=` for deep links. Downloads and Preview use the active variant. Vars are shared across variants by name. |
 | 1.2 Captured output | M | Optional `output/` folder. `<Step output="geocode.json">` shows a Result pane: JSON viewer for `.json`, terminal style for `.txt`/`.log`, image for images. Per-variant override via `output/<variant>/`. Works offline. |
-| 1.3 `.http` runner | L | Parse requests (`###` separators, `# @name`, method, URL, headers, body), apply var values, `fetch` client-side, show status, time, headers and body. `<Step request="geocode">` binds a named request; Run button in the Result pane. On network/CORS failure, fall back to the step's captured output and say so. Secret vars are masked in the displayed URL. Hand-written parser, no new dependency. |
+| 1.3 `.http` runner | L | Parse requests (`###` separators, `# @name`, method, URL, headers, body), apply var values, `fetch` client-side, show status, time, headers and body. `.http` files live in `requests/` (included in the ZIP, never a tab or variant). `<Step request="geocode-get geocode-post">` binds one or more named requests; the first is the default and a "Run as" picker appears when there are several; inputs bind via file variables, so alternatives may use different parameter names, headers or body fields for the same value; Run button in the Result pane. On network/CORS failure, fall back to the step's captured output and say so. Secret vars are masked in the displayed URL, with a "Show secrets" debugging toggle. Declarative error rule (JSON paths for error object, code, message) marks HTTP 200 bodies holding an error as failures; an error help table (code → text + link, fallback link) explains them. The pane replaces the browser Preview for non-web variants. Hand-written parser, no new dependency. |
 | 1.4 JSON viewer | M | Collapsible tree rendered with plain DOM + CSS (no client-side highlighter, matching the current architecture). Keyboard accessible; large arrays truncated with "show more". |
-| 1.5 REST example | M | `examples/rest-geocode` (or similar): `.http`, cURL, Python and JS variants, demo key, captured outputs. Fixture cases + E2E with `page.route` mocking the endpoint (no network in tests). |
+| 1.5 REST example | M | `examples/rest-geocode` (or similar): `requests/geocode.http` (GET and POST), cURL, Python and JS variants, demo key, captured outputs. Fixture cases + E2E with `page.route` mocking the endpoint (no network in tests). |
 | 1.6 Presentation fit | S | Result pane survives step navigation; clicker keys work while focus is in the Result pane; readable at high zoom. User visual review before release. |
 
-Exit: the REST tutorial is presentable at the conference, runs live with a real key, and degrades to captured output offline.
+Exit: the REST tutorial runs live with a real key, degrades to captured output offline, and is presentable in presentation mode.
 
 ### Phase 2 — Series site
 
@@ -86,7 +90,7 @@ Exit: the REST tutorial is presentable at the conference, runs live with a real 
 | Item | Size | Scope |
 |---|---|---|
 | 3.1 Result renderer API | M | Generic integration option `resultRenderers` (module paths): each exports `match(response)` and `render(element, data)`. Core renderers (JSON, text, image) use the same API. |
-| 3.2 ArcGIS preset | L | Separate package (name TBD, e.g. `interactive-code-scroll-arcgis`): map renderer for Esri JSON / GeoJSON / geocode candidates / route and places results using the Maps SDK for JavaScript via CDN in a sandboxed iframe; API key field conventions; doc links. Opt-in only. |
+| 3.2 ArcGIS preset | L | Separate package (name TBD, e.g. `interactive-code-scroll-arcgis`): map renderer for Esri JSON / GeoJSON / geocode candidates / route and places results using the Maps SDK for JavaScript via CDN in a sandboxed iframe; API key field conventions; ArcGIS error rule (`error.code` / `error.message` in HTTP 200 bodies) plus a curated help table of common codes (e.g. 498 invalid token, 499 token required, 400, 403) linking to the platform error codes reference and endpoint docs; doc links. Opt-in only. Phase 1's REST example configures the same rule and a small table locally until the preset exists. |
 
 ### Phase 4 — Native and Python depth
 
@@ -97,13 +101,13 @@ Exit: the REST tutorial is presentable at the conference, runs live with a real 
 
 ## SPEC changes required
 
-These parts of `SPEC.md` conflict with or do not yet cover the plan; update them before implementing the related phase:
+Applied to `SPEC.md` on 2026-09-29 (planned items are marked *planned*):
 
 - **Tech constraints / "Tutorial code without a build step"**: says HTML/JS/CSS runnable as-is and the ZIP opens `index.html`. Generalize to "runnable with its own standard toolchain; browser Preview only for web variants".
 - **Out of scope / "Multi-language support"**: clarify it means UI/human languages, not programming-language variants.
 - **Code markup rules**: extend supported comment styles and escaping contexts (Phase 0).
 - **Data model**: add Variant, Output, Request (and Result renderer in Phase 3).
-- **Preview**: add the Result pane and REST runner alongside the browser Preview.
+- **Preview**: add the Result pane and REST runner; the Result pane replaces the browser Preview for non-web variants.
 
 ## Risks
 
@@ -118,5 +122,52 @@ These parts of `SPEC.md` conflict with or do not yet cover the plan; update them
 ## Open questions
 
 - Should a step be allowed to reference different region ids per variant, or is "same id in every variant" strict enough?
-- Should the Result pane replace the browser Preview for non-web variants, or sit beside it?
 - Preset package name and whether it lives in this monorepo.
+
+## Go/no-go review (2026-09-29)
+
+**Verdict: GO WITH CHANGES.** The direction fits the goal and keeps the core generic, and existing tutorials are unaffected (no `@var` in shell files, no bare `#region` lines in the examples). Six design gaps below must be settled in `SPEC.md` before Phase 0 code, because they change data shapes that Phase 1 builds on. Update: no external deadline, so Phase 1 keeps its full scope in the order below. Blocking fixes applied to `SPEC.md` on 2026-09-29.
+
+### Blocking
+
+| # | Issue | Evidence | Fix |
+|---|---|---|---|
+| B1 | Validation cannot see frontmatter, so it cannot enforce `files:`, `variants:`, `only=` or `request=` rules with MDX positions. Frontmatter is only checked at page render. | `src/mdx-validation.ts:45-50`, `src/pages/index.astro:13-15` | Parse the frontmatter in the mdast plugin (yaml node) and pass the config to `validateTutorial`; move frontmatter errors there. Prerequisite for 0.5 and 1.1. |
+| B2 | A var name used in several files takes its default from the first match; other defaults are silently ignored. Variants make this the normal case (the same `accessToken` in `.sh`, `.py`, `.js`, `.http`). | `src/components/VarField.astro:14-16`, `SPEC.md` ("var names are unique per file") | Rule: every occurrence of a var name has the same default literal, or the build fails naming each file. |
+| B3 | Region-first addressing needs region ids unique **per variant**, not per file; today two files may share an id. | `src/validate.ts:62-70`, `SPEC.md` code markup rules | Within a variant, region ids are unique across files; validation error otherwise. |
+| B4 | Hidden files cannot both stay out of the page and be in the ZIP with form values applied: the ZIP is built client-side from serialized sources. Binaries are read as UTF-8 and published through `parseSource`. | `src/pages/index.astro:24`, `src/downloads.ts:9-11`, `src/preview/code-file.ts:14-20`, `src/tutorial-files.ts:32` | Hidden files may not contain `@var` (build error); on ZIP, fetch hidden and binary files from their published `preview/` URLs. Publish binaries byte for byte; extend `content-type.ts`. |
+| B5 | Preview assumes one `code/index.html` at the root and one preview page. With variants, only some variants are web code. | `src/preview/build-html.ts` (`PREVIEW_ENTRY`), `src/client/preview.ts` (storage key per target), `src/pages/index.astro:13-15` | A variant is web code when its folder has `index.html`; publish `preview/<variant>/`; the frontmatter `preview` check applies per web variant. |
+| B6 | Marker and escaping changes need scoping by file type, or they change meaning in existing files: bare `#region x` is an ordinary shell/YAML comment today; `f"…{…}"` needs brace escaping; `.http` values have no quotes (`VarRef.quote` is `'"' \| "'"`). | `src/markers.ts:14-16`, `src/markers.ts:39-42` | C# `#region` only in `.cs`; `# region` only in `.py`; `--` only in `.sql`/`.lua`. Reject `@var` on f-strings, raw and triple-quoted literals. Add an unquoted `.http` var kind with its own escaper. |
+
+### Non-blocking
+
+- Steps store one `data-file`; with variants, emit a per-variant file map at build (`data-files`) and key code panes by `<variant>/<path>` (`src/client/steps.ts:58`, `:150`).
+- The JSON viewer and captured outputs must render response data as text nodes only (never `innerHTML`); responses are untrusted.
+- `.http` runner: define URL-encoding of substituted query values (REST Client does not encode); document it.
+- E2E: `e2e/fixtures.ts:16` blocks only the Esri CDN; also block every host a runner example calls and mock with `page.route`.
+- Captured outputs are committed files: warn at build when an output contains the current value of a secret var's default pattern (e.g. `token=`), to avoid publishing real tokens.
+- Extension-scoped marker rules should appear in `docs/authoring.md`; `docs/upgrade.md` needs a note on the new "same default everywhere" rule (B2), which can break a tutorial that relied on different defaults.
+
+### Revised Phase 0 / Phase 1 order
+
+Phase 0:
+
+1. Config-aware validation (B1) — M
+2. Language map + extension-scoped markers (0.1, 0.2, B6) — S
+3. Var model: consistent defaults (B2), escaper by file type, unquoted `.http` vars, rejected literal forms (0.3, 0.4, B6) — M
+4. Visible files + binaries + lazy ZIP fetch (0.5, B4) — M
+5. Dev revalidation, watching `code/`, `images/`, and later `requests/`, `output/` (0.6) — S
+
+Phase 1:
+
+1. Variants: config, per-variant region uniqueness (B3), per-variant file map, switcher, `?variant=`, per-variant ZIP and preview (1.1, B5) — L
+2. Result pane shell replacing Preview for non-web variants + captured output (1.2) — M
+3. JSON viewer, text-only rendering (1.4) — M
+4. `.http` parser + runner: named requests, several per step with "Run as", masking + "Show secrets", network fallback, declarative error rule showing code + message (1.3) — L
+5. Error help table with reference links (moves to the ArcGIS preset in Phase 3; the example configures it locally until then) + Headers tab — M
+6. REST example + framework-fixture cases + mocked E2E (1.5) — M
+
+### Recommendations on open questions
+
+- Variants and region ids: keep "same id in every variant" with `only=`; per-variant id maps add authoring surface for little gain.
+- Preset package: `packages/interactive-code-scroll-arcgis` in this monorepo, published unscoped as `interactive-code-scroll-arcgis` (no npm org needed; shares CI and release flow).
