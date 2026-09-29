@@ -92,8 +92,8 @@ Exit: the REST tutorial runs live with a real key, degrades to captured output o
 
 | Item | Size | Scope |
 |---|---|---|
-| 3.1 Result renderer API | M | Generic integration option `resultRenderers` (module paths): each exports `match(response)` and `render(element, data)`. Core renderers (JSON, text, image) use the same API. |
-| 3.2 ArcGIS preset | L | Separate package (name TBD, e.g. `interactive-code-scroll-arcgis`): map renderer for Esri JSON / GeoJSON / geocode candidates / route and places results using the Maps SDK for JavaScript via CDN in a sandboxed iframe; API key field conventions; ArcGIS error rule (`error.code` / `error.message` in HTTP 200 bodies) plus a curated help table of common codes (e.g. 498 invalid token, 499 token required, 400, 403) linking to the platform error codes reference and endpoint docs; doc links. Opt-in only. Phase 1's REST example configures the same rule and a small table locally until the preset exists. |
+| 3.1 Result views + renderer plugins | M/L | Integration option `renderers: { id: modulePath }`; each module default-exports `{ accepts?(data), render(element, data, context) }` (optional cleanup). Frontmatter `views: { id: { renderer, label } }`; `<Step views="map table" view="map">` adds author-labeled tabs next to Body/Headers, for captured output and live responses alike. Explicit choice (no auto-matching); `accepts()` only disables a tab that does not fit. Lazy import per tab; data, never HTML; third-party code in a sandboxed iframe. Build errors for undeclared views, unregistered renderers, missing labels, `view=` not in `views=`, `views=` without a result. See `SPEC.md` Result pane. |
+| 3.2 ArcGIS preset | L | Separate package (`interactive-code-scroll-arcgis`), a set of 3.1 renderer plugins: map renderers for Esri JSON / GeoJSON / geocode candidates / route and places results (e.g. `geocode-map`, later `route-map`, `features-table`) using the Maps SDK for JavaScript via CDN in a sandboxed iframe; API key field conventions; ArcGIS error rule (`error.code` / `error.message` in HTTP 200 bodies) plus a curated help table of common codes (e.g. 498 invalid token, 499 token required, 400, 403) linking to the platform error codes reference and endpoint docs; doc links. Opt-in only. Phase 1's REST example configures the same rule and a small table locally until the preset exists. |
 
 ### Phase 4 — Native and Python depth
 
@@ -109,7 +109,7 @@ Applied to `SPEC.md` on 2026-09-29 (planned items are marked *planned*):
 - **Tech constraints / "Tutorial code without a build step"**: says HTML/JS/CSS runnable as-is and the ZIP opens `index.html`. Generalize to "runnable with its own standard toolchain; browser Preview only for web variants".
 - **Out of scope / "Multi-language support"**: clarify it means UI/human languages, not programming-language variants.
 - **Code markup rules**: extend supported comment styles and escaping contexts (Phase 0).
-- **Data model**: add Variant, Output, Request (and Result renderer in Phase 3).
+- **Data model**: add Variant, Output, Request, Error rule (and Renderer + View in Phase 3).
 - **Preview**: add the Result pane and REST runner; the Result pane replaces the browser Preview for non-web variants.
 
 ## Risks
