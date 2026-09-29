@@ -1,4 +1,4 @@
-import { FrontmatterError, readTutorialConfig, type TutorialConfig } from "./frontmatter.ts";
+import { FrontmatterError, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
 import { globToRegExp, selectVisible } from "./visible-files.ts";
@@ -57,6 +57,61 @@ function inconsistentDefaults(parsed: ReadonlyMap<string, ParsedSource>): string
   return errors;
 }
 
+/** A variant with the paths it owns, all relative to `code/`. */
+interface VariantFiles extends Variant {
+  /** Text files that get a tab. */
+  visible: Set<string>;
+  /** Region id → the file that defines it (region ids are unique within a variant). */
+  regions: Map<string, string>;
+}
+
+const inFolder = (dir: string, path: string) => path.startsWith(`${dir}/`);
+
+/** Checks the variant folders and returns what step validation needs; `undefined` without variants. */
+function checkVariants(
+  variants: readonly Variant[],
+  files: readonly SourceFile[],
+  binaries: readonly string[],
+  parsed: ReadonlyMap<string, ParsedSource>,
+  reportFrontmatter: (key: string, detail: string) => void,
+  errors: string[],
+): VariantFiles[] {
+  for (const path of [...files.map((f) => f.path), ...binaries].sort()) {
+    if (variants.some((v) => inFolder(v.dir, path))) continue;
+    errors.push(`code/${path}: file is outside every variant folder; move it into one of ${variants.map((v) => `code/${v.dir}/`).join(", ")}`);
+  }
+  return variants.map((variant) => {
+    const own = files.map((f) => f.path).filter((path) => inFolder(variant.dir, path));
+    const label = `variant "${variant.id}"`;
+    if (own.length === 0 && !binaries.some((path) => inFolder(variant.dir, path))) {
+      reportFrontmatter("variants", `${label} folder code/${variant.dir}/ has no files`);
+    }
+    const entry = `${variant.dir}/${variant.entry}`;
+    if (binaries.includes(entry)) reportFrontmatter("variants", `${label} entry "${variant.entry}" is binary and cannot be shown`);
+    else if (own.length > 0 && !own.includes(entry)) reportFrontmatter("variants", `${label} entry "${variant.entry}" not found in code/${variant.dir}/`);
+
+    const relative = own.map((path) => path.slice(variant.dir.length + 1));
+    const { visible, unmatched } = selectVisible(relative, variant.files);
+    for (const pattern of unmatched) {
+      reportFrontmatter("variants", `${label} files "${pattern}" matches no text file in code/${variant.dir}/`);
+    }
+    const visibleSet = new Set(visible.map((path) => `${variant.dir}/${path}`));
+    if (variant.files !== undefined && own.includes(entry) && !visibleSet.has(entry)) {
+      reportFrontmatter("variants", `${label} entry "${variant.entry}" must be one of its "files"`);
+    }
+
+    const regions = new Map<string, string>();
+    for (const path of own) {
+      for (const region of parsed.get(path)?.regions ?? []) {
+        const other = regions.get(region.id);
+        if (other === undefined) regions.set(region.id, path);
+        else errors.push(`code/${path}: region "${region.id}" is also defined in code/${other}; region ids must be unique within ${label}`);
+      }
+    }
+    return { ...variant, visible: visibleSet, regions };
+  });
+}
+
 /** Returns every broken reference as `file:line:column message`; empty when valid. */
 export function validateTutorial({
   mdxFile,
@@ -80,23 +135,10 @@ export function validateTutorial({
   if (config?.logo !== undefined && !images.includes(config.logo)) {
     reportFrontmatter("logo", `logo "${config.logo}" not found in images/`);
   }
-  if (config && config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
+  // With variants, the Preview applies to web variants only, so no variant is required to have it.
+  if (config && !config.variants && config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
     reportFrontmatter("preview", `preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
   }
-  const { visible, unmatched } = selectVisible(
-    files.map((f) => f.path),
-    config?.files,
-  );
-  for (const pattern of unmatched) {
-    const regex = globToRegExp(pattern);
-    reportFrontmatter(
-      "files",
-      binaries.some((path) => regex.test(path))
-        ? `files "${pattern}" matches only binary files, which cannot be shown as tabs`
-        : `files "${pattern}" matches no text file in code/`,
-    );
-  }
-  const visibleSet = new Set(visible);
 
   const parsed = new Map<string, ParsedSource>();
   for (const file of files) {
@@ -106,12 +148,42 @@ export function validateTutorial({
       errors.push((error as Error).message);
     }
   }
+
+  // Invalid variants config: skip file and region checks rather than judge them as a single project.
+  const skipFileChecks = config === undefined && frontmatter.variants !== undefined;
+  const variants = config?.variants && checkVariants(config.variants, files, binaries, parsed, reportFrontmatter, errors);
+  const visibleSet = new Set<string>();
+  const embedded = new Set<string>();
+  if (variants) {
+    for (const variant of variants) {
+      for (const path of variant.visible) visibleSet.add(path);
+      embedded.add(`${variant.dir}/${PREVIEW_ENTRY}`);
+    }
+  } else if (!skipFileChecks) {
+    const { visible, unmatched } = selectVisible(
+      files.map((f) => f.path),
+      config?.files,
+    );
+    for (const pattern of unmatched) {
+      const regex = globToRegExp(pattern);
+      reportFrontmatter(
+        "files",
+        binaries.some((path) => regex.test(path))
+          ? `files "${pattern}" matches only binary files, which cannot be shown as tabs`
+          : `files "${pattern}" matches no text file in code/`,
+      );
+    }
+    for (const path of visible) visibleSet.add(path);
+    embedded.add(PREVIEW_ENTRY);
+  }
+
   const varNames = new Set([...parsed.values()].flatMap((p) => p.vars.map((v) => v.name)));
   // The page embeds only tabbed files (plus the Preview entry); others reach the ZIP unchanged, so they cannot hold vars.
   for (const [path, source] of parsed) {
-    if (visibleSet.has(path) || path === PREVIEW_ENTRY) continue;
+    if (skipFileChecks || visibleSet.has(path) || embedded.has(path)) continue;
     for (const v of source.vars) {
-      errors.push(`code/${path}: @var "${v.name}" is in a file not shown in tabs; add the file to frontmatter "files" or remove the marker`);
+      const where = variants ? `its variant's "files"` : 'frontmatter "files"';
+      errors.push(`code/${path}: @var "${v.name}" is in a file not shown in tabs; add the file to ${where} or remove the marker`);
     }
   }
   errors.push(...inconsistentDefaults(parsed));
@@ -142,16 +214,22 @@ export function validateTutorial({
       if (preview !== undefined && !PREVIEW_STATES.has(preview)) {
         report('"preview" must be one of expanded, collapsed, keep');
       }
-      const source = file === undefined ? undefined : parsed.get(file);
-      if (file !== undefined) {
-        if (binaries.includes(file)) report(`file "${file}" is binary and cannot be shown`);
-        else if (!files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
-        else if (!visibleSet.has(file)) report(`file "${file}" is not shown in tabs; add it to frontmatter "files"`);
-      }
-      if (region !== undefined) {
-        if (file === undefined) report(`region "${region}" requires a "file"`);
-        else if (source && !source.regions.some((r) => r.id === region)) {
-          report(`region "${region}" not found in code/${file}`);
+      const only = text("only");
+      if (variants) {
+        checkVariantStep(variants, only, file, region, report);
+      } else if (!skipFileChecks) {
+        if (only !== undefined) report('"only" requires frontmatter "variants"');
+        const source = file === undefined ? undefined : parsed.get(file);
+        if (file !== undefined) {
+          if (binaries.includes(file)) report(`file "${file}" is binary and cannot be shown`);
+          else if (!files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
+          else if (!visibleSet.has(file)) report(`file "${file}" is not shown in tabs; add it to frontmatter "files"`);
+        }
+        if (region !== undefined) {
+          if (file === undefined) report(`region "${region}" requires a "file"`);
+          else if (source && !source.regions.some((r) => r.id === region)) {
+            report(`region "${region}" not found in code/${file}`);
+          }
         }
       }
 
@@ -183,4 +261,39 @@ export function validateTutorial({
     }
   }
   return errors;
+
+  function checkVariantStep(
+    all: readonly VariantFiles[],
+    only: string | undefined,
+    file: string | undefined,
+    region: string | undefined,
+    report: (message: string) => void,
+  ): void {
+    let covered = all;
+    if (only !== undefined) {
+      const ids = only.split(/\s+/).filter(Boolean);
+      if (ids.length === 0) report('"only" must list variant ids');
+      for (const id of ids) {
+        if (!all.some((v) => v.id === id)) report(`only "${id}" is not a variant id (${all.map((v) => v.id).join(", ")})`);
+      }
+      covered = all.filter((v) => ids.includes(v.id));
+    }
+    for (const variant of covered) {
+      const label = `variant "${variant.id}"`;
+      if (file !== undefined) {
+        const path = `${variant.dir}/${file}`;
+        if (binaries.includes(path)) report(`file "${file}" is binary in ${label} and cannot be shown`);
+        else if (!files.some((f) => f.path === path)) report(`file "${file}" not found in ${label} (code/${path}); add it or set "only"`);
+        else if (!variant.visible.has(path)) report(`file "${file}" is not shown in tabs in ${label}; add it to its "files"`);
+        else if (region !== undefined) {
+          const source = parsed.get(path);
+          if (source && !source.regions.some((r) => r.id === region)) report(`region "${region}" not found in code/${path}`);
+        }
+      } else if (region !== undefined) {
+        const owner = variant.regions.get(region);
+        if (owner === undefined) report(`region "${region}" not found in ${label} (code/${variant.dir}/); add it or set "only"`);
+        else if (!variant.visible.has(owner)) report(`region "${region}" is in code/${owner}, which is not shown in tabs in ${label}`);
+      }
+    }
+  }
 }

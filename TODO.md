@@ -17,7 +17,6 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
 
-- [ ] 1a Variants config + validation: `variants` (with per-variant `files`) and `otherVariantSteps` frontmatter, all code inside variant folders, region ids unique per variant, region-only steps, `only=`.
 - [ ] 1b Variants in the page: per-variant file map on steps, switcher before the file tabs, `?variant=` + `ics:variant`, focus kept on switch, `notice`/`hide` for `only=` steps; new `examples/framework-fixture-variants` + second Playwright web server.
 - [ ] 1c Per-variant downloads and Preview: ZIP of the active variant plus `requests/`, `<tutorial>-<variant>.zip`, web variants published under `preview/<variant>/`.
 - [ ] 2 Result pane replacing Preview for non-web code; captured output (`output/` folder, `<Step output>`, per-variant override); keeps the last result; build warning for credentials in outputs.

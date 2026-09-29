@@ -173,6 +173,128 @@ describe("validateTutorial frontmatter", () => {
   });
 });
 
+describe("validateTutorial variants", () => {
+  const variantFiles = [
+    { path: "curl/geocode.sh", source: 'TOKEN="ID" # @var clientId\n# #region request\ncurl "$URL?token=$TOKEN"\n# #endregion' },
+    { path: "curl/README.md", source: "# cURL" },
+    { path: "python/geocode.py", source: '# region auth\nTOKEN = "ID"  # @var clientId\n# endregion\n# region request\nprint(1)\n# endregion' },
+    { path: "python/util.py", source: "# region extra\nx = 1\n# endregion" },
+    { path: "web/index.html", source: "<p>hi</p>" },
+    { path: "web/main.js", source: '// #region auth\nconst t = "ID"; // @var clientId\n// #endregion\n// #region request\nfetch(u);\n// #endregion' },
+  ];
+  const variants = [
+    { id: "curl", label: "cURL", dir: "curl", entry: "geocode.sh", files: ["*.sh"] },
+    { id: "python", label: "Python", dir: "python", entry: "geocode.py" },
+    { id: "web", label: "JavaScript", dir: "web", entry: "main.js" },
+  ];
+  const run = (
+    options: { frontmatter?: Record<string, unknown>; files?: typeof variantFiles; binaries?: string[] },
+    ...uses: ComponentUse[]
+  ) =>
+    validateTutorial({
+      mdxFile: "tutorial.mdx",
+      uses,
+      files: options.files ?? variantFiles,
+      binaries: options.binaries ?? [],
+      images,
+      frontmatter: options.frontmatter ?? { variants, preview: "both" },
+      frontmatterLines: { variants: 2, files: 9 },
+    });
+
+  it("accepts region-only steps, only=, and files relative to the variant", () => {
+    expect(
+      run(
+        {},
+        use("Step", { id: "request", region: "request" }),
+        use("Step", { id: "auth", region: "auth", only: "python web" }),
+        use("Step", { id: "script", file: "geocode.py", region: "auth", only: "python" }),
+        use("Step", { id: "text-only" }),
+        use("VarField", { name: "clientId", label: "Token" }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not require index.html for the Preview", () => {
+    const noWeb = variantFiles.filter((f) => !f.path.startsWith("web/"));
+    expect(run({ files: noWeb, frontmatter: { variants: variants.slice(0, 2), preview: "both" } })).toEqual([]);
+  });
+
+  it("reports steps whose region or file is missing in a covered variant", () => {
+    expect(
+      run(
+        {},
+        use("Step", { id: "a", region: "auth" }),
+        use("Step", { id: "b", file: "main.js", only: "web curl" }),
+        use("Step", { id: "c", file: "geocode.py", region: "nope", only: "python" }),
+      ),
+    ).toEqual([
+      'tutorial.mdx:3:1 <Step> region "auth" not found in variant "curl" (code/curl/); add it or set "only"',
+      'tutorial.mdx:3:1 <Step> file "main.js" not found in variant "curl" (code/curl/main.js); add it or set "only"',
+      'tutorial.mdx:3:1 <Step> region "nope" not found in code/python/geocode.py',
+    ]);
+  });
+
+  it("reports unknown only= ids and only= without variants", () => {
+    expect(run({}, use("Step", { id: "a", only: "python rust" }))).toEqual([
+      'tutorial.mdx:3:1 <Step> only "rust" is not a variant id (curl, python, web)',
+    ]);
+    expect(validate(use("Step", { id: "a", only: "python" }))).toEqual(['tutorial.mdx:3:1 <Step> "only" requires frontmatter "variants"']);
+  });
+
+  it("reports steps on files or regions not shown in tabs", () => {
+    expect(
+      run({}, use("Step", { id: "a", file: "README.md", only: "curl" }), use("Step", { id: "b", region: "extra", only: "python" })),
+    ).toEqual([
+      'tutorial.mdx:3:1 <Step> file "README.md" is not shown in tabs in variant "curl"; add it to its "files"',
+    ]);
+    const hidden = [{ ...variants[1]!, files: ["geocode.py"] }];
+    const python = variantFiles.filter((f) => f.path.startsWith("python/"));
+    expect(run({ files: python, frontmatter: { variants: hidden } }, use("Step", { id: "b", region: "extra" }))).toEqual([
+      'tutorial.mdx:3:1 <Step> region "extra" is in code/python/util.py, which is not shown in tabs in variant "python"',
+    ]);
+  });
+
+  it("reports region ids defined twice within a variant", () => {
+    const files = [...variantFiles, { path: "python/more.py", source: "# region auth\ny = 2\n# endregion" }];
+    expect(run({ files })).toEqual(['code/python/more.py: region "auth" is also defined in code/python/geocode.py; region ids must be unique within variant "python"']);
+  });
+
+  it("reports files outside every variant folder", () => {
+    expect(run({ files: [...variantFiles, { path: "notes.md", source: "x" }], binaries: ["logo.png"] })).toEqual([
+      "code/logo.png: file is outside every variant folder; move it into one of code/curl/, code/python/, code/web/",
+      "code/notes.md: file is outside every variant folder; move it into one of code/curl/, code/python/, code/web/",
+    ]);
+  });
+
+  it("reports variant folder, entry and files problems at the variants key", () => {
+    const broken = [
+      { id: "curl", label: "cURL", dir: "curl", entry: "missing.sh", files: ["*.sh", "*.ps1"] },
+      { id: "python", label: "Python", dir: "python", entry: "geocode.py", files: ["util.py"] },
+      { id: "web", label: "JavaScript", dir: "web", entry: "main.js" },
+      { id: "go", label: "Go", dir: "go", entry: "main.go" },
+    ];
+    expect(run({ frontmatter: { variants: broken } })).toEqual([
+      'tutorial.mdx:2:1 frontmatter variant "curl" entry "missing.sh" not found in code/curl/',
+      'tutorial.mdx:2:1 frontmatter variant "curl" files "*.ps1" matches no text file in code/curl/',
+      'tutorial.mdx:2:1 frontmatter variant "python" entry "geocode.py" must be one of its "files"',
+      'tutorial.mdx:2:1 frontmatter variant "go" folder code/go/ has no files',
+      'code/python/geocode.py: @var "clientId" is in a file not shown in tabs; add the file to its variant\'s "files" or remove the marker',
+    ]);
+  });
+
+  it("reports vars in variant files not shown in tabs, but allows the variant's index.html", () => {
+    const files = variantFiles.map((f) => (f.path === "web/index.html" ? { ...f, source: '<script>const t = "ID"; // @var clientId</script>' } : f));
+    const web = [{ ...variants[2]!, files: ["main.js"] }];
+    expect(run({ files: files.filter((f) => f.path.startsWith("web/")), frontmatter: { variants: web } })).toEqual([]);
+  });
+
+  it("skips file checks when the variants config is invalid", () => {
+    expect(run({ frontmatter: { variants: "curl" } }, use("Step", { id: "a", region: "request" }))).toEqual([
+      'tutorial.mdx:2:1 frontmatter "variants" must be a non-empty list of { id, label, dir, entry }',
+    ]);
+  });
+});
+
 describe("parseStringArray", () => {
   it.each([
     ['["a.png", \'b.png\']', ["a.png", "b.png"]],

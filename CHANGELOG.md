@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added build validation for code variants (Phase 1, not rendered yet): `variants` frontmatter (`id`, `label`, `dir`, `entry`, per-variant `files`) and `otherVariantSteps` (`notice` | `hide`); all code must live in variant folders, region ids are unique within a variant, `<Step region>` without `file` resolves per variant, and `only="a b"` limits a step to some variants.
 - Added a `files` frontmatter list (paths/globs) that chooses which `code/` files get tabs; other files, including binaries, are published under `preview/` and fetched into the ZIP, and the ZIP action shows a badge with the total file count; its tooltip says how many are not shown in tabs.
 - Added binary file support in `code/`: detected by extension or NUL byte, never rendered, published and zipped byte for byte.
 - Added `.http` file variables (`@name = value`) as form-editable variables, and `-- @var` comments in SQL and Lua files.
