@@ -17,9 +17,13 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
 
-- [ ] Code variants: `variants` frontmatter, region ids unique per variant, per-variant file map on steps, switcher, `?variant=`, per-variant ZIP; web variants (with `index.html`) get Preview under `preview/<variant>/`.
-- [ ] Result pane replacing Preview for non-web variants; captured output (`output/` folder, `<Step output>`); build warning for credentials in outputs.
-- [ ] Collapsible JSON viewer (text-only rendering).
-- [ ] `.http` runner: `requests/` folder, several named requests per step with a "Run as" picker, URL-encoded query values, masking + "Show secrets", captured-output fallback, declarative error rule for HTTP 200 error bodies.
-- [ ] Error help table with reference links + Headers tab.
-- [ ] REST example tutorial + framework-fixture cases + mocked E2E (block every called host).
+- [ ] 1a Variants config + validation: `variants` (with per-variant `files`) and `otherVariantSteps` frontmatter, all code inside variant folders, region ids unique per variant, region-only steps, `only=`.
+- [ ] 1b Variants in the page: per-variant file map on steps, switcher before the file tabs, `?variant=` + `ics:variant`, focus kept on switch, `notice`/`hide` for `only=` steps; new `examples/framework-fixture-variants` + second Playwright web server.
+- [ ] 1c Per-variant downloads and Preview: ZIP of the active variant plus `requests/`, `<tutorial>-<variant>.zip`, web variants published under `preview/<variant>/`.
+- [ ] 2 Result pane replacing Preview for non-web code; captured output (`output/` folder, `<Step output>`, per-variant override); keeps the last result; build warning for credentials in outputs.
+- [ ] 3 Collapsible JSON viewer (text-only rendering, 100-entry truncation, keyboard).
+- [ ] 4a `.http` parser and build validation (`requests/`, supported subset, `request=` names).
+- [ ] 4b `.http` runner UI: Run, "Run as" picker, URL-encoded query values, masking + "Show secrets", 30 s timeout, captured-output fallback.
+- [ ] 5 Error rule + help table (`requests/errors.json`) + Headers tab.
+- [ ] 6 REST example tutorial (cURL / Python / JavaScript, GET + POST) + playground `requests/`; E2E blocks every called host.
+- [ ] 7 Presentation fit (Result pane across steps, clicker keys from the pane, high zoom) + authoring/upgrade docs.

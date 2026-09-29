@@ -124,8 +124,8 @@ Applied to `SPEC.md` on 2026-09-29 (planned items are marked *planned*):
 
 ## Open questions
 
-- Should a step be allowed to reference different region ids per variant, or is "same id in every variant" strict enough?
-- Preset package name and whether it lives in this monorepo.
+- [x] Should a step be allowed to reference different region ids per variant? No: same id in every variant, `only=` for single-variant steps (go/no-go review).
+- [x] Preset package name and location: `packages/interactive-code-scroll-arcgis` in this monorepo (go/no-go review).
 
 ## Go/no-go review (2026-09-29)
 
@@ -169,6 +169,12 @@ Phase 1:
 4. `.http` parser + runner: named requests, several per step with "Run as", masking + "Show secrets", network fallback, declarative error rule showing code + message (1.3) — L
 5. Error help table with reference links (moves to the ArcGIS preset in Phase 3; the example configures it locally until then) + Headers tab — M
 6. REST example + framework-fixture cases + mocked E2E (1.5) — M
+
+### Phase 1 plan-mode pass (2026-09-29)
+
+Rules settled in `SPEC.md` before implementing: variants schema (all code in variant folders, per-variant `files`), `otherVariantSteps: notice | hide` chosen by the author, variant choice precedence (`?variant=` > `ics:variant` > first), per-variant ZIP with `requests/`, Result pane keeps the last result, captured output types and lookup, supported `.http` subset, 30 s runner timeout, Body/Headers tabs, error rule in `requests/errors.json`, JSON viewer truncation and keyboard. Variant regressions get a second fixture, `examples/framework-fixture-variants`, on its own Playwright web server.
+
+Implementation order (one commit each): 1a variants config + validation; 1b page render, switcher, `?variant=`, `only=` behavior; 1c per-variant downloads and Preview; 2 Result pane + captured output; 3 JSON viewer; 4a `.http` parser + validation; 4b runner UI; 5 error rule + Headers tab; 6 REST example; 7 presentation fit + docs.
 
 ### Recommendations on open questions
 
