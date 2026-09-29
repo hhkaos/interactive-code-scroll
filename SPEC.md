@@ -138,6 +138,13 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - **Getting started tutorial**: teaches authors how to build their first tutorial with InteractiveCodeScroll. It should be built with InteractiveCodeScroll itself ("eat your own dog food") and live outside the stable E2E fixture.
 - **Authoring / API reference**: documents the tutorial folder layout, frontmatter options, MDX components, code markers, Preview behavior, downloads, validation rules, limitations and gotchas.
 - **CLI reference**: once the CLI exists, documents `dev`, `build`, `serve`, generated redirect URIs and scaffolding commands.
+- **Renderer plugin guide** *(planned, Phase 3, ships with result views)*: `docs/plugins.md` teaches authors to extend the Result pane with custom views:
+  - **Create**: the module contract (`accepts?(data)`, `render(element, data, context)`, cleanup), the data and context it receives, text-only rendering of untrusted data, sandboxed iframes for third-party code, a complete example (a table renderer in a few lines of TypeScript).
+  - **Install**: a local module in the tutorial project (`./renderers/table.ts`) or an npm package (`pnpm add interactive-code-scroll-arcgis`), and how to publish one as a package.
+  - **Register**: `renderers` in the integration config (and the CLI's generated config).
+  - **Use in MDX**: frontmatter `views` (renderer + label), `<Step views="…" view="…">`, how views apply to captured output and live responses, and the build errors authors may see.
+  - **Test**: rendering a view against captured output locally, without network.
+  `docs/authoring.md` documents `views`/`views=`/`view=` and links to the guide; `docs/features.md` lists the capability; the ArcGIS preset README is the worked example of an installed plugin package.
 - **Upgrade guide**: documents how authors update existing tutorials when the framework, CLI or client runtime changes, including supported version ranges, breaking-change notes, migration steps and validation commands.
 
 ---
