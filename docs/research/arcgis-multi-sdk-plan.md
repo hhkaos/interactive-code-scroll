@@ -21,6 +21,8 @@ The core stays generic (see `PROJECT.md`). Every capability below is described i
 | Variables | Language-aware escaping; one shared credential per site |
 | ArcGIS boundary | Generic core + ArcGIS scaffolder templates + optional preset package |
 | REST request source | `.http` files in `requests/` (VS Code REST Client / JetBrains HTTP Client format); runner source only, not a reader-visible variant |
+| Full tutorials per language | Sibling tutorials linked by `family` (Phase 2); code variants stay for shared-prose tutorials; no conditional prose in one MDX |
+| React/Vue with a build step | Deferred; captured output until decided (options in `SPEC.md` open questions) |
 | Result pane vs Preview | Result pane replaces the Preview for non-web variants |
 | Service errors | HTTP 200 bodies with an error object are failures, explained with code help + reference links |
 | Large projects UI | "+N files in ZIP" chip; no file list |
@@ -84,6 +86,7 @@ Exit: the REST tutorial runs live with a real key, degrades to captured output o
 | 2.2 Shared credentials | S | Document that persisted vars are shared per site; add `persist="tutorial"` for opt-out namespacing. E2E across two tutorials. |
 | 2.3 Scaffolder | M | Existing TODO `pnpm create interactive-code-scroll` with templates: `blank`, `web`, `rest`, `python`, `native`. ArcGIS starters live here as templates (e.g. `arcgis-js`, `arcgis-rest`, `arcgis-python`, `arcgis-kotlin`). |
 | 2.4 Pages workflow | S | One workflow building the whole series site. |
+| 2.5 Sibling tutorials | M | Frontmatter `family` + `familyLabel`; header switcher lists the family's tutorials on the site and navigates to the same step id when it exists. For tutorials whose prose differs by language (JS SDK vs Python API). Depends on 2.1. |
 
 ### Phase 3 — Extension point + ArcGIS preset package
 
