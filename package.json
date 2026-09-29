@@ -8,6 +8,8 @@
     "docs:dev": "pnpm --filter example-getting-started dev",
     "docs:build": "pnpm --filter example-getting-started build",
     "playground": "pnpm --filter example-multi-sdk-playground dev",
+    "variants": "pnpm --filter example-framework-fixture-variants dev",
+    "variants:hide": "pnpm --filter example-framework-fixture-variants-hide dev",
     "check": "pnpm --filter interactive-code-scroll build && pnpm -r check",
     "preflight:docs": "git diff --check",
     "preflight:ui": "pnpm check",

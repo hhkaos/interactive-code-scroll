@@ -28,6 +28,8 @@ pnpm install
 pnpm dev          # framework fixture through the generic CLI
 pnpm build        # build the framework fixture through the generic CLI
 pnpm playground   # multi-SDK playground (examples/multi-sdk-playground) in dev mode
+pnpm variants     # code variants fixture (examples/framework-fixture-variants) in dev mode
+pnpm variants:hide # same with `otherVariantSteps: hide`
 pnpm check        # tsc (core package) + astro check (example)
 pnpm preflight:docs    # whitespace/conflict check for docs/context-only changes
 pnpm preflight:ui      # focused preflight for CSS/UI-only changes
@@ -47,15 +49,19 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Phase 1 plan-mode pass is done: its rules are in `SPEC.md` (commit `f4f303a`) and its task order in `TODO.md` (1a → 7).
+Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`). Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
 
-Recommended next task: **1a Variants config + validation** (`src/frontmatter.ts`, `src/validate.ts`, `src/visible-files.ts`; Vitest only, no UI).
+Recommended next task: **2 Result pane + captured output** (SPEC "Result pane": `output/` folder, `<Step output>`, per-variant `output/<variant>/` override, pane replaces the Preview for non-web code, keeps the last result, text/terminal + image rendering, JSON as `<pre>` until task 3, build warning for credentials). Start in plan mode: it adds a `tutorial-files.ts` folder, a validation rule, a published route and new UI (screenshot review against the mockup's `ResultStates` artboard). Pending decision carried over: `requests/` goes into every variant's ZIP in task 4a.
+
+Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
 Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
 - UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
-- Full E2E was green (61/61) at `c559d8c`; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
+- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, the rest → :4400).
+- Full E2E was green (76/76) at `da9f036`; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
+- Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
 
 ---
 
