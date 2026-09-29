@@ -333,6 +333,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | Astro attributes on custom elements | `hidden={false}` / `selected={false}` on a native element: attribute omitted | On a custom element (e.g. `calcite-tab-nav`): serialized as the string `"false"`, so `hidden="false"` hides it | Write `attr={condition \|\| undefined}` |
 | Calcite sizes late | Measuring a Calcite container once (or observing only it) on load | Its children (`calcite-tab-title`, `calcite-segmented-control`) grow after they render, while the container keeps its size | Observe the children too (`ResizeObserver`); see `client/variants.ts` |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
+| Per-tutorial context for MDX components (Astro 7) | Values set on `Astro.locals` in a page's frontmatter: visible to MDX components that page renders (`<Content components>`), one value per route in a static build | A module-level "current tutorial" variable: shared by every route, unsafe if pages render concurrently (not verified) | Series sites use `setCurrentTutorial()`/`currentTutorial()` (`src/tutorial-data.ts`). A static route (`/`) may export `getStaticPaths` (returning `[{ params: {} }]`) without warning, so one entrypoint serves both `/` and `/[tutorial]` |
 
 ---
 
