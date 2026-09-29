@@ -662,7 +662,50 @@ body[data-docs-hidden] {
   .result-request-source { padding-block: 0.375rem; line-height: 1.5; white-space: nowrap; color: var(--calcite-color-text-3); }
 }
 
-#result-notice { flex: none; }
+:is(#result-notice, #result-error) { flex: none; }
+
+/* Body / Headers of a live response (captured output has no headers). */
+#result-tabs {
+  flex: none;
+  padding-inline: 0.5rem;
+
+  &[hidden] { display: none; }
+}
+
+/* Response headers: names and values are untrusted text. */
+.result-headers {
+  padding: 0.75rem 1rem;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font: var(--calcite-font-size-sm) / 1.6 var(--calcite-font-family-code);
+  }
+  tr + tr { border-top: 1px solid var(--calcite-color-border-3); }
+  :is(th, td) { padding: 0.25rem 0; vertical-align: top; text-align: start; }
+  th {
+    /* Names take the width they need; values get the rest. */
+    width: 1%;
+    padding-inline-end: 1.5rem;
+    white-space: nowrap;
+    font-weight: var(--calcite-font-weight-medium);
+    color: var(--calcite-color-text-2);
+  }
+  td { overflow-wrap: anywhere; color: var(--calcite-color-text-1); }
+  .result-headers-note { margin: 0.75rem 0 0; font-size: var(--calcite-font-size-xs); color: var(--calcite-color-text-3); }
+}
+
+/* A long text body shows its first part until "Show all". */
+.result-more {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--calcite-color-border-3);
+  font-size: var(--calcite-font-size-xs);
+  color: var(--calcite-color-text-2);
+}
 
 .result-frame {
   flex: 1;

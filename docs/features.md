@@ -49,6 +49,8 @@ See [Preview](authoring.md#preview).
 - The build warns when a captured output looks like it contains a real credential.
 - HTTP requests live in `.http` files under `requests/` (VS Code REST Client / JetBrains syntax): steps bind them with `request="geocode-get geocode-post"`, the build validates the supported syntax and names, and every ZIP includes `requests/` with form values applied.
 - A Run request button sends the step's request live from the browser with the reader's form values (a "Run as" picker when the step offers several, e.g. GET and POST), shows the status, time and response body, masks secrets in the request line (with a "Show secrets" toggle), gives up after 30 s and falls back to the captured output when the network or CORS fails. Readers can keep a live response for the session; Show captured returns to the captured one.
+- Live responses have Body and Headers tabs: JSON as a tree, images as images, long text cut at 200 KB with "Show all"; Headers lists what the server exposes through CORS.
+- Service errors inside responses (e.g. ArcGIS REST answering HTTP 200 with an `error` object) are shown as failures, with the code, message and a help link from `requests/errors.json`.
 
 See [Result Pane](authoring.md#result-pane).
 
@@ -81,5 +83,4 @@ See [Validation](authoring.md#validation).
 
 These are specified and being built; see `SPEC.md` and `TODO.md`:
 
-- Error explanations for service errors inside HTTP 200 responses, and a Headers tab for live responses.
 - Sites with several tutorials and an index page; sibling tutorials per language.

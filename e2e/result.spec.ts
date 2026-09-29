@@ -123,13 +123,14 @@ const requestLine = (page: Page) => page.locator(".result-request-line");
 const tokenInput = (page: Page) => page.locator('calcite-input[data-var="fixtureToken"] input');
 
 /** Answers the fixture API (and its CORS preflight); returns the requests it got. */
-async function mockApi(page: Page, reply: { status?: number; body?: string } = {}) {
+async function mockApi(page: Page, reply: { status?: number; body?: string | Buffer; headers?: Record<string, string> } = {}) {
   const calls: { method: string; url: string; body: string | null }[] = [];
   await page.route(API, (route) => {
     const request = route.request();
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
     calls.push({ method: request.method(), url: request.url(), body: request.postData() });
-    return route.fulfill({ status: reply.status ?? 200, headers: { ...CORS, "Content-Type": "application/json" }, body: reply.body ?? '{ "items": ["live"] }' });
+    const headers = { ...CORS, "Content-Type": "application/json", ...reply.headers };
+    return route.fulfill({ status: reply.status ?? 200, headers, body: reply.body ?? '{ "items": ["live"] }' });
   });
   return calls;
 }
@@ -249,4 +250,84 @@ test("a long request line wraps instead of hiding the query string", async ({ pa
   }));
   expect(height).toBeGreaterThan(lineHeight * 1.5);
   expect(overflows).toBe(false);
+});
+
+const errorNotice = (page: Page) => page.locator("#result-error");
+const tabTitle = (page: Page, name: string) => page.locator(`#result-tabs calcite-tab-title[data-tab="${name}"]`);
+
+test("a service error in an HTTP 200 body is shown as a failure, explained from requests/errors.json", async ({ page }) => {
+  await mockApi(page, { body: '{ "error": { "code": 498, "message": "Invalid token.", "details": [] } }' });
+  await page.goto("/#request");
+  await expect(errorNotice(page)).not.toHaveAttribute("open");
+  await runButton(page).click();
+  await expect(badge(page)).toHaveText("Error 498 · HTTP 200");
+  await expect(badge(page)).toHaveAttribute("data-state", "error");
+  await expect(errorNotice(page)).toHaveAttribute("open", "");
+  const message = errorNotice(page).locator("[slot=message]");
+  await expect(message).toHaveText(
+    "498 · Invalid token. HTTP 200, but the body holds an error object. The token is expired, revoked or mistyped. Learn more",
+  );
+  await expect(message.locator("calcite-link")).toHaveAttribute("href", "https://docs.fixture.test/errors#498");
+  await expect(body(page).getByRole("tree", { name: "JSON response of list-items" })).toContainText('"message": "Invalid token."');
+  await page.locator("#result-captured").click();
+  await expect(errorNotice(page)).not.toHaveAttribute("open");
+  await expect(badge(page)).toHaveText("Captured · output/request.json");
+});
+
+test("the error rule also explains non-2xx bodies, with the fallback link for unknown codes", async ({ page }) => {
+  await mockApi(page, { status: 400, body: '{ "error": { "code": "E42", "message": "Bad input" } }' });
+  await page.goto("/#request");
+  await runButton(page).click();
+  await expect(badge(page)).toHaveText("Error E42 · HTTP 400");
+  const message = errorNotice(page).locator("[slot=message]");
+  await expect(message).toHaveText("E42 · Bad input Error code reference");
+  await expect(message.locator("calcite-link")).toHaveAttribute("href", "https://docs.fixture.test/errors");
+});
+
+test("the Headers tab lists the headers the server exposes through CORS; captured output has no tabs", async ({ page }) => {
+  await mockApi(page, { headers: { "X-Exposed": "yes", "X-Hidden": "no", "Access-Control-Expose-Headers": "X-Exposed" } });
+  await page.goto("/#request");
+  await expect(page.locator("#result-tabs")).toBeHidden();
+  await runButton(page).click();
+  await expect(badge(page)).toHaveAttribute("data-state", "live");
+  await expect(page.locator("#result-tabs")).toBeVisible();
+  await expect(tabTitle(page, "body")).toHaveAttribute("selected", "");
+  await tabTitle(page, "headers").click();
+  await expect(tabTitle(page, "headers")).toHaveAttribute("selected", "");
+  await expect(tabTitle(page, "body")).not.toHaveAttribute("selected");
+  // The code panel's file tabs are not affected.
+  await expect(page.locator(".code:not([hidden])")).toHaveCount(1);
+  const table = body(page).getByRole("table", { name: "Response headers of list-items" });
+  await expect(table.getByRole("row", { name: "x-exposed yes" })).toBeVisible();
+  await expect(table).toContainText("content-type");
+  await expect(table).not.toContainText("x-hidden");
+  await expect(body(page)).toContainText("Only headers the server exposes to the browser through CORS");
+  // The chosen tab stays for the next run.
+  await runButton(page).click();
+  await expect(body(page).getByRole("table")).toBeVisible();
+  await tabTitle(page, "body").click();
+  await expect(body(page).getByRole("tree")).toBeVisible();
+  await page.locator("#result-captured").click();
+  await expect(page.locator("#result-tabs")).toBeHidden();
+});
+
+test("image responses are shown as images; long text is cut until Show all", async ({ page }) => {
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
+  await mockApi(page, { body: png, headers: { "Content-Type": "image/png" } });
+  await page.goto("/#request");
+  await runButton(page).click();
+  const image = body(page).getByRole("img", { name: "Response image of list-items" });
+  await expect(image).toHaveAttribute("src", /^blob:/);
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
+
+  await page.unrouteAll();
+  const text = `${"a".repeat(200 * 1024)}END`;
+  await mockApi(page, { body: text, headers: { "Content-Type": "text/plain" } });
+  await runButton(page).click();
+  const pre = body(page).locator("pre.result-response");
+  await expect(body(page)).toContainText("Showing the first 200 KB of 201 KB.");
+  expect(await pre.evaluate((el) => el.textContent!.length)).toBe(200 * 1024);
+  await body(page).getByRole("button", { name: "Show all (201 KB)" }).click();
+  expect(await pre.evaluate((el) => el.textContent!.endsWith("END"))).toBe(true);
+  await expect(body(page).locator(".result-more")).toHaveCount(0);
 });

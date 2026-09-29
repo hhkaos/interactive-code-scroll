@@ -99,18 +99,18 @@ test("the ZIP holds the active variant's folder plus requests/, with form values
   expect(download.suggestedFilename()).toBe(`${folder}.zip`);
   const zip = (await download.path())!;
   const listing = execFileSync("unzip", ["-Z1", zip], { encoding: "utf8" }).trim().split("\n").sort();
-  expect(listing).toEqual([`${folder}/request.py`, `${folder}/requests/items.http`, `${folder}/requirements.txt`, `${folder}/util.py`]);
+  expect(listing).toEqual([`${folder}/request.py`, `${folder}/requests/errors.json`, `${folder}/requests/items.http`, `${folder}/requirements.txt`, `${folder}/util.py`]);
   expect(execFileSync("unzip", ["-p", zip, `${folder}/request.py`], { encoding: "utf8" })).toContain('FIXTURE_TOKEN = "zip-token"');
   expect(execFileSync("unzip", ["-p", zip, `${folder}/requests/items.http`], { encoding: "utf8" })).toContain("@fixtureToken = zip-token");
 });
 
 test("the ZIP badge and tooltip count the active variant's files plus requests/", async ({ page }) => {
   await page.goto("/#config");
-  await expect(page.locator(".zip-action")).toHaveAttribute("data-count", "4");
-  await expect(page.locator("#download-zip")).toHaveAttribute("text", "Download project (ZIP) · 4 files (2 not shown in tabs)");
+  await expect(page.locator(".zip-action")).toHaveAttribute("data-count", "5");
+  await expect(page.locator("#download-zip")).toHaveAttribute("text", "Download project (ZIP) · 5 files (3 not shown in tabs)");
   await pick(page, "curl");
-  await expect(page.locator(".zip-action")).toHaveAttribute("data-count", "2");
-  await expect(page.locator("#download-zip")).toHaveAttribute("text", "Download project (ZIP) · 2 files (1 not shown in tabs)");
+  await expect(page.locator(".zip-action")).toHaveAttribute("data-count", "3");
+  await expect(page.locator("#download-zip")).toHaveAttribute("text", "Download project (ZIP) · 3 files (2 not shown in tabs)");
 });
 
 test("only web variants show the Preview, which runs from the variant's own page", async ({ page, baseURL }) => {

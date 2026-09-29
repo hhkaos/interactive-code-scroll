@@ -12,6 +12,7 @@ import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { MAX_SEGMENTED } from "../client/variant-values.ts";
 import { variantVisible } from "../variants.ts";
 import { selectVisible } from "../visible-files.ts";
+import { ERROR_RULE_FILE, readErrorRule } from "../error-rule.ts";
 import { parseHttpFile, runnerRequests } from "../requests.ts";
 import "../styles/tutorial.css";
 
@@ -51,6 +52,9 @@ const fetched = [...files.map((f) => f.path).filter((path) => !embedded.has(path
 const requestFiles = requests.map((f) => ({ path: f.path, parsed: parseSource(f.source, `requests/${f.path}`) }));
 // The Result pane's runner gets the named requests already parsed (validation reported any error).
 const runner = runnerRequests(requests.filter((f) => f.path.endsWith(".http")).map((f) => parseHttpFile(f.source, f.path).file));
+// Service errors in response bodies: requests/errors.json (validation reported any error).
+const errorRuleSource = requests.find((f) => f.path === ERROR_RULE_FILE)?.source;
+const errorRule = errorRuleSource === undefined ? undefined : readErrorRule(errorRuleSource).rule;
 // Files in each ZIP (a variant's ZIP holds its own folder) and how many of them have no tab.
 const allPaths = [...textPaths, ...binaries];
 const zipCountsFor = (inZip: (path: string) => boolean) => {
@@ -71,6 +75,7 @@ const clientData = JSON.stringify({
   fetched,
   requests: requestFiles,
   runner,
+  errorRule,
   zipCounts,
   variants: clientVariants,
   otherVariantSteps: config.otherVariantSteps,
@@ -256,6 +261,13 @@ const clientData = JSON.stringify({
                   <calcite-notice id="result-notice" kind="warning" icon="exclamation-mark-triangle" scale="s" width="full">
                     <div slot="message" />
                   </calcite-notice>
+                  <calcite-notice id="result-error" kind="danger" icon="exclamation-mark-circle" scale="s" width="full">
+                    <div slot="message" />
+                  </calcite-notice>
+                  <calcite-tab-nav id="result-tabs" hidden>
+                    <calcite-tab-title data-tab="body" selected>Body</calcite-tab-title>
+                    <calcite-tab-title data-tab="headers">Headers</calcite-tab-title>
+                  </calcite-tab-nav>
                   <div class="result-body" tabindex="0" role="region" aria-label="Result output">
                     <p class="result-empty">No result yet. Steps with a captured output show it here, and steps with a request can run it.</p>
                   </div>
@@ -273,6 +285,7 @@ const clientData = JSON.stringify({
     <script>
       import "../client/calcite.ts";
       import type { ParsedSource } from "../markers.ts";
+      import type { ErrorRule } from "../error-rule.ts";
       import type { RunnerRequest } from "../requests.ts";
       import { startDocsCodeBlocks } from "../client/docs-code.ts";
       import { startHints } from "../client/hints.ts";
@@ -295,6 +308,7 @@ const clientData = JSON.stringify({
         fetched: string[];
         requests: { path: string; parsed: ParsedSource }[];
         runner: Record<string, RunnerRequest>;
+        errorRule?: ErrorRule;
         zipCounts?: Record<string, { total: number; withoutTab: number }>;
         variants?: VariantInfo[];
         otherVariantSteps: "notice" | "hide";
@@ -329,7 +343,7 @@ const clientData = JSON.stringify({
       if (data.preview !== "off") {
         refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl, variants }).refresh;
       }
-      refreshRequest = startResult({ files: data.files, outputUrl: `${base}output/`, variants, requests: data.runner, vars }).refreshRequest;
+      refreshRequest = startResult({ files: data.files, outputUrl: `${base}output/`, variants, requests: data.runner, errorRule: data.errorRule, vars }).refreshRequest;
 
       // Clicker keys pressed while the preview has focus.
       addEventListener("message", (event) => {

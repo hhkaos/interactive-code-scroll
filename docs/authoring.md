@@ -307,7 +307,7 @@ Supported syntax:
 
 Build errors: request variables (`{{name.response…}}`), system variables (`{{$guid}}`…), `< file` bodies, pre-request and response handler scripts (`< {% %}`, `> {% %}`, `>> file`), `{{x}}` with no file variable `x`, a request line without a supported method, a request name defined twice across `requests/`, a `request=` name that does not exist or is listed twice, `request=` on a step whose variants are all web code (or in a tutorial with `code/index.html`), binary files in `requests/`, and a `code/requests/` (or `code/<variant dir>/requests/`) folder that would overwrite `requests/` in the ZIP.
 
-Other text files in `requests/` (for example a README) are zipped as is.
+Other text files in `requests/` (for example a README) are zipped as is. `requests/errors.json` is the [error rule](#service-errors).
 
 ### Request runner
 
@@ -316,10 +316,34 @@ A step with `request=` gets a **Run request** button in the Result pane. Nothing
 - **Run as**: when a step lists several requests, a picker labeled with each request's method (or its name when two share a method) chooses which one to send. The first is the default each time the step is shown.
 - **Values**: every `{{x}}` takes the reader's `<VarField>` value, else the file variable's default; file variables may use other file variables. Values substituted in the query string (after `?`) are URL-encoded; in the path, headers and body they are inserted as is.
 - **Request line**: above the result, the method and URL that will be sent, with the request file and name; long URLs wrap at `/`, `?` and `&`. Values of `secret` vars are masked (as in the code) unless the reader presses **Show secrets**, which is off on every page load and never remembered. Headers and body are not shown.
-- **Response**: the badge shows status and time (`Live · 200 OK · 318 ms`); the body is shown in the JSON viewer when it parses, else as plain text, never as HTML. Non-2xx statuses are shown the same way, with a red badge.
+- **Response**: the badge shows status and time (`Live · 200 OK · 318 ms`); non-2xx statuses get a red badge. A live response has two tabs:
+  - **Body**: `image/*` responses as an image; otherwise the JSON viewer when the body parses, else plain text, never as HTML. Text over 200 KB shows its first 200 KB and a **Show all** action.
+  - **Headers**: the response headers the browser can read. Cross-origin responses expose only the CORS-safelisted headers (such as `Content-Type`) plus those the server lists in `Access-Control-Expose-Headers`; the tab says so. The chosen tab stays until the page reloads.
 - **Keep response**: a live response lasts while the pane shows that step's result (steps without a result keep it too) and is dropped when the reader moves to another result, switches variant or picks another request. **Keep response** keeps it in memory until the page reloads, so coming back shows it (`Kept · …`); **Show captured** discards it.
 - **Failures**: a request is aborted after 30 s. On a timeout or a network/CORS failure the pane says so and shows the step's captured output instead (or only the notice when the step has none). A request the browser cannot build (an invalid URL, a body on `GET`/`HEAD`) is reported and not sent.
+- **Service errors**: see [below](#service-errors).
 - **CORS**: requests are sent with `fetch` from the reader's browser without cookies, so the service must allow cross-origin requests; browsers drop headers they forbid (such as `Host` or `Cookie`). Give such steps a captured `output=` so they still show a result.
+
+### Service errors
+
+Some APIs report errors inside a successful response: ArcGIS REST, for example, answers HTTP 200 with `{ "error": { "code": 498, "message": "Invalid token." } }`. Declare how to recognize them in `requests/errors.json`:
+
+```json
+{
+  "object": "error",
+  "code": "error.code",
+  "message": "error.message",
+  "help": {
+    "498": { "text": "The token is expired, revoked or mistyped.", "link": "https://…/error-codes#498" }
+  },
+  "fallbackLink": "https://…/error-codes"
+}
+```
+
+- `object`, `code` and `message` (required) are dot paths from the root of the response body. A JSON body where `object` is an object is a service error, whatever the HTTP status.
+- `help` (optional) maps codes to a short `text` and a `link`; `fallbackLink` (optional) is shown for codes without help. Links must be `http(s)` URLs.
+- The pane shows the failure prominently: a red badge (`Error 498 · HTTP 200`), a notice with the code, the message, the help text and its link, and the body below it.
+- The build validates the file (valid JSON, required paths, help entries, URLs, unknown keys) and reports errors as `requests/errors.json:<line>`. It is not a request file and is zipped with `requests/`.
 
 ## Files Not Shown in Tabs
 

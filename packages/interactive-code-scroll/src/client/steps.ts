@@ -106,10 +106,11 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   function showFile(path: string): void {
     for (const pane of $$(".code")) pane.hidden = pane.dataset.file !== path;
-    for (const title of $$<TabTitle>("calcite-tab-title")) title.selected = title.dataset.file === path;
+    for (const title of $$<TabTitle>("calcite-tab-title[data-file]")) title.selected = title.dataset.file === path;
   }
 
-  for (const title of $$("calcite-tab-title")) {
+  // File tabs only: the Result pane has its own tab titles.
+  for (const title of $$("calcite-tab-title[data-file]")) {
     title.addEventListener("calciteTabsActivate", () => showFile(title.dataset.file!));
   }
 

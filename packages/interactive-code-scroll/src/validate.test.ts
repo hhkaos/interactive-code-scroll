@@ -364,6 +364,7 @@ describe("validateTutorial requests", () => {
     path: "geocode.http",
     source: "@token = DEMO\n\n# @name geocode-get\nGET https://x.test/?token={{token}}\n\n###\n# @name geocode-post\nPOST https://x.test/\n",
   };
+  const errorRule = { path: "errors.json", source: '{ "object": "error", "code": "error.code", "message": "error.message" }' };
   const run = (
     uses: ComponentUse[],
     options: { files?: { path: string; source: string }[]; requests?: { path: string; source: string }[]; requestBinaries?: string[]; frontmatter?: Record<string, unknown> } = {},
@@ -373,7 +374,7 @@ describe("validateTutorial requests", () => {
       uses,
       files: options.files ?? script,
       images,
-      requests: options.requests ?? [http, { path: "errors.json", source: "{}" }],
+      requests: options.requests ?? [http, errorRule],
       requestBinaries: options.requestBinaries,
       frontmatter: options.frontmatter ?? { preview: "off" },
     });
@@ -402,6 +403,13 @@ describe("validateTutorial requests", () => {
       "requests/logo.png: binary files are not allowed in requests/",
       "requests/broken.http:2: system variable {{$guid}} is not supported; use a file variable",
       '@var "token" must have the same default in every file: code/main.py "DEMO", requests/broken.http "OTHER"',
+    ]);
+  });
+
+  it("reports an invalid requests/errors.json; other JSON files in requests/ are not rules", () => {
+    const broken = { path: "errors.json", source: '{\n  "object": "error",\n  "code": "error.code"\n}' };
+    expect(run([], { requests: [http, broken, { path: "sub/errors.json", source: "{}" }] })).toEqual([
+      'requests/errors.json:1: "message" is required: a dot path such as "error.message"',
     ]);
   });
 

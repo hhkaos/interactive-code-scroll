@@ -1,0 +1,12 @@
+{
+  "object": "error",
+  "code": "error.code",
+  "message": "error.message",
+  "help": {
+    "498": {
+      "text": "The token is expired, revoked or mistyped.",
+      "link": "https://docs.fixture.test/errors#498"
+    }
+  },
+  "fallbackLink": "https://docs.fixture.test/errors"
+}

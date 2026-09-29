@@ -1,3 +1,4 @@
+import { matchError, type ErrorRule, type ServiceError } from "../error-rule.ts";
 import { outputKind } from "../output.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import type { RunnerRequest } from "../requests.ts";
@@ -10,10 +11,13 @@ import { lastResult, stepOutput, stepRequests, type StepResult } from "./result-
 import {
   displayLine,
   failureMessage,
+  isImageType,
   resolveRequest,
   responseBadge,
   RUN_TIMEOUT_MS,
   runAsLabels,
+  serviceErrorBadge,
+  truncate,
   type RunFailure,
 } from "./runner-values.ts";
 import { STEP_EVENT } from "./steps.ts";
@@ -28,6 +32,8 @@ export interface ResultOptions {
   variants?: VariantsHandle;
   /** Named requests of `requests/`, by name. */
   requests: Readonly<Record<string, RunnerRequest>>;
+  /** `requests/errors.json`: marks responses whose body holds a service error. */
+  errorRule?: ErrorRule;
   vars: VarsHandle;
 }
 
@@ -36,16 +42,26 @@ export interface ResultHandle {
   refreshRequest(): void;
 }
 
-/** A live response; `body` is untrusted text. */
+/** A live response; `body` and `headers` are untrusted text. */
 interface LiveResponse {
   status: number;
   statusText: string;
   ms: number;
+  /** Headers the browser exposes (CORS), as it lists them. */
+  headers: [string, string][];
+  /** Empty for an image. */
   body: string;
+  /** Object URL of an `image/*` body. */
+  image?: string;
+  /** Found in a JSON body by the error rule. */
+  error?: ServiceError;
 }
+
+type ResponseTab = "body" | "headers";
 
 type CalciteNotice = HTMLElement & { open: boolean };
 type SegmentedControl = HTMLElement & { value: string };
+type TabTitle = HTMLElement & { selected: boolean };
 
 /**
  * The Result pane takes the Preview's place for code that cannot run in the browser.
@@ -56,7 +72,7 @@ type SegmentedControl = HTMLElement & { value: string };
  * until the pane shows another step, variant or request, unless the reader keeps it
  * (in memory, until the page reloads).
  */
-export function startResult({ files, outputUrl, variants, requests, vars }: ResultOptions): ResultHandle {
+export function startResult({ files, outputUrl, variants, requests, errorRule, vars }: ResultOptions): ResultHandle {
   const section = document.querySelector<HTMLElement>("section.result");
   if (!section) return { refreshRequest: () => {} };
   const frame = section.querySelector<HTMLElement>(".result-frame")!;
@@ -74,6 +90,10 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
   const revealButton = requestBar.querySelector<HTMLElement>("#result-reveal")!;
   const notice = section.querySelector<CalciteNotice>("#result-notice")!;
   const noticeMessage = notice.querySelector<HTMLElement>("[slot=message]")!;
+  const errorNotice = section.querySelector<CalciteNotice>("#result-error")!;
+  const errorMessage = errorNotice.querySelector<HTMLElement>("[slot=message]")!;
+  const tabs = section.querySelector<HTMLElement>("#result-tabs")!;
+  const tabTitles = [...tabs.querySelectorAll<TabTitle>("calcite-tab-title")];
 
   const allSteps = [...document.querySelectorAll<HTMLElement>("section.step")];
   const results: StepResult[] = allSteps.map(({ dataset }) => ({
@@ -120,11 +140,17 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
   let abort = () => {};
   let runs = 0;
   let revealed = false;
+  // Body or Headers of live responses: kept across runs until the page reloads.
+  let tab: ResponseTab = "body";
   let shown: string | undefined;
   let renders = 0;
 
   const keptKey = () => `${allSteps[resultStep]?.id ?? ""} ${chosen ?? ""}`;
   const isKept = () => live !== undefined && kept.get(keptKey()) === live;
+  /** Frees an image body once its response can no longer be shown. */
+  const release = (response: LiveResponse | undefined) => {
+    if (response?.image && ![...kept.values()].includes(response)) URL.revokeObjectURL(response.image);
+  };
 
   const text = (className: string, content: string, error = false) => {
     const pre = document.createElement("pre");
@@ -198,13 +224,87 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
     });
   }
 
+  /** Long text shows its first part and a "Show all" action. */
+  function renderText(content: string): Node {
+    const { shown: part, truncated, kb } = truncate(content);
+    const pre = text("result-response", part);
+    if (!truncated) return pre;
+    const more = document.createElement("div");
+    more.className = "result-more";
+    const note = document.createElement("span");
+    note.textContent = `Showing the first ${Math.round(part.length / 1024)} KB of ${kb} KB.`;
+    const button = document.createElement("calcite-button");
+    button.setAttribute("appearance", "outline");
+    button.setAttribute("scale", "s");
+    button.textContent = `Show all (${kb} KB)`;
+    button.addEventListener("click", () => {
+      pre.textContent = content;
+      more.remove();
+    });
+    more.append(note, button);
+    const fragment = document.createDocumentFragment();
+    fragment.append(pre, more);
+    return fragment;
+  }
+
+  function renderHeaders(headers: readonly [string, string][]): HTMLElement {
+    const view = document.createElement("div");
+    view.className = "result-headers";
+    if (headers.length > 0) {
+      const table = document.createElement("table");
+      table.setAttribute("aria-label", `Response headers of ${chosen}`);
+      for (const [name, value] of headers) {
+        const row = table.insertRow();
+        const th = document.createElement("th");
+        th.scope = "row";
+        th.textContent = name;
+        row.append(th);
+        row.insertCell().textContent = value;
+      }
+      view.append(table);
+    }
+    const note = document.createElement("p");
+    note.className = "result-headers-note";
+    note.textContent = `${headers.length === 0 ? "No headers exposed. " : ""}Only headers the server exposes to the browser through CORS (Access-Control-Expose-Headers) are listed.`;
+    view.append(note);
+    return view;
+  }
+
   function showResponse(response: LiveResponse): void {
-    show(`live:${runs}:${keptKey()}`, () => {
+    show(`live:${runs}:${keptKey()}:${tab}`, () => {
+      if (tab === "headers") return renderHeaders(response.headers);
+      if (response.image) {
+        const image = document.createElement("img");
+        image.className = "result-image";
+        image.alt = `Response image of ${chosen}`;
+        image.src = response.image;
+        return image;
+      }
       if (response.body === "") return text("result-message", "(empty body)");
       const json = parseJson(response.body);
       if (json.ok) return renderJson(json.value, `JSON response of ${chosen}`);
-      return text("result-response", response.body);
+      return renderText(response.body);
     });
+  }
+
+  /** Code and message first, then the help text and its reference link. */
+  function fillError(error: ServiceError, status: number): void {
+    const title = document.createElement("strong");
+    title.textContent = [error.code, error.message].filter((part) => part !== undefined).join(" · ") || "Service error";
+    const parts: Node[] = [title];
+    const say = (content: string) => parts.push(document.createTextNode(` ${content}`));
+    if (status >= 200 && status < 300) say(`HTTP ${status}, but the body holds an error object.`);
+    if (error.help) say(error.help.text);
+    const href = error.help?.link ?? error.link;
+    if (href) {
+      const link = document.createElement("calcite-link");
+      link.setAttribute("href", href);
+      link.setAttribute("target", "_blank");
+      link.setAttribute("rel", "noopener noreferrer");
+      link.textContent = error.help ? "Learn more" : "Error code reference";
+      parts.push(document.createTextNode(" "), link);
+    }
+    errorMessage.replaceChildren(...parts);
   }
 
   function setBadge(state: string | undefined, label = ""): void {
@@ -223,6 +323,12 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
     capturedButton.hidden = live === undefined;
     notice.open = failure !== undefined;
     noticeMessage.textContent = failure === undefined ? "" : failureMessage(failure, captured !== undefined);
+    const shownLive = running || buildError !== undefined ? undefined : live;
+    errorNotice.open = shownLive?.error !== undefined;
+    if (shownLive?.error) fillError(shownLive.error, shownLive.status);
+    else errorMessage.replaceChildren();
+    tabs.hidden = shownLive === undefined;
+    for (const title of tabTitles) title.selected = title.dataset.tab === tab;
     refreshRequest();
 
     if (running) {
@@ -233,7 +339,8 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
       setBadge("error", "Request not sent");
       show(`build-error:${runs}`, () => text("result-message", buildError!, true));
     } else if (live) {
-      setBadge(live.status >= 200 && live.status < 300 ? "live" : "error", responseBadge(live, isKept()));
+      if (live.error) setBadge("error", serviceErrorBadge(live.error.code, live.status));
+      else setBadge(live.status >= 200 && live.status < 300 ? "live" : "error", responseBadge(live, isKept()));
       showResponse(live);
     } else {
       setBadge(
@@ -267,7 +374,9 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
     running = false;
     failure = undefined;
     buildError = undefined;
+    const previous = live;
     live = kept.get(keptKey());
+    if (previous !== live) release(previous);
   }
 
   function choose(name: string | undefined): void {
@@ -293,6 +402,7 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
     const request = chosen === undefined ? undefined : requests[chosen];
     if (!request) return;
     reset();
+    release(live);
     live = undefined;
     setCollapsed(false);
     const token = ++runs;
@@ -330,9 +440,24 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
     const start = performance.now();
     try {
       const response = await fetch(sent);
-      const content = await response.text();
-      if (token !== runs) return;
-      live = { status: response.status, statusText: response.statusText, ms: performance.now() - start, body: content };
+      const image = isImageType(response.headers.get("content-type") ?? "") ? URL.createObjectURL(await response.blob()) : undefined;
+      const content = image === undefined ? await response.text() : "";
+      const ms = performance.now() - start;
+      if (token !== runs) {
+        if (image) URL.revokeObjectURL(image);
+        return;
+      }
+      const json = errorRule && content !== "" ? parseJson(content) : undefined;
+      const error = json?.ok ? matchError(errorRule!, json.value) : undefined;
+      live = {
+        status: response.status,
+        statusText: response.statusText,
+        ms,
+        headers: [...response.headers],
+        body: content,
+        ...(image !== undefined && { image }),
+        ...(error && { error }),
+      };
     } catch {
       // Aborted by a newer run or a context change: that one draws.
       if (token !== runs || (controller.signal.aborted && !timedOut)) return;
@@ -372,6 +497,12 @@ export function startResult({ files, outputUrl, variants, requests, vars }: Resu
   document.addEventListener(PREVIEW_STATE_EVENT, (event) => setCollapsed((event as CustomEvent<PreviewState>).detail === "collapsed"));
 
   runButton.addEventListener("click", () => void run());
+  for (const title of tabTitles) {
+    title.addEventListener("calciteTabsActivate", () => {
+      tab = title.dataset.tab as ResponseTab;
+      draw();
+    });
+  }
   runAsControl.addEventListener("calciteSegmentedControlChange", () => {
     choose(runAsControl.value);
     draw();

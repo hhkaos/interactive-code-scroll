@@ -1,3 +1,4 @@
+import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
@@ -202,6 +203,9 @@ export function validateTutorial({
       requestSources.set(`requests/${file.path}`, parseSource(file.source, `requests/${file.path}`));
     } catch (error) {
       errors.push((error as Error).message);
+    }
+    if (file.path === ERROR_RULE_FILE) {
+      for (const { line, message } of readErrorRule(file.source).errors) errors.push(`requests/${file.path}:${line}: ${message}`);
     }
     if (!file.path.endsWith(".http")) continue;
     const http = parseHttpFile(file.source, file.path);

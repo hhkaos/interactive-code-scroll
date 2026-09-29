@@ -85,3 +85,21 @@ export function failureMessage(failure: RunFailure, hasCaptured: boolean): strin
 export function responseBadge({ status, statusText, ms }: { status: number; statusText: string; ms: number }, kept: boolean): string {
   return `${kept ? "Kept" : "Live"} · ${status}${statusText ? ` ${statusText}` : ""} · ${Math.round(ms)} ms`;
 }
+
+/** Badge of a response whose body holds a service error, e.g. "Error 498 · HTTP 200". */
+export function serviceErrorBadge(code: string | undefined, status: number): string {
+  return `Error${code === undefined ? "" : ` ${code}`} · HTTP ${status}`;
+}
+
+/** Text bodies longer than this (in characters) are cut until the reader asks for all of it. */
+export const TEXT_LIMIT = 200 * 1024;
+
+/** The part of a text body shown first, and the size of the whole body for "Show all". */
+export function truncate(text: string, limit = TEXT_LIMIT): { shown: string; truncated: boolean; kb: number } {
+  return { shown: text.slice(0, limit), truncated: text.length > limit, kb: Math.ceil(text.length / 1024) };
+}
+
+/** How the Body tab renders a response, from its `Content-Type`. */
+export function isImageType(contentType: string): boolean {
+  return /^\s*image\//i.test(contentType);
+}

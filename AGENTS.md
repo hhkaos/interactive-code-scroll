@@ -55,6 +55,9 @@ Explore first: before writing code for X, ask what already exists. Check officia
 - Wait for my answer before continuing.
 - If you are about to write code for something that might already exist, ask first: "Does X already exist in this codebase?"
 
+### Shared components in the page
+Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).
+
 ### Ask before destructive actions
 Confirm before: deleting files, force-pushing, resetting git state, dropping packages.
 

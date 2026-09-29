@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RunnerRequest } from "../requests.ts";
-import { displayLine, failureMessage, resolveRequest, responseBadge, runAsLabels } from "./runner-values.ts";
+import { displayLine, failureMessage, isImageType, resolveRequest, responseBadge, runAsLabels, serviceErrorBadge, truncate } from "./runner-values.ts";
 
 const request: RunnerRequest = {
   path: "geocode.http",
@@ -69,5 +69,26 @@ describe("messages", () => {
   it("labels live and kept responses", () => {
     expect(responseBadge({ status: 200, statusText: "OK", ms: 317.6 }, false)).toBe("Live · 200 OK · 318 ms");
     expect(responseBadge({ status: 404, statusText: "", ms: 12 }, true)).toBe("Kept · 404 · 12 ms");
+  });
+});
+
+describe("response view", () => {
+  it("labels service errors with their code and HTTP status", () => {
+    expect(serviceErrorBadge("498", 200)).toBe("Error 498 · HTTP 200");
+    expect(serviceErrorBadge(undefined, 400)).toBe("Error · HTTP 400");
+  });
+
+  it("cuts text bodies over the limit and reports the full size", () => {
+    expect(truncate("abcdef", 4)).toEqual({ shown: "abcd", truncated: true, kb: 1 });
+    expect(truncate("abcd", 4)).toEqual({ shown: "abcd", truncated: false, kb: 1 });
+    expect(truncate("x".repeat(300 * 1024)).kb).toBe(300);
+    expect(truncate("x".repeat(300 * 1024)).shown).toHaveLength(200 * 1024);
+  });
+
+  it("shows image/* bodies as images", () => {
+    expect(isImageType("image/png")).toBe(true);
+    expect(isImageType("Image/SVG+xml; charset=utf-8")).toBe(true);
+    expect(isImageType("application/json")).toBe(false);
+    expect(isImageType("")).toBe(false);
   });
 });
