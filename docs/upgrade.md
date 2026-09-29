@@ -35,4 +35,12 @@ Before v1, breaking changes may happen in alpha releases. Each breaking change s
 - an actionable validation error when possible,
 - a fixture/E2E case when the behavior is observable through a tutorial.
 
-No breaking changes are documented yet.
+### Unreleased: one default per variable name
+
+A variable name used in several files must now have the same default literal everywhere. Before, the form field silently took the first file's default. The build now fails with `@var "name" must have the same default in every file: …` listing each file and value.
+
+Fix it by using the same demo value in every file, or by giving the variables different names.
+
+### Unreleased: literals that cannot be escaped
+
+`@var` on a Python f-string, raw string or triple-quoted string, or on a TOML literal string (`'...'`), is now a build error because typed values could break the code. Switch the literal to a plain string.

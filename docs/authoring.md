@@ -195,7 +195,33 @@ Rules:
 - `@var` targets the first string literal on its line.
 - Use one `@var` per line.
 - Variable names are unique per file.
-- Runtime values are escaped for the detected context.
+- The same variable may appear in several files (for example a token in `main.py` and `MainActivity.kt`); one form field then fills all of them. Every occurrence must use the same default literal, or the build fails and lists each file.
+- SQL and Lua files also accept `-- @var name` comments.
+
+Runtime values are escaped for the file type and quote style:
+
+| Files | Escaping |
+|---|---|
+| JS/TS, JSON, CSS, Python, Swift, Java, C#, C++, QML, YAML/TOML double quotes | Backslash escapes (`\"`, `\\`, `\n`) |
+| Kotlin, Dart, Gradle/Groovy | Backslash escapes plus `\$`, so values never start a string template |
+| Shell (`.sh`, `.bash`) | Double quotes escape `\ " $` and backticks; single quotes use `'\''` |
+| PowerShell (`.ps1`) | Double quotes use backtick escapes; single quotes double the quote |
+| SQL, YAML single quotes | The quote is doubled (`''`) |
+| HTML/XML/XAML (`<!-- @var -->`) | Attribute entities (`&quot;`, `&amp;`, `&lt;`) |
+
+Literals that cannot hold an arbitrary value are build errors: Python f-strings, raw strings and triple-quoted strings, and TOML literal strings (`'...'`). Use a plain string instead.
+
+### `.http` file variables
+
+In `.http` files (VS Code REST Client / JetBrains HTTP Client syntax), every file variable line is a variable with the rest of the line as its default. No `@var` marker is needed:
+
+```http
+@accessToken = YOUR_ACCESS_TOKEN
+
+GET https://example.com/search?token={{accessToken}}
+```
+
+Values are inserted as typed, with line breaks removed.
 
 ## Preview
 

@@ -27,6 +27,22 @@ The Python file uses the VS Code folding style `# region` / `# endregion`, recog
 
 </Step>
 
+<Step id="curl" file="geocode.sh" region="request">
+
+## cURL: the same request
+
+Shell strings escape differently: try an access token containing `"`, `$` or a backtick, then download the ZIP. Python, Kotlin and C# get backslash escapes, the shell script escapes `$` and backticks too, and `.http` values are inserted as is.
+
+</Step>
+
+<Step id="http" file="geocode.http" region="request">
+
+## HTTP: a request file
+
+`.http` file variables (`@accessToken = …`) are vars too, so the same field fills `{{accessToken}}`. The request runner will use these files in Phase 1.
+
+</Step>
+
 <Step id="request" file="geocode.py" region="request">
 
 ## Python: send the request

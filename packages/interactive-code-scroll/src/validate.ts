@@ -35,6 +35,25 @@ export function parseStringArray(expression: string): string[] | undefined {
   return [...expression.matchAll(/"([^"\\]*)"|'([^'\\]*)'/g)].map((m) => m[1] ?? m[2]!);
 }
 
+/** One form field feeds every file that marks the same var, so all of them must agree on its default. */
+function inconsistentDefaults(parsed: ReadonlyMap<string, ParsedSource>): string[] {
+  const byName = new Map<string, { path: string; value: string }[]>();
+  for (const [path, source] of parsed) {
+    for (const v of source.vars) {
+      const uses = byName.get(v.name) ?? [];
+      uses.push({ path, value: v.defaultValue });
+      byName.set(v.name, uses);
+    }
+  }
+  const errors: string[] = [];
+  for (const [name, uses] of byName) {
+    if (new Set(uses.map((u) => u.value)).size < 2) continue;
+    const listed = uses.map((u) => `code/${u.path} ${JSON.stringify(u.value)}`).join(", ");
+    errors.push(`@var "${name}" must have the same default in every file: ${listed}`);
+  }
+  return errors;
+}
+
 /** Returns every broken reference as `file:line:column message`; empty when valid. */
 export function validateTutorial({
   mdxFile,
@@ -70,6 +89,7 @@ export function validateTutorial({
     }
   }
   const varNames = new Set([...parsed.values()].flatMap((p) => p.vars.map((v) => v.name)));
+  errors.push(...inconsistentDefaults(parsed));
   const stepIds = new Set<string>();
   const hintIds = new Set<string>();
 

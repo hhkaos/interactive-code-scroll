@@ -1,0 +1,7 @@
+@serviceUrl = https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer
+@accessToken = YOUR_ACCESS_TOKEN
+
+# #region request
+# @name geocode
+GET {{serviceUrl}}/findAddressCandidates?singleLine=380 New York St, Redlands, CA&f=json&token={{accessToken}}
+# #endregion request

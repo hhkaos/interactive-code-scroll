@@ -74,6 +74,26 @@ describe("validateTutorial", () => {
   });
 });
 
+describe("validateTutorial shared vars", () => {
+  const run = (sources: [string, string][]) =>
+    validateTutorial({
+      mdxFile: "tutorial.mdx",
+      uses: [],
+      files: [...files, ...sources.map(([path, source]) => ({ path, source }))],
+      images,
+    });
+
+  it("accepts the same var in several files with one default", () => {
+    expect(run([["geocode.py", 'TOKEN = "ID"  # @var clientId'], ["Main.kt", 'val t = "ID" // @var clientId']])).toEqual([]);
+  });
+
+  it("reports a var whose defaults differ between files", () => {
+    expect(run([["geocode.py", 'TOKEN = "OTHER"  # @var clientId']])).toEqual([
+      '@var "clientId" must have the same default in every file: code/main.js "ID", code/geocode.py "OTHER"',
+    ]);
+  });
+});
+
 describe("validateTutorial frontmatter", () => {
   const withFrontmatter = (frontmatter: Record<string, unknown>, inputFiles = files) =>
     validateTutorial({

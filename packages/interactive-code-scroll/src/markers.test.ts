@@ -33,8 +33,8 @@ function a() {
   it("records var literal positions, defaults and quotes", () => {
     const { vars } = parseSource(js);
     expect(vars).toEqual([
-      { name: "clientId", line: 1, fromColumn: 18, toColumn: 32, defaultValue: "YOUR_CLIENT_ID", quote: '"', context: "script" },
-      { name: "portalUrl", line: 2, fromColumn: 19, toColumn: 41, defaultValue: "https://www.arcgis.com", quote: "'", context: "script" },
+      { name: "clientId", line: 1, fromColumn: 18, toColumn: 32, defaultValue: "YOUR_CLIENT_ID", quote: '"', escape: "backslash" },
+      { name: "portalUrl", line: 2, fromColumn: 19, toColumn: 41, defaultValue: "https://www.arcgis.com", quote: "'", escape: "backslash" },
     ]);
   });
 
@@ -48,11 +48,11 @@ body { font-family: "Avenir"; } /* @var font */
     expect(parseSource(html)).toMatchObject({
       code: '<arcgis-map item-id="abc123"></arcgis-map>',
       regions: [{ id: "map", fromLine: 1, toLine: 1 }],
-      vars: [{ name: "webmap", defaultValue: "abc123", context: "html" }],
+      vars: [{ name: "webmap", defaultValue: "abc123", escape: "markup" }],
     });
     expect(parseSource(css)).toMatchObject({
       code: 'body { font-family: "Avenir"; }',
-      vars: [{ name: "font", defaultValue: "Avenir", context: "script" }],
+      vars: [{ name: "font", defaultValue: "Avenir", escape: "backslash" }],
     });
   });
 
@@ -173,5 +173,68 @@ describe("applyVars", () => {
   it("escapes values for HTML attributes", () => {
     const parsed = parseSource('<a href="x"></a> <!-- @var url -->');
     expect(applyVars(parsed, { url: 'a"b&<c' })).toBe('<a href="a&quot;b&amp;&lt;c"></a>');
+  });
+});
+
+describe("escaping by file type", () => {
+  const tricky = `a"b'c\\d$e\`f`;
+  it.each([
+    ["main.js", `const v = "x"; // @var v`, `const v = "a\\"b'c\\\\d$e\`f";`],
+    ["Main.java", `String v = "x"; // @var v`, `String v = "a\\"b'c\\\\d$e\`f";`],
+    ["geocode.py", `V = "x"  # @var v`, `V = "a\\"b'c\\\\d$e\`f"`],
+    ["geocode.py", `V = 'x'  # @var v`, `V = 'a"b\\'c\\\\d$e\`f'`],
+    ["MainActivity.kt", `val v = "x" // @var v`, `val v = "a\\"b'c\\\\d\\$e\`f"`],
+    ["main.dart", `final v = 'x'; // @var v`, `final v = 'a"b\\'c\\\\d\\$e\`f';`],
+    ["setup.sh", `V="x" # @var v`, `V="a\\"b'c\\\\d\\$e\\\`f"`],
+    ["setup.sh", `V='x' # @var v`, `V='a"b'\\''c\\d$e\`f'`],
+    ["setup.ps1", `$v = "x" # @var v`, `$v = "a\`"b'c\\d\`$e\`\`f"`],
+    ["setup.ps1", `$v = 'x' # @var v`, `$v = 'a"b''c\\d$e\`f'`],
+    ["query.sql", `SELECT 'x'; -- @var v`, `SELECT 'a"b''c\\d$e\`f';`],
+    ["config.yaml", `key: 'x' # @var v`, `key: 'a"b''c\\d$e\`f'`],
+    ["config.yaml", `key: "x" # @var v`, `key: "a\\"b'c\\\\d$e\`f"`],
+    ["page.xaml", `<Map Key="x" /> <!-- @var v -->`, `<Map Key="a&quot;b'c\\d$e\`f" />`],
+  ])("%s: %s", (file, source, expected) => {
+    expect(applyVars(parseSource(source, `code/${file}`), { v: tricky })).toBe(expected);
+  });
+
+  it.each([
+    ["geocode.py", `URL = f"{BASE}/x"  # @var v`, /f-strings and raw strings/],
+    ["geocode.py", `PATH = r"C:\\x"  # @var v`, /f-strings and raw strings/],
+    ["geocode.py", `DOC = """x"""  # @var v`, /triple-quoted/],
+    ["pyproject.toml", `name = 'x' # @var v`, /TOML literal strings/],
+  ])("rejects unsafe literals in %s: %s", (file, source, message) => {
+    expect(() => parseSource(source, `code/${file}`)).toThrow(message);
+    expect(() => parseSource(source, `code/${file}`)).toThrow(/:1: @var v:/);
+  });
+
+  it("keeps -- comments as code outside SQL and Lua", () => {
+    expect(() => parseSource(`x = "a" -- @var v`, "code/main.js")).not.toThrow();
+    expect(parseSource(`x = "a" -- @var v`, "code/main.js").vars).toEqual([]);
+  });
+});
+
+describe(".http file variables", () => {
+  const http = `@serviceUrl = https://example.com/api
+@token = YOUR_TOKEN
+
+# @name search
+GET {{serviceUrl}}/search?token={{token}}`;
+
+  it("exposes @name = value lines as unquoted vars", () => {
+    const parsed = parseSource(http, "code/requests/search.http");
+    expect(parsed.code).toBe(http);
+    expect(parsed.vars).toEqual([
+      { name: "serviceUrl", line: 1, fromColumn: 14, toColumn: 37, defaultValue: "https://example.com/api", quote: "", escape: "raw" },
+      { name: "token", line: 2, fromColumn: 9, toColumn: 19, defaultValue: "YOUR_TOKEN", quote: "", escape: "raw" },
+    ]);
+  });
+
+  it("applies values as is, without line breaks", () => {
+    const [, line2] = applyVars(parseSource(http, "code/search.http"), { token: 'a"b\nc' }).split("\n");
+    expect(line2).toBe('@token = a"b c');
+  });
+
+  it("only reads file variables in .http files", () => {
+    expect(parseSource("@token = x", "code/notes.txt").vars).toEqual([]);
   });
 });

@@ -37,6 +37,9 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
     `${folder}/report.py`,
     `${folder}/style.css`,
   ]);
+  const report = execFileSync("unzip", ["-p", zip, `${folder}/report.py`], { encoding: "utf8" });
+  expect(report).toContain('CLIENT_ID = "secret-id"');
+  expect(report).not.toMatch(/# region|@var/);
   const main = execFileSync("unzip", ["-p", zip, `${folder}/main.js`], { encoding: "utf8" });
   expect(main).toContain('const clientId = "secret-id";');
   expect(main).not.toMatch(/#region|@var/);

@@ -16,7 +16,6 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 0 — language-agnostic code model (in order):
 
-- [ ] Var model: one default per var name across files (build error otherwise); escaper by file type and quote (JS-like, Python, shell, XML/HTML); reject f-strings, raw and triple-quoted literals; unquoted `.http` file variables (`@name = value`). Upgrade note in `docs/upgrade.md`.
 - [ ] Frontmatter `files:` visible subset; no `@var` in files without a tab; binary files published byte for byte; ZIP fetches hidden and binary files from `preview/`.
 - [ ] Dev mode: re-validate when `code/`, `images/` (later `requests/`, `output/`) change; center the error overlay on the failing MDX line (`loc`).
 

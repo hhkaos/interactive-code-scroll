@@ -19,6 +19,14 @@ test("secret values are masked until revealed", async ({ page }) => {
   await expect(code(page)).toContainText('const clientId = "my-client-id";');
 });
 
+test("one field updates every file that marks the same var", async ({ page }) => {
+  await page.goto("/#config");
+  await page.locator('calcite-input[data-var="clientId"] [data-reveal]').click();
+  await clientIdInput(page).fill("shared-id");
+  await expect(code(page).locator('[data-var="clientId"]')).toHaveText("shared-id");
+  await expect(page.locator('.code[data-file="report.py"] [data-var="clientId"]')).toHaveText("shared-id");
+});
+
 test("clearing a field restores the default from the code", async ({ page }) => {
   await page.goto("/#config");
   await clientIdInput(page).fill("abc");

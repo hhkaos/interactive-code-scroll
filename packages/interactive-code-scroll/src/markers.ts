@@ -15,10 +15,30 @@ export interface VarRef {
   fromColumn: number;
   toColumn: number;
   defaultValue: string;
-  quote: '"' | "'";
-  /** `html` when the marker is an HTML comment: the literal is an attribute value. */
-  context: "html" | "script";
+  /** `""` for an unquoted value (`.http` file variables). */
+  quote: '"' | "'" | "";
+  /** How runtime values are escaped, from the file type, the quote and the marker comment. */
+  escape: EscapeKind;
 }
+
+/**
+ * - `backslash`: `\\`, the quote, `\n`, `\r` (JS/TS, JSON, Python, Swift, C#, Java, C++, YAML/TOML double quotes…)
+ * - `backslash-dollar`: `backslash` plus `\$` (Kotlin, Dart, Groovy/Gradle string templates)
+ * - `shell-double` / `shell-single`: POSIX shell quoting
+ * - `powershell-double`: backtick escapes; single-quoted PowerShell uses `doubling`
+ * - `doubling`: the quote is doubled (SQL, YAML and PowerShell single quotes)
+ * - `markup`: HTML/XML attribute entities (marker in an `<!-- -->` comment)
+ * - `raw`: inserted as is, line breaks removed (`.http` file variables)
+ */
+export type EscapeKind =
+  | "backslash"
+  | "backslash-dollar"
+  | "shell-double"
+  | "shell-single"
+  | "powershell-double"
+  | "doubling"
+  | "markup"
+  | "raw";
 
 export interface ParsedSource {
   code: string;
@@ -52,7 +72,30 @@ const NATIVE_REGION: Record<string, readonly [RegExp, RegExp]> = {
   lua: DASH_REGION,
 };
 const VAR_COMMENT = /\s*(#|\/\/|\/\*|<!--)\s*@var\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
+/** SQL and Lua comments; only in those files, where `--` cannot be an operator before `@var`. */
+const DASH_VAR_COMMENT = /\s*(--)\s*@var\s+([\w-]+)\s*$/;
 const STRING_LITERAL = /(["'])((?:\\.|(?!\1).)*)\1/;
+/** `.http` file variable: `@name = value`. */
+const HTTP_VARIABLE = /^(\s*@([\w-]+)\s*=\s*)(.*?)\s*$/;
+
+const DOLLAR_TEMPLATES = new Set(["kt", "kts", "dart", "gradle", "groovy"]);
+const SHELLS = new Set(["sh", "bash", "zsh"]);
+
+/** The escaper for a literal, or a reason it cannot be edited safely. */
+function escapeFor(ext: string, quote: '"' | "'", comment: string, prefix: string, rest: string): EscapeKind | string {
+  if (comment === "<!--") return "markup";
+  if (ext === "py") {
+    if (/[rRfF]/.test(prefix)) return "Python f-strings and raw strings cannot hold an @var value; use a plain string";
+    if (rest.startsWith(quote.repeat(3))) return "Python triple-quoted strings cannot hold an @var value; use a plain string";
+  }
+  if (ext === "toml" && quote === "'") return "TOML literal strings ('...') cannot escape an @var value; use double quotes";
+  if (SHELLS.has(ext)) return quote === '"' ? "shell-double" : "shell-single";
+  if (ext === "ps1") return quote === '"' ? "powershell-double" : "doubling";
+  if (ext === "sql") return "doubling";
+  if ((ext === "yaml" || ext === "yml") && quote === "'") return "doubling";
+  if (DOLLAR_TEMPLATES.has(ext)) return "backslash-dollar";
+  return "backslash";
+}
 
 /** Strips `#region` / `@var` markers and records where they pointed. */
 export function parseSource(source: string, file?: string): ParsedSource {
@@ -61,7 +104,8 @@ export function parseSource(source: string, file?: string): ParsedSource {
   const vars: VarRef[] = [];
   const open: { id: string; fromLine: number; sourceLine: number }[] = [];
   const markdownLike = file === undefined ? false : /\.(?:md|mdx)$/i.test(file);
-  const native = file === undefined ? undefined : NATIVE_REGION[extensionOf(file)];
+  const ext = file === undefined ? "" : extensionOf(file);
+  const native = NATIVE_REGION[ext];
   let fenced = false;
   const fail = (message: string, sourceLine: number): never => {
     throw new MarkerError(message, file, sourceLine);
@@ -98,21 +142,41 @@ export function parseSource(source: string, file?: string): ParsedSource {
     }
 
     let line = raw;
-    const varComment = VAR_COMMENT.exec(line);
+    const addVar = (name: string, ref: Omit<VarRef, "name" | "line">) => {
+      if (vars.some((v) => v.name === name)) fail(`duplicate @var "${name}"`, sourceLine);
+      vars.push({ name, line: out.length + 1, ...ref });
+    };
+
+    const httpVariable = ext === "http" ? HTTP_VARIABLE.exec(line) : null;
+    if (httpVariable) {
+      const fromColumn = httpVariable[1]!.length;
+      addVar(httpVariable[2]!, {
+        fromColumn,
+        toColumn: fromColumn + httpVariable[3]!.length,
+        defaultValue: httpVariable[3]!,
+        quote: "",
+        escape: "raw",
+      });
+      out.push(line);
+      return;
+    }
+
+    const varComment = VAR_COMMENT.exec(line) ?? (ext === "sql" || ext === "lua" ? DASH_VAR_COMMENT.exec(line) : null);
     if (varComment) {
       const name = varComment[2]!;
       line = line.slice(0, varComment.index);
       const literal = STRING_LITERAL.exec(line) ?? fail(`@var ${name} has no string literal on its line`, sourceLine);
-      if (vars.some((v) => v.name === name)) fail(`duplicate @var "${name}"`, sourceLine);
+      const quote = literal[1] as '"' | "'";
+      const prefix = /[A-Za-z]*$/.exec(line.slice(0, literal.index))![0];
+      const escape = escapeFor(ext, quote, varComment[1]!, prefix, line.slice(literal.index));
+      if (!isEscapeKind(escape)) fail(`@var ${name}: ${escape}`, sourceLine);
       const fromColumn = literal.index + 1;
-      vars.push({
-        name,
-        line: out.length + 1,
+      addVar(name, {
         fromColumn,
         toColumn: fromColumn + literal[2]!.length,
         defaultValue: literal[2]!,
-        quote: literal[1] as VarRef["quote"],
-        context: varComment[1] === "<!--" ? "html" : "script",
+        quote,
+        escape: escape as EscapeKind,
       });
     }
     out.push(line);
@@ -122,7 +186,7 @@ export function parseSource(source: string, file?: string): ParsedSource {
   return { code: out.join("\n"), regions, vars };
 }
 
-/** Replaces each `@var` literal with its runtime value (default when missing), escaped for its context. */
+/** Replaces each `@var` literal with its runtime value (default when missing), escaped for its file type and quote. */
 export function applyVars(parsed: ParsedSource, values: Readonly<Record<string, string>>): string {
   const lines = parsed.code.split("\n");
   // Right-to-left so earlier columns on the same line stay valid.
@@ -135,16 +199,46 @@ export function applyVars(parsed: ParsedSource, values: Readonly<Record<string, 
   return lines.join("\n");
 }
 
-export function escapeLiteral(value: string, { quote, context }: Pick<VarRef, "quote" | "context">): string {
-  if (context === "html") {
-    return value
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replaceAll(quote, quote === '"' ? "&quot;" : "&#39;");
+const ESCAPE_KINDS: readonly string[] = [
+  "backslash",
+  "backslash-dollar",
+  "shell-double",
+  "shell-single",
+  "powershell-double",
+  "doubling",
+  "markup",
+  "raw",
+] satisfies EscapeKind[];
+
+function isEscapeKind(value: string): value is EscapeKind {
+  return ESCAPE_KINDS.includes(value);
+}
+
+export function escapeLiteral(value: string, { quote, escape }: Pick<VarRef, "quote" | "escape">): string {
+  switch (escape) {
+    case "markup":
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replaceAll(quote, quote === '"' ? "&quot;" : "&#39;");
+    case "raw":
+      return value.replace(/[\r\n]+/g, " ");
+    case "doubling":
+      return value.replaceAll(quote, quote + quote);
+    case "shell-single":
+      return value.replaceAll("'", "'\\''");
+    case "shell-double":
+      return value.replace(/[\\"$`]/g, "\\$&");
+    case "powershell-double":
+      return value.replace(/[`"$]/g, "`$&");
+    case "backslash":
+    case "backslash-dollar": {
+      const escaped = value
+        .replace(/\\/g, "\\\\")
+        .replaceAll(quote, `\\${quote}`)
+        .replace(/\n/g, "\\n")
+        .replace(/\r/g, "\\r");
+      return escape === "backslash-dollar" ? escaped.replace(/\$/g, "\\$") : escaped;
+    }
   }
-  return value
-    .replace(/\\/g, "\\\\")
-    .replaceAll(quote, `\\${quote}`)
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "\\r");
 }

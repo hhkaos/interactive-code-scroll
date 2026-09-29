@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added `.http` file variables (`@name = value`) as form-editable variables, and `-- @var` comments in SQL and Lua files.
 - Added `examples/multi-sdk-playground` (`pnpm playground`), a local tutorial with Python, Kotlin, C# and SQL steps for trying multi-SDK features by hand.
 - Added syntax highlighting for Python, Kotlin, Gradle, Swift, Java, C#, XML/XAML, C++, QML, Dart, TOML, INI, SQL, Lua, PowerShell, `.http`, JSX/TSX, Vue and GeoJSON files, plus a `languages` frontmatter map to override the language per extension.
 - Added native region markers scoped by file type: C# `#region` in `.cs`, `# region` in `.py`, and `-- #region` in `.sql`/`.lua`.
@@ -19,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- `@var` values are now escaped for the file type and quote style (backslash, Kotlin/Dart/Groovy `$`, shell, PowerShell, SQL/YAML quote doubling, HTML/XML entities). Python f-strings, raw and triple-quoted strings and TOML literal strings are rejected at build time.
+- A variable name used in several files must have the same default literal everywhere; the build fails otherwise (see `docs/upgrade.md`).
 - Frontmatter is now validated together with MDX references at compile time: invalid fields, a missing `logo` image and Preview without `code/index.html` report `tutorial.mdx:line:column` at the offending key instead of failing later during page rendering.
 - Expanded the root and package READMEs with quick-start guidance and links to tutorials built with InteractiveCodeScroll.
 - Updated shared project context to document the public docs, getting-started tutorial and GitHub Pages deployment workflow.

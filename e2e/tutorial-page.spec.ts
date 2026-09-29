@@ -201,7 +201,7 @@ test("highlights Python and strips its native region markers", async ({ page }) 
   await expect(pane).toBeVisible();
   await expect(pane).not.toContainText("region");
   await expect(pane.locator('.line[data-regions~="summary"]')).toHaveCount(2);
-  const colors = await pane.locator(".line").first().locator("span").evaluateAll((spans) =>
+  const colors = await pane.locator('.line[data-regions~="summary"]').first().locator("span").evaluateAll((spans) =>
     Object.fromEntries(spans.map((s) => [s.textContent?.trim(), (s as HTMLElement).style.getPropertyValue("--shiki-light")])),
   );
   expect(colors.def).toBeTruthy();
