@@ -45,9 +45,9 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 ## Next Session Plan
 
-Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 items 0.1–0.4 are done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge).
+Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Recommended next task: **0.5 dev revalidation** — in `pnpm dev`, re-run MDX validation when files under `code/` or `images/` (later `requests/`, `output/`) change without touching `tutorial.mdx`, and center the dev overlay on the failing MDX `loc`. Relevant: `src/tutorial-module.ts` (virtual module, `addWatchFile`), `src/mdx-validation.ts` (runs inside the MDX compile), `src/index.ts` (integration hooks). Then Phase 1 needs its own plan-mode pass.
+Recommended next task: **Phase 1 plan-mode pass** (REST vertical slice: variants, result pane, JSON viewer, `.http` runner). Update `SPEC.md` before implementing.
 
 Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
@@ -277,6 +277,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | MDX frontmatter in Sätteri plugins | `ctx.source` has the frontmatter blanked out (lines kept) | Astro parses it first and seeds `ctx.data.astro.frontmatter` | Read the parsed object from `ctx.data`; get key line numbers from the file on disk (`frontmatterKeyLines`) |
 | MDX plugins (Astro 7) | `remarkPlugins` on `@astrojs/mdx`: deprecated | Default processor is Sätteri: use `mdastPlugins` (`satteri` 0.x, API may change) | Astro does not surface Sätteri `report()` diagnostics: throw instead |
 | `astro dev` / `astro preview` (v7) | Human terminal: foreground | AI agent detected (`AI_AGENT` env): auto-backgrounds and returns | Use `--ignore-lock` to stay in the foreground (Playwright `webServer`); otherwise `astro dev stop` / `astro dev logs` |
+| `astro dev()` under Vitest | `process.env.VITEST` set: Astro skips its dev request handler (every page 404 "Cannot GET"); `NODE_ENV=test`: Astro sets `server.hmr: false`, so no `hotUpdate` hooks run | Unset `VITEST` and set `NODE_ENV=development` around `dev()`, then restore | See `test/dev.test.ts`; overlay errors reach the browser over the HMR socket (`?token=` from `/@vite/client`) 200 ms after the 500 response |
 | `calcite-carousel` selection | Setting `selected` on a `calcite-carousel-item` after creation: ignored (two items end up `selected`, the view does not move) | `selected` present when items are created: honoured | Public API has no next/select method; re-create the carousel with the wanted item `selected`; read the carousel's `selectedItem` (not items' flags) |
 | Calcite runtime assets | Online: components wait for t9n JSON from `js.arcgis.com` before first render (~1 s, more under load) | Offline / CDN blocked: render once the fetch fails, but no icons or translated labels | Matters for the "serve locally" plan B; tests block the CDN (`e2e/fixtures.ts`). Neither `customElements.whenDefined` nor `componentOnReady()` guarantees final layout online: observe sizes instead (`ResizeObserver`) |
 | Calcite mode classes | `calcite-mode-light` / `-dark` set Calcite tokens | They do not set `color-scheme` | Set it ourselves: `light-dark()` (Shiki colors) and native scrollbars follow the nearest mode class (the code panel's own class) |

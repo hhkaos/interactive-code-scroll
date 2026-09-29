@@ -57,16 +57,36 @@ describe("tutorialModule", () => {
     writeFileSync(join(root, "tutorial", "code", "js", "main.js"), 'const a = "1";\n');
     writeFileSync(join(root, "tutorial", "images", "shot.png"), "");
     const plugin = tutorialModule(join(root, "tutorial"));
-    const watched: string[] = [];
-    const ctx = { addWatchFile: (id: string) => watched.push(id) };
 
-    const code = plugin.load.call(ctx, plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
+    const code = plugin.load(plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
     expect(code).toContain(`export { Content, frontmatter } from ${JSON.stringify(join(root, "tutorial", "tutorial.mdx"))};`);
     expect(code).toContain('export const files = [{"path":"js/main.js","source":"const a = \\"1\\";\\n"}];');
     expect(code).toContain(`import image0 from ${JSON.stringify(join(root, "tutorial", "images", "shot.png") + "?url")};`);
     expect(code).toContain('export const images = {"images/shot.png": image0};'.replace("images/", ""));
-    expect(watched).toEqual([join(root, "tutorial", "code", "js", "main.js")]);
     expect(plugin.resolveId("other")).toBeUndefined();
-    expect(plugin.load.call(ctx, "other")).toBeUndefined();
+    expect(plugin.load("other")).toBeUndefined();
+  });
+
+  it("re-validates tutorial.mdx in dev when a watched folder changes", () => {
+    const tutorialDir = join(projectWithTutorial(), "tutorial");
+    const plugin = tutorialModule(tutorialDir);
+    const add = vi.fn();
+    plugin.configureServer({ watcher: { add } });
+    expect(add).toHaveBeenCalledWith(["code", "images", "requests", "output"].map((folder) => join(tutorialDir, folder)));
+
+    const mdx = { id: "mdx" };
+    const virtual = { id: "virtual" };
+    const changed = { id: "changed" };
+    const environment = {
+      moduleGraph: {
+        getModulesByFile: (file: string) => (file === join(tutorialDir, "tutorial.mdx") ? new Set([mdx]) : undefined),
+        getModuleById: (id: string) => (id === `\0${TUTORIAL_MODULE_ID}` ? virtual : undefined),
+      },
+    };
+    const update = (file: string, modules: unknown[] = []) => plugin.hotUpdate.call({ environment }, { file, modules });
+    expect(update(join(tutorialDir, "images", "new.png"))).toEqual([mdx, virtual]);
+    expect(update(join(tutorialDir, "code", "main.js"), [changed, mdx])).toEqual([changed, mdx, virtual]);
+    expect(update(join(tutorialDir, "notes.md"))).toBeUndefined();
+    expect(update(join(tutorialDir, "code-old", "main.js"))).toBeUndefined();
   });
 });

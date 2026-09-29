@@ -15,10 +15,6 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before implementing each phase._
 
-Phase 0 — language-agnostic code model (in order):
-
-- [ ] Dev mode: re-validate when `code/`, `images/` (later `requests/`, `output/`) change; center the error overlay on the failing MDX line (`loc`).
-
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
 
 - [ ] Code variants: `variants` frontmatter, region ids unique per variant, per-variant file map on steps, switcher, `?variant=`, per-variant ZIP; web variants (with `index.html`) get Preview under `preview/<variant>/`.

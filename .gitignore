@@ -11,3 +11,4 @@ playwright-report/
 .mcp.json
 spike/.shots/
 .DS_Store
+packages/interactive-code-scroll/test/fixtures/dev-*/

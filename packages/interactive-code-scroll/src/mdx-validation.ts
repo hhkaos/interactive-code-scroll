@@ -9,9 +9,25 @@ import { validateTutorial, type AttributeValue, type ComponentUse } from "./vali
 const COMPONENTS = new Set(["Hint", "Step", "VarField"]);
 
 export class TutorialValidationError extends Error {
-  constructor(readonly problems: string[]) {
+  /** Position in the MDX of the first problem that has one: the MDX compiler turns it into the dev overlay `loc`. */
+  readonly line?: number;
+  readonly column?: number;
+
+  constructor(
+    readonly problems: string[],
+    mdxFile?: string,
+  ) {
     super(`Tutorial has ${problems.length} broken reference(s):\n  ${problems.join("\n  ")}`);
     this.name = "TutorialValidationError";
+    if (mdxFile === undefined) return;
+    for (const problem of problems) {
+      if (!problem.startsWith(`${mdxFile}:`)) continue;
+      const position = /^(\d+):(\d+) /.exec(problem.slice(mdxFile.length + 1));
+      if (!position) continue;
+      this.line = Number(position[1]);
+      this.column = Number(position[2]);
+      return;
+    }
   }
 }
 
@@ -53,8 +69,9 @@ export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
       mdxJsxFlowElement: collect,
       mdxJsxTextElement: collect,
       after() {
+        const mdxFile = relative(process.cwd(), tutorial.mdxPath);
         const problems = validateTutorial({
-          mdxFile: relative(process.cwd(), tutorial.mdxPath),
+          mdxFile,
           uses,
           files: tutorial.files,
           binaries: tutorial.binaries,
@@ -62,7 +79,7 @@ export function tutorialValidation(tutorialDir: string): MdastPluginEntry {
           frontmatter,
           frontmatterLines: frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8")),
         });
-        if (problems.length > 0) throw new TutorialValidationError(problems);
+        if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
       },
     });
   };

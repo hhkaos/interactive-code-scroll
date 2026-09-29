@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- In dev mode, adding, changing or deleting a file under `code/`, `images/`, `requests/` or `output/` now re-runs the MDX validation without touching `tutorial.mdx`, and the browser error overlay opens `tutorial.mdx` at the first failing line.
 - `@var` values are now escaped for the file type and quote style (backslash, Kotlin/Dart/Groovy `$`, shell, PowerShell, SQL/YAML quote doubling, HTML/XML entities). Python f-strings, raw and triple-quoted strings and TOML literal strings are rejected at build time.
 - A variable name used in several files must have the same default literal everywhere; the build fails otherwise (see `docs/upgrade.md`).
 - Frontmatter is now validated together with MDX references at compile time: invalid fields, a missing `logo` image and Preview without `code/index.html` report `tutorial.mdx:line:column` at the offending key instead of failing later during page rendering.

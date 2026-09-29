@@ -246,7 +246,7 @@ Form changes refresh the Preview after a short debounce. The Run button refreshe
 
 ## Validation
 
-Builds fail when MDX references unknown files, regions, variables or images, when code markers are malformed, or when a frontmatter field is invalid (for example an unknown `theme`, a `logo` missing from `images/`, or Preview enabled without `code/index.html`). Every error names the MDX file, line and column; frontmatter errors point at the offending key. In dev mode, validation errors appear in Astro's browser overlay.
+Builds fail when MDX references unknown files, regions, variables or images, when code markers are malformed, or when a frontmatter field is invalid (for example an unknown `theme`, a `logo` missing from `images/`, or Preview enabled without `code/index.html`). Every error names the MDX file, line and column; frontmatter errors point at the offending key. In dev mode, validation re-runs whenever `tutorial.mdx` or a file under `code/` or `images/` changes, and errors appear in Astro's browser overlay at the first failing MDX line.
 
 For a package/build/runtime change, run:
 
