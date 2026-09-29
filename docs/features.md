@@ -21,7 +21,7 @@ See [Components](authoring.md#components).
 - **Final code, highlighted**: every file is shown in its final version; steps only focus parts of it. Highlighting happens at build time for JavaScript/TypeScript, HTML, CSS, JSON, Markdown, shell, YAML, Python, Kotlin, Swift, C#, Java, C++, Dart, SQL, `.http` and more, and can be overridden per extension.
 - **Regions and variables as comments**: `#region id` / `#endregion` marks what a step focuses; `@var name` marks a literal a form field can change. The source stays valid and runnable; markers never reach the reader or the downloads.
 - **Large projects**: the `files` list picks which files get tabs. Everything else, including binary files such as a Gradle wrapper jar, still goes into the ZIP.
-- **Code variants**: the same steps in several languages (for example cURL, Python and Node.js) with a language switcher, deep links such as `?variant=curl`, and steps that apply to only some languages. See [Code Variants](authoring.md#code-variants).
+- **Code variants**: the same steps in several languages (for example cURL, Python and Node.js) with a language switcher, deep links such as `?variant=curl`, steps that apply to only some languages, a Preview for web variants and a ZIP per variant. See [Code Variants](authoring.md#code-variants).
 
 See [Code Markers](authoring.md#code-markers) and [Files Not Shown in Tabs](authoring.md#files-not-shown-in-tabs).
 
@@ -71,6 +71,5 @@ See [Validation](authoring.md#validation).
 
 These are specified and being built; see `SPEC.md` and `TODO.md`:
 
-- Preview and ZIP downloads per code variant.
 - A Result pane for code that cannot run in the browser: captured output (JSON, text, images) and a live runner for `.http` requests, with secret masking, error explanations and an offline fallback.
 - Sites with several tutorials and an index page; sibling tutorials per language.

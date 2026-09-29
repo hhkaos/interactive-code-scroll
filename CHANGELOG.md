@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added Preview and downloads per code variant: web variants (with `index.html`) run the Preview from their own page at `preview/<dir>/index.html` and other variants hide it; the ZIP holds the active variant's folder as `<tutorial>-<variant>.zip`, and its badge counts that variant's files.
 - Added code variants to the tutorial page: a language switcher before the file tabs (segmented control for up to four variants whose tabs fit, dropdown otherwise), `?variant=` deep links and a remembered choice, per-variant tabs, steps that focus the same region in each variant's file, and `only=` steps shown with a notice (`otherVariantSteps: notice`) or hidden (`hide`).
 - Added `examples/framework-fixture-variants` and `examples/framework-fixture-variants-hide` with their own Playwright web servers.
 - Added build validation for code variants (Phase 1, not rendered yet): `variants` frontmatter (`id`, `label`, `dir`, `entry`, per-variant `files`) and `otherVariantSteps` (`notice` | `hide`); all code must live in variant folders, region ids are unique within a variant, `<Step region>` without `file` resolves per variant, and `only="a b"` limits a step to some variants.

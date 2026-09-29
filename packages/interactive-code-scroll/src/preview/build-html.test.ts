@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPreviewHtml } from "./build-html.ts";
+import { buildPreviewHtml, previewStorageKey, variantPreviewPage } from "./build-html.ts";
 
 const files = {
   "index.html": `<!doctype html>
@@ -45,5 +45,19 @@ describe("buildPreviewHtml", () => {
 
   it("requires an index.html entry", () => {
     expect(() => buildPreviewHtml({ "main.js": "" })).toThrow(/Preview entry index\.html not found in code\//);
+  });
+});
+
+describe("variant preview pages", () => {
+  it("keep one storage slot per variant and target", () => {
+    expect(previewStorageKey("iframe")).toBe("ics:preview:iframe");
+    expect(previewStorageKey("tab", "web")).toBe("ics:preview:tab:web");
+  });
+
+  it("read the variant's slot for the requested target", () => {
+    const page = variantPreviewPage("web");
+    expect(page).toContain('"iframe":"ics:preview:iframe:web"');
+    expect(page).toContain('"tab":"ics:preview:tab:web"');
+    expect(page).toContain("document.write(html)");
   });
 });

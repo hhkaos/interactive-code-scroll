@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { expect, test, type Page } from "./fixtures.ts";
 
 const shown = (page: Page) => page.locator(".code:not([hidden])");
@@ -88,4 +89,42 @@ test("the switcher becomes a dropdown when the tabs would get too little room, a
   await expect(segmented).toBeVisible();
   await expect(dropdown).toBeHidden();
   await expect(segmented.locator('calcite-segmented-control-item[value="node"]')).toHaveJSProperty("checked", true);
+});
+
+test("the ZIP holds the active variant's folder, with form values and files not shown in tabs", async ({ page }) => {
+  await page.goto("/#config");
+  await page.locator('calcite-input[data-var="fixtureToken"] input').fill("zip-token");
+  const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download-zip").click()]);
+  const folder = "variants-fixture-tutorial-python";
+  expect(download.suggestedFilename()).toBe(`${folder}.zip`);
+  const zip = (await download.path())!;
+  const listing = execFileSync("unzip", ["-Z1", zip], { encoding: "utf8" }).trim().split("\n").sort();
+  expect(listing).toEqual([`${folder}/request.py`, `${folder}/requirements.txt`, `${folder}/util.py`]);
+  expect(execFileSync("unzip", ["-p", zip, `${folder}/request.py`], { encoding: "utf8" })).toContain('FIXTURE_TOKEN = "zip-token"');
+});
+
+test("the ZIP badge and tooltip count the active variant's files", async ({ page }) => {
+  await page.goto("/#config");
+  await expect(page.locator(".zip-action")).toHaveAttribute("data-count", "3");
+  await expect(page.locator("#download-zip")).toHaveAttribute("text", "Download project (ZIP) · 3 files (1 not shown in tabs)");
+  await pick(page, "curl");
+  await expect(page.locator(".zip-action")).toHaveAttribute("data-count", "1");
+  await expect(page.locator("#download-zip")).toHaveAttribute("text", "Download project (ZIP) · 1 file");
+});
+
+test("only web variants show the Preview, which runs from the variant's own page", async ({ page, baseURL }) => {
+  await page.goto("/#request");
+  await expect(page.locator("section.preview")).toBeHidden();
+  await pick(page, "web");
+  await expect(page.locator("section.preview")).toBeVisible();
+  const iframe = page.locator(".preview iframe");
+  if (!(await iframe.isVisible())) await page.locator("#preview-toggle").click();
+  await expect(iframe).toHaveAttribute("src", `${baseURL}/preview/web/index.html?target=iframe`);
+  const output = page.frameLocator(".preview iframe").locator("#output");
+  await expect(output).toHaveText("https://api.fixture.test/v1/items?token=DEMO_TOKEN");
+
+  await page.locator('calcite-input[data-var="fixtureToken"] input').fill("live-token");
+  await expect(output).toHaveText("https://api.fixture.test/v1/items?token=live-token", { timeout: 10_000 });
+  await pick(page, "node");
+  await expect(page.locator("section.preview")).toBeHidden();
 });

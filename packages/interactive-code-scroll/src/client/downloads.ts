@@ -1,5 +1,6 @@
-import { buildZip, projectFiles, publishedUrl, slugify, type ParsedFile } from "../downloads.ts";
+import { buildZip, inFolder, projectFiles, publishedUrl, slugify, zipBadge, zipLabel, type ParsedFile } from "../downloads.ts";
 import { setAction } from "./actions.ts";
+import { VARIANT_EVENT, type VariantsHandle } from "./variants.ts";
 
 function save(name: string, data: BlobPart, type: string): void {
   const url = URL.createObjectURL(new Blob([data], { type }));
@@ -22,6 +23,10 @@ export interface DownloadsOptions {
   previewUrl: string;
   values: () => Record<string, string>;
   title: string;
+  /** With code variants, the ZIP holds the active variant's folder only. */
+  variants?: VariantsHandle;
+  /** Variant id → files in its ZIP and how many of them have no tab. */
+  zipCounts?: Record<string, { total: number; withoutTab: number }>;
 }
 
 async function fetchBytes(url: string): Promise<Uint8Array> {
@@ -31,7 +36,16 @@ async function fetchBytes(url: string): Promise<Uint8Array> {
 }
 
 /** Copy / download the visible file, or download the whole project as a ZIP (form values included). */
-export function startDownloads({ files, fetched, previewUrl, values, title }: DownloadsOptions): void {
+export function startDownloads({ files, fetched, previewUrl, values, title, variants, zipCounts }: DownloadsOptions): void {
+  const zipAction = document.querySelector<HTMLElement>("#download-zip");
+  const showZipCount = () => {
+    const counts = variants && zipCounts?.[variants.active().id];
+    if (!counts || !zipAction) return;
+    zipAction.closest<HTMLElement>(".zip-action")!.dataset.count = zipBadge(counts.total);
+    setAction(zipAction, "file-zip", zipLabel(counts.total, counts.withoutTab));
+  };
+  document.addEventListener(VARIANT_EVENT, showZipCount);
+  showZipCount();
 
   const current = () => {
     const path = document.querySelector<HTMLElement>(".code:not([hidden])")?.dataset.file;
@@ -56,12 +70,16 @@ export function startDownloads({ files, fetched, previewUrl, values, title }: Do
     if (file) save(file.path.split("/").pop()!, file.text, "text/plain;charset=utf-8");
   });
 
-  document.querySelector<HTMLElement>("#download-zip")?.addEventListener("click", async (event) => {
+  zipAction?.addEventListener("click", async (event) => {
     const button = event.currentTarget as HTMLElement;
-    const folder = slugify(title);
+    const variant = variants?.active();
+    const folder = variant ? `${slugify(title)}-${variant.id}` : slugify(title);
+    // A variant's ZIP is its own folder, at the root of the archive.
+    const own = <T>(record: Record<string, T>) => (variant ? inFolder(record, variant.dir) : record);
+    const toFetch = variant ? fetched.filter((path) => path.startsWith(`${variant.dir}/`)) : fetched;
     try {
-      const extra = await Promise.all(fetched.map(async (path) => [path, await fetchBytes(publishedUrl(previewUrl, path))] as const));
-      const content = { ...projectFiles(files, values()), ...Object.fromEntries(extra) };
+      const extra = await Promise.all(toFetch.map(async (path) => [path, await fetchBytes(publishedUrl(previewUrl, path))] as const));
+      const content = own({ ...projectFiles(files, values()), ...Object.fromEntries(extra) });
       save(`${folder}.zip`, await buildZip(content, folder), "application/zip");
     } catch {
       flash(button, "exclamation-mark-triangle", "Download failed");

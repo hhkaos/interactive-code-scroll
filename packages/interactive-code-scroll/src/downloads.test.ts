@@ -1,6 +1,6 @@
 import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
-import { buildZip, projectFiles, publishedUrl, slugify } from "./downloads.ts";
+import { buildZip, inFolder, projectFiles, publishedUrl, slugify, zipBadge, zipLabel } from "./downloads.ts";
 import { parseSource } from "./markers.ts";
 
 const files = [
@@ -48,5 +48,20 @@ describe("buildZip", () => {
 describe("publishedUrl", () => {
   it("encodes each path segment, keeping the folders", () => {
     expect(publishedUrl("/base/preview/", "my docs/read me.md")).toBe("/base/preview/my%20docs/read%20me.md");
+  });
+});
+
+describe("inFolder", () => {
+  it("keeps the folder's files with paths relative to it", () => {
+    expect(inFolder({ "py/a.py": 1, "py/lib/b.py": 2, "pyx/c.py": 3, "d.py": 4 }, "py")).toEqual({ "a.py": 1, "lib/b.py": 2 });
+  });
+});
+
+describe("zipLabel / zipBadge", () => {
+  it("names the file count and the files without a tab", () => {
+    expect(zipLabel(1, 0)).toBe("Download project (ZIP) · 1 file");
+    expect(zipLabel(7, 2)).toBe("Download project (ZIP) · 7 files (2 not shown in tabs)");
+    expect(zipBadge(99)).toBe("99");
+    expect(zipBadge(100)).toBe("99+");
   });
 });

@@ -577,6 +577,8 @@ body[data-docs-hidden] {
   display: flex;
   flex-direction: column;
 
+  /* Code variants without web code have no Preview. */
+  &[hidden] { display: none; }
   /* Collapsed: only the header remains (no splitter). */
   &:not(:has(.preview-frame:not([hidden]))) {
     flex: none;

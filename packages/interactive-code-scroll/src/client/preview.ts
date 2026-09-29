@@ -1,11 +1,11 @@
-import { projectFiles, type ParsedFile } from "../downloads.ts";
-import { buildPreviewHtml } from "../preview/build-html.ts";
+import { inFolder, projectFiles, publishedUrl, type ParsedFile } from "../downloads.ts";
+import { buildPreviewHtml, PREVIEW_ENTRY, previewStorageKey, type PreviewTarget } from "../preview/build-html.ts";
 import { setAction } from "./actions.ts";
+import { VARIANT_EVENT, type VariantsHandle } from "./variants.ts";
 
-export type PreviewTarget = "iframe" | "tab";
+export type { PreviewTarget };
 export type PreviewState = "expanded" | "collapsed";
 export const PREVIEW_STATE_EVENT = "ics:preview-state";
-const storageKey = (target: PreviewTarget) => `ics:preview:${target}`;
 
 export interface PreviewOptions {
   mode: "iframe" | "tab" | "both";
@@ -14,27 +14,43 @@ export interface PreviewOptions {
   values: () => Record<string, string>;
   /** URL of the standalone preview page (`<base>preview/`). */
   pageUrl: string;
+  /** With code variants, only web variants (with `index.html`) have a Preview, each on its own page. */
+  variants?: VariantsHandle;
 }
 
 /**
  * Both the iframe and the new tab load a real same-origin page (not srcdoc/blob):
  * the ArcGIS SDK derives the OAuth redirect_uri from `location`.
  */
-function store(html: string, target: PreviewTarget, pageUrl: string): string {
-  localStorage.setItem(storageKey(target), html);
+function store(html: string, target: PreviewTarget, pageUrl: string, variant?: string): string {
+  localStorage.setItem(previewStorageKey(target, variant), html);
   const url = new URL(pageUrl, location.href);
   url.searchParams.set("target", target);
   return url.href;
 }
 
-export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): { refresh(): void } {
-  const html = () => buildPreviewHtml(projectFiles(files, values()));
+export function startPreview({ mode, files, values, pageUrl, variants }: PreviewOptions): { refresh(): void } {
+  const section = document.querySelector<HTMLElement>("section.preview");
   const frame = document.querySelector<HTMLElement>(".preview-frame");
   const iframe = frame?.querySelector("iframe");
 
+  /** Project, page and storage slot of the code the Preview runs; `undefined` for a variant without web code. */
+  const target = () => {
+    if (!variants) return { files: projectFiles(files, values()), page: pageUrl, variant: undefined };
+    const { id, dir } = variants.active();
+    if (!files.some((f) => f.path === `${dir}/${PREVIEW_ENTRY}`)) return undefined;
+    // The explicit file name also resolves in dev, where `preview/<dir>/` is not mapped to its index.html.
+    return { files: inFolder(projectFiles(files, values()), dir), page: publishedUrl(pageUrl, `${dir}/${PREVIEW_ENTRY}`), variant: id };
+  };
+  const open = (kind: PreviewTarget) => {
+    const current = target();
+    return current && store(buildPreviewHtml(current.files), kind, current.page, current.variant);
+  };
+
   const run = () => {
     if (!iframe || frame!.hidden) return;
-    const url = store(html(), "iframe", pageUrl);
+    const url = open("iframe");
+    if (!url) return;
     if (iframe.src === url) iframe.contentWindow?.location.reload();
     else iframe.src = url;
   };
@@ -48,7 +64,8 @@ export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): 
 
   document.querySelector("#preview-run")?.addEventListener("click", run);
   document.querySelector("#preview-open")?.addEventListener("click", () => {
-    window.open(store(html(), "tab", pageUrl), "_blank");
+    const url = open("tab");
+    if (url) window.open(url, "_blank");
   });
   // Collapsing keeps the preview header (and its controls) in place.
   document.querySelector("#preview-toggle")?.addEventListener("click", () => {
@@ -59,6 +76,15 @@ export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): 
     setCollapsed(state === "collapsed");
   });
 
+  // Variants without web code have no Preview.
+  const showSection = () => {
+    if (section) section.hidden = target() === undefined;
+  };
+  document.addEventListener(VARIANT_EVENT, () => {
+    showSection();
+    if (mode !== "tab") run();
+  });
+  showSection();
   if (mode !== "tab") run();
 
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -73,7 +99,7 @@ export function startPreview({ mode, files, values, pageUrl }: PreviewOptions): 
 /** Runs on the standalone preview page. */
 export function renderStoredPreview(): void {
   const target = new URLSearchParams(location.search).get("target") === "iframe" ? "iframe" : "tab";
-  const html = localStorage.getItem(storageKey(target));
+  const html = localStorage.getItem(previewStorageKey(target));
   if (html === null) {
     document.body.textContent = "No preview available. Open it from the tutorial.";
     return;

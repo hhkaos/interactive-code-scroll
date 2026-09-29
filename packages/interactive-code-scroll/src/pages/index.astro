@@ -7,6 +7,7 @@ import VarField from "../components/VarField.astro";
 import { readTutorialConfig } from "../frontmatter.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
+import { zipBadge, zipLabel } from "../downloads.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { MAX_SEGMENTED } from "../client/variant-values.ts";
 import { variantVisible } from "../variants.ts";
@@ -23,10 +24,12 @@ const groups = variants
   ? variants.map((v) => ({ variant: v, prefix: `${v.dir}/`, entry: `${v.dir}/${v.entry}`, paths: variantVisible(v, textPaths).visible }))
   : [{ variant: undefined, prefix: "", entry: undefined, paths: selectVisible(textPaths, config.files).visible }];
 const visible = groups.flatMap((g) => g.paths);
-// TODO(1c): per-variant Preview; until then a tutorial with variants has none.
-const preview = variants ? "off" : config.preview;
-// The page embeds tabbed files plus the Preview entry; the ZIP fetches everything else from preview/.
-const embedded = new Set(variants ? visible : [...visible, PREVIEW_ENTRY]);
+// A variant is web code when its folder has index.html: only those get the Preview.
+const previewEntries = variants ? variants.map((v) => `${v.dir}/${PREVIEW_ENTRY}`).filter((path) => textPaths.includes(path)) : [PREVIEW_ENTRY];
+const preview = previewEntries.length > 0 ? config.preview : "off";
+const firstIsWeb = !variants || previewEntries.includes(`${variants[0]!.dir}/${PREVIEW_ENTRY}`);
+// The page embeds tabbed files plus the Preview entries; the ZIP fetches everything else from preview/.
+const embedded = new Set([...visible, ...previewEntries]);
 const parsed = files.filter((f) => embedded.has(f.path)).map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
 const highlighted = new Map(
   await Promise.all(
@@ -37,10 +40,14 @@ const highlighted = new Map(
 const initialFile = groups[0]!.entry ?? visible[0];
 const selectedIn = (group: (typeof groups)[number]) => group.entry ?? group.paths[0];
 const fetched = [...files.map((f) => f.path).filter((path) => !embedded.has(path)), ...binaries].sort();
-const withoutTab = [...files.map((f) => f.path).filter((path) => !visible.includes(path)), ...binaries].sort();
-const zipTotal = files.length + binaries.length;
-const plural = (n: number) => `${n} ${n === 1 ? "file" : "files"}`;
-const zipText = `Download project (ZIP) · ${plural(zipTotal)}${withoutTab.length > 0 ? ` (${withoutTab.length} not shown in tabs)` : ""}`;
+// Files in each ZIP (a variant's ZIP holds its own folder) and how many of them have no tab.
+const allPaths = [...textPaths, ...binaries];
+const zipCountsFor = (inZip: (path: string) => boolean) => {
+  const paths = allPaths.filter(inZip);
+  return { total: paths.length, withoutTab: paths.filter((path) => !visible.includes(path)).length };
+};
+const zipCounts = variants && Object.fromEntries(variants.map((v) => [v.id, zipCountsFor((path) => path.startsWith(`${v.dir}/`))]));
+const initialZip = zipCounts ? zipCounts[variants![0]!.id]! : zipCountsFor(() => true);
 const withIframe = preview === "iframe" || preview === "both";
 const withTab = preview === "tab" || preview === "both";
 const clientVariants = variants?.map(({ id, label, dir, entry }) => ({ id, label, dir, entry }));
@@ -50,6 +57,7 @@ const clientData = JSON.stringify({
   preview,
   files: parsed,
   fetched,
+  zipCounts,
   variants: clientVariants,
   otherVariantSteps: config.otherVariantSteps,
 }).replace(/</g, "\\u003c");
@@ -151,8 +159,8 @@ const clientData = JSON.stringify({
             <calcite-action id="copy-file" icon="copy-to-clipboard" text="Copy file" />
             <calcite-action id="download-file" icon="download" text="Download file" />
             {/* Our own count badge: Calcite has no numeric badge, and its `indicator` dot fails to render without t9n files (offline). */}
-            <span class="zip-action" data-count={zipTotal > 99 ? "99+" : String(zipTotal)}>
-              <calcite-action id="download-zip" icon="file-zip" text={zipText} />
+            <span class="zip-action" data-count={zipBadge(initialZip.total)}>
+              <calcite-action id="download-zip" icon="file-zip" text={zipLabel(initialZip.total, initialZip.withoutTab)} />
             </span>
           </div>
           {
@@ -168,7 +176,7 @@ const clientData = JSON.stringify({
         <div class="media-panel" hidden></div>
         {
           preview !== "off" && (
-            <section class="preview" aria-label="Preview">
+            <section class="preview" aria-label="Preview" hidden={!firstIsWeb || undefined}>
               {withIframe && (
                 <div
                   class="preview-splitter"
@@ -226,6 +234,7 @@ const clientData = JSON.stringify({
         preview: "off" | "iframe" | "tab" | "both";
         files: { path: string; parsed: ParsedSource }[];
         fetched: string[];
+        zipCounts?: Record<string, { total: number; withoutTab: number }>;
         variants?: VariantInfo[];
         otherVariantSteps: "notice" | "hide";
       };
@@ -241,9 +250,17 @@ const clientData = JSON.stringify({
       let refreshPreview = () => {};
       const vars = startVars(() => refreshPreview());
       const pageUrl = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}preview/`;
-      startDownloads({ files: data.files, fetched: data.fetched, previewUrl: pageUrl, values: vars.values, title: data.title });
+      startDownloads({
+        files: data.files,
+        fetched: data.fetched,
+        previewUrl: pageUrl,
+        values: vars.values,
+        title: data.title,
+        variants,
+        zipCounts: data.zipCounts,
+      });
       if (data.preview !== "off") {
-        refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl }).refresh;
+        refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl, variants }).refresh;
       }
 
       // Clicker keys pressed while the preview has focus.

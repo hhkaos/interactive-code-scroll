@@ -1,5 +1,32 @@
 export const PREVIEW_ENTRY = "index.html";
 
+export type PreviewTarget = "iframe" | "tab";
+
+/** Where the tutorial page leaves the assembled HTML for the preview page; one slot per code variant. */
+export const previewStorageKey = (target: PreviewTarget, variant?: string) =>
+  variant === undefined ? `ics:preview:${target}` : `ics:preview:${target}:${variant}`;
+
+/**
+ * Preview page of a web code variant, published at `preview/<dir>/` so the variant's relative
+ * references resolve next to it. Same job as `preview/page.astro`, with an inline script.
+ */
+export function variantPreviewPage(variant: string): string {
+  const keys = JSON.stringify({ iframe: previewStorageKey("iframe", variant), tab: previewStorageKey("tab", variant) });
+  return `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Preview</title></head>
+<body>
+<script>
+var keys = ${keys.replace(/</g, "\\u003c")};
+var html = localStorage.getItem(new URLSearchParams(location.search).get("target") === "iframe" ? keys.iframe : keys.tab);
+if (html === null) document.body.textContent = "No preview available. Open it from the tutorial.";
+else { document.open(); document.write(html); document.close(); }
+</script>
+</body>
+</html>
+`;
+}
+
 /** Forwards clicker keys from the preview to the tutorial (arrows stay with the app, e.g. map panning). */
 const KEY_FORWARDER = `<script>addEventListener("keydown",function(e){if((e.key==="PageDown"||e.key==="PageUp")&&parent!==window){parent.postMessage({type:"ics:step-key",key:e.key},location.origin)}})</script>`;
 

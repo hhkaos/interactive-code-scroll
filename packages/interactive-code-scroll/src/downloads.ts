@@ -10,6 +10,25 @@ export function projectFiles(files: readonly ParsedFile[], values: Readonly<Reco
   return Object.fromEntries(files.map((f) => [f.path, applyVars(f.parsed, values)]));
 }
 
+/** The files under `dir/`, keyed by their path inside it: a code variant's own project. */
+export function inFolder<T>(files: Readonly<Record<string, T>>, dir: string): Record<string, T> {
+  const prefix = `${dir}/`;
+  return Object.fromEntries(
+    Object.entries(files)
+      .filter(([path]) => path.startsWith(prefix))
+      .map(([path, content]) => [path.slice(prefix.length), content]),
+  );
+}
+
+/** Tooltip and accessible name of the ZIP action. */
+export function zipLabel(total: number, withoutTab: number): string {
+  const plural = (n: number) => `${n} ${n === 1 ? "file" : "files"}`;
+  return `Download project (ZIP) · ${plural(total)}${withoutTab > 0 ? ` (${withoutTab} not shown in tabs)` : ""}`;
+}
+
+/** Count shown on the ZIP action's badge. */
+export const zipBadge = (total: number) => (total > 99 ? "99+" : String(total));
+
 /** Folder / file-name friendly version of a tutorial title. */
 export function slugify(title: string): string {
   const slug = title

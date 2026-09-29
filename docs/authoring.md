@@ -229,7 +229,7 @@ Values are inserted as typed, with line breaks removed.
 
 ## Preview
 
-When Preview is enabled, `code/index.html` is required. The generated site publishes every file under `code/` next to the Preview page, with markers stripped, so relative links such as `./main.js` or `./oauth-callback.html` keep working.
+When Preview is enabled, `code/index.html` is required (with code variants, see [Preview and downloads](#preview-and-downloads)). The generated site publishes every file under `code/` next to the Preview page, with markers stripped, so relative links such as `./main.js` or `./oauth-callback.html` keep working.
 
 Preview modes:
 
@@ -323,7 +323,11 @@ Region ids are the contract between variants. Give the same region the same id i
 - The choice is remembered for the whole site and can be linked: `?variant=curl#request`. An unknown id is ignored.
 - Form fields are shared: one `@var` name fills every variant, and all its occurrences need the same default literal.
 
-Preview and ZIP downloads per variant are in progress; until they ship, a tutorial with `variants` has no Preview and its ZIP contains every variant.
+### Preview and downloads
+
+- A variant is web code when its folder has `index.html`. Only web variants show the Preview; for other variants the Preview panel disappears. `preview` in the frontmatter applies to the web variants, and a tutorial without any web variant needs no `index.html`.
+- A web variant's Preview runs from its own page, `preview/<dir>/index.html`, with every file of the variant published next to it, so relative references such as `./main.js` or an OAuth callback page resolve inside the variant folder.
+- The ZIP holds only the active variant: its folder becomes the root of the archive, named `<tutorial>-<variant id>.zip`. The ZIP badge and tooltip count that variant's files.
 
 ## Validation
 

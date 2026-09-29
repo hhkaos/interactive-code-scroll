@@ -17,10 +17,9 @@ _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before impleme
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript), in order:
 
-- [ ] 1c Per-variant downloads and Preview: ZIP of the active variant plus `requests/`, `<tutorial>-<variant>.zip`, web variants published under `preview/<variant>/`.
 - [ ] 2 Result pane replacing Preview for non-web code; captured output (`output/` folder, `<Step output>`, per-variant override); keeps the last result; build warning for credentials in outputs.
 - [ ] 3 Collapsible JSON viewer (text-only rendering, 100-entry truncation, keyboard).
-- [ ] 4a `.http` parser and build validation (`requests/`, supported subset, `request=` names).
+- [ ] 4a `.http` parser and build validation (`requests/`, supported subset, `request=` names); include `requests/` in every variant's ZIP.
 - [ ] 4b `.http` runner UI: Run, "Run as" picker, URL-encoded query values, masking + "Show secrets", 30 s timeout, captured-output fallback.
 - [ ] 5 Error rule + help table (`requests/errors.json`) + Headers tab.
 - [ ] 6 REST example tutorial (cURL / Python / JavaScript, GET + POST) + playground `requests/`; E2E blocks every called host.
