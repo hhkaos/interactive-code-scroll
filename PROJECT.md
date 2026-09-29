@@ -45,7 +45,14 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 ## Next Session Plan
 
-Recommended next task: Phase 0 of the multi-SDK plan (`docs/research/arcgis-multi-sdk-plan.md`, `TODO.md`), next open item in order (0.1 config-aware validation is done). UI work in later phases follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
+Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 items 0.1–0.4 are done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge).
+
+Recommended next task: **0.5 dev revalidation** — in `pnpm dev`, re-run MDX validation when files under `code/` or `images/` (later `requests/`, `output/`) change without touching `tutorial.mdx`, and center the dev overlay on the failing MDX `loc`. Relevant: `src/tutorial-module.ts` (virtual module, `addWatchFile`), `src/mdx-validation.ts` (runs inside the MDX compile), `src/index.ts` (integration hooks). Then Phase 1 needs its own plan-mode pass.
+
+Working notes:
+- Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
+- UI changes: show screenshots before committing. Save them under `test-results/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
+- Full E2E was green (61/61) at `c559d8c`; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 
 ---
 
@@ -233,6 +240,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 - Referencing line numbers from MDX (fragile); use region IDs.
 - Loading the OAuth sign-in page inside the Preview iframe.
 - Adding dependencies without justification.
+- Layout changes that reflow the explanations (splitter, window resize, showing them again) without going through `keepActiveCentered()` in `client/steps.ts`: the center-line observer then switches to whichever step crosses it and rewrites the URL hash.
 - Importing `highlight.ts` (Shiki) from modules the browser bundle uses (`markers.ts`, `downloads.ts`, `client/*`): shared helpers such as `extensionOf` live in `file-types.ts`.
 - Non-English text in the repo.
 - E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the Esri CDN: SDK and Calcite assets); opt in with `test.use({ network: true })` only when testing the SDK itself.
