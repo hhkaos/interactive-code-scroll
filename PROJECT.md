@@ -47,7 +47,9 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Recommended next task: **Phase 1 plan-mode pass** (REST vertical slice: variants, result pane, JSON viewer, `.http` runner). Update `SPEC.md` before implementing.
+Phase 1 plan-mode pass is done: its rules are in `SPEC.md` (commit `f4f303a`) and its task order in `TODO.md` (1a → 7).
+
+Recommended next task: **1a Variants config + validation** (`src/frontmatter.ts`, `src/validate.ts`, `src/visible-files.ts`; Vitest only, no UI).
 
 Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
