@@ -92,6 +92,7 @@ LICENSE             # Apache-2.0
 CLAUDE.md           # Claude Code-specific rules
 AGENTS.md           # Codex CLI-specific rules
 README.md
+docs/features.md   # public one-page overview of every capability, linking to the reference
 docs/authoring.md  # public authoring/API reference for tutorial writers
 docs/cli.md        # public CLI reference
 docs/deployment.md # GitHub Pages/static hosting notes, including getting-started URL variables
@@ -156,7 +157,7 @@ When adding or changing framework behavior, update this fixture to include the n
 
 ### Public docs and dogfooding tutorial
 
-Public author-facing docs live in `README.md` and `docs/`. The root README is the repository entry point; `packages/interactive-code-scroll/README.md` is the npm package entry point and should stay in sync at a high level.
+Public author-facing docs live in `README.md` and `docs/`. `docs/features.md` is the one-page overview of every capability; `docs/authoring.md` is the how-to reference. Every feature commit updates both (features marked in progress there until they ship). The root README is the repository entry point; `packages/interactive-code-scroll/README.md` is the npm package entry point and should stay in sync at a high level.
 
 `examples/getting-started` is the dogfooding tutorial for first-time authors. It is not the regression fixture: use it for public author experience and docs validation, while keeping framework E2E behavior coverage in `examples/framework-fixture`.
 

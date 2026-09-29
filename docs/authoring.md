@@ -44,6 +44,8 @@ logo: logo.svg
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | `logo` | image path | none | Relative to `images/`. Use a square SVG or a PNG of at least 512 x 512. |
 | `files` | list of paths/globs | all text files | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
+| `variants` | list | none | Code variants: the same steps in several languages. See [Code Variants](#code-variants). |
+| `otherVariantSteps` | `notice`, `hide` | `notice` | How steps limited with `only=` look to readers of another variant. See [Code Variants](#code-variants). |
 | `languages` | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
 
 Highlighting is chosen by file extension. Built in: JavaScript/TypeScript (`js`, `mjs`, `cjs`, `jsx`, `ts`, `tsx`), `vue`, `html`, `css`, `json`/`geojson`, Markdown (`md`, `mdx`), shell (`sh`, `bash`), `ps1`, `yaml`/`yml`, `toml`, `ini`, `http`, Python (`py`), Kotlin (`kt`, `kts`), Gradle Groovy (`gradle`), `swift`, `java`, C# (`cs`), XML/XAML (`xml`, `xaml`), C++ (`cpp`, `h`, `hpp`), `qml`, `dart`, `sql` and `lua`. Other files show as plain text.
@@ -83,8 +85,9 @@ Explain the change here.
 | Prop | Required | Notes |
 |---|---:|---|
 | `id` | yes | Unique deep-link id. The generated URL uses `#id`. |
-| `file` | no | Path relative to `code/`. Shows that file in the code panel. |
-| `region` | no | Region id in `file`. Omitting it shows the whole file with no focus. |
+| `file` | no | Path relative to `code/` (to the variant folder with `variants`). Shows that file in the code panel. |
+| `region` | no | Region id in `file`. Omitting it shows the whole file with no focus. With `variants`, `region` alone is enough: it names one file per variant. |
+| `only` | no | With `variants`: space-separated variant ids the step applies to, e.g. `only="python curl"`. |
 | `images` | no | Array of paths relative to `images/`. Shows an image carousel instead of code. |
 | `preview` | no | `expanded`, `collapsed` or `keep`. Controls iframe state when the step activates. |
 
@@ -243,6 +246,84 @@ Form changes refresh the Preview after a short debounce. The Run button refreshe
 - With `files` set, text files that match no pattern are also left out of the code panel and the page, and still go into the ZIP.
 - Files not shown in tabs cannot contain `@var` markers, and a `<Step file>` must point at a file shown in a tab.
 - `index.html` is always available to the Preview, whether or not it is shown in a tab.
+
+## Code Variants
+
+Variants show the same tutorial in several programming languages, for example a REST call as cURL, Python and Node.js. The prose and the steps are shared; only the code changes. When the explanations themselves differ by language, write separate tutorials instead.
+
+### Layout
+
+Each variant lives in its own folder under `code/`. With `variants`, every code file must belong to a variant folder.
+
+```text
+tutorial/
+  tutorial.mdx
+  code/
+    python/
+      request.py
+      requirements.txt
+    curl/
+      request.sh
+    node/
+      index.mjs
+      api.mjs
+```
+
+```yaml
+---
+title: Call the items API
+variants:
+  - { id: python, label: Python, dir: python, entry: request.py, files: ["request.py", "requirements.txt"] }
+  - { id: curl, label: cURL, dir: curl, entry: request.sh }
+  - { id: node, label: Node.js, dir: node, entry: index.mjs }
+---
+```
+
+| Key | Required | Notes |
+|---|---:|---|
+| `id` | yes | Lowercase letters, digits and dashes. Used in `?variant=` and `only=`. |
+| `label` | yes | Shown in the language switcher. |
+| `dir` | yes | Folder relative to `code/`. Folders must not overlap. |
+| `entry` | yes | File shown first, relative to `dir`. |
+| `files` | no | Like the top-level `files`, relative to `dir`. The top-level `files` cannot be combined with `variants`. |
+
+### Steps across variants
+
+Region ids are the contract between variants. Give the same region the same id in every variant, in whichever file it lives:
+
+```mdx
+<Step id="request" region="request">
+
+## Send the request
+
+</Step>
+```
+
+- Within a variant, a region id may appear in only one file, so `region` alone identifies the file.
+- `file` is relative to the variant folder and must exist in every variant the step covers.
+- Every step region must exist in every variant, unless the step sets `only`:
+
+```mdx
+<Step id="install" file="requirements.txt" only="python">
+
+## Install dependencies
+
+</Step>
+```
+
+`otherVariantSteps` decides what readers of other variants see for such a step:
+
+- `notice` (default): the step stays in place and keeps its number; the code panel keeps its file, clears the focus and shows "This step applies to Python" with an action to switch.
+- `hide`: the step disappears from the explanations; numbering and progress count only the steps of the active variant. A `#step` link to a hidden step switches to that step's variant.
+
+### Reader experience
+
+- The language switcher sits at the start of the code header. It is a segmented control for up to four variants whose file tabs all fit next to it, and a dropdown otherwise (five or more variants, or a narrow code panel). This is automatic.
+- Switching keeps the current step and focuses the same region in the new variant's file. A text-only step keeps the file with the same path when the new variant has it, else shows the new variant's `entry`.
+- The choice is remembered for the whole site and can be linked: `?variant=curl#request`. An unknown id is ignored.
+- Form fields are shared: one `@var` name fills every variant, and all its occurrences need the same default literal.
+
+Preview and ZIP downloads per variant are in progress; until they ship, a tutorial with `variants` has no Preview and its ZIP contains every variant.
 
 ## Validation
 

@@ -82,6 +82,7 @@ The code remains runnable without the framework. Markers are stripped from rende
 
 ## Documentation
 
+- [Features](docs/features.md): everything the tool can do, in one page
 - [Authoring and API reference](docs/authoring.md)
 - [CLI reference](docs/cli.md)
 - [Deployment guide](docs/deployment.md)

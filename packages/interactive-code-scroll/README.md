@@ -78,6 +78,7 @@ Markers are stripped from rendered and downloaded code.
 ## Documentation
 
 - Repository: <https://github.com/hhkaos/interactive-code-scroll>
+- Features: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/features.md>
 - Authoring reference: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/authoring.md>
 - CLI reference: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/cli.md>
 - Deployment guide: <https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/deployment.md>
