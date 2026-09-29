@@ -28,6 +28,7 @@ pnpm install
 pnpm dev          # framework fixture through the generic CLI
 pnpm build        # build the framework fixture through the generic CLI
 pnpm playground   # multi-SDK playground (examples/multi-sdk-playground) in dev mode
+pnpm rest         # REST example tutorial (examples/rest-geocode) in dev mode
 pnpm variants     # code variants fixture (examples/framework-fixture-variants) in dev mode
 pnpm variants:hide # same with `otherVariantSteps: hide`
 pnpm check        # tsc (core package) + astro check (example)
@@ -49,7 +50,7 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer, 4a `.http` parser + validation + `requests/` in every ZIP, 4b runner UI, 5 error rule + Body/Headers tabs. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
+Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer, 4a `.http` parser + validation + `requests/` in every ZIP, 4b runner UI, 5 error rule + Body/Headers tabs, 6 REST example (`examples/rest-geocode`). Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
 
 Result pane code: `src/output.ts` (types, `output/<variant>/` lookup, credential scan), `src/result/output-file.ts` (publishes `output/`), `stepOutputs()` in `src/variants.ts`, `src/client/result.ts` + `result-values.ts` (pane, last-result rule), `STEP_EVENT` from `src/client/steps.ts`. JSON viewer: `src/client/json-tree.ts` (DOM, keyboard) + `json-tree-values.ts` (parse, depth rule, paging, key map); reuse `renderJsonTree()` for the runner's Body tab.
 
@@ -57,7 +58,7 @@ Requests code: `src/requests.ts` (`parseHttpFile()` → `HttpFile` with file var
 
 Error rule: `src/error-rule.ts` (`readErrorRule()` validates `requests/errors.json`, `matchError()` runs on any JSON response), `clientData.errorRule`; `LiveResponse` in `src/client/result.ts` holds headers, image object URL and the matched error; `#result-error` notice + `#result-tabs` (Body/Headers). File-tab code in `steps.ts` targets `calcite-tab-title[data-file]` only.
 
-Recommended next task: **6 REST example tutorial**. Then (agreed, before task 7): **Maximize pane** (SPEC Presentation mode + `maximize=` step attribute). Note: the JSON tree owns all keys (`data-own-keys`), so PageUp/PageDown clickers do not move steps while it has focus; task 7 revisits this.
+Recommended next task (agreed, before task 7): **Maximize pane** (SPEC Presentation mode + `maximize=` step attribute). Note: the JSON tree owns all keys (`data-own-keys`), so PageUp/PageDown clickers do not move steps while it has focus; task 7 revisits this.
 
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
@@ -65,8 +66,9 @@ Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
 - UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
-- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, the rest → :4400).
-- Full E2E was green (84/84) after the JSON viewer + terminal colors commit; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
+- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, the rest → :4400).
+- E2E blocks every non-local host (`e2e/fixtures.ts`); mock services with `mockService()` (page routes win over the context route).
+- Full E2E was green (103/103) after the REST example commit; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 - Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
 
 ---
@@ -135,6 +137,7 @@ examples/oauth-pkce/               # example project: astro.config.mjs + tutoria
 examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
 examples/framework-fixture-variants/      # stable fake tutorial with code variants (`notice` mode) and captured outputs; E2E in e2e/variants.spec.ts, e2e/result.spec.ts
 examples/framework-fixture-variants-hide/ # same, with `otherVariantSteps: hide`; E2E in e2e/variants-hide.spec.ts
+examples/rest-geocode/              # public REST example (cURL / Python / JavaScript variants, requests/, output/, ArcGIS errors.json); `pnpm rest`; smoke E2E in e2e/rest-example.spec.ts (:4403)
 examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
 examples/multi-sdk-playground/      # local hands-on tutorial for multi-SDK features (Python, Kotlin, C#, SQL); `pnpm playground`; no E2E, grows with each plan task
 .github/workflows/publish-getting-started.yml # builds/deploys examples/getting-started on default-branch pushes
@@ -316,6 +319,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | Preview theme | Iframe: `prefers-color-scheme` inside follows the `<iframe>` element's `color-scheme` (verified in Chromium) | New tab: follows the OS | Tutorial apps opt in with `calcite-mode-auto`; the framework never rewrites tutorial code. E2E: Playwright emulates `colorScheme: "light"` by default and forces it on every frame; use `colorScheme: null` to observe this |
 | ArcGIS REST error responses | Many endpoints answer HTTP 200 with `{ "error": { "code", "message", "details" } }` in the body (e.g. 498 invalid token) | Transport failures (network, CORS) have no body at all | Request runner must not judge success by HTTP status alone: use the declarative error rule (planned); keep ArcGIS rule/codes in the preset, not core |
 | Runner `fetch` and Playwright mocks | A cross-origin `page.route().fulfill()` without `Access-Control-Allow-Origin` fails as a network error; a POST with `Content-Type: application/json` also sends an `OPTIONS` preflight to the same route; `new Request()` throws a `TypeError` for a body on GET/HEAD (same type as network errors) | Same-origin fetches need no CORS headers | Mocks answer `OPTIONS` with 204 and send CORS headers (`e2e/result.spec.ts`); `result.ts` builds the `Request` before `fetch` so build errors are not reported as network failures |
+| Playwright context vs page routes | `page.route()` handlers run before `context.route()` handlers for the same URL | Without a page route, the context route (abort) wins | `e2e/fixtures.ts` aborts every non-local host at context level; tests mock services with `page.route` (`mockService()`), so an unmocked call fails as a network error instead of reaching the real service |
 | `calcite-action` `indicator` | Online: renders the dot | Offline / CDN blocked (t9n not loaded): render throws (`messages.indicatorLabel` undefined, `messageOverrides` does not help) and the action collapses to 0 px | Do not use `indicator` (it has no count either); draw our own badge on a wrapper element (`.zip-action`) |
 | Astro attributes on custom elements | `hidden={false}` / `selected={false}` on a native element: attribute omitted | On a custom element (e.g. `calcite-tab-nav`): serialized as the string `"false"`, so `hidden="false"` hides it | Write `attr={condition \|\| undefined}` |
 | Calcite sizes late | Measuring a Calcite container once (or observing only it) on load | Its children (`calcite-tab-title`, `calcite-segmented-control`) grow after they render, while the container keeps its size | Observe the children too (`ResizeObserver`); see `client/variants.ts` |

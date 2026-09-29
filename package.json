@@ -8,6 +8,7 @@
     "docs:dev": "pnpm --filter example-getting-started dev",
     "docs:build": "pnpm --filter example-getting-started build",
     "playground": "pnpm --filter example-multi-sdk-playground dev",
+    "rest": "pnpm --filter example-rest-geocode dev",
     "variants": "pnpm --filter example-framework-fixture-variants dev",
     "variants:hide": "pnpm --filter example-framework-fixture-variants-hide dev",
     "check": "pnpm --filter interactive-code-scroll build && pnpm -r check",

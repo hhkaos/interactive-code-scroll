@@ -313,7 +313,9 @@ Other text files in `requests/` (for example a README) are zipped as is. `reques
 
 A step with `request=` gets a **Run request** button in the Result pane. Nothing is sent until the reader presses it: activating a step never sends a request.
 
-- **Run as**: when a step lists several requests, a picker labeled with each request's method (or its name when two share a method) chooses which one to send. The first is the default each time the step is shown.
+[examples/rest-geocode](../examples/rest-geocode) is a complete example: cURL, Python and JavaScript variants, a GET step (token in the query) and a POST step (token in a header), each running the request its code shows, captured outputs and an ArcGIS `requests/errors.json`.
+
+- **Run as**: when a step lists several requests, a picker labeled with each request's method (or its name when two share a method) chooses which one to send. The first is the default each time the step is shown. Offer an alternative only when the step's code shows it too: readers expect Run to send what they read.
 - **Values**: every `{{x}}` takes the reader's `<VarField>` value, else the file variable's default; file variables may use other file variables. Values substituted in the query string (after `?`) are URL-encoded; in the path, headers and body they are inserted as is.
 - **Request line**: above the result, the method and URL that will be sent, with the request file and name; long URLs wrap at `/`, `?` and `&`. Values of `secret` vars are masked (as in the code) unless the reader presses **Show secrets**, which is off on every page load and never remembered. Headers and body are not shown.
 - **Response**: the badge shows status and time (`Live · 200 OK · 318 ms`); non-2xx statuses get a red badge. A live response has two tabs:

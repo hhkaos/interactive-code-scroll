@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, mockService, test, type Page } from "./fixtures.ts";
 
 const result = (page: Page) => page.locator("section.result");
 const badge = (page: Page) => page.locator(".result-badge");
@@ -117,23 +117,13 @@ test("long JSON arrays show 100 entries and a Show more action", async ({ page }
 });
 
 const API = "https://api.fixture.test/v1/**";
-const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*" };
 const runButton = (page: Page) => page.locator("#result-run");
 const requestLine = (page: Page) => page.locator(".result-request-line");
 const tokenInput = (page: Page) => page.locator('calcite-input[data-var="fixtureToken"] input');
 
 /** Answers the fixture API (and its CORS preflight); returns the requests it got. */
-async function mockApi(page: Page, reply: { status?: number; body?: string | Buffer; headers?: Record<string, string> } = {}) {
-  const calls: { method: string; url: string; body: string | null }[] = [];
-  await page.route(API, (route) => {
-    const request = route.request();
-    if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
-    calls.push({ method: request.method(), url: request.url(), body: request.postData() });
-    const headers = { ...CORS, "Content-Type": "application/json", ...reply.headers };
-    return route.fulfill({ status: reply.status ?? 200, headers, body: reply.body ?? '{ "items": ["live"] }' });
-  });
-  return calls;
-}
+const mockApi = (page: Page, reply: Parameters<typeof mockService>[2] = {}) =>
+  mockService(page, API, { body: '{ "items": ["live"] }', ...reply });
 
 test("request steps show a Run button; activating steps never sends a request", async ({ page }) => {
   const calls = await mockApi(page);
@@ -156,7 +146,7 @@ test("Run sends the request with query values URL-encoded and shows the live res
   await runButton(page).click();
   await expect(badge(page)).toHaveText(/^Live · 200( OK)? · \d+ ms$/);
   await expect(badge(page)).toHaveAttribute("data-state", "live");
-  expect(calls).toEqual([{ method: "GET", url: "https://api.fixture.test/v1/items?token=a%20b%26c", body: null }]);
+  expect(calls).toMatchObject([{ method: "GET", url: "https://api.fixture.test/v1/items?token=a%20b%26c", body: null }]);
   await expect(body(page).getByRole("tree", { name: "JSON response of list-items" })).toContainText('"note": "<b>live</b>"');
   await expect(body(page).locator("b")).toHaveCount(0);
 });
@@ -183,7 +173,7 @@ test("Run as switches to the step's other request, which gets values as is in it
   await expect(requestLine(page)).toHaveText("POST https://api.fixture.test/v1/items");
   await runButton(page).click();
   await expect(badge(page)).toHaveAttribute("data-state", "live");
-  expect(calls).toEqual([{ method: "POST", url: "https://api.fixture.test/v1/items", body: '{ "token": "a b&c" }' }]);
+  expect(calls).toMatchObject([{ method: "POST", url: "https://api.fixture.test/v1/items", body: '{ "token": "a b&c" }' }]);
 });
 
 test("a network failure falls back to the captured output and says so", async ({ page }) => {

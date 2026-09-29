@@ -5,6 +5,7 @@ const fixtures = [
   { name: "fixture", filter: "example-framework-fixture", port: 4400, specs: undefined },
   { name: "variants", filter: "example-framework-fixture-variants", port: 4401, specs: /\/(variants|result)\.spec\.ts$/ },
   { name: "variants-hide", filter: "example-framework-fixture-variants-hide", port: 4402, specs: /\/variants-hide\.spec\.ts$/ },
+  { name: "rest", filter: "example-rest-geocode", port: 4403, specs: /\/rest-example\.spec\.ts$/ },
 ];
 /** Specs bound to a dedicated fixture; every other spec runs against the main fixture. */
 const dedicated = fixtures.flatMap((f) => (f.specs ? [f.specs] : []));

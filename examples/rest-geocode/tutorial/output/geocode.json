@@ -1,0 +1,26 @@
+{
+  "spatialReference": {
+    "wkid": 4326,
+    "latestWkid": 4326
+  },
+  "candidates": [
+    {
+      "address": "380 New York St, Redlands, California, 92373",
+      "location": {
+        "x": -117.194835113918,
+        "y": 34.057241819826
+      },
+      "score": 100,
+      "attributes": {
+        "Match_addr": "380 New York St, Redlands, California, 92373",
+        "Addr_type": "PointAddress"
+      },
+      "extent": {
+        "xmin": -117.195835113918,
+        "ymin": 34.056241819826,
+        "xmax": -117.193835113918,
+        "ymax": 34.058241819826
+      }
+    }
+  ]
+}

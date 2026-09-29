@@ -51,6 +51,7 @@ See [Preview](authoring.md#preview).
 - A Run request button sends the step's request live from the browser with the reader's form values (a "Run as" picker when the step offers several, e.g. GET and POST), shows the status, time and response body, masks secrets in the request line (with a "Show secrets" toggle), gives up after 30 s and falls back to the captured output when the network or CORS fails. Readers can keep a live response for the session; Show captured returns to the captured one.
 - Live responses have Body and Headers tabs: JSON as a tree, images as images, long text cut at 200 KB with "Show all"; Headers lists what the server exposes through CORS.
 - Service errors inside responses (e.g. ArcGIS REST answering HTTP 200 with an `error` object) are shown as failures, with the code, message and a help link from `requests/errors.json`.
+- Example: [examples/rest-geocode](../examples/rest-geocode) geocodes an address with the ArcGIS REST API in cURL, Python and JavaScript, with a GET step and a POST step (token in a header), captured outputs and the ArcGIS error rule.
 
 See [Result Pane](authoring.md#result-pane).
 

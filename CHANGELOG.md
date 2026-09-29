@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added `examples/rest-geocode` (`pnpm rest`): a REST tutorial that geocodes an address with the ArcGIS REST API in cURL, Python and JavaScript (Node.js), with a GET step (token in the query) and a POST step (form body, token in the `X-Esri-Authorization` header), each running the request its code shows, captured outputs and an ArcGIS error rule with help for codes 400, 403, 498 and 499; covered by its own E2E project.
+- Moved the playground's `geocode.http` to `requests/` and bound it to the Python request step, so it runs from the Result pane.
+- E2E tests now block every external host by default (not only the Esri CDN); `mockService()` in `e2e/fixtures.ts` mocks a cross-origin service and its CORS preflight.
+
 - Added service error explanations to the request runner: `requests/errors.json` declares where a response body holds an error object, its code and message (dot paths) plus a help table (text + link per code, fallback link); matching responses (HTTP 200 or not) get a red `Error <code> · HTTP <status>` badge and a notice with the code, message and help link. The build validates the file and reports errors by line.
 - Added Body and Headers tabs to live responses: `image/*` bodies render as images, text over 200 KB is cut with a "Show all" action, and the Headers tab lists the headers the server exposes through CORS.
 

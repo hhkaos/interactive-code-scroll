@@ -126,6 +126,7 @@ This builds the package, creates a tarball with `pnpm pack`, installs it into a 
 ## Examples
 
 - [Getting started with InteractiveCodeScroll](examples/getting-started) - dogfooding tutorial included in this repository.
+- [Geocode an address with the ArcGIS REST API](examples/rest-geocode) - cURL, Python and JavaScript variants with live GET/POST requests, captured outputs and ArcGIS error explanations (`pnpm rest`).
 - [OAuth PKCE with ArcGIS Maps SDK for JavaScript](https://github.com/EsriDevEvents/security-and-authentication-for-custom-applications-dtseu-2026/tree/main/demos/arcgis-js-sdk-user-auth) - ArcGIS JS SDK user authentication tutorial.
 
 ## License

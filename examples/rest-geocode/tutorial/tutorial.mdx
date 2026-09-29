@@ -1,0 +1,67 @@
+---
+title: Geocode an address with the ArcGIS REST API
+theme: auto
+codeWrap: true
+variants:
+  - { id: curl, label: cURL, dir: curl, entry: geocode.sh }
+  - { id: python, label: Python, dir: python, entry: geocode.py, files: ["geocode.py", "geocode_post.py", "requirements.txt"] }
+  - { id: node, label: JavaScript, dir: node, entry: geocode.mjs }
+---
+
+<Intro>
+
+## What you will build
+
+A script that turns an address into coordinates with the [ArcGIS Geocoding service](https://developers.arcgis.com/rest/geocode/find-address-candidates/). Pick cURL, Python or JavaScript (Node.js 18+) in the code header: every step follows along in the language you chose.
+
+You will need an [API key](https://developers.arcgis.com/documentation/security-and-authentication/api-key-authentication/tutorials/create-an-api-key/) with the **Geocoding** privilege from an ArcGIS Location Platform or ArcGIS Online account.
+
+> Each step with a request has a **Run request** button in the Result pane: it sends the request from your browser with the access token you enter below. Without a token, the pane shows a response captured earlier.
+
+</Intro>
+
+<Step id="config" region="config">
+
+## Set your access token
+
+The service URL points at the `World` geocode service, and the access token authorizes every request. Paste your API key here; it fills the code, the downloads and the requests you run from this page, and stays in this browser.
+
+<VarField name="accessToken" label="Access token" secret />
+
+</Step>
+
+<Step id="request" region="request" output="geocode.json" request="geocode-get">
+
+## Find address candidates
+
+`findAddressCandidates` takes the whole address in `singleLine`. `outFields` picks the attributes each candidate returns and `f=json` asks for JSON.
+
+Press **Run request** to send the same request from this page. It uses the access token you entered above; with the `YOUR_ACCESS_TOKEN` placeholder the service answers with error `498`.
+
+</Step>
+
+<Step id="results" region="results" only="python node" output="candidates.txt">
+
+## Print the candidates
+
+Each candidate has an address, a location and a `score` from 0 to 100. ArcGIS REST services report most errors inside an HTTP 200 response (`{ "error": { "code": 498, … } }`), so check for `error` before reading `candidates`.
+
+</Step>
+
+<Step id="header" region="header-auth" output="geocode.json" request="geocode-post">
+
+## Keep the token out of URLs
+
+A token in the query string ends up in browser history, proxy logs and server logs. This second script sends the same parameters as a form body with `POST`, and the token in the `X-Esri-Authorization: Bearer` header, which ArcGIS location services accept instead of the `token` parameter.
+
+Run it: the response is the same, but the request line no longer carries the token.
+
+</Step>
+
+<Step id="errors" region="request" request="geocode-get">
+
+## When a request fails
+
+Change a character of the access token above and run the request again. The service still answers `200 OK`, but the body holds error `498`: the Result pane marks it as a failure and explains it, because this tutorial describes the ArcGIS error format in `requests/errors.json`.
+
+</Step>

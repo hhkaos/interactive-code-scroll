@@ -3,7 +3,7 @@ title: Multi-SDK Playground
 preview: off
 theme: auto
 codeWrap: true
-files: ["python/*.py", "geocode.sh", "geocode.http", "android/MainActivity.kt", "dotnet/Program.cs", "*.sql"]
+files: ["python/*.py", "geocode.sh", "android/MainActivity.kt", "dotnet/Program.cs", "*.sql"]
 ---
 
 <Intro>
@@ -36,19 +36,13 @@ Shell strings escape differently: try an access token containing `"`, `$` or a b
 
 </Step>
 
-<Step id="http" file="geocode.http" region="request">
-
-## HTTP: a request file
-
-`.http` file variables (`@accessToken = …`) are vars too, so the same field fills `{{accessToken}}`. The request runner will use these files in Phase 1.
-
-</Step>
-
-<Step id="request" file="python/geocode.py" region="request" output="geocode.json">
+<Step id="request" file="python/geocode.py" region="request" output="geocode.json" request="geocode">
 
 ## Python: send the request
 
 `requests.get` calls `findAddressCandidates` with the address as `singleLine`. The Result pane shows a captured response from `output/geocode.json`; the next steps keep it until another step has an output.
+
+**Run request** sends `requests/geocode.http` from the browser with the access token above (`.http` file variables such as `@accessToken` take the field's value). `requests/` is the runner's source only: it gets no code tab but is included in the ZIP.
 
 </Step>
 

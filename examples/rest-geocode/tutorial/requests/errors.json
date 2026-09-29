@@ -1,0 +1,24 @@
+{
+  "object": "error",
+  "code": "error.code",
+  "message": "error.message",
+  "help": {
+    "400": {
+      "text": "The service could not read the request. Check the parameter names and values.",
+      "link": "https://developers.arcgis.com/rest/geocode/find-address-candidates/"
+    },
+    "403": {
+      "text": "The access token is valid but lacks the Geocoding privilege. Edit the API key's privileges.",
+      "link": "https://developers.arcgis.com/documentation/security-and-authentication/reference/privileges/location-platform/"
+    },
+    "498": {
+      "text": "The access token is expired, revoked or mistyped. Paste the API key again or create a new one.",
+      "link": "https://developers.arcgis.com/documentation/security-and-authentication/reference/rest-authentication-operations/"
+    },
+    "499": {
+      "text": "The request has no access token. Fill in the Access token field.",
+      "link": "https://developers.arcgis.com/documentation/security-and-authentication/reference/rest-authentication-operations/"
+    }
+  },
+  "fallbackLink": "https://developers.arcgis.com/rest/geocode/response-types/"
+}
