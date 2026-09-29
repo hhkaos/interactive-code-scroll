@@ -418,9 +418,24 @@ body[data-docs-hidden] {
   border-bottom: 1px solid var(--calcite-color-border-3);
 
   calcite-tab-nav { flex: 1; min-width: 0; align-self: stretch; }
-  /* Tabs give way first; header actions keep their size. */
-  & > calcite-action, & > .zip-action { flex: none; }
+  calcite-tab-nav[hidden] { display: none; }
+  /* Tabs give way first; header actions and the language switcher keep their size. */
+  & > calcite-action, & > .zip-action, & > calcite-segmented-control, & > calcite-dropdown { flex: none; }
+  & > calcite-segmented-control, & > calcite-dropdown { margin-inline: 0.5rem 0; }
+  & > :is(calcite-segmented-control, calcite-dropdown)[hidden] { display: none; }
 }
+
+/* Separates the language switcher from the file tabs. */
+.header-divider {
+  flex: none;
+  width: 1px;
+  height: 1.75rem;
+  margin-inline: 0.75rem 0.25rem;
+  background: var(--calcite-color-border-3);
+}
+
+/* Code panel notice for steps that apply to other variants. */
+#variant-notice { flex: none; }
 
 /* Quiet count badge: files in the ZIP (the action's text adds how many have no tab). */
 .zip-action {

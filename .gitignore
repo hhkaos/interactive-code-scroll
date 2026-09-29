@@ -12,3 +12,4 @@ playwright-report/
 spike/.shots/
 .DS_Store
 packages/interactive-code-scroll/test/fixtures/dev-*/
+screenshots/

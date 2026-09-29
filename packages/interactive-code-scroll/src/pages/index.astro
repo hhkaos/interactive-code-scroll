@@ -8,31 +8,51 @@ import { readTutorialConfig } from "../frontmatter.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
+import { MAX_SEGMENTED } from "../client/variant-values.ts";
+import { variantVisible } from "../variants.ts";
 import { selectVisible } from "../visible-files.ts";
 import "../styles/tutorial.css";
 
 // Frontmatter and references are validated at MDX compile time (mdx-validation.ts).
 const config = readTutorialConfig(frontmatter);
 const logo = config.logo === undefined ? undefined : images[config.logo];
-const { visible } = selectVisible(
-  files.map((f) => f.path),
-  config.files,
-);
+const textPaths = files.map((f) => f.path);
+const { variants } = config;
+// Each variant's tabs, in order; a tutorial without variants is one unnamed group.
+const groups = variants
+  ? variants.map((v) => ({ variant: v, prefix: `${v.dir}/`, entry: `${v.dir}/${v.entry}`, paths: variantVisible(v, textPaths).visible }))
+  : [{ variant: undefined, prefix: "", entry: undefined, paths: selectVisible(textPaths, config.files).visible }];
+const visible = groups.flatMap((g) => g.paths);
+// TODO(1c): per-variant Preview; until then a tutorial with variants has none.
+const preview = variants ? "off" : config.preview;
 // The page embeds tabbed files plus the Preview entry; the ZIP fetches everything else from preview/.
-const embedded = new Set([...visible, PREVIEW_ENTRY]);
+const embedded = new Set(variants ? visible : [...visible, PREVIEW_ENTRY]);
 const parsed = files.filter((f) => embedded.has(f.path)).map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`) }));
-const panes = await Promise.all(
-  visible.map(async (path) => ({ path, html: await highlight(parsed.find((f) => f.path === path)!.parsed, path, config.languages) })),
+const highlighted = new Map(
+  await Promise.all(
+    visible.map(async (path) => [path, await highlight(parsed.find((f) => f.path === path)!.parsed, path, config.languages)] as const),
+  ),
 );
+// First shown: the first variant's entry, else the first tab.
+const initialFile = groups[0]!.entry ?? visible[0];
+const selectedIn = (group: (typeof groups)[number]) => group.entry ?? group.paths[0];
 const fetched = [...files.map((f) => f.path).filter((path) => !embedded.has(path)), ...binaries].sort();
 const withoutTab = [...files.map((f) => f.path).filter((path) => !visible.includes(path)), ...binaries].sort();
 const zipTotal = files.length + binaries.length;
 const plural = (n: number) => `${n} ${n === 1 ? "file" : "files"}`;
 const zipText = `Download project (ZIP) · ${plural(zipTotal)}${withoutTab.length > 0 ? ` (${withoutTab.length} not shown in tabs)` : ""}`;
-const withIframe = config.preview === "iframe" || config.preview === "both";
-const withTab = config.preview === "tab" || config.preview === "both";
+const withIframe = preview === "iframe" || preview === "both";
+const withTab = preview === "tab" || preview === "both";
+const clientVariants = variants?.map(({ id, label, dir, entry }) => ({ id, label, dir, entry }));
 // Escape "<" so embedded code containing </script> cannot close the data block.
-const clientData = JSON.stringify({ title: config.title, preview: config.preview, files: parsed, fetched }).replace(/</g, "\\u003c");
+const clientData = JSON.stringify({
+  title: config.title,
+  preview,
+  files: parsed,
+  fetched,
+  variants: clientVariants,
+  otherVariantSteps: config.otherVariantSteps,
+}).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -43,7 +63,7 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
     <title>{config.title}</title>
     {logo && <link rel="icon" href={logo} />}
   </head>
-  <body data-preview={config.preview} data-theme={config.theme} data-code-wrap={config.codeWrap ? "" : undefined}>
+  <body data-preview={preview} data-theme={config.theme} data-code-wrap={config.codeWrap ? "" : undefined}>
     <script is:inline>
       // Before first paint: avoid a flash of the wrong theme. Mirrors client/layout-values.ts.
       (function () {
@@ -88,15 +108,46 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       <aside class="right">
         <div class="code-panel">
           <div class="panel-header">
-            <calcite-tab-nav>
-              {
-                panes.map((p, i) => (
-                  <calcite-tab-title data-file={p.path} selected={i === 0} icon-start="file-code">
-                    {p.path}
-                  </calcite-tab-title>
-                ))
-              }
-            </calcite-tab-nav>
+            {
+              variants && (
+                <>
+                  {/* Segmented up to MAX_SEGMENTED variants; client/variants.ts falls back to the dropdown when it does not fit. */}
+                  {variants.length <= MAX_SEGMENTED && (
+                    <calcite-segmented-control id="variant-switcher" label="Code language" scale="s">
+                      {variants.map((v, i) => (
+                        <calcite-segmented-control-item value={v.id} checked={i === 0 || undefined}>
+                          {v.label}
+                        </calcite-segmented-control-item>
+                      ))}
+                    </calcite-segmented-control>
+                  )}
+                  <calcite-dropdown id="variant-dropdown" scale="s" hidden={variants.length <= MAX_SEGMENTED || undefined}>
+                    <calcite-button slot="trigger" kind="neutral" appearance="outline" scale="s" icon-end="chevron-down" label="Code language">
+                      {variants[0]!.label}
+                    </calcite-button>
+                    <calcite-dropdown-group selection-mode="single" group-title="Code language">
+                      {variants.map((v, i) => (
+                        <calcite-dropdown-item data-variant={v.id} selected={i === 0 || undefined}>
+                          {v.label}
+                        </calcite-dropdown-item>
+                      ))}
+                    </calcite-dropdown-group>
+                  </calcite-dropdown>
+                  <span class="header-divider" aria-hidden="true" />
+                </>
+              )
+            }
+            {
+              groups.map((group, g) => (
+                <calcite-tab-nav data-variant={group.variant?.id} hidden={g !== 0 || undefined}>
+                  {group.paths.map((path) => (
+                    <calcite-tab-title data-file={path} selected={path === selectedIn(group)} icon-start="file-code">
+                      {path.slice(group.prefix.length)}
+                    </calcite-tab-title>
+                  ))}
+                </calcite-tab-nav>
+              ))
+            }
             <calcite-action id="copy-file" icon="copy-to-clipboard" text="Copy file" />
             <calcite-action id="download-file" icon="download" text="Download file" />
             {/* Our own count badge: Calcite has no numeric badge, and its `indicator` dot fails to render without t9n files (offline). */}
@@ -104,11 +155,19 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
               <calcite-action id="download-zip" icon="file-zip" text={zipText} />
             </span>
           </div>
-          {panes.map((p, i) => <div class="code" data-file={p.path} hidden={i !== 0} set:html={p.html} />)}
+          {
+            variants && (
+              <calcite-notice id="variant-notice" kind="info" icon="information" scale="s" width="full">
+                <div slot="message" />
+                <calcite-link slot="link" />
+              </calcite-notice>
+            )
+          }
+          {visible.map((path) => <div class="code" data-file={path} hidden={path !== initialFile} set:html={highlighted.get(path)} />)}
         </div>
         <div class="media-panel" hidden></div>
         {
-          config.preview !== "off" && (
+          preview !== "off" && (
             <section class="preview" aria-label="Preview">
               {withIframe && (
                 <div
@@ -160,12 +219,15 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       import { startPreview } from "../client/preview.ts";
       import { startStepEngine } from "../client/steps.ts";
       import { startVars } from "../client/vars.ts";
+      import { startVariants, type VariantInfo } from "../client/variants.ts";
 
       const data = JSON.parse(document.querySelector("#ics-data")!.textContent!) as {
         title: string;
         preview: "off" | "iframe" | "tab" | "both";
         files: { path: string; parsed: ParsedSource }[];
         fetched: string[];
+        variants?: VariantInfo[];
+        otherVariantSteps: "notice" | "hide";
       };
 
       startTooltips();
@@ -173,7 +235,8 @@ const clientData = JSON.stringify({ title: config.title, preview: config.preview
       startHints();
       startLayout();
       startPresentation();
-      const engine = startStepEngine();
+      const variants = data.variants && startVariants(data.variants);
+      const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
       startImageViewer();
       let refreshPreview = () => {};
       const vars = startVars(() => refreshPreview());

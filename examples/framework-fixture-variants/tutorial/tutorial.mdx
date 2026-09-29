@@ -1,0 +1,68 @@
+---
+title: Variants Fixture Tutorial
+preview: off
+theme: auto
+variants:
+  - { id: python, label: Python, dir: python, entry: request.py, files: ["request.py", "requirements.txt"] }
+  - { id: curl, label: cURL, dir: curl, entry: request.sh }
+  - { id: node, label: Node.js, dir: node, entry: index.mjs, files: ["index.mjs", "config.mjs", "api.mjs"] }
+---
+
+<Intro>
+
+## Before you start
+
+This fixture is not product documentation. It is a stable contract for the E2E tests of code variants.
+Do not edit its content for narrative polish; add cases only when the framework gains behavior.
+
+</Intro>
+
+<Step id="config" region="config">
+
+## Configure the client
+
+Every variant defines the `config` region, each in its own file.
+
+<VarField name="fixtureToken" label="Fixture token" secret />
+
+</Step>
+
+<Step id="request" region="request">
+
+## Send the request
+
+The `request` region lives in the entry file for Python and cURL, and in `api.mjs` for Node.js.
+
+</Step>
+
+<Step id="client" region="client" only="python node">
+
+## Wrap the call
+
+Only Python and Node.js have a client wrapper.
+
+</Step>
+
+<Step id="flags" region="flags" only="curl">
+
+## Quiet output
+
+Only cURL has flags.
+
+</Step>
+
+<Step id="deps" file="requirements.txt" only="python">
+
+## Install dependencies
+
+A whole-file step that only Python has.
+
+</Step>
+
+<Step id="summary">
+
+## Summary
+
+A text-only step keeps the current file.
+
+</Step>

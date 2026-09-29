@@ -1,0 +1,40 @@
+---
+title: Hidden Variant Steps Fixture
+preview: off
+otherVariantSteps: hide
+variants:
+  - { id: python, label: Python, dir: python, entry: main.py }
+  - { id: curl, label: cURL, dir: curl, entry: main.sh }
+---
+
+<Step id="config" region="config">
+
+## Configure
+
+Shared by every variant.
+
+</Step>
+
+<Step id="install" region="install" only="python">
+
+## Python only
+
+Hidden while cURL is active.
+
+</Step>
+
+<Step id="flags" region="flags" only="curl">
+
+## cURL only
+
+Hidden while Python is active.
+
+</Step>
+
+<Step id="request" region="request">
+
+## Send the request
+
+Shared by every variant.
+
+</Step>

@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added code variants to the tutorial page: a language switcher before the file tabs (segmented control for up to four variants whose tabs fit, dropdown otherwise), `?variant=` deep links and a remembered choice, per-variant tabs, steps that focus the same region in each variant's file, and `only=` steps shown with a notice (`otherVariantSteps: notice`) or hidden (`hide`).
+- Added `examples/framework-fixture-variants` and `examples/framework-fixture-variants-hide` with their own Playwright web servers.
 - Added build validation for code variants (Phase 1, not rendered yet): `variants` frontmatter (`id`, `label`, `dir`, `entry`, per-variant `files`) and `otherVariantSteps` (`notice` | `hide`); all code must live in variant folders, region ids are unique within a variant, `<Step region>` without `file` resolves per variant, and `only="a b"` limits a step to some variants.
 - Added a `files` frontmatter list (paths/globs) that chooses which `code/` files get tabs; other files, including binaries, are published under `preview/` and fetched into the ZIP, and the ZIP action shows a badge with the total file count; its tooltip says how many are not shown in tabs.
 - Added binary file support in `code/`: detected by extension or NUL byte, never rendered, published and zipped byte for byte.

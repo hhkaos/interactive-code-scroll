@@ -1,6 +1,7 @@
 import { FrontmatterError, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
+import { variantVisible } from "./variants.ts";
 import { globToRegExp, selectVisible } from "./visible-files.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 
@@ -90,12 +91,11 @@ function checkVariants(
     if (binaries.includes(entry)) reportFrontmatter("variants", `${label} entry "${variant.entry}" is binary and cannot be shown`);
     else if (own.length > 0 && !own.includes(entry)) reportFrontmatter("variants", `${label} entry "${variant.entry}" not found in code/${variant.dir}/`);
 
-    const relative = own.map((path) => path.slice(variant.dir.length + 1));
-    const { visible, unmatched } = selectVisible(relative, variant.files);
+    const { visible, unmatched } = variantVisible(variant, own);
     for (const pattern of unmatched) {
       reportFrontmatter("variants", `${label} files "${pattern}" matches no text file in code/${variant.dir}/`);
     }
-    const visibleSet = new Set(visible.map((path) => `${variant.dir}/${path}`));
+    const visibleSet = new Set(visible);
     if (variant.files !== undefined && own.includes(entry) && !visibleSet.has(entry)) {
       reportFrontmatter("variants", `${label} entry "${variant.entry}" must be one of its "files"`);
     }

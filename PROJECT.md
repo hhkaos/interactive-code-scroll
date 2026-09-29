@@ -35,7 +35,7 @@ pnpm preflight:package # unit + check + package smoke test for CLI/build/package
 pnpm preflight:release # same as package preflight before tagging/publishing
 pnpm test         # Vitest unit tests
 pnpm test:pack    # pack the package, install it in a temporary project, and build that project
-pnpm test:e2e     # Playwright: builds the example and serves it on :4400
+pnpm test:e2e     # Playwright: builds and serves the fixtures (:4400 main, :4401 variants, :4402 variants with hidden steps)
 ```
 
 For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so pnpm never prompts while checking dependency state.
@@ -53,7 +53,7 @@ Recommended next task: **1a Variants config + validation** (`src/frontmatter.ts`
 
 Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
-- UI changes: show screenshots before committing. Save them under `test-results/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
+- UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
 - Full E2E was green (61/61) at `c559d8c`; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 
@@ -116,6 +116,8 @@ packages/interactive-code-scroll/  # core package: Astro integration
   test/                            # Astro build + dev-server (revalidation, overlay loc) integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
+examples/framework-fixture-variants/      # stable fake tutorial with code variants (`notice` mode); E2E in e2e/variants.spec.ts
+examples/framework-fixture-variants-hide/ # same, with `otherVariantSteps: hide`; E2E in e2e/variants-hide.spec.ts
 examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
 examples/multi-sdk-playground/      # local hands-on tutorial for multi-SDK features (Python, Kotlin, C#, SQL); `pnpm playground`; no E2E, grows with each plan task
 .github/workflows/publish-getting-started.yml # builds/deploys examples/getting-started on default-branch pushes
@@ -289,6 +291,8 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 | Preview theme | Iframe: `prefers-color-scheme` inside follows the `<iframe>` element's `color-scheme` (verified in Chromium) | New tab: follows the OS | Tutorial apps opt in with `calcite-mode-auto`; the framework never rewrites tutorial code. E2E: Playwright emulates `colorScheme: "light"` by default and forces it on every frame; use `colorScheme: null` to observe this |
 | ArcGIS REST error responses | Many endpoints answer HTTP 200 with `{ "error": { "code", "message", "details" } }` in the body (e.g. 498 invalid token) | Transport failures (network, CORS) have no body at all | Request runner must not judge success by HTTP status alone: use the declarative error rule (planned); keep ArcGIS rule/codes in the preset, not core |
 | `calcite-action` `indicator` | Online: renders the dot | Offline / CDN blocked (t9n not loaded): render throws (`messages.indicatorLabel` undefined, `messageOverrides` does not help) and the action collapses to 0 px | Do not use `indicator` (it has no count either); draw our own badge on a wrapper element (`.zip-action`) |
+| Astro attributes on custom elements | `hidden={false}` / `selected={false}` on a native element: attribute omitted | On a custom element (e.g. `calcite-tab-nav`): serialized as the string `"false"`, so `hidden="false"` hides it | Write `attr={condition \|\| undefined}` |
+| Calcite sizes late | Measuring a Calcite container once (or observing only it) on load | Its children (`calcite-tab-title`, `calcite-segmented-control`) grow after they render, while the container keeps its size | Observe the children too (`ResizeObserver`); see `client/variants.ts` |
 | Calcite props in React 19 | Set as DOM properties (e.g. `label`) | Not reflected as attributes | E2E selectors must not rely on those attributes |
 
 ---

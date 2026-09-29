@@ -1,0 +1,15 @@
+{
+  "name": "example-framework-fixture-variants-hide",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../packages/interactive-code-scroll/bin/interactive-code-scroll.mjs dev",
+    "build": "node ../../packages/interactive-code-scroll/bin/interactive-code-scroll.mjs build",
+    "preview": "node ../../packages/interactive-code-scroll/bin/interactive-code-scroll.mjs serve",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "astro": "7.3.5",
+    "interactive-code-scroll": "workspace:*"
+  }
+}

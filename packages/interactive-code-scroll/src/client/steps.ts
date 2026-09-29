@@ -3,6 +3,8 @@ import { MEDIA_EVENT } from "./image-viewer.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
 import { setAction } from "./actions.ts";
+import { counterpartFile, coversVariant, listLabels, nearestVisible } from "./variant-values.ts";
+import { VARIANT_EVENT, type VariantChange, type VariantsHandle } from "./variants.ts";
 
 type TabTitle = HTMLElement & { selected: boolean };
 
@@ -35,11 +37,29 @@ const OWN_CLICKS = "a, button, input, textarea, select, [contenteditable], calci
 /** User input that ends the deep-link restore (programmatic scrolling fires none of these). */
 const TAKE_OVER_EVENTS = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
 
-export function startStepEngine(): StepEngine {
-  const steps = $$("section.step");
-  if (steps.length === 0) return { step: () => {} };
+export interface StepEngineOptions {
+  variants?: VariantsHandle;
+  /** How steps limited to other variants (`only=`) look: a notice in the code panel, or hidden. */
+  otherVariantSteps?: "notice" | "hide";
+}
 
-  const docs = steps[0]!.closest<HTMLElement>(".docs")!;
+export function startStepEngine({ variants, otherVariantSteps = "notice" }: StepEngineOptions = {}): StepEngine {
+  const allSteps = $$("section.step");
+  if (allSteps.length === 0) return { step: () => {} };
+  const hideOthers = !!variants && otherVariantSteps === "hide";
+  const covers = (step: HTMLElement) => !variants || coversVariant(step.dataset.only, variants.active().id);
+  /** Steps the reader can reach: with `hide`, only those of the active variant (numbering follows them). */
+  let steps = allSteps;
+  function applyHidden(): void {
+    if (!hideOthers) return;
+    for (const step of allSteps) step.hidden = !covers(step);
+    steps = allSteps.filter((step) => !step.hidden);
+  }
+  applyHidden();
+  const firstStep = steps[0] ?? allSteps[0]!;
+
+  const docs = firstStep.closest<HTMLElement>(".docs")!;
+  const notice = document.querySelector<HTMLElement & { open: boolean }>("#variant-notice");
   const hasIntro = !!docs.querySelector(".intro");
   const codePanel = document.querySelector<HTMLElement>(".code-panel")!;
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
@@ -54,6 +74,30 @@ export function startStepEngine(): StepEngine {
     setAction(document.querySelector("#preview-toggle"), frame.hidden ? "chevron-right" : "chevron-down", "Preview");
     document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
   }
+
+  /** File the step shows in the active variant (`data-files` maps variant id → file). */
+  function fileOf(step: HTMLElement): string | undefined {
+    if (!variants) return step.dataset.file;
+    const files = JSON.parse(step.dataset.files ?? "{}") as Record<string, string>;
+    return files[variants.active().id];
+  }
+
+  /** With `notice`, a step for other variants says which ones and offers to switch. */
+  function showNotice(step: HTMLElement | undefined): void {
+    if (!notice) return;
+    const ids = step?.dataset.only?.split(/\s+/).filter(Boolean) ?? [];
+    const targets = variants!.list.filter((v) => ids.includes(v.id));
+    notice.open = targets.length > 0;
+    if (!notice.open) return;
+    notice.querySelector("[slot=message]")!.textContent = `This step applies to ${listLabels(targets.map((v) => v.label))}.`;
+    const link = notice.querySelector<HTMLElement>("[slot=link]")!;
+    link.textContent = `Switch to ${targets[0]!.label}`;
+    link.dataset.variant = targets[0]!.id;
+  }
+  notice?.querySelector("[slot=link]")?.addEventListener("click", (event) => {
+    const id = (event.currentTarget as HTMLElement).dataset.variant;
+    if (id) variants!.set(id);
+  });
 
   function showFile(path: string): void {
     for (const pane of $$(".code")) pane.hidden = pane.dataset.file !== path;
@@ -74,8 +118,9 @@ export function startStepEngine(): StepEngine {
 
   function clearActive(): void {
     current = -1;
-    steps.forEach((s) => s.removeAttribute("data-active"));
+    allSteps.forEach((s) => s.removeAttribute("data-active"));
     clearFocus();
+    showNotice(undefined);
     mediaPanel.hidden = true;
     codePanel.hidden = false;
     mediaPanel.replaceChildren();
@@ -126,10 +171,10 @@ export function startStepEngine(): StepEngine {
 
   /** `fromEnd`: entering backwards starts a carousel at its last image. */
   function activate(index: number, fromEnd = false): void {
-    if (index === current) return;
+    if (index === current || index < 0) return;
     current = index;
     const step = steps[index]!;
-    steps.forEach((s, i) => s.toggleAttribute("data-active", i === index));
+    allSteps.forEach((s) => s.toggleAttribute("data-active", s === step));
     history.replaceState(null, "", `#${step.id}`);
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
     if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
@@ -146,8 +191,13 @@ export function startStepEngine(): StepEngine {
     announceMedia();
 
     clearFocus();
+    // A step for other variants keeps the current file, with no focus.
+    const covered = covers(step);
+    showNotice(covered ? undefined : step);
+    if (!covered) return;
 
-    const { file, region } = step.dataset;
+    const file = fileOf(step);
+    const { region } = step.dataset;
     if (!file) return; // Text-only step: keep the current file.
     showFile(file);
     const pane = document.querySelector<HTMLElement>(`.code[data-file="${CSS.escape(file)}"]`)!;
@@ -189,7 +239,7 @@ export function startStepEngine(): StepEngine {
     },
     { root: docs, rootMargin: "-50% 0px -50% 0px" },
   );
-  steps.forEach((step) => observer.observe(step));
+  allSteps.forEach((step) => observer.observe(step));
 
   /** Step keys first page through the active step's carousel; true when they did. */
   function moveCarousel(delta: -1 | 1): boolean {
@@ -293,17 +343,47 @@ export function startStepEngine(): StepEngine {
 
   // In-page #step-id links: center the step (native anchor scrolling would align its top).
   addEventListener("hashchange", () => {
+    revealHashStep();
     const index = steps.findIndex((s) => `#${s.id}` === location.hash);
     if (index >= 0) goTo(index);
   });
 
   // Just enough room below the last step for it to reach the center line (no fixed blank tail).
-  const last = steps.at(-1)!;
+  const last = allSteps.at(-1)!;
   const tail = new ResizeObserver(() => {
     docs.style.setProperty("--tail", `${Math.max(docs.clientHeight / 2 - last.offsetHeight / 2, 32)}px`);
   });
   tail.observe(docs);
   tail.observe(last);
+
+  // Switching variants keeps the step (or the nearest earlier one still shown) and moves the
+  // focus to the same region in the new variant; text-only steps keep the matching file.
+  const tabs = new Set($$(".code").map((pane) => pane.dataset.file!));
+  document.addEventListener(VARIANT_EVENT, (event) => {
+    const { from, to } = (event as CustomEvent<VariantChange>).detail;
+    const active = allSteps.find((s) => s.hasAttribute("data-active"));
+    const shown = document.querySelector<HTMLElement>(".code:not([hidden])")?.dataset.file;
+    applyHidden();
+    showFile(counterpartFile(shown, from, to, tabs));
+    if (!active || steps.length === 0) return;
+    current = -1;
+    activate(nearestVisible(allSteps, steps, active));
+    keepActiveCentered();
+  });
+
+  /** With `hide`, a link to a step of another variant switches to the step's first variant. */
+  function revealHashStep(): void {
+    if (!hideOthers) return;
+    const target = allSteps.find((s) => `#${s.id}` === decodeURIComponent(location.hash));
+    const id = target?.hidden ? target.dataset.only?.split(/\s+/)[0] : undefined;
+    if (id) variants!.set(id);
+  }
+
+  if (variants) {
+    const { dir, entry } = variants.active();
+    showFile(`${dir}/${entry}`);
+    revealHashStep();
+  }
 
   // Deep link: activate now and keep the step centered while the layout settles (Calcite
   // components render late, after fetching their translations), until the user takes over.
@@ -315,7 +395,7 @@ export function startStepEngine(): StepEngine {
   const settle = new ResizeObserver(() => {
     if (hasInitialStep && !userNavigated) showStep(hashIndex, true, "auto");
   });
-  for (const el of [docs, ...steps]) settle.observe(el);
+  for (const el of [docs, ...allSteps]) settle.observe(el);
   const takeOver = () => {
     settle.disconnect();
     restoring = false;
