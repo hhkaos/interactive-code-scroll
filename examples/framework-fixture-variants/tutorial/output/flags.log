@@ -1,2 +1,3 @@
 $ sh request.sh
+[32m200 OK[0m [2m(118 ms)[0m
 {"items":[{"id":1,"name":"First item"}]}

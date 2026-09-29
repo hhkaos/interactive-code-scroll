@@ -633,10 +633,84 @@ body[data-docs-hidden] {
   pre[data-error] { color: var(--calcite-color-status-danger); font-family: var(--calcite-font-family); }
 }
 
-/* Captured program output: a terminal in both modes. */
+/* JSON viewer: text-only tree; token colors follow the GitHub themes used for code. */
+.result-json {
+  flex: 1;
+  padding: 0.75rem 1rem 0.75rem 0.5rem;
+  font: var(--calcite-font-size-sm) / 1.6 var(--calcite-font-family-code);
+  color: light-dark(#1f2328, #e6edf3);
+
+  ul { margin: 0; padding: 0; list-style: none; }
+  [role="group"] { padding-inline-start: 1.125rem; }
+  [role="treeitem"] {
+    outline: none;
+    &:focus-visible > .jt-row:first-child { outline: 2px solid var(--calcite-color-brand); outline-offset: -2px; }
+    &[aria-expanded] > .jt-row:first-child { cursor: pointer; }
+    &[aria-expanded="false"] > :is([role="group"], .jt-row:last-child:not(:first-child)) { display: none; }
+    &[aria-expanded="true"] > .jt-row > .jt-when-closed,
+    &[aria-expanded="false"] > .jt-row > .jt-when-open { display: none; }
+  }
+  .jt-row {
+    display: flex;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    border-radius: 2px;
+    > :not(.jt-caret) { min-width: 0; }
+  }
+  .jt-caret {
+    flex: none;
+    width: 1rem;
+    color: light-dark(#6a6a6a, #8b949e);
+    user-select: none;
+  }
+  [aria-expanded="true"] > .jt-row:first-child > .jt-caret::before { content: "▾"; }
+  [aria-expanded="false"] > .jt-row:first-child > .jt-caret::before { content: "▸"; }
+  .jt-key { color: light-dark(#0550ae, #79c0ff); }
+  .jt-str { color: light-dark(#0a3069, #a5d6ff); }
+  :is(.jt-num, .jt-lit) { color: light-dark(#953800, #ffa657); }
+  .jt-dim { margin-inline-start: 1ch; color: light-dark(#6a6a6a, #8b949e); user-select: none; }
+  .jt-more {
+    margin: 0.125rem 0 0.125rem 1rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid var(--calcite-color-border-1);
+    border-radius: 4px;
+    background: var(--calcite-color-foreground-1);
+    color: var(--calcite-color-brand);
+    font: inherit;
+    font-family: var(--calcite-font-family);
+    cursor: pointer;
+    &:hover { background: var(--calcite-color-foreground-2); }
+    &:focus-visible { outline: 2px solid var(--calcite-color-brand); outline-offset: 1px; }
+  }
+}
+
+/* Captured program output: a terminal in both modes (GitHub dark terminal palette). */
 .result-terminal {
   background: #1b1b1b;
-  color: #e6e6e6;
+  color: #c9d1d9;
+
+  .term-prompt { color: #3fb950; user-select: none; }
+  .term-command { color: #ffffff; font-weight: 600; }
+  .term-black { color: #6e7681; }
+  .term-red { color: #ff7b72; }
+  .term-green { color: #3fb950; }
+  .term-yellow { color: #d29922; }
+  .term-blue { color: #58a6ff; }
+  .term-magenta { color: #bc8cff; }
+  .term-cyan { color: #39c5cf; }
+  .term-white { color: #b1bac4; }
+  .term-bright-black { color: #8b949e; }
+  .term-bright-red { color: #ffa198; }
+  .term-bright-green { color: #56d364; }
+  .term-bright-yellow { color: #e3b341; }
+  .term-bright-blue { color: #79c0ff; }
+  .term-bright-magenta { color: #d2a8ff; }
+  .term-bright-cyan { color: #56d4dd; }
+  .term-bright-white { color: #ffffff; }
+  .term-bold { font-weight: 600; }
+  .term-dim { opacity: 0.7; }
+  .term-italic { font-style: italic; }
+  .term-underline { text-decoration: underline; }
 }
 
 .result-image {

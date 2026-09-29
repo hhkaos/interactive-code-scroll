@@ -49,11 +49,11 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
-Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
+Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
 
-Result pane code: `src/output.ts` (types, `output/<variant>/` lookup, credential scan), `src/result/output-file.ts` (publishes `output/`), `stepOutputs()` in `src/variants.ts`, `src/client/result.ts` + `result-values.ts` (pane, last-result rule), `STEP_EVENT` from `src/client/steps.ts`. JSON is a `<pre class="result-json">` today.
+Result pane code: `src/output.ts` (types, `output/<variant>/` lookup, credential scan), `src/result/output-file.ts` (publishes `output/`), `stepOutputs()` in `src/variants.ts`, `src/client/result.ts` + `result-values.ts` (pane, last-result rule), `STEP_EVENT` from `src/client/steps.ts`. JSON viewer: `src/client/json-tree.ts` (DOM, keyboard) + `json-tree-values.ts` (parse, depth rule, paging, key map); reuse `renderJsonTree()` for the runner's Body tab.
 
-Recommended next task: **3 Collapsible JSON viewer** (SPEC "JSON viewer": text nodes only, nodes deeper than two levels collapsed, 100-entry "Show more", tree keyboard semantics); it replaces the `result-json` `<pre>` in `src/client/result.ts`. Mockup state A of `ResultStates` shows the tree. Pending decision carried over: `requests/` goes into every variant's ZIP in task 4a.
+Recommended next task: **4a `.http` parser and build validation** (SPEC "Supported `.http` syntax"; `requests/` folder, `request=` names). Pending decision carried over: `requests/` goes into every variant's ZIP in task 4a. Then (agreed, before task 7): **Maximize pane** (SPEC Presentation mode + `maximize=` step attribute). Note: the JSON tree owns all keys (`data-own-keys`), so PageUp/PageDown clickers do not move steps while it has focus; task 7 revisits this.
 
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
@@ -62,7 +62,7 @@ Working notes:
 - UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
 - Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, the rest → :4400).
-- Full E2E was green (76/76) at `da9f036`; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
+- Full E2E was green (84/84) after the JSON viewer + terminal colors commit; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 - Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
 
 ---
@@ -120,7 +120,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/frontmatter.ts               # title / preview config
   src/downloads.ts                 # project files with values applied, ZIP (fflate)
   src/components/                  # Step.astro, VarField.astro
-  src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitters), presentation.ts, preview.ts, result.ts + result-values.ts (Result pane), downloads.ts
+  src/client/                      # browser runtime: calcite.ts, steps.ts + navigation.ts (step engine), vars.ts + var-values.ts (form → code), layout.ts + layout-values.ts (theme, splitters), presentation.ts, preview.ts, result.ts + result-values.ts (Result pane), json-tree.ts + json-tree-values.ts (JSON viewer), terminal-values.ts (prompt/ANSI colors for `.txt`/`.log`), downloads.ts
   src/pages/index.astro            # injected tutorial page
   src/preview/                     # preview page, code/ files published under preview/, HTML builder
   src/result/                      # output/ files published under output/
@@ -275,6 +275,7 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 |---|---|---|---|
 | ArcGIS OAuth sign-in | Inside iframe: expected to be blocked (X-Frame-Options) — **unverified** | Popup from the Preview iframe: **verified** (PKCE S256, real Client ID) | The SDK shows its own "Please sign in" dialog first: the popup needs a user gesture |
 | OAuth redirect URI | GitHub Pages | localhost (served locally) | Both must be registered in the app by the author; the CLI prints the exact URIs |
+| Keys inside widgets vs step keys | `stopPropagation()` in a widget's own `keydown` handler: does not help | `data-own-keys` on the widget (or an ancestor): step keys ignored | The step key listener runs on `window` in the capture phase, before any widget handler; `data-own-keys` owns every key, so PageUp/PageDown clickers do not move steps while such a widget has focus |
 | Preview `redirect_uri` | `srcdoc` / blob iframe: SDK builds it from `location` → `about://null/oauth-callback.html` (`<base href>` ignored) | Real same-origin preview page: correct URI | Preview (iframe and tab) must load a real URL; `oauth-callback.html` must sit next to that page |
 | Preview sandbox | Without `allow-same-origin`: opaque origin, no Referer (OSM tiles 403, referrer-restricted API keys fail), callback cannot reach `window.opener` | With `allow-same-origin`: works | Preview can read the tutorial's `localStorage` (author-trusted code) |
 | Keyboard step navigation | Focus in page: works | Focus inside Preview iframe: keys go to the map | Forward keys from the preview page (same origin) |

@@ -45,7 +45,7 @@ See [Preview](authoring.md#preview).
 ## Result pane
 
 - Takes the Preview's place for code that cannot run in the browser (scripts, native apps): a step with `output="geocode.json"` shows a captured result from `output/`, with per-language overrides in `output/<variant>/`.
-- JSON and text (terminal style) are shown as text, images as images. Steps without an output keep the last result. Works offline.
+- JSON is shown as a collapsible, colored tree (keyboard navigable, long lists paged by 100), text in terminal style (colored prompt lines and ANSI colors), images as images. Steps without an output keep the last result. Works offline.
 - The build warns when a captured output looks like it contains a real credential.
 
 See [Result Pane](authoring.md#result-pane).

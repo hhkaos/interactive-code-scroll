@@ -1,6 +1,9 @@
 import { outputKind } from "../output.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { setAction } from "./actions.ts";
+import { renderJsonTree } from "./json-tree.ts";
+import { parseJson } from "./json-tree-values.ts";
+import { terminalSegments } from "./terminal-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 import { lastOutput, type StepOutput } from "./result-values.ts";
 import { STEP_EVENT } from "./steps.ts";
@@ -17,7 +20,7 @@ export interface ResultOptions {
 /**
  * The Result pane takes the Preview's place for code that cannot run in the browser.
  * Captured outputs are untrusted text: they are fetched when shown and rendered as text
- * nodes (or an image), never as HTML.
+ * nodes (a JSON tree, terminal text or an image), never as HTML.
  */
 export function startResult({ files, outputUrl, variants }: ResultOptions): void {
   const section = document.querySelector<HTMLElement>("section.result");
@@ -84,7 +87,28 @@ export function startResult({ files, outputUrl, variants }: ResultOptions): void
     fetchText(url).then(
       (text) => {
         if (token !== renders) return;
-        pre.textContent = text;
+        const json = kind === "json" ? parseJson(text) : undefined;
+        if (json?.ok) {
+          const viewer = document.createElement("div");
+          viewer.className = "result-json";
+          viewer.append(renderJsonTree(json.value, `JSON output/${path}`));
+          pre.replaceWith(viewer);
+          return;
+        }
+        if (kind === "text") {
+          pre.replaceChildren(
+            ...terminalSegments(text).map(({ text: run, classes }) => {
+              if (!classes.length) return document.createTextNode(run);
+              const span = document.createElement("span");
+              span.className = classes.join(" ");
+              span.textContent = run;
+              return span;
+            }),
+          );
+        } else {
+          // JSON that does not parse: shown as it is.
+          pre.textContent = text;
+        }
         pre.removeAttribute("aria-busy");
       },
       () => {
