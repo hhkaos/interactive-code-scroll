@@ -131,7 +131,14 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server. Validation also reads the frontmatter: invalid fields report the key's MDX line, and later frontmatter-dependent rules (`files:`, `variants:`, `only=`, `request=`, `output=`) use the same path. It re-runs in dev when files under `code/`, `images/`, `requests/` or `output/` change.
 - **Serve locally**: the CLI can serve the built site on localhost (fallback if conference wifi fails; Preview/OAuth still need network — plan B: images/carousel of the result).
 - **Generic CLI**: CLI commands must work for any InteractiveCodeScroll tutorial. Topic-specific helpers, such as OAuth redirect URI printing, must be opt-in or derived from explicit tutorial/project configuration, never hard-coded into the framework.
-- Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (`/tutorials/<name>/`) with an index page.
+- Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (a *series site*) with an index page. *(Planned, Phase 2 task 2.1)*:
+  - **Series layout**: `tutorials/<slug>/` (each a normal tutorial folder with `tutorial.mdx`) is published at `/<slug>/`, with its Preview, published code and captured outputs under that prefix. One Astro build serves the whole site; dev serves every tutorial and the index with live updates. The slug is the folder name and must match `[a-z0-9][a-z0-9-]*` (build error otherwise). Folders starting with `_` or `.` are ignored; other folders without `tutorial.mdx` are skipped with a warning; no tutorial at all is a build error.
+  - **Activation**: integration option `tutorials: "<dir>"` / CLI `--tutorials <dir>`. Without options, the CLI uses `tutorials/` when there is no `tutorial/tutorial.mdx` and no root `tutorial.mdx` but at least one `tutorials/*/tutorial.mdx`. `--tutorial tutorials/<slug>` still serves one tutorial on its own. `tutorial` and `tutorials` together are an error.
+  - **Tutorial metadata** (optional frontmatter, generic): `description` (string; also the page's meta description), `tags` (string list), `level` (free text, e.g. "Beginner"), `duration` (free text, e.g. "20 min"), `order` (number). The index sorts by `order`, then title.
+  - **Index page**, customizable in three levels: (1) default: title "Tutorials" and the full list; (2) optional `tutorials/index.mdx`: frontmatter `title`, `description`, `logo`, `theme`, free MDX prose, and `<TutorialList />` placed anywhere, filtered with `tags="…"` (any of the listed tags) and/or `level="…"` to build sections; validated at build like a tutorial; (3) integration option `index: "<path to .astro page>"` replaces the page; it reads the tutorial list (slug, URL, title and metadata) and may render `<TutorialList />` from the public `interactive-code-scroll/series` module.
+  - **List UI**: Calcite cards with title, description, level, duration and tag chips, each linking to the tutorial; a tag filter above the full list (client-side; without JS every card shows).
+  - **Back to index**: in a series, the tutorial header has an action that returns to the index.
+  - **Reader state**: stored Preview HTML is namespaced per tutorial. Site-wide on purpose: persisted vars (`ics:var:<name>`), theme, splitter sizes and the variant choice (the reader's language carries across tutorials).
 
 ### Public documentation
 - **README for repository visitors**: explains what InteractiveCodeScroll is, who it is for, how to start, and where to find the tutorial, reference and examples.
@@ -208,6 +215,8 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 | Entity | Key fields | Notes |
 |---|---|---|
 | Tutorial | folder, MDX file, preview config (disabled / iframe / tab / both) | Contains steps, code files and images. A repo can hold one or several |
+| Series *(planned)* | tutorials folder, optional `index.mdx` or custom index page | Several tutorials published as one site with an index page |
+| Tutorial metadata *(planned)* | slug (folder), title, description, tags, level, duration, order | Frontmatter shown on the index cards |
 | Step / Text block | id (deep link), MDX content, associated action | Fires its action when it comes into focus (scroll or keyboard) |
 | Code file | path (`server.js`, `checkout.html`…) | Final version; downloadable individually or as ZIP |
 | Code region | id | Marked with `#region <id>` / `#endregion`; referenced from MDX |
@@ -298,6 +307,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - **Presentation fit** (plan-mode pass 2026-09-29, task 7): clicker keys (PageDown/PageUp) move steps from any focus except multi-line text, so a presenter never has to click away from a field or the Result pane first; arrows stay with the widgets that use them. At high zoom the Result header compacts to icons (one row) instead of wrapping, and a short pane scrolls as a whole instead of squeezing the body.
 - **Tutorials in several languages** (2026-09-29): code variants inside one tutorial when the process and prose are shared (e.g. REST in cURL/Python/JS); sibling tutorials linked by `family` when explanations differ (e.g. JS SDK vs Python API). No `<Variant for>`-style conditional prose inside one MDX.
 - **Result views** (2026-09-29): renderers are plugins; the author chooses per step which views appear (tabs next to Body/Headers) and labels them once in the frontmatter, instead of renderers picking themselves by matching the response. Views apply to captured output and live responses alike. Replaces the earlier `match(response)` auto-selection idea.
+- **Series sites** (plan-mode pass 2026-09-30, task 2.1): one Astro build for every tutorial (not one build per tutorial), so dev serves the whole site and sibling tutorials (2.5) see each other; index customizable at three levels (default, `index.mdx` with `<TutorialList>` sections, custom Astro page); cards with a client-side tag filter; `--tutorials` plus auto-detection.
 - **ArcGIS boundary for multi-SDK work**: the core stays generic; ArcGIS content ships as scaffolder templates and an optional preset package (e.g. map renderer for results). Nothing ArcGIS-specific enters core packages.
 
 ---

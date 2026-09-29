@@ -203,3 +203,9 @@ Implementation order (one commit each): 1a variants config + validation; 1b page
 - The real OAuth Preview E2E stays disabled (existing TODO).
 - Build-step variants (React/Vue) stay deferred (`SPEC.md` open questions).
 - Phase 2 order: 2.1 multi-tutorial repos first (2.2, 2.4 and 2.5 depend on it), then 2.2 → 2.5 → 2.4 → 2.3. The scaffolder goes last so its templates can include the series layout.
+
+### Phase 2 task 2.1 plan-mode pass (2026-09-30)
+
+Rules settled in `SPEC.md` (Authoring and DX, series layout): one Astro build for the whole series; slug = folder name; generic metadata frontmatter (`description`, `tags`, `level`, `duration`, `order`); index customizable at three levels (default list, `tutorials/index.mdx` with `<TutorialList tags= level=>` sections, custom Astro page via the `index` option and the public `interactive-code-scroll/series` module); cards with a client-side tag filter; `--tutorials` plus auto-detection; Preview storage namespaced per tutorial, vars/theme/splits/variant choice site-wide. Regressions get `examples/framework-fixture-series` on its own Playwright server.
+
+Implementation order (one commit each): SPEC; series model + routes + per-tutorial context and storage keys; index page + `TutorialList` + tag filter + `index.mdx`; custom index page + `interactive-code-scroll/series`; CLI `--tutorials` + auto-detection.
