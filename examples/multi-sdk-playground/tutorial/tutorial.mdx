@@ -1,0 +1,76 @@
+---
+title: Multi-SDK Playground
+preview: off
+theme: auto
+codeWrap: true
+---
+
+<Intro>
+
+## What this playground is for
+
+A local tutorial that grows with each step of the multi-SDK plan (`docs/research/arcgis-multi-sdk-plan.md`). Use it to try new framework features by hand. It is not covered by E2E tests; framework regressions are guarded by `examples/framework-fixture`.
+
+> Run it with `pnpm playground` from the repository root.
+
+</Intro>
+
+<Step id="token" file="geocode.py" region="config">
+
+## Python: configure the request
+
+The access token field below updates every file that marks the same `@var`: Python, Kotlin and C#.
+
+<VarField name="accessToken" label="Access token" secret />
+
+The Python file uses the VS Code folding style `# region` / `# endregion`, recognized only in `.py` files.
+
+</Step>
+
+<Step id="request" file="geocode.py" region="request">
+
+## Python: send the request
+
+`requests.get` calls `findAddressCandidates` with the address as `singleLine`.
+
+</Step>
+
+<Step id="results" file="geocode.py" region="results">
+
+## Python: print the candidates
+
+Each candidate has an address and a score from 0 to 100.
+
+</Step>
+
+<Step id="kotlin-key" file="android/MainActivity.kt" region="api-key">
+
+## Kotlin: set the API key
+
+Kotlin keeps the shared `// #region` style.
+
+</Step>
+
+<Step id="kotlin-map" file="android/MainActivity.kt" region="map">
+
+## Kotlin: show the map
+
+A `MapView` composable with a topographic basemap.
+
+</Step>
+
+<Step id="dotnet-key" file="dotnet/Program.cs" region="api-key">
+
+## C#: set the API key
+
+C# files accept the native `#region` directive, so the source stays idiomatic.
+
+</Step>
+
+<Step id="sql" file="places.sql" region="top-categories">
+
+## SQL: query the results
+
+SQL and Lua files accept `-- #region`.
+
+</Step>

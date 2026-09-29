@@ -27,6 +27,7 @@ Package manager: **pnpm**. From the repo root:
 pnpm install
 pnpm dev          # framework fixture through the generic CLI
 pnpm build        # build the framework fixture through the generic CLI
+pnpm playground   # multi-SDK playground (examples/multi-sdk-playground) in dev mode
 pnpm check        # tsc (core package) + astro check (example)
 pnpm preflight:docs    # whitespace/conflict check for docs/context-only changes
 pnpm preflight:ui      # focused preflight for CSS/UI-only changes
@@ -106,6 +107,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
 examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
 examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
+examples/multi-sdk-playground/      # local hands-on tutorial for multi-SDK features (Python, Kotlin, C#, SQL); `pnpm playground`; no E2E, grows with each plan task
 .github/workflows/publish-getting-started.yml # builds/deploys examples/getting-started on default-branch pushes
 e2e/                               # Playwright tests (against the built example)
 docs/research/technical-base-spike.md # spike findings (prototype code in git history, commit f265e61)
