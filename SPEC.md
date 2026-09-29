@@ -128,7 +128,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 
 ### Authoring and DX
 - **Dev mode** with file watching and live updates.
-- **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server. Validation also reads the frontmatter: invalid fields report the key's MDX line, and later frontmatter-dependent rules (`files:`, `variants:`, `only=`, `request=`, `output=`) use the same path. *Planned (Phase 0)*: it re-runs when files under `code/`, `images/`, `requests/` or `output/` change.
+- **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server. Validation also reads the frontmatter: invalid fields report the key's MDX line, and later frontmatter-dependent rules (`files:`, `variants:`, `only=`, `request=`, `output=`) use the same path. It re-runs in dev when files under `code/`, `images/`, `requests/` or `output/` change.
 - **Serve locally**: the CLI can serve the built site on localhost (fallback if conference wifi fails; Preview/OAuth still need network — plan B: images/carousel of the result).
 - **Generic CLI**: CLI commands must work for any InteractiveCodeScroll tutorial. Topic-specific helpers, such as OAuth redirect URI printing, must be opt-in or derived from explicit tutorial/project configuration, never hard-coded into the framework.
 - Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (`/tutorials/<name>/`) with an index page.

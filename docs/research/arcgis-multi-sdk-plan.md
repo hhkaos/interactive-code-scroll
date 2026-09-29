@@ -180,3 +180,26 @@ Implementation order (one commit each): 1a variants config + validation; 1b page
 
 - Variants and region ids: keep "same id in every variant" with `only=`; per-variant id maps add authoring surface for little gain.
 - Preset package: `packages/interactive-code-scroll-arcgis` in this monorepo, published unscoped as `interactive-code-scroll-arcgis` (no npm org needed; shares CI and release flow).
+
+## Phase 1 go/no-go review (2026-09-30)
+
+**Verdict: GO for Phase 2.** Phase 1 met its exit criterion: the author's manual test of `examples/rest-geocode` passed (live run with a real key, captured-output fallback offline, presentation mode). No blocking issue found.
+
+### Exit evidence
+
+| Check | Result |
+|---|---|
+| Plan items 1.1–1.6 | Done, one commit each (`4db2a9c` … `d9a9060`); Phase 1 plan-mode order followed |
+| Manual test (author) | OK: live key, offline fallback, presentation mode |
+| Unit tests | 361/361 green (Vitest, 2026-09-30) |
+| E2E | 113/113 green after the maximized panes work; `e2e/step-engine.spec.ts:73` seen flaky once under parallel load |
+| Page size | `examples/rest-geocode/dist/index.html` is 58 KB with 3 variants: the page-size risk did not materialize |
+| Phase 0 non-blocking items | Text-only rendering of results, query-only URL encoding (documented), E2E blocks every non-local host, credential scan of captured outputs, B2 note in `docs/upgrade.md`: all done |
+
+### Carried into Phase 2
+
+- `SPEC.md` still marked dev revalidation of `code/`/`images/`/`requests/`/`output/` as planned; it shipped in Phase 0 (`fa5e9ac`). Marker removed.
+- Watch `e2e/step-engine.spec.ts:73` for flakiness; fix if it recurs in the Pages workflow (2.4), which will run E2E on every push.
+- The real OAuth Preview E2E stays disabled (existing TODO).
+- Build-step variants (React/Vue) stay deferred (`SPEC.md` open questions).
+- Phase 2 order: 2.1 multi-tutorial repos first (2.2, 2.4 and 2.5 depend on it), then 2.2 → 2.5 → 2.4 → 2.3. The scaffolder goes last so its templates can include the series layout.
