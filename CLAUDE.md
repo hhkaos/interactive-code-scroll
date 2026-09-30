@@ -52,6 +52,9 @@ Explore first: before writing code for X, ask what already exists. Check officia
 ### Rendered attributes are a test contract
 When changing a rendered attribute or class (`data-*`, ids, CSS hooks), grep `e2e/` and `test/` for the old value before committing, even when running only focused specs. (Changing `data-persist` from `""` to `"site"` once broke `e2e/tutorial-page.spec.ts` unnoticed.)
 
+### Base path in framework code
+Never read `import.meta.env.BASE_URL` in framework code: a `BASE_URL` environment variable (Vitest sets one) overrides it at build time while Astro's asset URLs keep `config.base`. Import `base` from `virtual:interactive-code-scroll/tutorial` (or use `clientData.base` in the browser). (This once dropped `/<repo>/` from every series link; `test/pages.test.ts` guards it.)
+
 ### Shared components in the page
 Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).
 
