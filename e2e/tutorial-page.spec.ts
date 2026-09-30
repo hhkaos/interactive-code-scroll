@@ -165,7 +165,7 @@ test("renders <VarField> as a Calcite input with the code literal as placeholder
   await expect(input).toHaveAttribute("placeholder", "YOUR_CLIENT_ID");
   await expect(input).toHaveAttribute("data-default-value", "YOUR_CLIENT_ID");
   await expect(input).toHaveAttribute("data-secret", "");
-  await expect(input).toHaveAttribute("data-persist", "");
+  await expect(input).toHaveAttribute("data-persist", "site");
 });
 
 test("renders custom <VarField> placeholder without changing the code default", async ({ page }) => {
