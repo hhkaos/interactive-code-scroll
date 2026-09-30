@@ -1,6 +1,6 @@
 ---
 import type { GetStaticPaths } from "astro";
-import { series, tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { base, series, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Step from "../components/Step.astro";
@@ -81,14 +81,14 @@ const initialZip = zipCounts ? zipCounts[variants![0]!.id]! : zipCountsFor(() =>
 const withIframe = preview === "iframe" || preview === "both";
 const withTab = preview === "tab" || preview === "both";
 // Sibling tutorials (same `family`) for the header's language switcher; empty without one.
-const siblings = series ? siblingsOf(tutorials, slug, import.meta.env.BASE_URL) : [];
+const siblings = series ? siblingsOf(tutorials, slug, base) : [];
 const currentSibling = siblings.find((s) => s.current);
 const clientVariants = variants?.map(({ id, label, dir, entry }) => ({ id, label, dir, entry }));
 // Escape "<" so embedded code containing </script> cannot close the data block.
 const clientData = JSON.stringify({
   title: config.title,
   // Where this tutorial's Preview page, published code and outputs live.
-  base: tutorialBase(import.meta.env.BASE_URL, slug),
+  base: tutorialBase(base, slug),
   tutorial: slug,
   preview,
   files: parsed,
@@ -128,7 +128,7 @@ const clientData = JSON.stringify({
     <calcite-navigation class="app-header">
       {
         series && (
-          <a slot="navigation-action" class="series-home" href={tutorialBase(import.meta.env.BASE_URL, "")} aria-label="All tutorials" data-tooltip>
+          <a slot="navigation-action" class="series-home" href={tutorialBase(base, "")} aria-label="All tutorials" data-tooltip>
             <calcite-icon icon="apps" scale="s" />
           </a>
         )

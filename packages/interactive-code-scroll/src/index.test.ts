@@ -70,8 +70,12 @@ describe("interactiveCodeScroll", () => {
     writeFileSync(join(root, "tutorials", "index.mdx"), "# Index\n");
     writeFileSync(join(root, "tutorials", "images", "logo.svg"), "<svg/>");
     const seriesDir = join(root, "tutorials");
-    const plugin = tutorialModule([{ slug: "alpha", dir: join(seriesDir, "alpha") }], seriesDir);
+    let base = "/";
+    const plugin = tutorialModule([{ slug: "alpha", dir: join(seriesDir, "alpha") }], seriesDir, () => base);
+    base = "/repo/";
     const code = plugin.load(plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
+    // Read at load time, so the final config.base (set in astro:config:done) wins.
+    expect(code).toContain('export const base = "/repo/";');
     expect(code).toContain(`import * as seriesIndexMdx from ${JSON.stringify(join(seriesDir, "index.mdx"))};`);
     expect(code).toContain("export const seriesIndex = { Content: seriesIndexMdx.Content, frontmatter: seriesIndexMdx.frontmatter };");
     expect(code).toContain(`import seriesImage0 from ${JSON.stringify(join(seriesDir, "images", "logo.svg") + "?url")};`);
@@ -126,6 +130,7 @@ describe("tutorialModule", () => {
     const code = plugin.load(plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
     expect(code).toContain(`import * as mdx0 from ${JSON.stringify(join(root, "tutorial", "tutorial.mdx"))};`);
     expect(code).toContain("export const series = false;");
+    expect(code).toContain('export const base = "/";');
     expect(code).toContain('slug: "",\nContent: mdx0.Content,\nfrontmatter: mdx0.frontmatter,');
     expect(code).toContain('files: [{"path":"js/main.js","source":"const a = \\"1\\";\\n"}],');
     expect(code).toContain(`import image0_0 from ${JSON.stringify(join(root, "tutorial", "images", "shot.png") + "?url")};`);

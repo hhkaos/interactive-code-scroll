@@ -1,5 +1,5 @@
 ---
-import { tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { base, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { parseTagList, selectCards } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
 import "../styles/series-list.css";
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const { tags, level } = Astro.props;
-const cards = seriesCards(tutorials, import.meta.env.BASE_URL);
+const cards = seriesCards(tutorials, base);
 const wanted = parseTagList(tags);
 const unknownTags = wanted.filter((tag) => !cards.some((card) => card.tags.includes(tag)));
 if (unknownTags.length > 0) {

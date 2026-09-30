@@ -79,6 +79,7 @@ See [Presenting a tutorial](authoring.md#presenting-a-tutorial) and [CLI Referen
 - **Strict validation**: a wrong file, region, variable, image, variant or frontmatter value fails the build with the MDX file, line and column. In dev mode the error appears as a browser overlay and validation re-runs when code or images change.
 - **Generic CLI**: `dev`, `build`, `serve`, `doctor` and `init-scripts` for any tutorial folder or series site (`--tutorials`, or detected from `tutorials/`; `--index` for a custom index page).
 - **Series sites**: several tutorials published as one site, each under its own URL, with an index of cards (description, level, duration, tags), a tag filter and an "All tutorials" link in each tutorial's header. An optional `index.mdx` adds a title, description, logo, prose and sections (`<TutorialList tags=… level=…>`) and places the filter (`<TutorialFilter />`); a custom Astro page (`index` option) can replace the index and reuse the tutorial list and components from `interactive-code-scroll/series`. See [Series Sites](authoring.md#series-sites).
+- **Publishing on GitHub Pages**: a copy-paste workflow (npm or pnpm) builds a single tutorial or a whole series site on every push, checks pull requests without deploying, and picks the site URL and base path from the Pages settings (project site, user site or custom domain). See the [Deployment Guide](deployment.md#github-pages).
 - **Sibling tutorials**: tutorials with the same `family` (e.g. one per SDK language, with their own prose) get a "Tutorial for" menu in the header that opens the sibling on the same step and keeps the reader's code variant when it can. See [Sibling tutorials](authoring.md#sibling-tutorials).
 
 See [Validation](authoring.md#validation).
@@ -87,5 +88,4 @@ See [Validation](authoring.md#validation).
 
 These are specified and being built; see `SPEC.md` and `TODO.md`:
 
-- Sibling tutorials per language.
 - Custom result views through renderer plugins (e.g. "Preview on map", "Show as table"): write or install a renderer, register it, and choose per step in the MDX which views appear and with what label. A plugin guide will explain how to create, install and use them.

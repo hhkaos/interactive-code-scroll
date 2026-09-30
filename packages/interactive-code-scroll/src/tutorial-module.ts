@@ -35,7 +35,8 @@ export interface TutorialSource {
  * when the site publishes several tutorials under `/<slug>/`; its optional `index.mdx` and
  * `images/` feed the index page.
  */
-export function tutorialModule(sources: readonly TutorialSource[], seriesDir?: string): TutorialModulePlugin {
+/** `base` is read when the module loads: Astro's final `config.base`, never `import.meta.env.BASE_URL`, which a `BASE_URL` environment variable overrides at build time. */
+export function tutorialModule(sources: readonly TutorialSource[], seriesDir?: string, base: () => string = () => "/"): TutorialModulePlugin {
   const series = seriesDir !== undefined;
   const owner = (file: string) =>
     sources.find(({ dir }) => WATCHED_FOLDERS.some((folder) => file.startsWith(join(dir, folder) + sep)));
@@ -76,6 +77,7 @@ export function tutorialModule(sources: readonly TutorialSource[], seriesDir?: s
       return [
         ...lines,
         `export const series = ${series};`,
+        `export const base = ${JSON.stringify(base())};`,
         `export const tutorials = [${entries.join(",\n")}];`,
         `export const seriesIndex = ${hasIndex ? "{ Content: seriesIndexMdx.Content, frontmatter: seriesIndexMdx.frontmatter }" : "undefined"};`,
         `export const seriesImages = {${indexImages.map((image, i) => `${JSON.stringify(image)}: seriesImage${i}`).join(", ")}};`,

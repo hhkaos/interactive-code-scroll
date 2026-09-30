@@ -26,6 +26,7 @@ export interface InteractiveCodeScrollOptions {
 }
 
 export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}): AstroIntegration {
+  let siteBase = "/";
   return {
     name: "interactive-code-scroll",
     hooks: {
@@ -53,7 +54,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         updateConfig({
           integrations: [mdx({ processor })],
           vite: {
-            plugins: [tutorialModule(sources, seriesDir)],
+            plugins: [tutorialModule(sources, seriesDir, () => siteBase)],
             // pnpm does not hoist `cookie`; bundle it so Node never resolves a stray copy up the tree.
             environments: { prerender: { resolve: { noExternal: ["cookie"] } } },
           },
@@ -65,6 +66,10 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         injectRoute({ pattern: `${prefix}/preview`, entrypoint: new URL("./preview/page.astro", import.meta.url) });
         injectRoute({ pattern: `${prefix}/preview/[...file]`, entrypoint: new URL("./preview/code-file.ts", import.meta.url) });
         injectRoute({ pattern: `${prefix}/output/[...file]`, entrypoint: new URL("./result/output-file.ts", import.meta.url) });
+      },
+      // The final base, after every integration's config updates.
+      "astro:config:done": ({ config }) => {
+        siteBase = config.base;
       },
     },
   };

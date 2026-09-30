@@ -1,11 +1,11 @@
 ---
-import { tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { base, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { allTags } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
 import "../styles/series-list.css";
 
 // Tag chips that filter every <TutorialList> on the page (client/series.ts); nothing when no tutorial has tags.
-const tags = allTags(seriesCards(tutorials, import.meta.env.BASE_URL));
+const tags = allTags(seriesCards(tutorials, base));
 ---
 
 {

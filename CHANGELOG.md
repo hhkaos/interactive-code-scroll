@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added GitHub Pages workflows for author repos (Phase 2 task 2.4): `docs/deployment.md` has a copy-paste `.github/workflows/pages.yml` for npm and for pnpm that publishes a single tutorial or a series site, builds pull requests without deploying, uses per-job least-privilege permissions and takes `site`/`base` from `actions/configure-pages` (project site, user site or custom domain), overridable with repository variables `ICS_SITE` / `ICS_BASE`. A build test checks that every internal URL of the series fixture carries a project-site base and that both workflow flavors stay in sync.
+- Added a CI workflow that runs unit tests, `astro check` and E2E on every push to `main`.
+
 - Added sibling tutorials (Phase 2 task 2.5): tutorials of a series site with the same frontmatter `family` get a "Tutorial for: <label> ▾" menu of links in the header (labels from `familyLabel`, ordered by `order` then label; the prefix hides on narrow headers). Choosing a sibling opens it on the same step id, else its top, and carries the code variant when the sibling has it. `family` without `familyLabel` (or the reverse) and a label used twice in a family fail the build; a family of one and `family` outside a series warn. New fixture tutorial `delta` in `examples/framework-fixture-series`.
 
 - Added `<VarField persist="tutorial">` (Phase 2 task 2.2): a persisted value that belongs to one tutorial of a series site (key `ics:var:<tutorial>:<name>`), while plain `persist` stays shared by the whole site. On a single-tutorial site both use the site key. Any other `persist` value fails the build. The series fixture covers both scopes across two tutorials.
@@ -55,6 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- The getting-started Pages workflow takes `site`/`base` from `actions/configure-pages`; its overrides are now `ICS_SITE` / `ICS_BASE` (were `ICS_GETTING_STARTED_SITE` / `ICS_GETTING_STARTED_BASE`). Pages, checkout, Node and pnpm actions updated to their current majors.
 - The explanations panel's top padding matches its side gutter (1.5rem instead of 2rem).
 - In dev mode, adding, changing or deleting a file under `code/`, `images/`, `requests/` or `output/` now re-runs the MDX validation without touching `tutorial.mdx`, and the browser error overlay opens `tutorial.mdx` at the first failing line.
 - `@var` values are now escaped for the file type and quote style (backslash, Kotlin/Dart/Groovy `$`, shell, PowerShell, SQL/YAML quote doubling, HTML/XML entities). Python f-strings, raw and triple-quoted strings and TOML literal strings are rejected at build time.
@@ -68,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Series links (index cards, "All tutorials", sibling menu) and the client `base` (Preview, outputs) no longer lose the base path when the build runs with a `BASE_URL` environment variable: the framework reads Astro's `base` instead of `import.meta.env.BASE_URL`.
 - Resizing the explanations panel no longer switches the active step (and the URL hash) while its text reflows; the active step stays centered.
 
 ## [0.1.0-alpha.8] - 2026-09-28
