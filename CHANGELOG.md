@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Specified the `create-interactive-code-scroll` scaffolder as a wizard (Phase 2 task 2.3, `SPEC.md` Scaffolder); ArcGIS starters and `interactive-code-scroll add` are separate TODOs.
 - The getting-started Pages workflow takes `site`/`base` from `actions/configure-pages`; its overrides are now `ICS_SITE` / `ICS_BASE` (were `ICS_GETTING_STARTED_SITE` / `ICS_GETTING_STARTED_BASE`). Pages, checkout, Node and pnpm actions updated to their current majors.
 - The explanations panel's top padding matches its side gutter (1.5rem instead of 2rem).
 - In dev mode, adding, changing or deleting a file under `code/`, `images/`, `requests/` or `output/` now re-runs the MDX validation without touching `tutorial.mdx`, and the browser error overlay opens `tutorial.mdx` at the first failing line.

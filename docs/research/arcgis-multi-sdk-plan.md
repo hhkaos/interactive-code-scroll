@@ -84,7 +84,7 @@ Exit: the REST tutorial runs live with a real key, degrades to captured output o
 |---|---|---|
 | 2.1 Multi-tutorial repos | L | Existing TODO. `tutorials/<name>/` → `/<name>/`, generated index page from frontmatter (`title`, `description`, `tags`, `level`, `duration` — generic metadata). CLI `--tutorials <dir>`. |
 | 2.2 Shared credentials | S | Document that persisted vars are shared per site; add `persist="tutorial"` for opt-out namespacing. E2E across two tutorials. |
-| 2.3 Scaffolder | M | Existing TODO `pnpm create interactive-code-scroll` with templates: `blank`, `web`, `rest`, `python`, `native`. ArcGIS starters live here as templates (e.g. `arcgis-js`, `arcgis-rest`, `arcgis-python`, `arcgis-kotlin`). |
+| 2.3 Scaffolder | M | `npm/pnpm create interactive-code-scroll`: a wizard (layout, series names and index, type `web`/`rest`/`script`/`native`, languages as variants or siblings, package manager, Pages workflow, git, install) that writes a minimal working project and prints the next steps; every answer has a flag. ArcGIS starters (e.g. `arcgis-js`, `arcgis-rest`, `arcgis-python`, `arcgis-kotlin`) come after as templates on the same generator. Rules in `SPEC.md` (Scaffolder). |
 | 2.4 Pages workflow | S | One workflow building the whole series site. |
 | 2.5 Sibling tutorials | M | Frontmatter `family` + `familyLabel`; header switcher lists the family's tutorials on the site and navigates to the same step id when it exists. For tutorials whose prose differs by language (JS SDK vs Python API). Depends on 2.1. |
 
@@ -209,3 +209,9 @@ Implementation order (one commit each): 1a variants config + validation; 1b page
 Rules settled in `SPEC.md` (Authoring and DX, series layout): one Astro build for the whole series; slug = folder name; generic metadata frontmatter (`description`, `tags`, `level`, `duration`, `order`); index customizable at three levels (default list, `tutorials/index.mdx` with `<TutorialList tags= level=>` sections, custom Astro page via the `index` option and the public `interactive-code-scroll/series` module); cards with a client-side tag filter; `--tutorials` plus auto-detection; Preview storage namespaced per tutorial, vars/theme/splits/variant choice site-wide. Regressions get `examples/framework-fixture-series` on its own Playwright server.
 
 Implementation order (one commit each): SPEC; series model + routes + per-tutorial context and storage keys; index page + `TutorialList` + tag filter + `index.mdx`; custom index page + `interactive-code-scroll/series`; CLI `--tutorials` + auto-detection.
+
+### Phase 2 task 2.3 plan-mode pass (2026-09-30)
+
+Rules settled in `SPEC.md` (Authoring and DX, Scaffolder): a wizard instead of fixed templates; questions for folder, layout, series names and index style, type (`web`, `rest`, `script`, `native`), languages as variants or siblings, package manager, Pages workflow, git and install, each with a flag (`--yes` for defaults); minimal working examples with generic placeholders; `@clack/prompts` 1.8.1 in the create package only; the Pages workflow text lives in the scaffolder's templates and `docs/deployment.md` must match it. ArcGIS starters and `interactive-code-scroll add` are separate TODOs.
+
+Implementation order (one commit each): SPEC; package skeleton + options + pure `planProject()` for a single web tutorial; REST/script/native types, variants/siblings, series and index modes + build-matrix test; prompts, disk writes (no overwrite), git/install, next steps (UX review with the user); Pages workflow from template files + docs sync test; publishing (pack smoke with both packages, `publish-npm.yml` publishes both) + docs (CLI reference, README, features, authoring, getting-started setup step).
