@@ -1,0 +1,39 @@
+---
+import { base } from "../../site-config.mjs";
+
+interface Props {
+  name: string;
+  alt: string;
+  eager?: boolean;
+}
+
+// Screenshots come in light and dark; the page theme picks one.
+const { name, alt, eager = false } = Astro.props;
+const src = (scheme: string) => `${base}screenshots/${name}-${scheme}.png`;
+const loading = eager ? "eager" : "lazy";
+---
+
+<div class="shot">
+  <img class="shot-dark" src={src("dark")} alt={alt} width="1440" height="860" loading={loading} decoding="async" />
+  <img class="shot-light" src={src("light")} alt={alt} width="1440" height="860" loading={loading} decoding="async" />
+</div>
+
+<style>
+  .shot {
+    border-radius: 0.9rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    background: var(--surface);
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+
+  :global(:root[data-theme="dark"]) .shot-light,
+  :global(:root[data-theme="light"]) .shot-dark {
+    display: none;
+  }
+</style>

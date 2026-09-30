@@ -31,6 +31,7 @@ pnpm rest                               # REST example tutorial in dev mode
 | `examples/` | User-facing tutorials (REST geocoding, OAuth PKCE, multi-SDK playground) |
 | `fixtures/` | Stable fake tutorials for E2E tests — not edited for content polish |
 | `e2e/` | Playwright tests (each fixture is built and served on its own port) |
+| `site/` | Project website: landing page, showcase build, screenshots (`pnpm --filter site screenshots`) |
 | `docs/` | Public documentation |
 | `docs/dev/` | Specification (`SPEC.md`), project context (`PROJECT.md`), task list (`TODO.md`), research |
 
@@ -39,6 +40,7 @@ pnpm rest                               # REST example tutorial in dev mode
 ```sh
 pnpm dev             # main fixture in dev mode
 pnpm playground      # multi-SDK playground in dev mode
+pnpm site            # project website (landing + showcase) in dev mode
 pnpm test            # unit tests (Vitest)
 pnpm check           # type check (tsc + astro check)
 pnpm test:e2e        # E2E tests (Playwright)

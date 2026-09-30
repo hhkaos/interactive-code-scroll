@@ -1,12 +1,13 @@
 import { defineConfig } from "@playwright/test";
 
-/** Each fixture tutorial is built and served on its own port. */
-const fixtures = [
-  { name: "fixture", filter: "example-framework-fixture", port: 4400, specs: undefined },
+/** Each fixture tutorial is built and served on its own port (`ready`: the path to wait for, when not `/`). */
+const fixtures: { name: string; filter: string; port: number; specs?: RegExp; ready?: string }[] = [
+  { name: "fixture", filter: "example-framework-fixture", port: 4400 },
   { name: "variants", filter: "example-framework-fixture-variants", port: 4401, specs: /\/(variants|result|maximize-steps)\.spec\.ts$/ },
   { name: "variants-hide", filter: "example-framework-fixture-variants-hide", port: 4402, specs: /\/variants-hide\.spec\.ts$/ },
   { name: "rest", filter: "example-rest-geocode", port: 4403, specs: /\/rest-example\.spec\.ts$/ },
   { name: "series", filter: "example-framework-fixture-series", port: 4404, specs: /\/series\.spec\.ts$/ },
+  { name: "site", filter: "site", port: 4405, specs: /\/site\.spec\.ts$/, ready: "/interactive-code-scroll/" },
 ];
 /** Specs bound to a dedicated fixture; every other spec runs against the main fixture. */
 const dedicated = fixtures.flatMap((f) => (f.specs ? [f.specs] : []));
@@ -19,10 +20,10 @@ export default defineConfig({
     use: { baseURL: `http://localhost:${port}` },
     ...(specs ? { testMatch: specs } : { testIgnore: dedicated }),
   })),
-  webServer: fixtures.map(({ filter, port }) => ({
+  webServer: fixtures.map(({ filter, port, ready = "" }) => ({
     // --ignore-lock keeps Astro 7 in the foreground; it auto-backgrounds when it detects an AI agent.
     command: `CI=true pnpm --filter ${filter} build && CI=true pnpm --filter ${filter} preview --port ${port} --ignore-lock`,
-    url: `http://localhost:${port}`,
+    url: `http://localhost:${port}${ready}`,
     reuseExistingServer: !process.env.CI,
   })),
 });

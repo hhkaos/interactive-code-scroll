@@ -16,10 +16,11 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 _Rules: `SPEC.md` (Project website and repository presentation)._
 
 - [ ] F1: repository labels (`showcase`, `enhancement`, `bug`) and GitHub private vulnerability reporting enabled; npm package READMEs aligned with the root README.
-- [ ] F1: repository description, topics and homepage (`gh repo edit`), once the site exists.
-- [ ] F2: `site/` landing page (Astro) + logo + VHS terminal recordings; Pages workflow publishes the site with the REST geocoding tutorial embedded.
+- [ ] F1: repository description and topics (`gh repo edit`).
+- [ ] F2: VHS terminal recording (`.tape` script, GIF for the README, video for the landing "Start in 30 seconds" section in place of the static terminal); needs the core `0.2.0-beta.0` on npm.
+- [ ] F2: set the repository homepage to `https://www.rauljimenez.info/interactive-code-scroll/` once the site is deployed.
 - [ ] F3: Starlight docs under `/docs/`, sourced from `docs/*.md`.
-- [ ] F4: showcase (REST geocode, OAuth PKCE, community list + submission issue template), social preview image, GitHub release, announcement.
+- [ ] F4: community showcase list (from showcase issues), social preview image (1280×640), GitHub release, announcement.
 
 ## Multi-SDK support
 

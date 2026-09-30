@@ -1,0 +1,16 @@
+{
+  "name": "site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/build-showcase.mjs && astro dev",
+    "build": "node scripts/build-showcase.mjs && astro build",
+    "build:showcase": "node scripts/build-showcase.mjs",
+    "preview": "astro preview",
+    "screenshots": "node scripts/screenshots.mjs",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "astro": "7.3.5"
+  }
+}

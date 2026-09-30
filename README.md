@@ -16,8 +16,8 @@ Write the story in MDX, keep your code runnable, and get a static site where exp
 [**Live demo**](https://www.rauljimenez.info/interactive-code-scroll/) · [Features](docs/features.md) · [Docs](docs/authoring.md) · [Examples](#examples) · [Report a bug / request a feature](https://github.com/hhkaos/interactive-code-scroll/issues/new/choose)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hero-rest-python-dark.png">
-  <img alt="A tutorial built with InteractiveCodeScroll: numbered steps on the left, Python code with the current step highlighted on the right, a cURL / Python / JavaScript switcher and a Result pane showing the JSON response." src=".github/assets/hero-rest-python-light.png" width="900">
+  <source media="(prefers-color-scheme: dark)" srcset="site/public/screenshots/hero-rest-python-dark.png">
+  <img alt="A tutorial built with InteractiveCodeScroll: numbered steps on the left, Python code with the current step highlighted on the right, a cURL / Python / JavaScript switcher and a Result pane showing the JSON response." src="site/public/screenshots/hero-rest-python-light.png" width="900">
 </picture>
 
 </div>
@@ -56,8 +56,8 @@ Built for people who teach developer technologies: developer advocates, trainers
 See every capability in [docs/features.md](docs/features.md).
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/oauth-preview-dark.png">
-  <img alt="The OAuth PKCE tutorial: the current step highlights the HTML it explains, and the live Preview below the code shows the running app." src=".github/assets/oauth-preview-light.png" width="900">
+  <source media="(prefers-color-scheme: dark)" srcset="site/public/screenshots/oauth-preview-dark.png">
+  <img alt="The OAuth PKCE tutorial: the current step highlights the HTML it explains, and the live Preview below the code shows the running app." src="site/public/screenshots/oauth-preview-light.png" width="900">
 </picture>
 
 ## How it works

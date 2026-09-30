@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Project website (`site/`): a landing page (dark by default, light/dark toggle shared with the tutorials) with a copyable `npm create` command, the REST geocoding tutorial embedded as a live demo (scaled desktop view; a screenshot link on phones), a start-in-30-seconds section, features with light/dark screenshots, audiences, a showcase (REST geocoding, OAuth PKCE, community submissions), a built-in-the-open section (AI agents, Stripe inspiration, beta) with links to issues, and the GitHub star count once it reaches 10. `publish-site.yml` publishes it to GitHub Pages with the showcase tutorials under `showcase/<name>/`; `pnpm site` runs it locally. New logo. Screenshots are regenerated with `pnpm --filter site screenshots` and shared with the README. E2E in `e2e/site.spec.ts`.
 - `docs/quick-start.md`: from `npm create interactive-code-scroll` to a published first tutorial, as one linear page.
 - Community files: `CONTRIBUTING.md` (setup, repository layout, PR rules, working with AI agents), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (private vulnerability reporting, scope notes on persisted field values), issue forms (bug report, feature request, showcase submission) and a pull request template.
 

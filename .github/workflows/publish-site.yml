@@ -1,0 +1,68 @@
+name: Publish project website
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build landing page and showcase
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.13.1
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v6
+
+      - name: Build core package
+        run: pnpm --filter interactive-code-scroll build
+
+      - name: Build site
+        env:
+          ICS_SITE: ${{ vars.ICS_SITE || steps.pages.outputs.origin }}
+          ICS_BASE: ${{ vars.ICS_BASE || format('{0}/', steps.pages.outputs.base_path) }}
+          # Star count on the landing page (read-only API call).
+          GITHUB_TOKEN: ${{ github.token }}
+        run: pnpm --filter site build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

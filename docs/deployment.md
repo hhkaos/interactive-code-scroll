@@ -164,7 +164,7 @@ In a series site, every tutorial is published under the base: `tutorials/auth/` 
 
 ### This repository
 
-`.github/workflows/ci.yml` runs unit tests, `astro check` and the E2E suite on every push to `main`.
+`.github/workflows/publish-site.yml` publishes the project website (`site/`: landing page plus the showcase tutorials under `showcase/<name>/`) with the same `configure-pages` defaults and the same `ICS_SITE` / `ICS_BASE` overrides. `.github/workflows/ci.yml` runs unit tests, `astro check` and the E2E suite on every push to `main`.
 
 ## Manual Build
 

@@ -1,0 +1,1051 @@
+---
+import Base from "../layouts/Base.astro";
+import CopyCommand from "../components/CopyCommand.astro";
+import DemoFrame from "../components/DemoFrame.astro";
+import Shot from "../components/Shot.astro";
+import { base } from "../../site-config.mjs";
+import core from "../../../packages/interactive-code-scroll/package.json";
+
+const repo = "https://github.com/hhkaos/interactive-code-scroll";
+const blob = `${repo}/blob/main`;
+const docs = `${blob}/docs`;
+const newIssue = `${repo}/issues/new`;
+const createCommand = "npm create interactive-code-scroll@latest";
+
+/** Star count at build time; hidden when unavailable or too small to be social proof. */
+async function starCount(): Promise<number | undefined> {
+  try {
+    const token = process.env.GITHUB_TOKEN;
+    const response = await fetch("https://api.github.com/repos/hhkaos/interactive-code-scroll", {
+      headers: token ? { authorization: `Bearer ${token}` } : {},
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!response.ok) return undefined;
+    const { stargazers_count: count } = (await response.json()) as { stargazers_count?: number };
+    return typeof count === "number" && count >= 10 ? count : undefined;
+  } catch {
+    return undefined;
+  }
+}
+const stars = await starCount();
+const starLabel = stars === undefined ? undefined : stars >= 1000 ? `${(stars / 1000).toFixed(1)}k` : String(stars);
+
+const highlights = [
+  {
+    eyebrow: "Multi-language",
+    title: "One tutorial. Every language your audience speaks.",
+    text: "Write the explanation once and ship cURL, Python and JavaScript side by side. Readers switch in place, and every step follows them to the same region in the new language.",
+    shot: "hero-rest-python",
+    alt: "The REST geocoding tutorial with the cURL / Python / JavaScript switcher and a Result pane.",
+  },
+  {
+    eyebrow: "Live Preview",
+    title: "Real code, running next to the explanation.",
+    text: "Web code runs in an embedded Preview or a new tab. Fields in the text — an API key, a client ID, a title — flow into the code, the Preview and the downloadable project.",
+    shot: "oauth-preview",
+    alt: "The OAuth PKCE tutorial: highlighted HTML and the running app in the Preview pane.",
+  },
+  {
+    eyebrow: "Beyond code",
+    title: "Screenshots and walkthroughs, in the same flow.",
+    text: "Some steps happen outside the editor. Image carousels sit in the code panel so portal clicks and setup screens are part of the story, not a separate doc.",
+    shot: "oauth-images",
+    alt: "A step showing a carousel of portal screenshots in place of the code.",
+  },
+  {
+    eyebrow: "Made for the stage",
+    title: "Present it. Then hand it over.",
+    text: "Presentation mode strips the chrome, shows the step counter and listens to your clicker. After the talk, attendees open the same URL and replay every step at their own pace.",
+    shot: "present-rest-curl",
+    alt: "Presentation mode: bigger layout, step counter in the header.",
+  },
+];
+
+const features = [
+  { icon: "📡", title: "Request runner", text: "Run `.http` requests from the page, with captured output when there is no token and a JSON viewer." },
+  { icon: "✏️", title: "Fields → code", text: "Readers type their own values; code, Preview and downloads update. Secrets stay in their browser." },
+  { icon: "📦", title: "Copy & ZIP", text: "Readers leave with a runnable project. Markers are stripped from everything they copy." },
+  { icon: "📚", title: "Series sites", text: "Many tutorials in one site: index, tag filters and sibling tutorials across SDKs." },
+  { icon: "🛡️", title: "Build-time checks", text: "Missing files, regions or variables fail the build with the file and line. No silent rot." },
+  { icon: "🔗", title: "Deep links", text: "Every step has a URL. Share “step 4” in chat or on a slide." },
+  { icon: "🚀", title: "Static output", text: "Deploy anywhere. The wizard can add a GitHub Pages workflow for you." },
+  { icon: "🌗", title: "Light & dark", text: "Follows the reader's system, with a toggle. Projector-friendly either way." },
+];
+
+const audiences = [
+  { title: "Developer advocates", text: "Turn your best demo into something people can replay after the booth closes." },
+  { title: "Trainers & partners", text: "Workshops where every attendee has the same working code at every step." },
+  { title: "Conference speakers", text: "No more juggling slides and an IDE. One URL on stage, the same URL for the audience." },
+  { title: "Technical writers", text: "Keep the sample runnable and the prose in sync — the build tells you when they drift." },
+];
+
+const showcase = [
+  {
+    title: "Geocode an address with the ArcGIS REST API",
+    text: "cURL, Python and JavaScript variants, live requests, captured output and error explanations.",
+    href: `${base}showcase/rest-geocode/`,
+    shot: "hero-rest-python",
+    tags: ["REST", "cURL", "Python", "JavaScript"],
+  },
+  {
+    title: "User authentication with the ArcGIS Maps SDK for JavaScript",
+    text: "OAuth 2.0 PKCE in the browser, with portal walkthrough screenshots and a live Preview.",
+    href: `${base}showcase/oauth-pkce/`,
+    shot: "oauth-preview",
+    tags: ["OAuth", "JavaScript", "Preview"],
+  },
+];
+---
+
+<Base
+  title="InteractiveCodeScroll — scroll-driven code tutorials for talks and self-paced learning"
+  description="Write the story in MDX, keep your code runnable, and get a static site where explanations, highlighted code, live Preview and API results move together. Built for people who teach developer technologies."
+>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href={base}>
+        <img src={`${base}logo.svg`} alt="" width="30" height="30" />
+        <span>InteractiveCodeScroll</span>
+        <span class="beta-pill">beta</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#demo">Demo</a>
+        <a href="#features">Features</a>
+        <a href="#showcase">Showcase</a>
+        <a href={`${docs}/quick-start.md`}>Docs</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" id="theme" type="button" aria-label="Toggle light and dark theme">
+          <svg class="sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+        </button>
+        <a class="btn btn-small" href={repo}>
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+          {starLabel && <span class="count">★ {starLabel}</span>}
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="glow" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <a class="announce reveal" href="#built-in-the-open">
+          <span class="tag">Public beta</span> v{core.version}<span class="announce-long"> · built in the open with AI agents</span> →
+        </a>
+        <h1 class="reveal">
+          Code tutorials that<br /><span class="gradient-text">move with your story.</span>
+        </h1>
+        <p class="lead reveal">
+          Write the explanation in MDX and keep your code runnable. InteractiveCodeScroll turns them into a static site where
+          steps, highlighted code, live previews and API results stay in sync — for readers at home and for you on stage.
+        </p>
+        <div class="hero-cta reveal">
+          <CopyCommand command={createCommand} />
+          <div class="hero-buttons">
+            <a class="btn btn-primary" href="#demo">Try the live demo ↓</a>
+            <a class="btn" href={repo}>★ Star on GitHub{starLabel && <span class="count">{starLabel}</span>}</a>
+          </div>
+        </div>
+        <ul class="stack reveal" aria-label="Built with">
+          <li>Astro</li>
+          <li>MDX</li>
+          <li>Shiki</li>
+          <li>Calcite Design System</li>
+          <li>Static output</li>
+          <li>Apache-2.0</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="demo" class="demo">
+      <div class="container">
+        <div class="section-head center reveal">
+          <span class="eyebrow">Live demo</span>
+          <h2>Scroll it. Switch the language. Run the request.</h2>
+          <p>
+            This is a real tutorial built with InteractiveCodeScroll, running right here. Scroll the explanations, pick
+            cURL, Python or JavaScript, and watch the code and the result follow.
+          </p>
+        </div>
+        <div class="reveal">
+          <DemoFrame
+            src={`${base}showcase/rest-geocode/?variant=python#request`}
+            label="showcase/rest-geocode — Geocode an address with the ArcGIS REST API"
+            fallback="hero-rest-python"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="start">
+      <div class="container start-grid">
+        <div class="reveal">
+          <span class="eyebrow">Start in 30 seconds</span>
+          <h2>One command.<br />A working tutorial.</h2>
+          <p class="muted">
+            The wizard asks what you are teaching — a web app, a REST API, a script or a native app, in one language or
+            several — and writes a working tutorial you can edit right away. Add a GitHub Pages workflow and every push
+            publishes it.
+          </p>
+          <ol class="steps">
+            <li><code>{createCommand}</code></li>
+            <li><code>npm run dev</code> — edit <code>tutorial.mdx</code>, see it live</li>
+            <li><code>git push</code> — published on GitHub Pages</li>
+          </ol>
+          <a class="btn" href={`${docs}/quick-start.md`}>Read the quick start →</a>
+        </div>
+        <div class="terminal reveal" aria-label="Example wizard session">
+          <div class="terminal-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span> zsh</div>
+          <pre><code><span class="t-prompt">$</span> {createCommand} my-talk
+<span class="t-dim">┌</span>  Create an InteractiveCodeScroll project
+<span class="t-dim">│</span>
+<span class="t-ok">◇</span>  What do you want to create?
+<span class="t-dim">│</span>  One tutorial
+<span class="t-dim">│</span>
+<span class="t-ok">◇</span>  What will the tutorial use?
+<span class="t-dim">│</span>  cURL, Python, Node.js
+<span class="t-dim">│</span>
+<span class="t-ok">◇</span>  Package manager
+<span class="t-dim">│</span>  npm
+<span class="t-dim">│</span>
+<span class="t-ok">◇</span>  Add a GitHub Pages workflow?
+<span class="t-dim">│</span>  Yes
+<span class="t-dim">│</span>
+<span class="t-accent">◆</span>  Created 10 files in my-talk
+<span class="t-dim">│</span>
+<span class="t-dim">└</span>  Happy writing!
+
+<span class="t-prompt">$</span> cd my-talk && npm install && npm run dev
+  <span class="t-accent">astro</span>  ready
+  ┃ Local    <span class="t-link">http://localhost:4321/</span><span class="cursor" aria-hidden="true"></span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="highlights">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Features</span>
+          <h2>Everything a code walkthrough needs. <span class="muted-h">Nothing your audience has to install.</span></h2>
+        </div>
+        {
+          highlights.map((item, index) => (
+            <div class:list={["highlight", { flip: index % 2 === 1 }]}>
+              <div class="highlight-text reveal">
+                <span class="eyebrow">{item.eyebrow}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+              <div class="highlight-shot reveal">
+                <Shot name={item.shot} alt={item.alt} />
+              </div>
+            </div>
+          ))
+        }
+        <div class="feature-grid">
+          {
+            features.map((feature) => (
+              <div class="feature reveal">
+                <span class="feature-icon" aria-hidden="true">{feature.icon}</span>
+                <h3>{feature.title}</h3>
+                <p>{feature.text}</p>
+              </div>
+            ))
+          }
+        </div>
+        <p class="more reveal"><a href={`${docs}/features.md`}>See every feature →</a></p>
+      </div>
+    </section>
+
+    <section class="audience">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Who it is for</span>
+          <h2>Made for people who teach code.</h2>
+          <p>
+            Born from teaching ArcGIS at developer conferences, and topic-agnostic by design: web apps, REST APIs,
+            Python, Kotlin, Swift, C# — if you can put it in a file, you can walk people through it.
+          </p>
+        </div>
+        <div class="audience-grid">
+          {
+            audiences.map((audience) => (
+              <div class="card reveal">
+                <h3>{audience.title}</h3>
+                <p>{audience.text}</p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section id="showcase" class="showcase">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Showcase</span>
+          <h2>See real tutorials.</h2>
+          <p>Built with InteractiveCodeScroll and used in talks and workshops.</p>
+        </div>
+        <div class="showcase-grid">
+          {
+            showcase.map((item) => (
+              <a class="showcase-card reveal" href={item.href}>
+                <Shot name={item.shot} alt="" />
+                <div class="showcase-body">
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                  <ul class="tags">
+                    {item.tags.map((tag) => (
+                      <li>{tag}</li>
+                    ))}
+                  </ul>
+                </div>
+              </a>
+            ))
+          }
+          <a class="showcase-card yours reveal" href={`${newIssue}?template=showcase.yml`}>
+            <div class="yours-inner">
+              <span class="plus" aria-hidden="true">+</span>
+              <h3>Your tutorial here</h3>
+              <p>Built something with it? Share it and we will feature it on this page.</p>
+              <span class="link">Submit your tutorial →</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="built-in-the-open" class="open">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Built in the open</span>
+          <h2>Beta, and moving fast. <span class="gradient-text">Steer it.</span></h2>
+          <p>
+            The first beta took less than a week. That pace is the point: InteractiveCodeScroll grows with the tutorials
+            people actually build. Tell us what yours needs.
+          </p>
+        </div>
+        <div class="open-grid">
+          <div class="card reveal">
+            <span class="feature-icon" aria-hidden="true">🤖</span>
+            <h3>Built with AI coding agents</h3>
+            <p>
+              Human-led design and review; most code and docs written with Claude Code and Codex. The agent instructions and the
+              full spec are in the repo.
+            </p>
+            <a href={`${blob}/docs/dev/SPEC.md`}>Read the spec →</a>
+          </div>
+          <div class="card reveal">
+            <span class="feature-icon" aria-hidden="true">💳</span>
+            <h3>Inspired by Stripe</h3>
+            <p>
+              Stripe's interactive quickstarts showed how good a code walkthrough can feel. This brings that experience to
+              anyone's tutorials, and to the stage.
+            </p>
+            <a href="https://docs.stripe.com/checkout/quickstart">See the original →</a>
+          </div>
+          <div class="card reveal">
+            <span class="feature-icon" aria-hidden="true">🧪</span>
+            <h3>Public beta</h3>
+            <p>
+              Used for real tutorials and talks. Authoring APIs may still change before 1.0; the upgrade guide covers every
+              breaking change.
+            </p>
+            <a href={`${docs}/upgrade.md`}>Upgrade guide →</a>
+          </div>
+        </div>
+        <div class="open-cta reveal">
+          <a class="btn" href={`${newIssue}?template=bug_report.yml`}>🐞 Report a bug</a>
+          <a class="btn" href={`${newIssue}?template=feature_request.yml`}>💡 Request a feature</a>
+          <a class="btn" href={`${blob}/docs/dev/TODO.md`}>🗺️ Roadmap</a>
+          <a class="btn" href={`${blob}/CONTRIBUTING.md`}>🤝 Contribute</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="final">
+      <div class="glow" aria-hidden="true"></div>
+      <div class="container final-inner reveal">
+        <h2>Your next talk deserves more than slides.</h2>
+        <p>Build the tutorial once. Present it on stage. Let everyone replay it at home.</p>
+        <CopyCommand command={createCommand} />
+        <div class="hero-buttons">
+          <a class="btn btn-primary" href={repo}>★ Star on GitHub{starLabel && <span class="count">{starLabel}</span>}</a>
+          <a class="btn" href={`${docs}/quick-start.md`}>Read the docs</a>
+        </div>
+        <p class="small">A star helps other trainers and speakers find it.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src={`${base}logo.svg`} alt="" width="26" height="26" />
+        <span>InteractiveCodeScroll</span>
+      </div>
+      <nav aria-label="Footer">
+        <a href={`${docs}/quick-start.md`}>Docs</a>
+        <a href={repo}>GitHub</a>
+        <a href="https://www.npmjs.com/package/interactive-code-scroll">npm</a>
+        <a href={`${blob}/CHANGELOG.md`}>Changelog</a>
+        <a href={`${repo}/issues`}>Issues</a>
+      </nav>
+      <p class="fineprint">
+        Apache-2.0 · A personal open-source project by <a href="https://github.com/hhkaos">@hhkaos</a>, built with AI coding
+        agents. Not an official Esri product. ArcGIS appears in example tutorials only.
+      </p>
+    </div>
+  </footer>
+</Base>
+
+<script>
+  document.documentElement.classList.add("js");
+
+  const root = document.documentElement;
+  document.querySelector("#theme")?.addEventListener("click", () => {
+    const next = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem("ics:theme", next);
+    } catch {}
+    document.dispatchEvent(new Event("themechange"));
+  });
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
+      }
+    },
+    { rootMargin: "0px 0px -8% 0px" },
+  );
+  document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+</script>
+
+<style>
+  /* Nav */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: saturate(160%) blur(14px);
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 4rem;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+
+  .beta-pill {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  nav {
+    display: flex;
+    gap: 1.6rem;
+  }
+
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  nav a:hover {
+    color: var(--text);
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-left: auto;
+  }
+
+  .btn-small {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.88rem;
+  }
+
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  :global(:root[data-theme="dark"]) .moon,
+  :global(:root[data-theme="light"]) .sun {
+    display: none;
+  }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    padding: 6rem 0 5rem;
+    overflow: hidden;
+  }
+
+  .glow {
+    position: absolute;
+    inset: -30% -10% auto;
+    height: 80%;
+    background:
+      radial-gradient(40% 50% at 30% 40%, var(--glow), transparent 70%),
+      radial-gradient(35% 45% at 70% 30%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift {
+    to {
+      transform: translate3d(3%, 4%, 0) scale(1.05);
+    }
+  }
+
+  .hero-inner {
+    position: relative;
+    text-align: center;
+  }
+
+  .announce {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.3rem 0.9rem 0.3rem 0.35rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
+    color: var(--muted);
+    font-size: 0.88rem;
+    text-decoration: none;
+  }
+
+  .announce:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .tag {
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: linear-gradient(100deg, var(--accent), var(--accent-2));
+    color: var(--accent-ink);
+    font-weight: 700;
+    font-size: 0.75rem;
+  }
+
+  h1 {
+    margin: 1.6rem auto 1.4rem;
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+
+  .lead {
+    max-width: 44rem;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+  }
+
+  .hero-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+    margin-top: 2.5rem;
+  }
+
+  .hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.6rem;
+    margin: 3.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .stack li::before {
+    content: "◆ ";
+    color: var(--accent);
+    font-size: 0.7em;
+  }
+
+  /* Demo */
+  .demo {
+    padding-top: 2rem;
+  }
+
+  /* Start */
+  .start-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .muted {
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .start h2 {
+    margin-bottom: 1.2rem;
+  }
+
+  .steps {
+    margin: 1.5rem 0 2rem;
+    padding-left: 1.3rem;
+    display: grid;
+    gap: 0.6rem;
+    color: var(--muted);
+  }
+
+  .steps code {
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.35rem;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.88em;
+  }
+
+  .terminal {
+    border-radius: 1rem;
+    border: 1px solid #1f2c45;
+    background: #0a1120;
+    color: #cbd5e1;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid #1f2c45;
+    color: #64748b;
+    font-size: 0.8rem;
+  }
+
+  .terminal .dots {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .terminal .dots i {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: #334155;
+  }
+
+  .terminal pre {
+    margin: 0;
+    padding: 1.2rem 1.4rem 1.4rem;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    overflow-x: auto;
+  }
+
+  .t-prompt,
+  .t-ok {
+    color: #22d3ee;
+  }
+
+  .t-accent {
+    color: #60a5fa;
+    font-weight: 700;
+  }
+
+  .t-dim {
+    color: #475569;
+  }
+
+  .t-link {
+    color: #93c5fd;
+    text-decoration: underline;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.1em;
+    margin-left: 0.2em;
+    vertical-align: text-bottom;
+    background: #22d3ee;
+    animation: blink 1.1s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* Highlights */
+  .muted-h {
+    color: var(--muted);
+  }
+
+  .highlight {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 4rem;
+    align-items: center;
+    margin-bottom: 6rem;
+  }
+
+  .highlight.flip .highlight-text {
+    order: 2;
+  }
+
+  .highlight h3 {
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    margin-bottom: 1rem;
+  }
+
+  .highlight p {
+    color: var(--muted);
+    font-size: 1.08rem;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  .feature,
+  .card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .feature-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    margin-bottom: 0.9rem;
+    border-radius: 0.65rem;
+    background: var(--surface-2);
+    font-size: 1.2rem;
+  }
+
+  .feature h3,
+  .card h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .feature p,
+  .card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .more {
+    margin-top: 2rem;
+    text-align: center;
+  }
+
+  .more a,
+  .card a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  /* Audience */
+  .audience,
+  .open {
+    background: var(--bg-soft);
+  }
+
+  .audience-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  /* Showcase */
+  .showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .showcase-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .showcase-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+  }
+
+  .showcase-card :global(.shot) {
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .showcase-body {
+    padding: 1.25rem 1.4rem 1.4rem;
+  }
+
+  .showcase-body h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .showcase-body p {
+    margin: 0 0 1rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tags li {
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .yours {
+    border-style: dashed;
+    background: transparent;
+  }
+
+  .yours-inner {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 2rem;
+  }
+
+  .yours p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .plus {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    border: 1px dashed var(--accent);
+    color: var(--accent);
+    font-size: 1.4rem;
+  }
+
+  .yours .link {
+    margin-top: 0.5rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Built in the open */
+  .open-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .open-grid .card p {
+    margin-bottom: 1rem;
+  }
+
+  .open-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+  }
+
+  /* Final CTA */
+  .final {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .final .glow {
+    inset: 10% -10% auto;
+  }
+
+  .final-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+  }
+
+  .final-inner > p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+
+  .final .small {
+    font-size: 0.9rem;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 3rem 0;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem 2.5rem;
+  }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .fineprint {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  .fineprint a {
+    color: var(--text);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .feature-grid,
+    .audience-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .showcase-grid,
+    .open-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 860px) {
+    nav {
+      display: none;
+    }
+
+    .start-grid,
+    .highlight {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .highlight.flip .highlight-text {
+      order: 0;
+    }
+
+    .highlight {
+      margin-bottom: 4rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hero {
+      padding-top: 4rem;
+    }
+
+    .feature-grid,
+    .audience-grid,
+    .showcase-grid,
+    .open-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .btn-small span:not(.count),
+    .announce-long {
+      display: none;
+    }
+  }
+</style>
