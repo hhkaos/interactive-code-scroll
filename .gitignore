@@ -13,3 +13,4 @@ spike/.shots/
 .DS_Store
 packages/interactive-code-scroll/test/fixtures/dev-*/
 screenshots/
+packages/create-interactive-code-scroll/test/fixtures/

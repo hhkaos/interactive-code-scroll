@@ -1,0 +1,32 @@
+{
+  "name": "create-interactive-code-scroll",
+  "version": "0.1.0-alpha.8",
+  "description": "Create an InteractiveCodeScroll tutorial project: npm create interactive-code-scroll",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hhkaos/interactive-code-scroll",
+    "directory": "packages/create-interactive-code-scroll"
+  },
+  "type": "module",
+  "bin": {
+    "create-interactive-code-scroll": "bin/create.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "!src/**/*.test.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "astro": "7.3.5"
+  }
+}

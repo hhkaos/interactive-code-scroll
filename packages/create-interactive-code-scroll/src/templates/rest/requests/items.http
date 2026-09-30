@@ -1,0 +1,6 @@
+@baseUrl = https://api.example.com
+@apiKey = YOUR_API_KEY
+
+# @name list-items
+GET {{baseUrl}}/items?limit=2
+Authorization: Bearer {{apiKey}}
