@@ -109,7 +109,11 @@ interactiveCodeScroll({ tutorials: "tutorials", index: "src/series-home.astro" }
 import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll/series";
 ---
 <html lang="en">
-  <head><title>My tutorials</title></head>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My tutorials</title>
+  </head>
   <body>
     <h1>{tutorials.length} tutorials</h1>
     <ul>
@@ -122,7 +126,7 @@ import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll
 ```
 
 - `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set.
-- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. The page owns everything else (layout, header, theme).
+- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
 - `index` must be an `.astro` file, needs `tutorials`, and cannot be combined with `tutorials/index.mdx` (build error: the file would be ignored).
 
 ## Frontmatter
