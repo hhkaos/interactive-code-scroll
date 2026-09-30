@@ -107,7 +107,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - Forms defined in MDX (left panel); filling them updates code variables in real time.
 - **Default value**: the literal in the code is the single source of truth (default and field placeholder).
 - **Custom placeholder**: `<VarField placeholder="...">` can override the input placeholder without changing the code default used for clearing, downloads or Preview.
-- **localStorage persistence**: configurable per field by the author (persist or not). Persisted values are shared by every tutorial on the same site (key `ics:var:<name>`), so a credential is entered once per site; *(planned, Phase 2)* `persist="tutorial"` scopes a value to one tutorial.
+- **localStorage persistence**: configurable per field by the author (persist or not). Persisted values are shared by every tutorial on the same site (key `ics:var:<name>`), so a credential is entered once per site; `persist="tutorial"` scopes a value to one tutorial (key `ics:var:<tutorial>:<name>`; on a single-tutorial site it is the site key). Any other `persist` value is a build error.
 - **Secret fields**: the author can mark a field as sensitive → masked in the form and in the code, with a **visibility toggle** to reveal it when needed.
 - Entered values are included in downloads.
 
@@ -138,7 +138,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
   - **Index page**, customizable in three levels: (1) default: title "Tutorials" and the full list; (2) optional `tutorials/index.mdx`: frontmatter `title`, `description` (shown under the title in the header), `logo` (from `tutorials/images/`, or an `https://` URL as for tutorials), `theme`, free MDX prose, `<TutorialList />` placed anywhere, filtered with `tags="…"` (comma-separated, any of them) and/or `level="…"` to build sections, and `<TutorialFilter />` (at most one) where the tag filter goes; validated at build like a tutorial; without `index.mdx`, the page shows the filter and one list; (3) integration option `index: "<path to .astro page>"` / CLI `--index <path>` replaces the page; it reads the tutorial list (slug, URL, title and metadata) and may render `<TutorialList />` and `<TutorialFilter />` from the public `interactive-code-scroll/series` module; `index` needs `tutorials`, must be an `.astro` file and cannot be combined with `tutorials/index.mdx` (build errors).
   - **List UI**: Calcite-styled cards with title, description, level, duration and tag chips, each linking to the tutorial; the tag filter (chips, any selected tag, client-side; without JS every card shows) filters every list on the page and counts each tutorial once.
   - **Back to index**: in a series, the tutorial header has an action that returns to the index.
-  - **Reader state**: stored Preview HTML is namespaced per tutorial. Site-wide on purpose: persisted vars (`ics:var:<name>`), theme, splitter sizes and the variant choice (the reader's language carries across tutorials).
+  - **Reader state**: stored Preview HTML is namespaced per tutorial. Site-wide on purpose: persisted vars (`ics:var:<name>`, unless `persist="tutorial"`), theme, splitter sizes and the variant choice (the reader's language carries across tutorials).
 
 ### Public documentation
 - **README for repository visitors**: explains what InteractiveCodeScroll is, who it is for, how to start, and where to find the tutorial, reference and examples.
@@ -222,7 +222,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 | Code region | id | Marked with `#region <id>` / `#endregion`; referenced from MDX |
 | Action | type: highlight / switch file / show image(s) | Links a Step to a Region, File or Image |
 | Form | fields | Defined in MDX |
-| Field ↔ Variable | variable name, persist (bool), secret (bool) | Variable marked with `// @var <name>`; default = code literal |
+| Field ↔ Variable | variable name, persist (off, site-wide or `"tutorial"`), secret (bool) | Variable marked with `// @var <name>`; default = code literal |
 | Image / Carousel | image files | In tutorial folders; shown instead of code; manual navigation |
 | Variant | id, label, dir, entry, files (optional) | A programming-language version of the tutorial's code under `code/<dir>/`; shares region ids and vars with the other variants |
 | Output | file in `output/` (optional per-variant override) | Captured result shown in the Result pane |

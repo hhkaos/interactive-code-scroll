@@ -7,7 +7,8 @@ interface Props {
   label: string;
   placeholder?: string;
   secret?: boolean;
-  persist?: boolean;
+  /** `persist` shares the value with every tutorial of the site; `persist="tutorial"` keeps it to this one. */
+  persist?: boolean | "tutorial";
 }
 
 const { name, label, placeholder, secret = false, persist = false } = Astro.props;
@@ -26,7 +27,7 @@ const defaultValue = [
   label-text={label}
   data-var={name}
   data-default-value={defaultValue}
-  data-persist={persist ? "" : undefined}
+  data-persist={persist === "tutorial" ? "tutorial" : persist ? "site" : undefined}
   data-secret={secret ? "" : undefined}
   placeholder={placeholder ?? defaultValue}
   type={secret ? "password" : "text"}

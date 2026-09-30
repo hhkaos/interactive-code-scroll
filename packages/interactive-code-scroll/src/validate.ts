@@ -322,6 +322,10 @@ export function validateTutorial({
       else if (!varNames.has(name)) report(`no "@var ${name}" found in code/`);
       if (!text("label")) report('requires a "label"');
       text("placeholder");
+      const persist = use.attributes.persist;
+      const validPersist =
+        persist === undefined || persist === true || persist === "tutorial" || (typeof persist === "object" && /^\s*(?:true|false)\s*$/.test(persist.expression));
+      if (!validPersist) report('"persist" must be persist (shared by the site) or persist="tutorial"');
     }
   }
   return errors;

@@ -1,5 +1,5 @@
 import { setAction } from "./actions.ts";
-import { displayValue, readStored, valueFromInput, writeStored } from "./var-values.ts";
+import { displayValue, readStored, storageKey, valueFromInput, writeStored, type PersistScope } from "./var-values.ts";
 
 type CalciteInput = HTMLElement & { value: string; type: string };
 
@@ -14,14 +14,15 @@ export interface VarsHandle {
  * `<VarField>` inputs → in-place text swap of the `[data-var]` tokens in the
  * pre-highlighted code (no client-side highlighter).
  */
-export function startVars(onChange: () => void = () => {}): VarsHandle {
+export function startVars(onChange: () => void = () => {}, tutorial = ""): VarsHandle {
   const values: Record<string, string> = {};
   const secrets = new Set<string>();
 
   for (const input of document.querySelectorAll<CalciteInput>("calcite-input[data-var]")) {
     const name = input.dataset.var!;
     const defaultValue = input.dataset.defaultValue ?? "";
-    const persist = input.hasAttribute("data-persist");
+    const scope = input.dataset.persist as PersistScope | undefined;
+    const key = scope && storageKey(name, scope, tutorial);
     const secret = input.hasAttribute("data-secret");
     let revealed = false;
     if (secret) secrets.add(name);
@@ -31,14 +32,14 @@ export function startVars(onChange: () => void = () => {}): VarsHandle {
       for (const token of document.querySelectorAll(`.code [data-var="${CSS.escape(name)}"]`)) token.textContent = text;
     };
 
-    const stored = persist ? readStored(localStorage, name) : undefined;
+    const stored = key ? readStored(localStorage, key) : undefined;
     values[name] = stored ?? defaultValue;
     if (stored !== undefined) input.value = stored;
     render();
 
     input.addEventListener("calciteInputInput", () => {
       values[name] = valueFromInput(input.value, defaultValue);
-      if (persist) writeStored(localStorage, name, input.value === "" ? undefined : input.value);
+      if (key) writeStored(localStorage, key, input.value === "" ? undefined : input.value);
       render();
       onChange();
     });

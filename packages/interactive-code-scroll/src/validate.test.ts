@@ -31,6 +31,10 @@ describe("validateTutorial", () => {
     ).toEqual([]);
   });
 
+  it.each([true, "tutorial", { expression: "true" }, { expression: "false" }] as const)("accepts VarField persist %j", (persist) => {
+    expect(validate(use("VarField", { name: "clientId", label: "Client ID", persist }))).toEqual([]);
+  });
+
   it.each([
     [use("Step", { file: "main.js" }), '<Step> requires an "id"'],
     [use("Step", { id: "Bad Id" }), 'id "Bad Id" must be lowercase letters, digits and dashes'],
@@ -49,6 +53,8 @@ describe("validateTutorial", () => {
     [use("Hint", { id: "redirect-uri" }), '<Hint> requires a "label"'],
     [use("VarField", { name: "nope", label: "X" }), 'no "@var nope" found in code/'],
     [use("VarField", { name: "clientId" }), '<VarField> requires a "label"'],
+    [use("VarField", { name: "clientId", label: "X", persist: "site" }), '"persist" must be persist (shared by the site) or persist="tutorial"'],
+    [use("VarField", { name: "clientId", label: "X", persist: { expression: "scope" } }), '"persist" must be persist'],
   ])("reports %j", (component, message) => {
     const [error] = validate(component);
     expect(error).toContain("tutorial.mdx:3:1");

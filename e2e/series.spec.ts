@@ -79,3 +79,20 @@ test("persisted fields are shared by every tutorial of the site", async ({ page 
   await page.goto("/beta/#config");
   await expect(page.locator('calcite-input[data-var="seriesToken"] input')).toHaveValue("shared-value");
 });
+
+test('persist="tutorial" keeps a field to its tutorial', async ({ page }) => {
+  const layer = page.locator('calcite-input[data-var="layerName"] input');
+  await page.goto("/alpha/#config");
+  await layer.fill("alpha-layer");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ics:var:alpha:layerName"))).toBe("alpha-layer");
+
+  await page.goto("/beta/#config");
+  await expect(layer).toHaveValue("");
+  await expect(page.locator('.code [data-var="layerName"]').first()).toContainText("Demo layer");
+  await layer.fill("beta-layer");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ics:var:beta:layerName"))).toBe("beta-layer");
+
+  await page.goto("/alpha/#config");
+  await expect(layer).toHaveValue("alpha-layer");
+  expect(await page.evaluate(() => localStorage.getItem("ics:var:layerName"))).toBeNull();
+});

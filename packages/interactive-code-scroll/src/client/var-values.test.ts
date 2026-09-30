@@ -20,6 +20,22 @@ describe("valueFromInput", () => {
   });
 });
 
+describe("storageKey", () => {
+  it("shares persisted values across the site by default", () => {
+    expect(storageKey("apiKey")).toBe("ics:var:apiKey");
+    expect(storageKey("apiKey", "site", "alpha")).toBe("ics:var:apiKey");
+  });
+
+  it("scopes tutorial values by slug", () => {
+    expect(storageKey("apiKey", "tutorial", "alpha")).toBe("ics:var:alpha:apiKey");
+    expect(storageKey("apiKey", "tutorial", "beta")).toBe("ics:var:beta:apiKey");
+  });
+
+  it("uses the site key in a single-tutorial site", () => {
+    expect(storageKey("apiKey", "tutorial", "")).toBe("ics:var:apiKey");
+  });
+});
+
 describe("storage", () => {
   it("round-trips values and removes them", () => {
     const map = new Map<string, string>();
@@ -28,11 +44,11 @@ describe("storage", () => {
       setItem: (k: string, v: string) => void map.set(k, v),
       removeItem: (k: string) => void map.delete(k),
     };
-    writeStored(storage, "clientId", "abc");
-    expect(map.get(storageKey("clientId"))).toBe("abc");
-    expect(readStored(storage, "clientId")).toBe("abc");
-    writeStored(storage, "clientId", undefined);
-    expect(readStored(storage, "clientId")).toBeUndefined();
+    writeStored(storage, "k", "abc");
+    expect(map.get("k")).toBe("abc");
+    expect(readStored(storage, "k")).toBe("abc");
+    writeStored(storage, "k", undefined);
+    expect(readStored(storage, "k")).toBeUndefined();
   });
 
   it("survives storage that throws", () => {

@@ -357,7 +357,7 @@ const clientData = JSON.stringify({
       const vars = startVars(() => {
         refreshPreview();
         refreshRequest();
-      });
+      }, data.tutorial);
       const { base } = data;
       const pageUrl = `${base}preview/`;
       startDownloads({

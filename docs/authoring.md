@@ -55,7 +55,7 @@ interactiveCodeScroll({ tutorials: "tutorials" })
 - Folders starting with `_` or `.` are ignored; other folders without `tutorial.mdx` are skipped with a warning.
 - Each tutorial's Preview, published code and captured outputs live under its own URL. Its header gets an "All tutorials" link back to the index.
 - `tutorial` and `tutorials` cannot be combined.
-- Persisted `<VarField>` values are shared by every tutorial on the site (enter a key once); a Preview never shows another tutorial's code.
+- Persisted `<VarField>` values are shared by every tutorial on the site (enter a key once); use `persist="tutorial"` for a value that belongs to one tutorial. A Preview never shows another tutorial's code.
 
 #### Index page
 
@@ -227,7 +227,7 @@ Creates a form field linked to an `@var` marker in code.
 | `label` | yes | Visible field label. |
 | `placeholder` | no | Input hint. Does not change the code default. |
 | `secret` | no | Masks the input and rendered code value until revealed. |
-| `persist` | no | Stores the value in `localStorage`. |
+| `persist` | no | Stores the value in `localStorage`. `persist` shares it with every tutorial of a [series site](#series-sites) (a key is entered once per site); `persist="tutorial"` keeps it to this tutorial. On a single-tutorial site both behave the same. Any other value is a build error. |
 
 The default value is the literal in code. Empty fields restore that literal in code, Preview and downloads.
 

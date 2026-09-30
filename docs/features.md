@@ -29,7 +29,7 @@ See [Code Markers](authoring.md#code-markers) and [Files Not Shown in Tabs](auth
 
 - `<VarField>` inputs in the explanations update the code as the reader types (client ID, API key, portal URL…). The literal in the code is the default.
 - **Secret fields** are masked in the form and in the code, with a reveal toggle.
-- **Persisted fields** are remembered per site, so a credential typed once fills every tutorial on the same site.
+- **Persisted fields** are remembered per site, so a credential typed once fills every tutorial on the same site; `persist="tutorial"` keeps a value to one tutorial.
 - Values are escaped for each language and quote style, and are included in Preview and downloads.
 
 See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables).

@@ -16,4 +16,4 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before implementing each phase._
 
-Phase 1 — REST vertical slice (cURL / Python / JavaScript): done, go/no-go GO (2026-09-30). Next: Phase 2; 2.1 multi-tutorial repos is done, then 2.2 → 2.5 → 2.4 → 2.3 (plan).
+Phase 1 — REST vertical slice (cURL / Python / JavaScript): done, go/no-go GO (2026-09-30). Next: Phase 2; 2.1 multi-tutorial repos and 2.2 shared credentials are done, then 2.5 → 2.4 → 2.3 (plan).
