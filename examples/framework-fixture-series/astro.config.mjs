@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config";
-// Source, not the built package: like the CLI's generated config, so changes need no package build.
-import { interactiveCodeScroll } from "../../packages/interactive-code-scroll/src/index.ts";
+import { interactiveCodeScroll } from "interactive-code-scroll";
 
+// Used by `astro check` only: dev/build/serve go through the CLI, which detects tutorials/ on its own.
 export default defineConfig({
   integrations: [interactiveCodeScroll({ tutorials: "tutorials" })],
 });

@@ -131,7 +131,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - **Strict validation**: if the MDX references a region, file, variable or image that does not exist, the build fails with a clear error (file, line, ID). In dev mode it is shown as a browser overlay without crashing the server. Validation also reads the frontmatter: invalid fields report the key's MDX line, and later frontmatter-dependent rules (`files:`, `variants:`, `only=`, `request=`, `output=`) use the same path. It re-runs in dev when files under `code/`, `images/`, `requests/` or `output/` change.
 - **Serve locally**: the CLI can serve the built site on localhost (fallback if conference wifi fails; Preview/OAuth still need network — plan B: images/carousel of the result).
 - **Generic CLI**: CLI commands must work for any InteractiveCodeScroll tutorial. Topic-specific helpers, such as OAuth redirect URI printing, must be opt-in or derived from explicit tutorial/project configuration, never hard-coded into the framework.
-- Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (a *series site*) with an index page. *(Planned, Phase 2 task 2.1)*:
+- Supports **both layouts**: one tutorial per repo, or several tutorials in one repo (a *series site*) with an index page:
   - **Series layout**: `tutorials/<slug>/` (each a normal tutorial folder with `tutorial.mdx`) is published at `/<slug>/`, with its Preview, published code and captured outputs under that prefix. One Astro build serves the whole site; dev serves every tutorial and the index with live updates. The slug is the folder name and must match `[a-z0-9][a-z0-9-]*` (build error otherwise). Folders starting with `_` or `.` are ignored; other folders without `tutorial.mdx` are skipped with a warning; no tutorial at all is a build error.
   - **Activation**: integration option `tutorials: "<dir>"` / CLI `--tutorials <dir>`. Without options, the CLI uses `tutorials/` when there is no `tutorial/tutorial.mdx` and no root `tutorial.mdx` but at least one `tutorials/*/tutorial.mdx`. `--tutorial tutorials/<slug>` still serves one tutorial on its own. `tutorial` and `tutorials` together are an error.
   - **Tutorial metadata** (optional frontmatter, generic): `description` (string; also the page's meta description), `tags` (string list), `level` (free text, e.g. "Beginner"), `duration` (free text, e.g. "20 min"), `order` (number). The index sorts by `order`, then title.
@@ -215,8 +215,8 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 | Entity | Key fields | Notes |
 |---|---|---|
 | Tutorial | folder, MDX file, preview config (disabled / iframe / tab / both) | Contains steps, code files and images. A repo can hold one or several |
-| Series *(planned)* | tutorials folder, optional `index.mdx` or custom index page | Several tutorials published as one site with an index page |
-| Tutorial metadata *(planned)* | slug (folder), title, description, tags, level, duration, order | Frontmatter shown on the index cards |
+| Series | tutorials folder, optional `index.mdx` or custom index page | Several tutorials published as one site with an index page |
+| Tutorial metadata | slug (folder), title, description, tags, level, duration, order | Frontmatter shown on the index cards |
 | Step / Text block | id (deep link), MDX content, associated action | Fires its action when it comes into focus (scroll or keyboard) |
 | Code file | path (`server.js`, `checkout.html`…) | Final version; downloadable individually or as ZIP |
 | Code region | id | Marked with `#region <id>` / `#endregion`; referenced from MDX |

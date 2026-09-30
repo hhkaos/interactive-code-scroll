@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
+    "dev": "node ../../packages/interactive-code-scroll/bin/interactive-code-scroll.mjs dev",
+    "build": "node ../../packages/interactive-code-scroll/bin/interactive-code-scroll.mjs build",
+    "preview": "node ../../packages/interactive-code-scroll/bin/interactive-code-scroll.mjs serve",
     "check": "astro check"
   },
   "dependencies": {

@@ -26,6 +26,7 @@ ics serve
 |---|---|---|
 | `--root <dir>` | all | Project root. Defaults to the current directory. |
 | `--tutorial <dir>` | all | Tutorial folder inside the root. Defaults to `tutorial`, or `.` when a root-level `tutorial.mdx` is detected. |
+| `--tutorials <dir>` | all | Series site: folder whose subfolders are tutorials (`<dir>/<name>/tutorial.mdx`), each published at `/<name>/` with an index at `/`. Used automatically for `tutorials/` when there is no `tutorial/tutorial.mdx` and no root `tutorial.mdx`. Cannot be combined with `--tutorial`. |
 | `--base <path>` | `dev`, `build`, `serve` | Forwarded to Astro. Useful for GitHub Pages project sites. |
 | `--site <url>` | `dev`, `build`, `serve` | Forwarded to Astro. Used for absolute URLs and sitemap-like integrations. |
 | `--port <port>` | `dev`, `serve` | Forwarded to Astro. |
@@ -51,7 +52,14 @@ Run a tutorial stored at the project root:
 npm exec -- interactive-code-scroll dev --tutorial .
 ```
 
-Run a tutorial stored in a multi-tutorial repo:
+Run a series site (every tutorial under `tutorials/`, plus the index page). Without a single tutorial in the project, `tutorials/` is detected, so the option is only needed for another folder:
+
+```sh
+npm exec -- interactive-code-scroll dev
+npm exec -- interactive-code-scroll dev --tutorials guides
+```
+
+Run one tutorial of a series on its own:
 
 ```sh
 npm exec -- interactive-code-scroll dev --tutorial tutorials/auth

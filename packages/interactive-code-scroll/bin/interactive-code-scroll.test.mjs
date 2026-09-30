@@ -10,6 +10,7 @@ import {
   planCli,
   preflightMessage,
   resolveAstroBin,
+  seriesTutorials,
   validateProject,
   writeAstroConfig,
 } from "./interactive-code-scroll.mjs";
@@ -30,6 +31,62 @@ describe("interactive-code-scroll CLI", () => {
 
     expect(plan.tutorial).toBe(".");
     expect(plan.tutorialAutoDetected).toBe(true);
+  });
+
+  it("auto-detects a series site when tutorials/ holds tutorials and there is no single tutorial", () => {
+    const root = seriesRoot(["intro", "_drafts"]);
+    const plan = planCli(["dev"], { cwd: root });
+
+    expect(plan).toMatchObject({ tutorials: "tutorials", tutorialsAutoDetected: true, tutorialAutoDetected: false });
+    expect(preflightMessage(plan)).toContain("Tutorials: tutorials (1: intro)");
+    expect(preflightMessage(plan)).toContain('Detected tutorials/<name>/tutorial.mdx; using --tutorials "tutorials".');
+    expect(() => validateProject(plan)).not.toThrow();
+  });
+
+  it("prefers a single tutorial over tutorials/ when both exist", () => {
+    const withDefault = seriesRoot(["intro"]);
+    mkdirSync(join(withDefault, "tutorial"));
+    writeFileSync(join(withDefault, "tutorial", "tutorial.mdx"), "");
+    expect(planCli(["dev"], { cwd: withDefault })).toMatchObject({ tutorial: "tutorial", tutorials: undefined });
+
+    const withRoot = seriesRoot(["intro"]);
+    writeFileSync(join(withRoot, "tutorial.mdx"), "");
+    expect(planCli(["dev"], { cwd: withRoot })).toMatchObject({ tutorial: ".", tutorials: undefined });
+  });
+
+  it("does not auto-detect a series from ignored or empty folders", () => {
+    const root = seriesRoot(["_drafts"]);
+    mkdirSync(join(root, "tutorials", "notes"));
+    expect(planCli(["dev"], { cwd: root })).toMatchObject({ tutorials: undefined, tutorialsAutoDetected: false });
+  });
+
+  it("uses --tutorials for any folder and serves one series tutorial with --tutorial", () => {
+    const root = seriesRoot([]);
+    mkdirSync(join(root, "guides", "auth"), { recursive: true });
+    writeFileSync(join(root, "guides", "auth", "tutorial.mdx"), "");
+
+    const series = planCli(["build", "--tutorials", "guides"], { cwd: root, configPath: join(root, "config.mjs") });
+    expect(series).toMatchObject({ tutorials: "guides", tutorialsAutoDetected: false });
+    expect(series.astroArgs).toEqual(["build", "--root", root, "--config", "config.mjs"]);
+    writeAstroConfig(series);
+    expect(readFileSync(join(root, "config.mjs"), "utf8")).toContain('interactiveCodeScroll({ tutorials: "guides" })');
+
+    expect(planCli(["dev", "--tutorial", "guides/auth"], { cwd: root })).toMatchObject({ tutorial: "guides/auth", tutorials: undefined });
+  });
+
+  it("rejects --tutorial together with --tutorials", () => {
+    expect(() => planCli(["dev", "--tutorial", ".", "--tutorials", "tutorials"])).toThrow(/either --tutorial .* or --tutorials/);
+  });
+
+  it("explains an empty series folder", () => {
+    const root = seriesRoot(["_drafts"]);
+    expect(() => validateProject(planCli(["build", "--tutorials", "tutorials"], { cwd: root }))).toThrow(/tutorials\/<name>\/tutorial\.mdx/);
+    expect(seriesTutorials(root, "missing")).toEqual([]);
+  });
+
+  it("recommends --tutorials in doctor for a series site", () => {
+    const root = seriesRoot(["intro"]);
+    expect(doctor(planCli(["doctor"], { cwd: root }))).toMatch(/run dev -- --tutorials tutorials|dev --tutorials tutorials/);
   });
 
   it("maps serve to Astro preview and keeps generic Astro flags", () => {
@@ -152,3 +209,14 @@ describe("interactive-code-scroll CLI", () => {
     expect(pkg.scripts["ics:build"]).toBe("interactive-code-scroll build");
   });
 });
+
+/** Temporary project with `tutorials/<name>/tutorial.mdx` for each name. */
+function seriesRoot(names) {
+  const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+  mkdirSync(join(root, "tutorials"));
+  for (const name of names) {
+    mkdirSync(join(root, "tutorials", name));
+    writeFileSync(join(root, "tutorials", name, "tutorial.mdx"), "");
+  }
+  return root;
+}

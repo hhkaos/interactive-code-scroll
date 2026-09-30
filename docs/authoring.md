@@ -45,7 +45,7 @@ tutorials/
   _drafts/           # ignored: starts with "_"
 ```
 
-Enable it in `astro.config.mjs` (CLI support is coming):
+The CLI detects this layout on its own: with no `tutorial/tutorial.mdx` and no root `tutorial.mdx`, but at least one `tutorials/<name>/tutorial.mdx`, `interactive-code-scroll dev` serves the whole series. For another folder name, pass `--tutorials <dir>`; `--tutorial tutorials/<name>` still serves one tutorial on its own. In your own `astro.config.mjs`:
 
 ```js
 interactiveCodeScroll({ tutorials: "tutorials" })
@@ -98,7 +98,7 @@ Start with the REST tutorials if you are new to location services.
 
 #### Custom index page
 
-For full control, replace the index with your own Astro page. Keep it outside `src/pages/` (Astro would also publish it as a route of its own):
+For full control, replace the index with your own Astro page. Keep it outside `src/pages/` (Astro would also publish it as a route of its own). The CLI has no option for it, so set it in your own `astro.config.mjs` and run `astro dev` / `astro build`:
 
 ```js
 interactiveCodeScroll({ tutorials: "tutorials", index: "src/series-home.astro" })

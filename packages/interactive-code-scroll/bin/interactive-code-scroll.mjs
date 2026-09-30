@@ -12,7 +12,7 @@ const OPTION_ALIASES = new Map([
   ["-p", "--port"],
   ["-h", "--host"],
 ]);
-const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--base", "--site", "--port", "--outDir"]);
+const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--tutorials", "--base", "--site", "--port", "--outDir"]);
 const OPTIONAL_VALUE_OPTIONS = new Set(["--host"]);
 const BOOLEAN_OPTIONS = new Set(["--write"]);
 const COMMAND_FLAG_TARGETS = new Map([
@@ -30,6 +30,8 @@ const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
  *   root: string;
  *   tutorial: string;
  *   tutorialAutoDetected: boolean;
+ *   tutorials: string | undefined;
+ *   tutorialsAutoDetected: boolean;
  *   write: boolean;
  *   configPath: string;
  *   configArg: string;
@@ -94,9 +96,18 @@ export function planCli(argv, context = {}) {
 
   const root = resolve(cwd, options.get("--root") ?? ".");
   const explicitTutorial = options.get("--tutorial");
-  const defaultTutorial = existsSync(join(root, "tutorial.mdx")) && !existsSync(join(root, "tutorial", "tutorial.mdx")) ? "." : "tutorial";
+  const explicitTutorials = options.get("--tutorials");
+  if (explicitTutorial !== undefined && explicitTutorials !== undefined) {
+    throw new Error("Use either --tutorial (one tutorial) or --tutorials (a series site), not both.");
+  }
+  const hasDefaultTutorial = existsSync(join(root, "tutorial", "tutorial.mdx"));
+  const hasRootTutorial = existsSync(join(root, "tutorial.mdx"));
+  const tutorialsAutoDetected =
+    explicitTutorial === undefined && explicitTutorials === undefined && !hasDefaultTutorial && !hasRootTutorial && seriesTutorials(root, "tutorials").length > 0;
+  const tutorials = explicitTutorials ?? (tutorialsAutoDetected ? "tutorials" : undefined);
+  const defaultTutorial = hasRootTutorial && !hasDefaultTutorial ? "." : "tutorial";
   const tutorial = explicitTutorial ?? defaultTutorial;
-  const tutorialAutoDetected = explicitTutorial === undefined && tutorial === ".";
+  const tutorialAutoDetected = explicitTutorial === undefined && tutorials === undefined && tutorial === ".";
   const configDir = existsSync(join(root, "node_modules"))
     ? join(root, "node_modules", ".interactive-code-scroll")
     : join(root, ".interactive-code-scroll");
@@ -106,7 +117,7 @@ export function planCli(argv, context = {}) {
   const astroArgs = [astroCommand, "--root", root, "--config", configArg];
 
   for (const [option, value] of options) {
-    if (option === "--root" || option === "--tutorial" || option === "--write") continue;
+    if (option === "--root" || option === "--tutorial" || option === "--tutorials" || option === "--write") continue;
     const targets = COMMAND_FLAG_TARGETS.get(option);
     if (targets && !targets.has(command)) throw new Error(`${option} is only supported with ${[...targets].join(" or ")}.`);
     astroArgs.push(option);
@@ -114,18 +125,18 @@ export function planCli(argv, context = {}) {
   }
   astroArgs.push(...forwarded);
 
-  return { command, root, tutorial, tutorialAutoDetected, write: options.get("--write") === true, configPath, configArg, astroArgs };
+  return { command, root, tutorial, tutorialAutoDetected, tutorials, tutorialsAutoDetected, write: options.get("--write") === true, configPath, configArg, astroArgs };
 }
 
 /**
  * @param {CliPlan} plan
  */
 export function writeAstroConfig(plan) {
-  const tutorial = plan.tutorial.split("\\").join("/");
+  const option = plan.tutorials === undefined ? `tutorial: ${JSON.stringify(toPosix(plan.tutorial))}` : `tutorials: ${JSON.stringify(toPosix(plan.tutorials))}`;
   mkdirSync(dirname(plan.configPath), { recursive: true });
   writeFileSync(
     plan.configPath,
-    `import { defineConfig } from "astro/config";\nimport { interactiveCodeScroll } from ${JSON.stringify(integrationUrl)};\n\nexport default defineConfig({\n  integrations: [interactiveCodeScroll({ tutorial: ${JSON.stringify(tutorial)} })],\n});\n`,
+    `import { defineConfig } from "astro/config";\nimport { interactiveCodeScroll } from ${JSON.stringify(integrationUrl)};\n\nexport default defineConfig({\n  integrations: [interactiveCodeScroll({ ${option} })],\n});\n`,
   );
 }
 
@@ -133,13 +144,17 @@ export function writeAstroConfig(plan) {
  * @param {string | undefined} prefix
  */
 function help(prefix) {
-  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
+  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --tutorials <dir>  Series site: folder of tutorials (<dir>/<name>/tutorial.mdx).\n                     Used automatically for tutorials/ when there is no single tutorial.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
 }
 
 /**
  * @param {CliPlan} plan
  */
 export function validateProject(plan) {
+  if (plan.tutorials !== undefined) {
+    if (seriesTutorials(plan.root, plan.tutorials).length > 0) return;
+    throw new Error(`No tutorial found in the series folder.\n\nRoot:\n  ${plan.root}\n\nLooking for:\n  ${toPosix(plan.tutorials)}/<name>/tutorial.mdx`);
+  }
   const mdxPath = join(plan.root, plan.tutorial, "tutorial.mdx");
   if (existsSync(mdxPath)) return;
   const relativeMdxPath = relative(plan.root, mdxPath).split("\\").join("/");
@@ -168,12 +183,14 @@ export function resolveAstroBin(root) {
  */
 export function preflightMessage(plan) {
   const action = plan.command === "serve" ? "preview server" : plan.command === "dev" ? "dev server" : "build";
-  const lines = [
-    `InteractiveCodeScroll ${action} starting...`,
-    `Root: ${plan.root}`,
-    `Tutorial: ${plan.tutorial}`,
-    `Expected file: ${relative(plan.root, join(plan.root, plan.tutorial, "tutorial.mdx")).split("\\").join("/")}`,
-  ];
+  const lines = [`InteractiveCodeScroll ${action} starting...`, `Root: ${plan.root}`];
+  if (plan.tutorials !== undefined) {
+    const found = seriesTutorials(plan.root, plan.tutorials);
+    lines.push(`Tutorials: ${plan.tutorials} (${found.length}: ${found.join(", ")})`);
+  } else {
+    lines.push(`Tutorial: ${plan.tutorial}`, `Expected file: ${toPosix(relative(plan.root, join(plan.root, plan.tutorial, "tutorial.mdx")))}`);
+  }
+  if (plan.tutorialsAutoDetected) lines.push('Detected tutorials/<name>/tutorial.mdx; using --tutorials "tutorials".');
   if (plan.tutorialAutoDetected) lines.push('Detected root-level tutorial.mdx; using --tutorial ".".');
   if (!existsSync(join(plan.root, "package.json"))) {
     const pm = packageManager();
@@ -220,6 +237,26 @@ function unexpectedArgumentHelp(command, arg) {
   return `Unexpected argument: ${arg}\n\nDid you mean:\n  interactive-code-scroll ${command} --tutorial ${arg}\n\nIf you are using package.json scripts, pass CLI arguments after --:\n  ${pm.run("dev", `--tutorial ${arg}`)}\n\nNot:\n  npm run dev --tutorial ${arg}`;
 }
 
+/**
+ * Tutorial slugs of a series folder: subfolders with a `tutorial.mdx`, skipping `_` and `.` folders
+ * like the integration does.
+ * @param {string} root
+ * @param {string} dir
+ */
+export function seriesTutorials(root, dir) {
+  const seriesDir = join(root, dir);
+  if (!existsSync(seriesDir)) return [];
+  return readdirSync(seriesDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && !/^[_.]/.test(entry.name) && existsSync(join(seriesDir, entry.name, "tutorial.mdx")))
+    .map((entry) => entry.name)
+    .sort();
+}
+
+/** @param {string} path */
+function toPosix(path) {
+  return path.split("\\").join("/");
+}
+
 export function findTutorialCandidates(root, maxDepth = 3) {
   const ignored = new Set([".astro", ".git", "dist", "node_modules"]);
   /** @type {string[]} */
@@ -245,6 +282,7 @@ export function doctor(plan) {
   const astroFound = existsSync(astro);
   const candidates = findTutorialCandidates(plan.root);
   const recommendedTutorial = plan.tutorial !== "tutorial" || candidates.length === 0 ? plan.tutorial : candidates[0] === "tutorial.mdx" ? "." : dirname(candidates[0]);
+  const recommended = plan.tutorials === undefined ? `--tutorial ${recommendedTutorial}` : `--tutorials ${plan.tutorials}`;
   return [
     "InteractiveCodeScroll doctor",
     "",
@@ -257,7 +295,7 @@ export function doctor(plan) {
     "Tutorial candidates:",
     ...(candidates.length > 0 ? candidates.map((candidate) => `  ✓ ${candidate}`) : ["  ✗ none found"]),
     "Recommended command:",
-    `  ${pm.run("dev", `--tutorial ${recommendedTutorial}`)}`,
+    `  ${pm.run("dev", recommended)}`,
   ].join("\n");
 }
 
