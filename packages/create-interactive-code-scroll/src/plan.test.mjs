@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { nextSteps } from "./next-steps.mjs";
-import { complete, defaults } from "./options.mjs";
+import { complete, defaults, parseUse } from "./options.mjs";
 import { detectPackageManager } from "./package-manager.mjs";
 import { pagesWorkflow, planProject } from "./plan.mjs";
 import { ASTRO_VERSION, VERSION } from "./versions.mjs";
@@ -13,7 +13,7 @@ const paths = (/** @type {Map<string, string>} */ files) => [...files.keys()].fi
 
 describe("planProject", () => {
   it("writes a single web tutorial with a Preview and the Pages workflow", () => {
-    const files = plan({ layout: "single", type: "web", pages: true });
+    const files = plan({ layout: "single", use: parseUse("web:javascript"), pages: true });
     expect(paths(files)).toEqual([
       ".github/workflows/pages.yml",
       "tutorial/code/index.html",
@@ -36,7 +36,7 @@ describe("planProject", () => {
   });
 
   it("puts several languages of one tutorial in variants, sharing requests and outputs", () => {
-    const files = plan({ layout: "single", type: "rest", langs: ["curl", "python"], pages: false });
+    const files = plan({ layout: "single", use: parseUse("rest:curl,rest:python"), pages: false });
     expect(paths(files)).toEqual([
       "tutorial/code/curl/list-items.sh",
       "tutorial/code/python/list_items.py",
@@ -46,12 +46,12 @@ describe("planProject", () => {
     ]);
     const mdx = files.get("tutorial/tutorial.mdx");
     expect(mdx).toContain("variants:\n  - { id: curl, label: cURL, dir: curl, entry: list-items.sh }\n  - { id: python, label: Python, dir: python, entry: list_items.py }\n");
-    expect(mdx).toContain('<Step id="request" region="request" output="items.json" request="list-items">');
+    expect(mdx).toContain('<Step id="run" region="run" output="items.json" request="list-items">');
     expect(mdx).toContain("preview: off");
   });
 
   it("writes one tutorial per name and language for sibling tutorials, with series metadata", () => {
-    const files = plan({ layout: "series", tutorials: ["intro", "next"], type: "native", langs: ["kotlin", "csharp"], languagesAs: "siblings", pages: false });
+    const files = plan({ layout: "series", tutorials: ["intro", "next"], use: parseUse("native:kotlin,native:csharp"), languagesAs: "siblings", pages: false });
     expect(paths(files).filter((path) => path.endsWith(".mdx"))).toEqual([
       "tutorials/intro-csharp/tutorial.mdx",
       "tutorials/intro-kotlin/tutorial.mdx",
@@ -62,6 +62,36 @@ describe("planProject", () => {
       '---\ntitle: "Next (C#)"\ndescription: An app that prints a greeting.\ntags: [Native app, "C#"]\nlevel: Beginner\nduration: 10 min\norder: 2\nfamily: next\nfamilyLabel: "C#"\npreview: off\n---',
     );
     expect(files.get("tutorials/intro-csharp/code/Program.cs")).toContain("#region config");
+  });
+
+  it("mixes kinds as variants with one group of steps per kind, hidden from the other variants", () => {
+    const files = plan({ layout: "single", use: parseUse("web:javascript,script:python,script:node"), pages: false });
+    expect(paths(files)).toEqual([
+      "tutorial/code/javascript/index.html",
+      "tutorial/code/javascript/main.js",
+      "tutorial/code/javascript/style.css",
+      "tutorial/code/node/main.mjs",
+      "tutorial/code/python/main.py",
+      "tutorial/output/run.txt",
+      "tutorial/tutorial.mdx",
+    ]);
+    const mdx = files.get("tutorial/tutorial.mdx") ?? "";
+    expect(mdx).toContain("preview: both\nvariants:\n  - { id: javascript, label: JavaScript, dir: javascript, entry: main.js }\n  - { id: python, label: Python, dir: python, entry: main.py }\n  - { id: node, label: Node.js, dir: node, entry: main.mjs }\notherVariantSteps: hide\n---");
+    expect(mdx.match(/<Step [^>]+>/g)).toEqual([
+      '<Step id="page-web" file="index.html" region="page" only="javascript">',
+      '<Step id="config-web" region="config" only="javascript">',
+      '<Step id="run-web" region="run" only="javascript">',
+      '<Step id="config-script" region="config" only="python node">',
+      '<Step id="run-script" region="run" output="run.txt" only="python node">',
+    ]);
+  });
+
+  it("gives each series tutorial its own kinds and languages", () => {
+    const files = plan({ layout: "series", tutorials: ["map", "geo"], use: parseUse("web:javascript"), useBy: { geo: parseUse("rest:curl") }, pages: false });
+    expect(files.get("tutorials/map/tutorial.mdx")).toContain("preview: both");
+    expect(files.get("tutorials/geo/tutorial.mdx")).toContain("tags: [REST API, cURL]");
+    expect(files.has("tutorials/geo/requests/items.http")).toBe(true);
+    expect(files.has("tutorials/map/requests/items.http")).toBe(false);
   });
 
   it("adds the chosen index page and wires a custom one into the scripts", () => {

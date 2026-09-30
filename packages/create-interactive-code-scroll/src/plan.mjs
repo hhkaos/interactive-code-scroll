@@ -2,24 +2,26 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { LANGUAGES, TYPES, packageName, titleFrom } from "./options.mjs";
+import { KINDS, LANGUAGES, packageName, titleFrom, usesByTutorial } from "./options.mjs";
 
 /** @typedef {import("./options.mjs").Answers} Answers */
+/** @typedef {import("./options.mjs").Choice} Choice */
+/** @typedef {import("./options.mjs").Kind} Kind */
 /** @typedef {import("./options.mjs").Language} Language */
-/** @typedef {import("./options.mjs").TutorialType} TutorialType */
 
 const TEMPLATES = fileURLToPath(new URL("./templates/", import.meta.url));
 export const CUSTOM_INDEX = "site/index.astro";
 
-/** The file each language's steps point at (the variant `entry`). */
-/** @type {Record<TutorialType, Partial<Record<Language, string>>>} */
+/** The file each entry's steps point at (the variant `entry`). */
+/** @type {Record<Kind, Partial<Record<Language, string>>>} */
 const ENTRY = {
   web: { javascript: "main.js" },
-  rest: { curl: "list-items.sh", python: "list_items.py", javascript: "list-items.mjs" },
-  script: { python: "main.py", javascript: "main.mjs" },
+  rest: { curl: "list-items.sh", python: "list_items.py", node: "list-items.mjs" },
+  script: { python: "main.py", node: "main.mjs" },
   native: { kotlin: "Main.kt", swift: "main.swift", csharp: "Program.cs" },
 };
 
+/** @type {Record<Kind, string>} */
 const DESCRIPTION = {
   web: "A web page that greets the reader by name.",
   rest: "Call a REST API and read its JSON response.",
@@ -36,7 +38,7 @@ const DESCRIPTION = {
  */
 
 /**
- * @typedef {{ dir: string; title: string; langs: Language[]; order?: number; family?: string; familyLabel?: string }} TutorialPlan
+ * @typedef {{ dir: string; title: string; use: Choice[]; order?: number; family?: string; familyLabel?: string }} TutorialPlan
  */
 
 /**
@@ -45,19 +47,18 @@ const DESCRIPTION = {
  * @returns {TutorialPlan[]}
  */
 export function tutorialPlans(answers) {
-  if (answers.layout === "single") return [{ dir: "tutorial", title: titleFrom(answers.dir), langs: answers.langs }];
-  const siblings = answers.languagesAs === "siblings" && answers.langs.length > 1;
-  return answers.tutorials.flatMap((slug, i) =>
-    siblings
-      ? answers.langs.map((lang) => ({
-          dir: `tutorials/${slug}-${lang}`,
-          title: `${titleFrom(slug)} (${LANGUAGES[lang]})`,
-          langs: [lang],
+  if (answers.layout === "single") return [{ dir: "tutorial", title: titleFrom(answers.dir), use: answers.use }];
+  return usesByTutorial(answers).flatMap(([slug, use], i) =>
+    answers.languagesAs === "siblings" && use.length > 1
+      ? use.map((choice) => ({
+          dir: `tutorials/${slug}-${choice.lang}`,
+          title: `${titleFrom(slug)} (${LANGUAGES[choice.lang]})`,
+          use: [choice],
           order: i + 1,
           family: slug,
-          familyLabel: LANGUAGES[lang],
+          familyLabel: LANGUAGES[choice.lang],
         }))
-      : [{ dir: `tutorials/${slug}`, title: titleFrom(slug), langs: answers.langs, order: i + 1 }],
+      : [{ dir: `tutorials/${slug}`, title: titleFrom(slug), use, order: i + 1 }],
   );
 }
 
@@ -80,7 +81,7 @@ export function planProject(answers, versions) {
   files.set("README.md", readme(answers, title));
 
   for (const tutorial of tutorialPlans(answers)) {
-    for (const [path, content] of tutorialFiles(answers.type, tutorial, series)) files.set(`${tutorial.dir}/${path}`, content);
+    for (const [path, content] of tutorialFiles(tutorial, series)) files.set(`${tutorial.dir}/${path}`, content);
   }
   if (series && answers.index === "mdx") files.set("tutorials/index.mdx", indexMdx(title));
   if (custom) files.set(CUSTOM_INDEX, customIndex(title));
@@ -120,27 +121,37 @@ function packageJson(answers, versions, custom) {
 }
 
 /**
- * @param {TutorialType} type
+ * Kinds in first-use order.
+ * @param {Choice[]} use
+ * @returns {Kind[]}
+ */
+function kindsOf(use) {
+  return [...new Set(use.map((choice) => choice.kind))];
+}
+
+/**
  * @param {TutorialPlan} tutorial
  * @param {boolean} series
  * @returns {Map<string, string>}
  */
-function tutorialFiles(type, tutorial, series) {
+function tutorialFiles(tutorial, series) {
   /** @type {Map<string, string>} */
   const files = new Map();
-  const variants = tutorial.langs.length > 1;
-  for (const lang of tutorial.langs) {
-    const source = join(TEMPLATES, type, lang);
+  const variants = tutorial.use.length > 1;
+  for (const { kind, lang } of tutorial.use) {
+    const source = join(TEMPLATES, kind, lang);
     for (const file of listFiles(source)) {
       const [top, ...rest] = file.split("/");
       files.set(variants && top === "code" ? ["code", lang, ...rest].join("/") : file, readFileSync(join(source, file), "utf8"));
     }
   }
-  for (const shared of ["requests", "output"]) {
-    const source = join(TEMPLATES, type, shared);
-    for (const file of listFiles(source)) files.set(`${shared}/${file}`, readFileSync(join(source, file), "utf8"));
+  for (const kind of kindsOf(tutorial.use)) {
+    for (const shared of ["requests", "output"]) {
+      const source = join(TEMPLATES, kind, shared);
+      for (const file of listFiles(source)) files.set(`${shared}/${file}`, readFileSync(join(source, file), "utf8"));
+    }
   }
-  files.set("tutorial.mdx", tutorialMdx(type, tutorial, series));
+  files.set("tutorial.mdx", tutorialMdx(tutorial, series));
   return files;
 }
 
@@ -160,51 +171,71 @@ function listFiles(dir) {
 }
 
 /**
- * @param {TutorialType} type
  * @param {TutorialPlan} tutorial
  * @param {boolean} series
  */
-function tutorialMdx(type, tutorial, series) {
-  const variants = tutorial.langs.length > 1;
-  const entry = /** @param {Language} lang */ (lang) => /** @type {string} */ (ENTRY[type][lang]);
-  const lines = ["---", `title: ${yamlString(tutorial.title)}`, `description: ${yamlString(DESCRIPTION[type])}`];
+function tutorialMdx(tutorial, series) {
+  const variants = tutorial.use.length > 1;
+  const kinds = kindsOf(tutorial.use);
+  const mixed = kinds.length > 1;
+  const entry = /** @param {Choice} choice */ (choice) => /** @type {string} */ (ENTRY[choice.kind][choice.lang]);
+  const description = mixed ? "The same example in several languages." : DESCRIPTION[/** @type {Kind} */ (kinds[0])];
+  const lines = ["---", `title: ${yamlString(tutorial.title)}`, `description: ${yamlString(description)}`];
   if (series) {
-    lines.push(`tags: [${[TYPES[type].label, ...tutorial.langs.map((lang) => LANGUAGES[lang])].map(yamlString).join(", ")}]`);
-    lines.push("level: Beginner", "duration: 10 min", `order: ${tutorial.order}`);
+    const tags = [...kinds.map((kind) => KINDS[kind].label), ...tutorial.use.map((choice) => LANGUAGES[choice.lang])];
+    lines.push(`tags: [${tags.map(yamlString).join(", ")}]`, "level: Beginner", "duration: 10 min", `order: ${tutorial.order}`);
   }
   if (tutorial.family) lines.push(`family: ${tutorial.family}`, `familyLabel: ${yamlString(/** @type {string} */ (tutorial.familyLabel))}`);
-  lines.push(`preview: ${type === "web" ? "both" : "off"}`);
+  lines.push(`preview: ${kinds.includes("web") ? "both" : "off"}`);
   if (variants) {
     lines.push("variants:");
-    for (const lang of tutorial.langs) lines.push(`  - { id: ${lang}, label: ${yamlString(LANGUAGES[lang])}, dir: ${lang}, entry: ${entry(lang)} }`);
+    for (const choice of tutorial.use) lines.push(`  - { id: ${choice.lang}, label: ${yamlString(LANGUAGES[choice.lang])}, dir: ${choice.lang}, entry: ${entry(choice)} }`);
   }
+  // Each kind has its own steps; mixed kinds limit them to their variants and hide them from the others.
+  if (mixed) lines.push("otherVariantSteps: hide");
   lines.push("---", "");
-  // Without variants, each step names its file; with variants, the entry of the active variant is used.
-  const file = variants ? "" : ` file="${entry(/** @type {Language} */ (tutorial.langs[0]))}"`;
-  const pick = variants ? ["", "Pick a language in the code header: every step follows along.", ""] : [];
-  return [...lines, ...STEPS[type](file, pick)].join("\n");
+
+  const pick = variants ? ["", "Pick a language in the code header: every step follows along."] : [];
+  const intro = mixed
+    ? ["The same example in several languages. Replace it with your own tutorial: each step highlights a region of a file in `code/`."]
+    : INTRO[/** @type {Kind} */ (kinds[0])];
+  const body = ["<Intro>", "", "## What you will build", "", ...intro, ...pick, "", "</Intro>", ""];
+  for (const kind of kinds) {
+    const langs = tutorial.use.filter((choice) => choice.kind === kind);
+    // Without variants, each step names its file; with variants, the entry of the active variant is used.
+    const file = variants ? "" : ` file="${entry(/** @type {Choice} */ (langs[0]))}"`;
+    const only = mixed ? ` only="${langs.map((choice) => choice.lang).join(" ")}"` : "";
+    const id = /** @param {string} step */ (step) => (mixed ? `${step}-${kind}` : step);
+    body.push(...STEPS[kind]({ id, file, only }));
+  }
+  return [...lines, ...body].join("\n");
 }
 
-/** @type {Record<TutorialType, (file: string, pick: string[]) => string[]>} */
+/** @type {Record<Kind, string[]>} */
+const INTRO = {
+  web: ["A page that greets the reader by name. Replace this example with your own tutorial: each step highlights a region of a file in `code/`, and the Preview runs `code/index.html`."],
+  rest: ["A request to a REST API and its JSON response. `https://api.example.com` is a placeholder: point `requests/items.http` and the code at your API, and save a real response in `output/items.json`."],
+  script: ["A script that prints a greeting. Replace this example with your own code, and save what it prints in `output/run.txt`."],
+  native: ["An app that prints a greeting. Replace this example with your own code: readers download it with the ZIP button and run it in their IDE."],
+};
+
+/**
+ * @typedef {{ id: (step: string) => string; file: string; only: string }} StepAttrs
+ */
+
+/** @type {Record<Kind, (a: StepAttrs) => string[]>} */
 const STEPS = {
-  web: (file) => [
-    "<Intro>",
-    "",
-    "## What you will build",
-    "",
-    "A page that greets the reader by name. Replace this example with your own tutorial: each step highlights a region of a file in `code/`, and the Preview runs `code/index.html`.",
-    "",
-    "</Intro>",
-    "",
-    '<Step id="page" file="index.html" region="page">',
+  web: ({ id, file, only }) => [
+    // The page step shows index.html of the web variant (or of the only code folder).
+    `<Step id="${id("page")}" file="index.html" region="page"${only}>`,
     "",
     "## Add the page",
     "",
-    "`code/index.html` is the Preview entry. `#region page` and `#endregion page` comments mark the lines this step highlights; they are removed from the Preview and the downloads.",
+    "`index.html` is the Preview entry. `#region page` and `#endregion page` comments mark the lines this step highlights; they are removed from the Preview and the downloads.",
     "",
     "</Step>",
     "",
-    `<Step id="config"${file} region="config">`,
+    `<Step id="${id("config")}"${file} region="config"${only}>`,
     "",
     "## Configure",
     "",
@@ -214,7 +245,7 @@ const STEPS = {
     "",
     "</Step>",
     "",
-    `<Step id="render"${file} region="render">`,
+    `<Step id="${id("run")}"${file} region="run"${only}>`,
     "",
     "## Show the greeting",
     "",
@@ -223,17 +254,8 @@ const STEPS = {
     "</Step>",
     "",
   ],
-  rest: (file, pick) => [
-    "<Intro>",
-    "",
-    "## What you will build",
-    "",
-    "A request to a REST API and its JSON response. `https://api.example.com` is a placeholder: point `requests/items.http` and the code at your API, and save a real response in `output/items.json`.",
-    ...pick,
-    "",
-    "</Intro>",
-    "",
-    `<Step id="config"${file} region="config">`,
+  rest: ({ id, file, only }) => [
+    `<Step id="${id("config")}"${file} region="config"${only}>`,
     "",
     "## Set your API key",
     "",
@@ -243,7 +265,7 @@ const STEPS = {
     "",
     "</Step>",
     "",
-    `<Step id="request"${file} region="request" output="items.json" request="list-items">`,
+    `<Step id="${id("run")}"${file} region="run" output="items.json" request="list-items"${only}>`,
     "",
     "## Send the request",
     "",
@@ -252,17 +274,8 @@ const STEPS = {
     "</Step>",
     "",
   ],
-  script: (file, pick) => [
-    "<Intro>",
-    "",
-    "## What you will build",
-    "",
-    "A script that prints a greeting. Replace this example with your own code, and save what it prints in `output/run.txt`.",
-    ...pick,
-    "",
-    "</Intro>",
-    "",
-    `<Step id="config"${file} region="config">`,
+  script: ({ id, file, only }) => [
+    `<Step id="${id("config")}"${file} region="config"${only}>`,
     "",
     "## Configure",
     "",
@@ -272,7 +285,7 @@ const STEPS = {
     "",
     "</Step>",
     "",
-    `<Step id="run"${file} region="run" output="run.txt">`,
+    `<Step id="${id("run")}"${file} region="run" output="run.txt"${only}>`,
     "",
     "## Run it",
     "",
@@ -281,17 +294,8 @@ const STEPS = {
     "</Step>",
     "",
   ],
-  native: (file, pick) => [
-    "<Intro>",
-    "",
-    "## What you will build",
-    "",
-    "An app that prints a greeting. Replace this example with your own code: readers download it with the ZIP button and run it in their IDE.",
-    ...pick,
-    "",
-    "</Intro>",
-    "",
-    `<Step id="config"${file} region="config">`,
+  native: ({ id, file, only }) => [
+    `<Step id="${id("config")}"${file} region="config"${only}>`,
     "",
     "## Configure",
     "",
@@ -301,7 +305,7 @@ const STEPS = {
     "",
     "</Step>",
     "",
-    `<Step id="run"${file} region="run">`,
+    `<Step id="${id("run")}"${file} region="run"${only}>`,
     "",
     "## Print the greeting",
     "",

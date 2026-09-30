@@ -26,13 +26,15 @@ describe("non-interactive mode", () => {
     const result = run(["docs", "--type", "web"]);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("No terminal to ask in. Pass these options, or --yes for defaults:\n  --layout single|series\n  --pm npm|pnpm\n  --pages / --no-pages\n  --git / --no-git\n  --install / --no-install");
+    const series = run(["docs", "--layout", "series"]);
+    expect(series.stderr).toContain("  --use <kind:lang,...> (e.g. rest:curl,script:python), or --type <kind> --langs <list>");
     expect(existsSync(join(root, "docs"))).toBe(false);
   });
 
   it("reports invalid answers without writing anything", () => {
     const result = run(["bad", "--yes", "--type", "script", "--langs", "swift"]);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('--langs: "swift" is not available for script tutorials (python, javascript).');
+    expect(result.stderr).toContain('--use: "swift" is not available for script (python, node).');
     expect(existsSync(join(root, "bad"))).toBe(false);
   });
 
@@ -56,21 +58,26 @@ describe("non-interactive mode", () => {
 
 /** Every type, each layout and language model, and each index kind. */
 const matrix = [
-  { name: "web", args: ["--type", "web"], pages: ["index.html", "preview/index.html"] },
-  { name: "rest-variants", args: ["--type", "rest", "--langs", "curl,python,javascript"], pages: ["index.html", "output/items.json"] },
-  { name: "script", args: ["--type", "script", "--langs", "python"], pages: ["index.html", "output/run.txt"] },
-  { name: "native-variants", args: ["--type", "native", "--langs", "kotlin,swift,csharp"], pages: ["index.html"] },
+  { name: "web", args: ["--use", "web:javascript"], pages: ["index.html", "preview/index.html"] },
+  { name: "rest-variants", args: ["--use", "rest:curl,rest:python,rest:node"], pages: ["index.html", "output/items.json"] },
+  { name: "script", args: ["--use", "script:python"], pages: ["index.html", "output/run.txt"] },
+  { name: "native-variants", args: ["--use", "native:kotlin,native:swift,native:csharp"], pages: ["index.html"] },
+  { name: "mixed-variants", args: ["--use", "web:javascript,rest:curl,script:python,native:kotlin"], pages: ["index.html", "preview/javascript/index.html", "output/items.json", "output/run.txt"] },
   {
     name: "series-mdx",
-    args: ["--layout", "series", "--tutorials", "intro,advanced", "--type", "rest", "--langs", "curl,python", "--languages-as", "variants", "--index", "mdx"],
+    args: ["--layout", "series", "--tutorials", "intro,advanced", "--use", "rest:curl,rest:python", "--languages-as", "variants", "--index", "mdx"],
     pages: ["index.html", "intro/index.html", "advanced/output/items.json"],
   },
   {
-    name: "series-siblings",
-    args: ["--layout", "series", "--tutorials", "intro", "--type", "script", "--langs", "python,javascript", "--languages-as", "siblings"],
-    pages: ["index.html", "intro-python/index.html", "intro-javascript/index.html"],
+    name: "series-siblings-mixed",
+    args: ["--layout", "series", "--tutorials", "intro", "--use", "web:javascript,script:python,native:swift", "--languages-as", "siblings"],
+    pages: ["index.html", "intro-javascript/preview/index.html", "intro-python/output/run.txt", "intro-swift/index.html"],
   },
-  { name: "series-custom", args: ["--layout", "series", "--tutorials", "intro", "--type", "web", "--index", "custom"], pages: ["index.html", "intro/preview/index.html"] },
+  {
+    name: "series-per-tutorial-custom",
+    args: ["--layout", "series", "--tutorials", "map,geo", "--use", "map=web:javascript", "--use", "geo=rest:curl,rest:node", "--index", "custom"],
+    pages: ["index.html", "map/preview/index.html", "geo/output/items.json"],
+  },
 ];
 
 describe("generated projects build", () => {

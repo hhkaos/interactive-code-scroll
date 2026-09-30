@@ -6,7 +6,7 @@ BASE_URL = "https://api.example.com"
 API_KEY = "YOUR_API_KEY"  # @var apiKey
 # endregion
 
-# region request
+# region run
 request = urllib.request.Request(
     BASE_URL + "/items?limit=2",
     headers={"Authorization": "Bearer " + API_KEY},

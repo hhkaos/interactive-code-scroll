@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import * as p from "@clack/prompts";
 import { nextSteps } from "./next-steps.mjs";
-import { FLAGS, LANGUAGES, SLUG, TYPES, complete, defaults, list, parseArgs, unanswered, validate } from "./options.mjs";
+import { FLAGS, KINDS, LANGUAGES, SLUG, complete, defaults, list, parseArgs, parseUse, unanswered, validate } from "./options.mjs";
 import { commands, detectPackageManager, pnpmVersion } from "./package-manager.mjs";
 import { planProject } from "./plan.mjs";
 import { ASTRO_VERSION, VERSION } from "./versions.mjs";
@@ -21,11 +21,13 @@ Options:
   --layout single|series           One tutorial, or several with an index page.
   --tutorials <a,b>                Series: tutorial folder names.
   --index default|mdx|custom       Series: default index, tutorials/index.mdx, or site/index.astro.
-  --type web|rest|script|native    What the tutorial teaches.
-  --langs <list>                   Languages: javascript (web); curl, python, javascript (rest);
-                                   python, javascript (script); kotlin, swift, csharp (native).
-  --languages-as variants|siblings Series with several languages: one tutorial with a code
-                                   switcher, or one tutorial per language.
+  --use <kind:lang,...>            What the tutorials use, e.g. rest:curl,script:python. Kinds and
+                                   languages: web:javascript; rest:curl|python|node;
+                                   script:python|node; native:kotlin|swift|csharp.
+                                   Series: repeat as --use <name>=<kind:lang,...> for one tutorial.
+  --type <kind> --langs <list>     Shorthand for one kind: --type rest --langs curl,python.
+  --languages-as variants|siblings Series with several languages in a tutorial: one tutorial with a
+                                   code switcher, or one tutorial per language.
   --pm npm|pnpm                    Package manager.
   --pages / --no-pages             Add a GitHub Pages workflow.
   --git / --no-git                 Run git init.
@@ -43,6 +45,32 @@ class Cancelled extends Error {}
 function answer(value) {
   if (p.isCancel(value)) throw new Cancelled();
   return /** @type {Exclude<T, symbol>} */ (value);
+}
+
+/** @typedef {import("./options.mjs").Choice} Choice */
+
+/**
+ * One checkbox list of kind:language entries, grouped by kind.
+ * @param {string} message
+ * @param {Choice[]} initial
+ * @returns {Promise<Choice[]>}
+ */
+async function pickUse(message, initial) {
+  /** @type {Record<string, { value: string; label: string }[]>} */
+  const options = {};
+  for (const [kind, { label, hint, langs }] of Object.entries(KINDS)) {
+    options[`${label} (${hint})`] = langs.map((lang) => ({ value: `${kind}:${lang}`, label: LANGUAGES[lang] }));
+  }
+  const picked = answer(
+    await p.groupMultiselect({
+      message: `${message} (space to select, enter to confirm)`,
+      options,
+      initialValues: initial.map(({ kind, lang }) => `${kind}:${lang}`),
+      required: true,
+      selectableGroups: false,
+    }),
+  );
+  return parseUse(picked.join(","));
 }
 
 /**
@@ -95,34 +123,30 @@ async function ask(given, fallback) {
       );
     }
   }
-  if (a.type === undefined) {
-    a.type = answer(
-      await p.select({
-        message: a.layout === "series" ? "What do the tutorials teach?" : "What does the tutorial teach?",
-        options: Object.entries(TYPES).map(([value, type]) => ({ value: /** @type {import("./options.mjs").TutorialType} */ (value), label: type.label, hint: type.hint })),
-      }),
-    );
+  if (a.use === undefined) {
+    const names = a.layout === "series" ? a.tutorials ?? [] : [];
+    const uncovered = names.filter((slug) => a.useBy?.[slug] === undefined);
+    const same =
+      uncovered.length < 2 ||
+      answer(await p.confirm({ message: "Do all tutorials use the same languages?", initialValue: true }));
+    if (same) {
+      if (a.layout !== "series" || uncovered.length > 0) {
+        a.use = await pickUse(a.layout === "series" ? "What will the tutorials use?" : "What will the tutorial use?", fallback.use);
+      }
+    } else {
+      /** @type {Record<string, Choice[]>} */
+      const useBy = { ...a.useBy };
+      for (const slug of uncovered) useBy[slug] = await pickUse(`What will ${slug} use?`, fallback.use);
+      a.useBy = useBy;
+    }
   }
-  const available = TYPES[/** @type {import("./options.mjs").TutorialType} */ (a.type)].langs;
-  if (a.langs === undefined) {
-    a.langs =
-      available.length === 1
-        ? available
-        : answer(
-            await p.multiselect({
-              message: "Languages (space to select)",
-              options: available.map((lang) => ({ value: lang, label: LANGUAGES[lang] })),
-              initialValues: [/** @type {import("./options.mjs").Language} */ (available[0])],
-              required: true,
-            }),
-          );
-  }
-  if (a.languagesAs === undefined && a.layout === "series" && (a.langs?.length ?? 0) > 1) {
+  const uses = [a.use ?? [], ...Object.values(a.useBy ?? {})];
+  if (a.languagesAs === undefined && a.layout === "series" && uses.some((use) => use.length > 1)) {
     a.languagesAs = answer(
       await p.select({
-        message: "How do the languages differ?",
+        message: "With several languages in a tutorial",
         options: [
-          { value: /** @type {const} */ ("variants"), label: "Same explanation", hint: "one tutorial per name with a code switcher" },
+          { value: /** @type {const} */ ("variants"), label: "Same explanation", hint: "one tutorial with a code switcher" },
           { value: /** @type {const} */ ("siblings"), label: "Own explanation per language", hint: "one tutorial per language, linked by a menu" },
         ],
       }),

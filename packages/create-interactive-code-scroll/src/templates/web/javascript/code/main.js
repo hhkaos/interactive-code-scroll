@@ -2,6 +2,6 @@
 const name = "World"; // @var name
 // #endregion config
 
-// #region render
+// #region run
 document.querySelector("#greeting").textContent = `Hello, ${name}!`;
-// #endregion render
+// #endregion run
