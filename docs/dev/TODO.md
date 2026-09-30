@@ -15,7 +15,7 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 _Rules: `SPEC.md` (Project website and repository presentation)._
 
-- [ ] F1: README as a mini landing (logo, badges, quick start, features, links) + `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue/PR templates.
+- [ ] F1: repository labels (`showcase`, `enhancement`, `bug`) and GitHub private vulnerability reporting enabled; npm package READMEs aligned with the root README.
 - [ ] F1: repository description, topics and homepage (`gh repo edit`), once the site exists.
 - [ ] F2: `site/` landing page (Astro) + logo + VHS terminal recordings; Pages workflow publishes the site with getting-started under `/demo/getting-started/`.
 - [ ] F3: Starlight docs under `/docs/`, sourced from `docs/*.md`.

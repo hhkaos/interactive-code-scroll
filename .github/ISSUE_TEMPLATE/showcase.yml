@@ -1,0 +1,39 @@
+name: Showcase submission
+description: Share a tutorial you built with InteractiveCodeScroll.
+labels: [showcase]
+title: "Showcase: "
+body:
+  - type: markdown
+    attributes:
+      value: Built something with InteractiveCodeScroll? We would love to feature it.
+  - type: input
+    id: title
+    attributes:
+      label: Tutorial title
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Live URL
+      placeholder: https://…
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source repository (optional)
+  - type: textarea
+    id: description
+    attributes:
+      label: Short description
+      description: One or two sentences — topic, languages, and where it was used (talk, workshop, docs…).
+    validations:
+      required: true
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Permission
+      options:
+        - label: I agree that this tutorial can be listed on the InteractiveCodeScroll website and README.
+          required: true

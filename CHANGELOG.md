@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Community files: `CONTRIBUTING.md` (setup, repository layout, PR rules, working with AI agents), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md` (private vulnerability reporting, scope notes on persisted field values), issue forms (bug report, feature request, showcase submission) and a pull request template.
+
 ### Changed
+
+- Rewrote the README as a mini landing page: tagline, badges (npm, CI, license, beta, Astro, stars), light/dark screenshots of real tutorials, a three-line quick start, a feature table, examples, a beta section that invites issues, and a transparency section (built with AI coding agents, inspired by Stripe's quickstarts, stack, not an official Esri product).
 
 - Moved internal docs out of the repository root: `SPEC.md`, `PROJECT.md`, `TODO.md` and `docs/research/` now live in `docs/dev/`; `CLAUDE.md` and `AGENTS.md` stay at the root (agent tools load them from there) and point to the new paths. Moved the stable E2E fixtures (`framework-fixture*`) from `examples/` to `fixtures/`, so `examples/` only holds user-facing tutorials.
 

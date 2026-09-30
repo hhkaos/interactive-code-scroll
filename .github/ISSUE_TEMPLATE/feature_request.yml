@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an idea or improvement.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: InteractiveCodeScroll evolves with the needs of people who build tutorials. Tell us what you are trying to build.
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What are you trying to build or teach?
+      description: The tutorial, talk or workshop, and what gets in your way today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help?
+      description: Your idea for a solution. Sketches, MDX snippets or links to similar tools are welcome.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds or alternatives you considered
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to help implement this.

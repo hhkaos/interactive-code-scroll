@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/features.md
+    about: Check the features overview and authoring reference first.
+  - name: Report a security vulnerability
+    url: https://github.com/hhkaos/interactive-code-scroll/security/advisories/new
+    about: Please report vulnerabilities privately, not as public issues.

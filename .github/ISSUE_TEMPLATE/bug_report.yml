@@ -1,0 +1,53 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report this! A minimal tutorial that reproduces the problem helps the most.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Include the relevant `tutorial.mdx` excerpt, code markers or command.
+      placeholder: |
+        1. Run `npm create interactive-code-scroll@latest` with …
+        2. Add this step …
+        3. Run `npm run dev` and scroll to …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: interactive-code-scroll version
+      placeholder: 0.2.0-beta.0
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      multiple: true
+      options:
+        - dev (interactive-code-scroll dev)
+        - build / serve
+        - create-interactive-code-scroll wizard
+        - published site (GitHub Pages or other host)
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Node.js version, package manager, browser.
+      placeholder: macOS 15, Node 24, pnpm 11, Chrome 140
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      render: shell
