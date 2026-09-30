@@ -1,6 +1,6 @@
 # Authoring and API Reference
 
-This reference describes the tutorial files authors write. For implementation details, see `SPEC.md`.
+This reference describes the tutorial files authors write. For implementation details, see `SPEC.md`. To start from a working example of any layout below, run `npm create interactive-code-scroll@latest` ([Create a Project](cli.md#create-a-project)).
 
 ## Tutorial Layout
 
@@ -296,7 +296,7 @@ main {
 ```sh
 # #region setup
 npm init -y
-npm install -D astro interactive-code-scroll@alpha
+npm install -D astro interactive-code-scroll
 # #endregion setup
 ```
 

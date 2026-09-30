@@ -224,7 +224,7 @@ export function packageManager(env = process.env) {
     return {
       name: "yarn",
       init: "yarn init",
-      add: "yarn add -D interactive-code-scroll@alpha astro@7.3.5",
+      add: "yarn add -D interactive-code-scroll astro@7.3.5",
       exec: (args) => `yarn interactive-code-scroll ${args}`,
       run: (script, args) => `yarn ${script} ${args}`,
     };
@@ -233,7 +233,7 @@ export function packageManager(env = process.env) {
     return {
       name: "pnpm",
       init: "pnpm init",
-      add: "pnpm add -D interactive-code-scroll@alpha astro@7.3.5",
+      add: "pnpm add -D interactive-code-scroll astro@7.3.5",
       exec: (args) => `pnpm exec interactive-code-scroll ${args}`,
       run: (script, args) => `pnpm run ${script} -- ${args}`,
     };
@@ -241,7 +241,7 @@ export function packageManager(env = process.env) {
   return {
     name: "npm",
     init: "npm init",
-    add: "npm install -D interactive-code-scroll@alpha astro@7.3.5",
+    add: "npm install -D interactive-code-scroll astro@7.3.5",
     exec: (args) => `npm exec -- interactive-code-scroll ${args}`,
     run: (script, args) => `npm run ${script} -- ${args}`,
   };

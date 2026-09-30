@@ -1,4 +1,4 @@
-name: Publish npm package
+name: Publish npm packages
 
 on:
   push:
@@ -11,23 +11,23 @@ permissions:
 
 jobs:
   publish:
-    name: Publish interactive-code-scroll
+    name: Publish interactive-code-scroll and create-interactive-code-scroll
     runs-on: ubuntu-latest
     environment: npm-publish
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 11.13.1
           run_install: false
@@ -35,14 +35,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify tag matches package version
+      - name: Verify tag matches package versions
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
-          package_version="$(node -p "require('./packages/interactive-code-scroll/package.json').version")"
-          if [ "$tag_version" != "$package_version" ]; then
-            echo "Tag version ($tag_version) does not match package version ($package_version)." >&2
-            exit 1
-          fi
+          for package in interactive-code-scroll create-interactive-code-scroll; do
+            package_version="$(node -p "require('./packages/$package/package.json').version")"
+            if [ "$tag_version" != "$package_version" ]; then
+              echo "Tag version ($tag_version) does not match $package version ($package_version)." >&2
+              exit 1
+            fi
+          done
 
       - name: Run unit tests
         run: pnpm test
@@ -56,13 +58,33 @@ jobs:
       - name: Select npm dist-tag
         id: dist-tag
         run: |
-          version="$(node -p "require('./packages/interactive-code-scroll/package.json').version")"
-          if [[ "$version" == *-* ]]; then
+          version="${GITHUB_REF_NAME#v}"
+          # Alphas stay behind @alpha; betas, release candidates and stable releases are what `latest` installs.
+          if [[ "$version" == *-alpha* ]]; then
             echo "tag=alpha" >> "$GITHUB_OUTPUT"
           else
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish to npm
+      # A version already on npm is skipped, so a manual first publish (needed before trusted publishing
+      # can be configured for a new package) or a re-run does not fail the release.
+      - name: Publish interactive-code-scroll
         working-directory: packages/interactive-code-scroll
-        run: npm publish --access public --tag "${{ steps.dist-tag.outputs.tag }}"
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if npm view "interactive-code-scroll@$version" version > /dev/null 2>&1; then
+            echo "interactive-code-scroll@$version is already on npm; skipping."
+          else
+            npm publish --access public --tag "${{ steps.dist-tag.outputs.tag }}"
+          fi
+
+      # Published after the core: generated projects depend on the core version released here.
+      - name: Publish create-interactive-code-scroll
+        working-directory: packages/create-interactive-code-scroll
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if npm view "create-interactive-code-scroll@$version" version > /dev/null 2>&1; then
+            echo "create-interactive-code-scroll@$version is already on npm; skipping."
+          else
+            npm publish --access public --tag "${{ steps.dist-tag.outputs.tag }}"
+          fi

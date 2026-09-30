@@ -4,7 +4,7 @@ InteractiveCodeScroll builds guided, scroll-driven code tutorials from MDX and a
 
 Write the tutorial text once, keep the source files runnable, and let the generated static site synchronize explanations, highlighted code, images, form fields, Preview, copy and downloads. It is designed for technical writers, developer advocates and conference speakers who want one artifact that works both on stage and at home.
 
-> Status: early alpha. The framework is usable, but authoring APIs may still change before v1.
+> Status: beta. The framework is usable, but authoring APIs may still change before v1.
 
 ## What You Can Build
 
@@ -17,10 +17,17 @@ InteractiveCodeScroll is generic. ArcGIS, OAuth, maps and other topics belong to
 
 ## Quick Start
 
-Install Astro and InteractiveCodeScroll in an existing project:
+Create a project with the wizard. It asks for one tutorial or a series, what each tutorial uses (web app, REST API, script, native app, and their languages), the package manager and a GitHub Pages workflow, then writes a working example and prints the next steps:
 
 ```sh
-npm install -D astro interactive-code-scroll@alpha
+npm create interactive-code-scroll@latest my-tutorial
+# or: pnpm create interactive-code-scroll@latest my-tutorial
+```
+
+Or install Astro and InteractiveCodeScroll in an existing project:
+
+```sh
+npm install -D astro interactive-code-scroll
 ```
 
 Create this folder layout:
@@ -121,7 +128,7 @@ Before publishing, verify the package as an external project would consume it:
 pnpm test:pack
 ```
 
-This builds the package, creates a tarball with `pnpm pack`, installs it into a temporary tutorial project, runs `interactive-code-scroll build`, and checks that the static site was produced.
+This builds the package, creates tarballs of both packages with `pnpm pack`, installs them into temporary projects (a tutorial, a series with a custom index, and a series written by the packed scaffolder), builds each one and checks that the static site was produced.
 
 ## Examples
 

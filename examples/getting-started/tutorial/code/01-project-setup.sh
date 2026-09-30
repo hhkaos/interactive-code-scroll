@@ -2,7 +2,7 @@
 mkdir my-code-tutorial
 cd my-code-tutorial
 npm init -y
-npm install -D astro interactive-code-scroll@alpha
+npm install -D astro interactive-code-scroll
 # #endregion install
 
 # #region scripts

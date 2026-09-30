@@ -6,9 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.0] - 2026-09-30
+
+First beta: code variants, the Result pane and `.http` runner, series sites, sibling tutorials, GitHub Pages workflows and the project wizard. Published under the `latest` dist-tag (alphas stay under `alpha`).
+
 ### Added
 
-- Added the `create-interactive-code-scroll` package (Phase 2 task 2.3, not published yet): a wizard (`@clack/prompts`) that asks for the layout (one tutorial or a series with tutorial names and a default, `index.mdx` or custom Astro index), what each tutorial uses (one checkbox list grouped by kind: web app, REST API, script, native app, with runtime languages such as browser JavaScript and Node.js; kinds can be mixed; a series can use one list for all tutorials or one per tutorial), several languages as code variants or sibling tutorials, the package manager, a GitHub Pages workflow, `git init` and installing dependencies, then writes a minimal working project and prints the next steps. Every answer has a flag (`--yes` for defaults); without a terminal, missing answers name their flags. Existing files are never overwritten. Tests build every kind of generated project. The Pages workflow text now lives in the scaffolder's templates, and `docs/deployment.md` is checked against them.
+- Published `create-interactive-code-scroll` together with the core: one `v*` tag releases both packages at the same version (`publish-npm.yml` checks both versions against the tag). `pnpm test:pack` now also runs the packed scaffolder and builds the series it writes against the packed core.
+- Added the `create-interactive-code-scroll` package (Phase 2 task 2.3): a wizard (`@clack/prompts`) that asks for the layout (one tutorial or a series with tutorial names and a default, `index.mdx` or custom Astro index), what each tutorial uses (one checkbox list grouped by kind: web app, REST API, script, native app, with runtime languages such as browser JavaScript and Node.js; kinds can be mixed; a series can use one list for all tutorials or one per tutorial), several languages as code variants or sibling tutorials, the package manager, a GitHub Pages workflow, `git init` and installing dependencies, then writes a minimal working project and prints the next steps. Every answer has a flag (`--yes` for defaults); without a terminal, missing answers name their flags. Existing files are never overwritten. Tests build every kind of generated project. The Pages workflow text now lives in the scaffolder's templates, and `docs/deployment.md` is checked against them.
 - Added GitHub Pages workflows for author repos (Phase 2 task 2.4): `docs/deployment.md` has a copy-paste `.github/workflows/pages.yml` for npm and for pnpm that publishes a single tutorial or a series site, builds pull requests without deploying, uses per-job least-privilege permissions and takes `site`/`base` from `actions/configure-pages` (project site, user site or custom domain), overridable with repository variables `ICS_SITE` / `ICS_BASE`. A build test checks that every internal URL of the series fixture carries a project-site base and that both workflow flavors stay in sync.
 - Added a CI workflow that runs unit tests, `astro check` and E2E on every push to `main`.
 
@@ -58,6 +63,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added a GitHub Pages workflow to publish the getting-started tutorial on pushes to the default branch, with configurable site and base URL variables.
 
 ### Changed
+
+- Releases other than alphas publish under the npm `latest` dist-tag; install commands in the docs, the CLI hints and the getting-started tutorial drop `@alpha`.
 
 - Specified the `create-interactive-code-scroll` scaffolder as a wizard (Phase 2 task 2.3, `SPEC.md` Scaffolder); ArcGIS starters and `interactive-code-scroll add` are separate TODOs.
 - The getting-started Pages workflow takes `site`/`base` from `actions/configure-pages`; its overrides are now `ICS_SITE` / `ICS_BASE` (were `ICS_GETTING_STARTED_SITE` / `ICS_GETTING_STARTED_BASE`). Pages, checkout, Node and pnpm actions updated to their current majors.

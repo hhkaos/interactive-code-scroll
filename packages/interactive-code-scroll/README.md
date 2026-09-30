@@ -4,12 +4,21 @@ Build guided, interactive code tutorials from MDX and annotated source code.
 
 InteractiveCodeScroll generates a static tutorial site with synchronized prose, highlighted code regions, images, editable variables, Preview, copy and downloads. It is designed for technical writers, developer advocates and conference speakers.
 
-> Status: early alpha. Authoring APIs may still change before v1.
+> Status: beta. Authoring APIs may still change before v1.
 
 ## Install
 
+Start a new project with the wizard:
+
 ```sh
-npm install -D astro interactive-code-scroll@alpha
+npm create interactive-code-scroll@latest my-tutorial
+# or: pnpm create interactive-code-scroll@latest my-tutorial
+```
+
+Or add it to an existing project:
+
+```sh
+npm install -D astro interactive-code-scroll
 ```
 
 ## Tutorial Layout
