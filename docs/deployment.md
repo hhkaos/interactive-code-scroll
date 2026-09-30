@@ -164,14 +164,14 @@ In a series site, every tutorial is published under the base: `tutorials/auth/` 
 
 ### This repository
 
-`.github/workflows/publish-getting-started.yml` publishes the getting-started tutorial (`examples/getting-started`) with the same `configure-pages` defaults and the same `ICS_SITE` / `ICS_BASE` overrides. `.github/workflows/ci.yml` runs unit tests, `astro check` and the E2E suite on every push to `main`.
+`.github/workflows/ci.yml` runs unit tests, `astro check` and the E2E suite on every push to `main`.
 
 ## Manual Build
 
 From this repository:
 
 ```sh
-pnpm --filter example-getting-started build -- --base /interactive-code-scroll/ --site https://hhkaos.github.io
+pnpm --filter example-rest-geocode build -- --base /interactive-code-scroll/ --site https://hhkaos.github.io
 ```
 
 From a standalone tutorial or series project:

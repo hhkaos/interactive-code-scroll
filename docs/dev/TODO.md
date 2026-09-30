@@ -17,7 +17,7 @@ _Rules: `SPEC.md` (Project website and repository presentation)._
 
 - [ ] F1: repository labels (`showcase`, `enhancement`, `bug`) and GitHub private vulnerability reporting enabled; npm package READMEs aligned with the root README.
 - [ ] F1: repository description, topics and homepage (`gh repo edit`), once the site exists.
-- [ ] F2: `site/` landing page (Astro) + logo + VHS terminal recordings; Pages workflow publishes the site with getting-started under `/demo/getting-started/`.
+- [ ] F2: `site/` landing page (Astro) + logo + VHS terminal recordings; Pages workflow publishes the site with the REST geocoding tutorial embedded.
 - [ ] F3: Starlight docs under `/docs/`, sourced from `docs/*.md`.
 - [ ] F4: showcase (REST geocode, OAuth PKCE, community list + submission issue template), social preview image, GitHub release, announcement.
 

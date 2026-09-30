@@ -19,7 +19,7 @@ git clone https://github.com/hhkaos/interactive-code-scroll.git
 cd interactive-code-scroll
 pnpm install
 pnpm exec playwright install chromium   # once, for E2E tests
-pnpm docs:dev                           # getting-started tutorial in dev mode
+pnpm rest                               # REST example tutorial in dev mode
 ```
 
 ### Repository layout
@@ -28,7 +28,7 @@ pnpm docs:dev                           # getting-started tutorial in dev mode
 |---|---|
 | `packages/interactive-code-scroll/` | Core package: Astro integration, CLI, browser runtime |
 | `packages/create-interactive-code-scroll/` | `npm create interactive-code-scroll` wizard |
-| `examples/` | User-facing tutorials (getting started, REST geocoding, playground) |
+| `examples/` | User-facing tutorials (REST geocoding, OAuth PKCE, multi-SDK playground) |
 | `fixtures/` | Stable fake tutorials for E2E tests — not edited for content polish |
 | `e2e/` | Playwright tests (each fixture is built and served on its own port) |
 | `docs/` | Public documentation |
@@ -38,7 +38,6 @@ pnpm docs:dev                           # getting-started tutorial in dev mode
 
 ```sh
 pnpm dev             # main fixture in dev mode
-pnpm rest            # REST example in dev mode
 pnpm playground      # multi-SDK playground in dev mode
 pnpm test            # unit tests (Vitest)
 pnpm check           # type check (tsc + astro check)

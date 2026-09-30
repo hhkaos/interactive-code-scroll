@@ -114,7 +114,8 @@ docs/dev/research/  # plans, spikes and go/no-go reviews
 docs/features.md   # public one-page overview of every capability, linking to the reference
 docs/authoring.md  # public authoring/API reference for tutorial writers
 docs/cli.md        # public CLI reference
-docs/deployment.md # GitHub Pages/static hosting notes, including getting-started URL variables
+docs/quick-start.md # public quick start: create, write, publish a first tutorial
+docs/deployment.md # GitHub Pages/static hosting notes
 docs/upgrade.md    # public upgrade guide for alpha authors
 packages/create-interactive-code-scroll/  # `npm create interactive-code-scroll` wizard (plain .mjs + JSDoc, @clack/prompts)
   bin/create.mjs                    # entry → src/cli.mjs main()
@@ -155,9 +156,7 @@ fixtures/framework-fixture-variants/      # stable fake tutorial with code varia
 fixtures/framework-fixture-variants-hide/ # same, with `otherVariantSteps: hide`; E2E in e2e/variants-hide.spec.ts
 fixtures/framework-fixture-series/        # stable series site (tutorials alpha, beta, gamma, delta + skipped folders; alpha/beta/delta are one family); E2E in e2e/series.spec.ts
 examples/rest-geocode/              # public REST example (cURL / Python / JavaScript variants, requests/, output/, ArcGIS errors.json); `pnpm rest`; smoke E2E in e2e/rest-example.spec.ts (:4403)
-examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
 examples/multi-sdk-playground/      # local hands-on tutorial for multi-SDK features (Python, Kotlin, C#, SQL); `pnpm playground`; no E2E, grows with each plan task
-.github/workflows/publish-getting-started.yml # builds/deploys examples/getting-started on default-branch pushes
 e2e/                               # Playwright tests (against the built example)
 docs/dev/research/technical-base-spike.md  # spike findings (prototype code in git history, commit f265e61)
 ```
@@ -196,13 +195,11 @@ MDX + annotated code + images → build (validates references; fails on broken I
 
 When adding or changing framework behavior, update this fixture to include the new case whenever the behavior is observable through a tutorial, and add or adjust the corresponding Playwright assertions in `e2e/`. The real tutorials (for example `examples/oauth-pkce`) may change editorially; E2E tests for framework behavior should not depend on those editorial changes.
 
-### Public docs and dogfooding tutorial
+### Public docs
 
 Public author-facing docs live in `README.md` and `docs/`. `docs/features.md` is the one-page overview of every capability; `docs/authoring.md` is the how-to reference. Every feature commit updates both (features marked in progress there until they ship). The root README is the repository entry point; `packages/interactive-code-scroll/README.md` is the npm package entry point and should stay in sync at a high level.
 
-`examples/getting-started` is the dogfooding tutorial for first-time authors. It is not the regression fixture: use it for public author experience and docs validation, while keeping framework E2E behavior coverage in `fixtures/framework-fixture`.
-
-The getting-started tutorial is published by `.github/workflows/publish-getting-started.yml`. The workflow takes `site` and `base` from `actions/configure-pages` (project site, user site or custom domain) and can be overridden with repository variables `ICS_SITE` and `ICS_BASE`, like the author workflows in `docs/deployment.md`.
+`docs/quick-start.md` takes first-time authors from `npm create` to a published tutorial. It replaced the getting-started tutorial built with the tool (2026-09-30): a tutorial about writing tutorials was too recursive. Dogfooding happens through real-topic tutorials (`examples/rest-geocode`, `examples/oauth-pkce`).
 
 ---
 
@@ -366,8 +363,7 @@ The page structure is our own CSS grid (`div.layout` > `main.docs` + `div.gutter
 
 ## Deployment
 
-- GitHub Pages via GitHub Actions, on push to `main` or `master` (`publish-getting-started.yml`).
-- Current published site: the dogfooding getting-started tutorial (`examples/getting-started`).
+- No Pages workflow until the project website (`site/`, F2 in TODO) lands.
 - `site`/`base` from `actions/configure-pages` outputs (`origin`, `base_path`); repo variables `ICS_SITE` (origin, no trailing path) and `ICS_BASE` override them.
 - Author repos: copy-paste workflows (npm and pnpm) in `docs/deployment.md`, the same file for a single tutorial or a series. `test/pages.test.ts` keeps the two flavors in sync (they may differ only in package manager commands) and builds the series fixture through the CLI with `--base /repo/`, failing on any root-absolute URL without the base.
 - npm releases (`publish-npm.yml`, on `v*` tags): both packages at the same version (checked against the tag), core first, then `create-interactive-code-scroll`; `*-alpha*` → dist-tag `alpha`, anything else → `latest`. Trusted publishing (OIDC, environment `npm-publish`) needs a trusted publisher per package on npmjs.com; a new package's first publish is manual.

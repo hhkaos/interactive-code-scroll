@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
-  <title id="title">InteractiveCodeScroll logo</title>
-  <rect width="512" height="512" rx="96" fill="#0b1f2a" />
-  <path d="M128 144h256v48H128zM128 232h168v48H128zM128 320h256v48H128z" fill="#65b7ff" />
-  <path d="M328 224l56 32-56 32z" fill="#ffffff" />
-</svg>

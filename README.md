@@ -56,8 +56,8 @@ Built for people who teach developer technologies: developer advocates, trainers
 See every capability in [docs/features.md](docs/features.md).
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/getting-started-preview-dark.png">
-  <img alt="The getting-started tutorial: a field in the explanation panel updates the code and the live Preview below it." src=".github/assets/getting-started-preview-light.png" width="900">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/oauth-preview-dark.png">
+  <img alt="The OAuth PKCE tutorial: the current step highlights the HTML it explains, and the live Preview below the code shows the running app." src=".github/assets/oauth-preview-light.png" width="900">
 </picture>
 
 ## How it works
@@ -86,7 +86,6 @@ Markers are stripped from rendered and downloaded code. Broken references fail t
 
 ## Examples
 
-- **[Getting started](examples/getting-started)** — learn the authoring flow in a tutorial built with InteractiveCodeScroll itself.
 - **[Geocode an address with the ArcGIS REST API](examples/rest-geocode)** — cURL, Python and JavaScript variants, live requests, captured output and error explanations.
 - **[OAuth PKCE with the ArcGIS Maps SDK for JavaScript](https://github.com/EsriDevEvents/security-and-authentication-for-custom-applications-dtseu-2026/tree/main/demos/arcgis-js-sdk-user-auth)** — user authentication with a live Preview.
 
@@ -94,6 +93,7 @@ Built a tutorial with it? [Add it to the showcase](https://github.com/hhkaos/int
 
 ## Documentation
 
+- [Quick start](docs/quick-start.md) — from zero to a published tutorial
 - [Features](docs/features.md) — everything the tool can do, in one page
 - [Authoring and API reference](docs/authoring.md) — folder layout, frontmatter, components, code markers
 - [CLI reference](docs/cli.md) — `create`, `dev`, `build`, `serve`, `doctor`
