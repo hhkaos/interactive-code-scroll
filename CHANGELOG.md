@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Repository settings: description, topics, homepage (the project website), a `showcase` label, GitHub Pages from Actions and private vulnerability reporting.
 - Rewrote the README as a mini landing page: tagline, badges (npm, CI, license, beta, Astro, stars), light/dark screenshots of real tutorials, a three-line quick start, a feature table, examples, a beta section that invites issues, and a transparency section (built with AI coding agents, inspired by Stripe's quickstarts, stack, not an official Esri product).
 - Moved internal docs out of the repository root: `SPEC.md`, `PROJECT.md`, `TODO.md` and `docs/research/` now live in `docs/dev/`; `CLAUDE.md` and `AGENTS.md` stay at the root (agent tools load them from there) and point to the new paths. Moved the stable E2E fixtures (`framework-fixture*`) from `examples/` to `fixtures/`, so `examples/` only holds user-facing tutorials.
 

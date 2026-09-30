@@ -15,10 +15,8 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 _Rules: `SPEC.md` (Project website and repository presentation)._
 
-- [ ] F1: repository labels (`showcase`, `enhancement`, `bug`) and GitHub private vulnerability reporting enabled; npm package READMEs aligned with the root README.
-- [ ] F1: repository description and topics (`gh repo edit`).
+- [ ] F1: npm package READMEs aligned with the root README.
 - [ ] F2: VHS terminal recording (`.tape` script, GIF for the README, video for the landing "Start in 30 seconds" section in place of the static terminal); needs the core `0.2.0-beta.0` on npm.
-- [ ] F2: set the repository homepage to `https://www.rauljimenez.info/interactive-code-scroll/` once the site is deployed.
 - [ ] F3: Starlight docs under `/docs/`, sourced from `docs/*.md`. Handoff (2026-09-30):
   - `@astrojs/starlight` approved by the owner (dependency of `site/` only); pick the latest stable version compatible with Astro 7.3.5 and justify it.
   - Same visual line as the landing: dark by default, the tokens in `site/src/styles/global.css` (colors, accent gradient, system fonts), the logo in `site/public/logo.svg`, and the `ics:theme` storage key so landing, docs and tutorials share the theme choice. Get owner approval on screenshots before publishing.
