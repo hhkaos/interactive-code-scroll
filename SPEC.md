@@ -171,6 +171,22 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
   `docs/authoring.md` documents `views`/`views=`/`view=` and links to the guide; `docs/features.md` lists the capability; the ArcGIS preset README is the worked example of an installed plugin package.
 - **Upgrade guide**: documents how authors update existing tutorials when the framework, CLI or client runtime changes, including supported version ranges, breaking-change notes, migration steps and validation commands.
 
+### Project website and repository presentation *(planned)*
+Goal: a first visit makes people want to try it now or save it for later, and leads them through a clear adoption journey: **see** (live demo) → **try** (one command) → **learn** (docs) → **get inspired** (showcase) → **contribute** (issues, stars).
+
+- **Audience**: anyone who teaches developer technologies, with Esri's developer technologies trainers first (Esri staff, distributors, training partners, speakers). The framework stays generic; ArcGIS appears as showcase content, never as a core requirement.
+- **Ownership**: personal open-source project (`hhkaos/interactive-code-scroll`), designed so it can move to an Esri organization later. The site and README state it is not an official Esri product.
+- **Honesty as a feature**: the site and README say from the start that it is in **beta**, that it was built with AI coding agents in a short time, that it was inspired by Stripe's interactive tutorials, and which technologies it uses (Astro, MDX, Shiki, Calcite Design System). Beta is framed as "evolving fast with your needs": every page invites readers to open issues for bugs and ideas.
+- **Site** (`site/` in the monorepo, one GitHub Pages build, base path `/interactive-code-scroll/`, served at `rauljimenez.info/interactive-code-scroll/` through the owner's GitHub Pages custom domain):
+  - `/` — custom landing page (Astro). Sections: hero (logo, tagline, beta badge, copyable `npm create interactive-code-scroll@latest`, "Live demo" and "Star on GitHub" calls to action with the star count), a live scroll-driven demo built with InteractiveCodeScroll itself, a "start in 30 seconds" terminal recording, features with screenshots (presentation mode and clicker, code variants, live Preview, form fields → code variables, Result pane and request runner, ZIP downloads, light/dark), who it is for, showcase, "how it was built" (AI agents, Stripe inspiration, stack, beta), footer (docs, GitHub, npm, license, disclaimer). Animations are subtle and respect `prefers-reduced-motion`.
+  - `/docs/` — documentation built with Starlight (search, sidebar, light/dark), sourced from `docs/*.md`.
+  - `/demo/getting-started/` — the dogfooding getting-started tutorial (moves from the Pages root).
+  - `/showcase/…` — published tutorials: ArcGIS REST geocoding (multi-language variants) and OAuth PKCE with the ArcGIS Maps SDK for JavaScript, plus a "Built with InteractiveCodeScroll" list of community tutorials submitted through an issue template.
+  - Basic SEO and sharing: title, description, Open Graph/Twitter image. No analytics.
+- **Terminal recordings** are reproducible: VHS `.tape` scripts in the repo render a GIF for the README and an MP4/WebM for the site, regenerated when the CLI output changes.
+- **Repository presentation**: README as a mini landing (logo, tagline, badges: npm version, CI, license, beta status, GitHub stars; demo GIF; one-command quick start; features; links to site, docs and showcase); `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue templates (bug, feature, showcase submission) and a PR template; repository description, topics, homepage and social preview image. The root lists only what visitors and tools need: README, LICENSE, CHANGELOG, community files, `CLAUDE.md` and `AGENTS.md` (agent tools load them from the root; they also document how the project is built). Internal specs, plans and research live in `docs/dev/`; stable E2E fixtures live in `fixtures/`, apart from user-facing `examples/`.
+- **Phasing**: (1) clean repository and professional README + community files; (2) landing page + terminal recordings (visual review with the owner before publishing); (3) Starlight docs; (4) showcase, social preview, GitHub release and announcement.
+
 ---
 
 ## Key user flows
@@ -223,7 +239,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - Mobile-first: the experience is desktop-first.
 - Offline mode / PWA.
 - Visual regression and automated accessibility tests.
-- Analytics and SEO.
+- Analytics and SEO in generated tutorials. (The project website has basic SEO/Open Graph tags; no analytics anywhere.)
 
 ---
 
@@ -327,6 +343,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - **Series sites** (plan-mode pass 2026-09-30, task 2.1): one Astro build for every tutorial (not one build per tutorial), so dev serves the whole site and sibling tutorials (2.5) see each other; index customizable at three levels (default, `index.mdx` with `<TutorialList>` sections, custom Astro page); cards with a client-side tag filter; `--tutorials` plus auto-detection.
 - **Scaffolder as a wizard** (plan-mode pass 2026-09-30, task 2.3): questions compose the project instead of picking one of a few fixed templates; kind and language are one grouped checkbox list (2026-09-30 UX review; kinds can be mixed, languages are runtimes); several entries offer both variants and sibling tutorials; generated tutorials are minimal working examples; `@clack/prompts` for the terminal UI (dependency of the create package only); every answer has a flag for tests, agents and repeatable setups.
 - **Sibling tutorials** (2026-09-30, task 2.5; UX review the same day): a labeled menu of links in the page header, deliberately unlike the segmented variant switcher (navigation vs. in-place setting); navigation carries the step hash and the variant when the sibling has it; duplicate labels in a family are errors, one-tutorial families and `family` outside a series are warnings; index cards are not grouped.
+- **Project website** (2026-09-30): Astro + Starlight in `site/`, custom landing, docs under `/docs/`; published under the owner's GitHub Pages domain as a personal project that may move to Esri later; terminal recordings with VHS (reproducible, GIF works in the GitHub README) instead of asciinema (its player cannot be embedded in a README and does not show the browser). `CLAUDE.md`/`AGENTS.md` stay at the root because agent tools only load them from there; other internal docs move to `docs/dev/`.
 - **ArcGIS boundary for multi-SDK work**: the core stays generic; ArcGIS content ships as scaffolder templates and an optional preset package (e.g. map renderer for results). Nothing ArcGIS-specific enters core packages.
 
 ---

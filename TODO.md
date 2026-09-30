@@ -11,6 +11,17 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] Review with Calcite experts whether `calcite-shell` / `calcite-shell-panel` could replace the page grid (`div.layout`); requirements in PROJECT.md "Page layout".
 - [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.
 
+## Project website and repository presentation
+
+_Rules: `SPEC.md` (Project website and repository presentation)._
+
+- [ ] F1: move internal docs to `docs/dev/` and E2E fixtures to `fixtures/`.
+- [ ] F1: README as a mini landing (logo, badges, quick start, features, links) + `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue/PR templates.
+- [ ] F1: repository description, topics and homepage (`gh repo edit`), once the site exists.
+- [ ] F2: `site/` landing page (Astro) + logo + VHS terminal recordings; Pages workflow publishes the site with getting-started under `/demo/getting-started/`.
+- [ ] F3: Starlight docs under `/docs/`, sourced from `docs/*.md`.
+- [ ] F4: showcase (REST geocode, OAuth PKCE, community list + submission issue template), social preview image, GitHub release, announcement.
+
 ## Multi-SDK support
 
 _Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before implementing each phase._
