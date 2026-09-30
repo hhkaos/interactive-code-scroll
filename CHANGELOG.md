@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Added sibling tutorials (Phase 2 task 2.5): tutorials of a series site with the same frontmatter `family` get a "Tutorial language" switcher in the header (labels from `familyLabel`, ordered by `order` then label; segmented control up to four while it fits, else a dropdown). Choosing a sibling opens it on the same step id, else its top, and carries the code variant when the sibling has it. `family` without `familyLabel` (or the reverse) and a label used twice in a family fail the build; a family of one and `family` outside a series warn. New fixture tutorial `delta` in `examples/framework-fixture-series`.
+- Added sibling tutorials (Phase 2 task 2.5): tutorials of a series site with the same frontmatter `family` get a "Tutorial for: <label> ▾" menu of links in the header (labels from `familyLabel`, ordered by `order` then label; the prefix hides on narrow headers). Choosing a sibling opens it on the same step id, else its top, and carries the code variant when the sibling has it. `family` without `familyLabel` (or the reverse) and a label used twice in a family fail the build; a family of one and `family` outside a series warn. New fixture tutorial `delta` in `examples/framework-fixture-series`.
 
 - Added `<VarField persist="tutorial">` (Phase 2 task 2.2): a persisted value that belongs to one tutorial of a series site (key `ics:var:<tutorial>:<name>`), while plain `persist` stays shared by the whole site. On a single-tutorial site both use the site key. Any other `persist` value fails the build. The series fixture covers both scopes across two tutorials.
 
@@ -55,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- The explanations panel's top padding matches its side gutter (1.5rem instead of 2rem).
 - In dev mode, adding, changing or deleting a file under `code/`, `images/`, `requests/` or `output/` now re-runs the MDX validation without touching `tutorial.mdx`, and the browser error overlay opens `tutorial.mdx` at the first failing line.
 - `@var` values are now escaped for the file type and quote style (backslash, Kotlin/Dart/Groovy `$`, shell, PowerShell, SQL/YAML quote doubling, HTML/XML entities). Python f-strings, raw and triple-quoted strings and TOML literal strings are rejected at build time.
 - A variable name used in several files must have the same default literal everywhere; the build fails otherwise (see `docs/upgrade.md`).

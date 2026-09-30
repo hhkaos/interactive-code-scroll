@@ -8,38 +8,18 @@ export interface SiblingInfo {
 }
 
 /**
- * Segmented control while it fits the header without squeezing the title, else the dropdown. Measured with the
- * segmented control shown: both toggles happen before the next paint, so nothing flickers.
+ * Sibling tutorials (same `family`) are plain links in the header menu; when it opens, each `href` gains the
+ * current step and, when the sibling has it, the active variant.
  */
-function fitSwitcher(slot: HTMLElement, segmented: HTMLElement, dropdown: HTMLElement): void {
-  segmented.hidden = false;
-  dropdown.hidden = true;
-  const fits = slot.scrollWidth <= slot.clientWidth;
-  segmented.hidden = !fits;
-  dropdown.hidden = fits;
-}
-
-/** Header switcher between sibling tutorials (same `family`): loads the chosen one at the current step. */
 export function startFamily(siblings: readonly SiblingInfo[], variants: VariantsHandle | undefined): void {
-  const slot = document.querySelector<HTMLElement>(".family-switcher");
-  if (!slot || siblings.length === 0) return;
-  const control = slot.querySelector<HTMLElement & { value: string }>("#family-switcher");
-  const dropdown = slot.querySelector<HTMLElement>("#family-dropdown");
-
-  const go = (slug: string) => {
-    const sibling = siblings.find((s) => s.slug === slug);
-    if (!sibling || location.pathname === new URL(sibling.href, location.href).pathname) return;
-    location.assign(siblingUrl(sibling.href, location.href, location.hash, variants?.active().id, sibling.variants));
+  const bySlug = new Map(siblings.map((s) => [s.slug, s]));
+  const refresh = (link: HTMLElement & { href: string }) => {
+    const sibling = bySlug.get(link.dataset.tutorial ?? "");
+    if (sibling) link.href = siblingUrl(sibling.href, location.href, location.hash, variants?.active().id, sibling.variants);
   };
 
-  control?.addEventListener("calciteSegmentedControlChange", () => go(control.value));
-  dropdown?.addEventListener("calciteDropdownSelect", (event) => {
-    const item = (event.target as HTMLElement & { selectedItems?: HTMLElement[] }).selectedItems?.[0];
-    if (item?.dataset.tutorial) go(item.dataset.tutorial);
+  const dropdown = document.querySelector<HTMLElement>("#family-dropdown");
+  dropdown?.addEventListener("calciteDropdownBeforeOpen", () => {
+    for (const item of dropdown.querySelectorAll<HTMLElement & { href: string }>("calcite-dropdown-item[data-tutorial]")) refresh(item);
   });
-  if (control && dropdown) {
-    // Calcite components render (and size) late: watch the control as well as its room.
-    const fit = new ResizeObserver(() => fitSwitcher(slot, control, dropdown));
-    for (const el of [slot, control]) fit.observe(el);
-  }
 }

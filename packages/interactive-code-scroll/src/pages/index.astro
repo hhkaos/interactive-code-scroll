@@ -138,23 +138,21 @@ const clientData = JSON.stringify({
       {
         currentSibling && (
           <div slot="content-start" class="family-switcher">
-            {/* Segmented up to MAX_SEGMENTED tutorials; client/family.ts falls back to the dropdown when it does not fit. */}
-            {siblings.length <= MAX_SEGMENTED && (
-              <calcite-segmented-control id="family-switcher" label="Tutorial language" scale="s" data-own-keys>
-                {siblings.map((s) => (
-                  <calcite-segmented-control-item value={s.slug} checked={s.current || undefined}>
-                    {s.label}
-                  </calcite-segmented-control-item>
-                ))}
-              </calcite-segmented-control>
-            )}
-            <calcite-dropdown id="family-dropdown" scale="s" hidden={siblings.length <= MAX_SEGMENTED || undefined}>
-              <calcite-button slot="trigger" kind="neutral" appearance="outline" scale="s" icon-end="chevron-down" label="Tutorial language">
-                {currentSibling.label}
+            {/* Navigation, not a setting: a menu of links (client/family.ts adds the current step and variant). */}
+            <calcite-dropdown id="family-dropdown" scale="s" width="m">
+              <calcite-button
+                slot="trigger"
+                kind="neutral"
+                appearance="transparent"
+                scale="s"
+                icon-end="chevron-down"
+                label={`Tutorial for: ${currentSibling.label}`}
+              >
+                <span class="family-prefix">Tutorial for:</span> {currentSibling.label}
               </calcite-button>
-              <calcite-dropdown-group selection-mode="single" group-title="Tutorial language">
+              <calcite-dropdown-group selection-mode="single" group-title="This tutorial is available for">
                 {siblings.map((s) => (
-                  <calcite-dropdown-item data-tutorial={s.slug} selected={s.current || undefined}>
+                  <calcite-dropdown-item href={s.href} data-tutorial={s.slug} selected={s.current || undefined}>
                     {s.label}
                   </calcite-dropdown-item>
                 ))}

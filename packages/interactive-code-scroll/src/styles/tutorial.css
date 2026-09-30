@@ -116,7 +116,7 @@ body[data-docs-hidden] {
   overflow-wrap: break-word;
   counter-reset: step;
   /* The bottom room lets the last step reach the center line (--tail: computed by the step engine). */
-  padding: 2rem 0 var(--tail, 60vh);
+  padding: var(--gutter) 0 var(--tail, 60vh);
   background: var(--calcite-color-foreground-1);
   font-size: var(--calcite-font-size-md);
   line-height: 1.6;
@@ -914,14 +914,13 @@ body[data-maximized="code"] .media-panel:not([hidden]) ~ .media-restore {
   &:focus-visible { outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand)); outline-offset: -2px; }
 }
 
-/* Sibling tutorials: next to the title; shrinks first so client/family.ts can swap to the dropdown. */
+/* Sibling tutorials: a menu of links next to the title (navigation, unlike the variant switcher). */
 .family-switcher {
   display: flex;
   align-items: center;
   height: 100%;
-  min-width: 0;
-  overflow: hidden;
-  padding-inline: 0.75rem;
+  padding-inline: 0.5rem;
 }
-/* Natural width: a squeezed control would wrap its labels instead of overflowing the slot. */
-.family-switcher calcite-segmented-control { flex: none; }
+.family-prefix { color: var(--calcite-color-text-3); }
+/* Narrow headers keep the current label; the button's accessible name still says "Tutorial for". */
+@media (max-width: 720px) { .family-prefix { display: none; } }

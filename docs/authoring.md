@@ -151,7 +151,8 @@ family: display-map
 familyLabel: Python
 ```
 
-- The header shows a "Tutorial language" switcher after the title, listing the family's tutorials by `order`, then `familyLabel`. It is a segmented control for up to four tutorials while it fits the header, else a dropdown.
+- The header shows a "Tutorial for: <familyLabel> ▾" menu after the title, with links to the family's tutorials by `order`, then `familyLabel`.
+- Keep siblings and variants apart: a sibling's `familyLabel` should not repeat a language that is already a code variant of another sibling (for example a "REST API" tutorial with a Python variant next to a "Python" sibling), or readers see two "Python" choices that do different things.
 - Choosing a sibling opens it on the step with the same id when it exists (give matching steps the same `id`), else at its top. The reader's code variant carries over when the sibling has a variant with that id.
 - `family` and `familyLabel` go together, and each label must be unique within its family (build errors). A family with one tutorial, or `family` outside a series site, only warns.
 - The index keeps one card per tutorial.
@@ -185,7 +186,7 @@ logo: logo.svg
 | `duration` | string | none | Series index card, e.g. `20 min`. |
 | `order` | number | none | Series index position: lower first; tutorials without it come after, by title. Also orders the [sibling](#sibling-tutorials) switcher. |
 | `family` | string | none | Links [sibling tutorials](#sibling-tutorials) of a series site. Needs `familyLabel`. |
-| `familyLabel` | string | none | This tutorial's name in the sibling switcher, e.g. `Python`. Unique within the family. |
+| `familyLabel` | string | none | This tutorial's name in the sibling menu, e.g. `Python`. Unique within the family. |
 
 Highlighting is chosen by file extension. Built in: JavaScript/TypeScript (`js`, `mjs`, `cjs`, `jsx`, `ts`, `tsx`), `vue`, `html`, `css`, `json`/`geojson`, Markdown (`md`, `mdx`), shell (`sh`, `bash`), `ps1`, `yaml`/`yml`, `toml`, `ini`, `http`, Python (`py`), Kotlin (`kt`, `kts`), Gradle Groovy (`gradle`), `swift`, `java`, C# (`cs`), XML/XAML (`xml`, `xaml`), C++ (`cpp`, `h`, `hpp`), `qml`, `dart`, `sql` and `lua`. Other files show as plain text.
 
