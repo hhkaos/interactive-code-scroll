@@ -74,6 +74,29 @@ describe("interactive-code-scroll CLI", () => {
     expect(planCli(["dev", "--tutorial", "guides/auth"], { cwd: root })).toMatchObject({ tutorial: "guides/auth", tutorials: undefined });
   });
 
+  it("passes a custom index page of a series to the generated config", () => {
+    const root = seriesRoot(["intro"]);
+    mkdirSync(join(root, "src"));
+    writeFileSync(join(root, "src", "home.astro"), "");
+    const plan = planCli(["build", "--index", "src/home.astro"], { cwd: root, configPath: join(root, "config.mjs") });
+
+    expect(plan).toMatchObject({ tutorials: "tutorials", index: "src/home.astro" });
+    expect(plan.astroArgs).toEqual(["build", "--root", root, "--config", "config.mjs"]);
+    expect(preflightMessage(plan)).toContain("Index page: src/home.astro");
+    expect(() => validateProject(plan)).not.toThrow();
+    writeAstroConfig(plan);
+    expect(readFileSync(join(root, "config.mjs"), "utf8")).toContain('interactiveCodeScroll({ tutorials: "tutorials", index: "src/home.astro" })');
+  });
+
+  it("rejects an index page outside a series, missing or not .astro", () => {
+    const single = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    expect(() => planCli(["dev", "--index", "home.astro"], { cwd: single })).toThrow(/--index .* needs --tutorials/);
+
+    const root = seriesRoot(["intro"]);
+    expect(() => validateProject(planCli(["dev", "--index", "home.astro"], { cwd: root }))).toThrow(/Index page not found[\s\S]*home\.astro/);
+    expect(() => validateProject(planCli(["dev", "--index", "home.mdx"], { cwd: root }))).toThrow(/must be an \.astro page/);
+  });
+
   it("rejects --tutorial together with --tutorials", () => {
     expect(() => planCli(["dev", "--tutorial", ".", "--tutorials", "tutorials"])).toThrow(/either --tutorial .* or --tutorials/);
   });

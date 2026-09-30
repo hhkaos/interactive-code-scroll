@@ -49,8 +49,8 @@ try {
     throw new Error("Pack smoke test did not produce dist/index.html");
   }
 
-  // Series site with a custom index page: the public `interactive-code-scroll/series` module.
-  // The CLI has no series support yet, so this project builds with its own astro.config.mjs.
+  // Series site with a custom index page, through the packed CLI (tutorials/ auto-detected) and the
+  // public `interactive-code-scroll/series` module.
   cpSync(join(root, "examples", "framework-fixture-series", "tutorials"), join(seriesDir, "tutorials"), { recursive: true });
   rmSync(join(seriesDir, "tutorials", "index.mdx"));
   writeFileSync(
@@ -59,7 +59,7 @@ try {
       {
         private: true,
         type: "module",
-        scripts: { build: "astro build" },
+        scripts: { build: "interactive-code-scroll build --index home.astro" },
         dependencies: { astro: "7.3.5", "interactive-code-scroll": `file:${tarball}` },
       },
       null,
@@ -67,15 +67,6 @@ try {
     ),
   );
   writeFileSync(join(seriesDir, "pnpm-workspace.yaml"), "allowBuilds:\n  esbuild: true\n");
-  writeFileSync(
-    join(seriesDir, "astro.config.mjs"),
-    [
-      'import { defineConfig } from "astro/config";',
-      'import { interactiveCodeScroll } from "interactive-code-scroll";',
-      'export default defineConfig({ integrations: [interactiveCodeScroll({ tutorials: "tutorials", index: "home.astro" })] });',
-      "",
-    ].join("\n"),
-  );
   writeFileSync(
     join(seriesDir, "home.astro"),
     [

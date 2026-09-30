@@ -27,6 +27,7 @@ ics serve
 | `--root <dir>` | all | Project root. Defaults to the current directory. |
 | `--tutorial <dir>` | all | Tutorial folder inside the root. Defaults to `tutorial`, or `.` when a root-level `tutorial.mdx` is detected. |
 | `--tutorials <dir>` | all | Series site: folder whose subfolders are tutorials (`<dir>/<name>/tutorial.mdx`), each published at `/<name>/` with an index at `/`. Used automatically for `tutorials/` when there is no `tutorial/tutorial.mdx` and no root `tutorial.mdx`. Cannot be combined with `--tutorial`. |
+| `--index <file>` | all | Series site only: `.astro` page, relative to the root, that replaces the index page. See [Custom index page](authoring.md#custom-index-page). |
 | `--base <path>` | `dev`, `build`, `serve` | Forwarded to Astro. Useful for GitHub Pages project sites. |
 | `--site <url>` | `dev`, `build`, `serve` | Forwarded to Astro. Used for absolute URLs and sitemap-like integrations. |
 | `--port <port>` | `dev`, `serve` | Forwarded to Astro. |
@@ -57,6 +58,12 @@ Run a series site (every tutorial under `tutorials/`, plus the index page). With
 ```sh
 npm exec -- interactive-code-scroll dev
 npm exec -- interactive-code-scroll dev --tutorials guides
+```
+
+Replace the series index with your own Astro page:
+
+```sh
+npm exec -- interactive-code-scroll dev --index src/series-home.astro
 ```
 
 Run one tutorial of a series on its own:

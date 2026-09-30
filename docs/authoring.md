@@ -98,7 +98,13 @@ Start with the REST tutorials if you are new to location services.
 
 #### Custom index page
 
-For full control, replace the index with your own Astro page. Keep it outside `src/pages/` (Astro would also publish it as a route of its own). The CLI has no option for it, so set it in your own `astro.config.mjs` and run `astro dev` / `astro build`:
+For full control, replace the index with your own Astro page. Keep it outside `src/pages/` (Astro would also publish it as a route of its own). Pass it to the CLI:
+
+```sh
+interactive-code-scroll dev --index src/series-home.astro
+```
+
+or set it in your own `astro.config.mjs`:
 
 ```js
 interactiveCodeScroll({ tutorials: "tutorials", index: "src/series-home.astro" })

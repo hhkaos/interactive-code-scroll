@@ -12,7 +12,7 @@ const OPTION_ALIASES = new Map([
   ["-p", "--port"],
   ["-h", "--host"],
 ]);
-const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--tutorials", "--base", "--site", "--port", "--outDir"]);
+const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--tutorials", "--index", "--base", "--site", "--port", "--outDir"]);
 const OPTIONAL_VALUE_OPTIONS = new Set(["--host"]);
 const BOOLEAN_OPTIONS = new Set(["--write"]);
 const COMMAND_FLAG_TARGETS = new Map([
@@ -32,6 +32,7 @@ const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
  *   tutorialAutoDetected: boolean;
  *   tutorials: string | undefined;
  *   tutorialsAutoDetected: boolean;
+ *   index: string | undefined;
  *   write: boolean;
  *   configPath: string;
  *   configArg: string;
@@ -108,6 +109,10 @@ export function planCli(argv, context = {}) {
   const defaultTutorial = hasRootTutorial && !hasDefaultTutorial ? "." : "tutorial";
   const tutorial = explicitTutorial ?? defaultTutorial;
   const tutorialAutoDetected = explicitTutorial === undefined && tutorials === undefined && tutorial === ".";
+  const index = options.get("--index");
+  if (index !== undefined && tutorials === undefined) {
+    throw new Error("--index replaces the index page of a series site; it needs --tutorials <dir> or a detected tutorials/ folder.");
+  }
   const configDir = existsSync(join(root, "node_modules"))
     ? join(root, "node_modules", ".interactive-code-scroll")
     : join(root, ".interactive-code-scroll");
@@ -117,7 +122,7 @@ export function planCli(argv, context = {}) {
   const astroArgs = [astroCommand, "--root", root, "--config", configArg];
 
   for (const [option, value] of options) {
-    if (option === "--root" || option === "--tutorial" || option === "--tutorials" || option === "--write") continue;
+    if (option === "--root" || option === "--tutorial" || option === "--tutorials" || option === "--index" || option === "--write") continue;
     const targets = COMMAND_FLAG_TARGETS.get(option);
     if (targets && !targets.has(command)) throw new Error(`${option} is only supported with ${[...targets].join(" or ")}.`);
     astroArgs.push(option);
@@ -125,14 +130,17 @@ export function planCli(argv, context = {}) {
   }
   astroArgs.push(...forwarded);
 
-  return { command, root, tutorial, tutorialAutoDetected, tutorials, tutorialsAutoDetected, write: options.get("--write") === true, configPath, configArg, astroArgs };
+  return { command, root, tutorial, tutorialAutoDetected, tutorials, tutorialsAutoDetected, index, write: options.get("--write") === true, configPath, configArg, astroArgs };
 }
 
 /**
  * @param {CliPlan} plan
  */
 export function writeAstroConfig(plan) {
-  const option = plan.tutorials === undefined ? `tutorial: ${JSON.stringify(toPosix(plan.tutorial))}` : `tutorials: ${JSON.stringify(toPosix(plan.tutorials))}`;
+  const option =
+    plan.tutorials === undefined
+      ? `tutorial: ${JSON.stringify(toPosix(plan.tutorial))}`
+      : `tutorials: ${JSON.stringify(toPosix(plan.tutorials))}${plan.index === undefined ? "" : `, index: ${JSON.stringify(toPosix(plan.index))}`}`;
   mkdirSync(dirname(plan.configPath), { recursive: true });
   writeFileSync(
     plan.configPath,
@@ -144,7 +152,7 @@ export function writeAstroConfig(plan) {
  * @param {string | undefined} prefix
  */
 function help(prefix) {
-  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --tutorials <dir>  Series site: folder of tutorials (<dir>/<name>/tutorial.mdx).\n                     Used automatically for tutorials/ when there is no single tutorial.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
+  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --tutorials <dir>  Series site: folder of tutorials (<dir>/<name>/tutorial.mdx).\n                     Used automatically for tutorials/ when there is no single tutorial.\n  --index <file>     Series site: .astro page that replaces the index page.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
 }
 
 /**
@@ -152,6 +160,7 @@ function help(prefix) {
  */
 export function validateProject(plan) {
   if (plan.tutorials !== undefined) {
+    if (plan.index !== undefined) validateIndexPage(plan.root, plan.index);
     if (seriesTutorials(plan.root, plan.tutorials).length > 0) return;
     throw new Error(`No tutorial found in the series folder.\n\nRoot:\n  ${plan.root}\n\nLooking for:\n  ${toPosix(plan.tutorials)}/<name>/tutorial.mdx`);
   }
@@ -167,6 +176,15 @@ export function validateProject(plan) {
     : `${commandSuggestion(plan.command, ".", pm)}\n  ${commandSuggestion(plan.command, "<folder>", pm)}`;
   const scriptTutorial = first ? (first === "tutorial.mdx" ? "." : dirname(first).split("\\").join("/")) : "<folder>";
   throw new Error(`Tutorial file not found.\n\nRoot:\n  ${plan.root}\n\nLooking for:\n  ${relativeMdxPath}${detected}\n\nTry:\n  ${suggestion}\n\nIf using package.json scripts, pass CLI arguments after --:\n  ${pm.run("dev", `--tutorial ${scriptTutorial}`)}`);
+}
+
+/**
+ * @param {string} root
+ * @param {string} index
+ */
+function validateIndexPage(root, index) {
+  if (!index.endsWith(".astro")) throw new Error(`--index must be an .astro page, got "${index}".`);
+  if (!existsSync(join(root, index))) throw new Error(`Index page not found.\n\nRoot:\n  ${root}\n\nLooking for:\n  ${toPosix(index)}`);
 }
 
 export function resolveAstroBin(root) {
@@ -187,6 +205,7 @@ export function preflightMessage(plan) {
   if (plan.tutorials !== undefined) {
     const found = seriesTutorials(plan.root, plan.tutorials);
     lines.push(`Tutorials: ${plan.tutorials} (${found.length}: ${found.join(", ")})`);
+    if (plan.index !== undefined) lines.push(`Index page: ${toPosix(plan.index)}`);
   } else {
     lines.push(`Tutorial: ${plan.tutorial}`, `Expected file: ${toPosix(relative(plan.root, join(plan.root, plan.tutorial, "tutorial.mdx")))}`);
   }
