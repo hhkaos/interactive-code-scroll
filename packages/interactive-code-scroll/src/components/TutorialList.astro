@@ -2,9 +2,10 @@
 import { tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { parseTagList, selectCards } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
+import "../styles/series-list.css";
 
-// Attributes were validated at MDX compile time (index.mdx); tag and level values are checked here,
-// where the tutorials' metadata is known.
+// Attributes are validated at MDX compile time in index.mdx (a custom index page gets its types);
+// tag and level values are checked here, where the tutorials' metadata is known.
 interface Props {
   /** Comma-separated tags: the list shows tutorials with any of them. */
   tags?: string;
@@ -17,10 +18,10 @@ const cards = seriesCards(tutorials, import.meta.env.BASE_URL);
 const wanted = parseTagList(tags);
 const unknownTags = wanted.filter((tag) => !cards.some((card) => card.tags.includes(tag)));
 if (unknownTags.length > 0) {
-  throw new Error(`index.mdx <TutorialList tags="${tags}">: no tutorial has the tag(s) ${unknownTags.map((t) => `"${t}"`).join(", ")}`);
+  throw new Error(`<TutorialList tags="${tags}">: no tutorial has the tag(s) ${unknownTags.map((t) => `"${t}"`).join(", ")}`);
 }
 if (level !== undefined && !cards.some((card) => card.level === level)) {
-  throw new Error(`index.mdx <TutorialList level="${level}">: no tutorial has that level`);
+  throw new Error(`<TutorialList level="${level}">: no tutorial has that level`);
 }
 const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : { level }) });
 ---
@@ -63,3 +64,8 @@ const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : 
   </ul>
   <p class="series-empty" hidden>No tutorials match the selected tags.</p>
 </div>
+
+<script>
+  import "@esri/calcite-components/main.css";
+  import "@esri/calcite-components/components/calcite-icon";
+</script>

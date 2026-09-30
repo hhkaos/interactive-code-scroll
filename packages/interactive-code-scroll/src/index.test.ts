@@ -91,6 +91,24 @@ describe("interactiveCodeScroll", () => {
     expect(plugin.hotUpdate.call({ environment }, { file: join(seriesDir, "images", "new.svg"), modules: [] })).toEqual([indexMdx, virtual]);
   });
 
+  it("replaces the series index with a custom index page", () => {
+    const root = projectWithTutorial("tutorials/alpha");
+    writeFileSync(join(root, "home.astro"), "<h1>Home</h1>\n");
+    const { injectRoute } = runSetup(root, { tutorials: "tutorials", index: "home.astro" });
+    expect(injectRoute.mock.calls[0]![0]).toEqual({ pattern: "/", entrypoint: pathToFileURL(join(root, "home.astro")) });
+  });
+
+  it("rejects an index page that is not usable", () => {
+    const root = projectWithTutorial("tutorials/alpha");
+    writeFileSync(join(root, "home.md"), "# Home\n");
+    expect(() => runSetup(root, { tutorials: "tutorials", index: "missing.astro" })).toThrow(/index page not found at .*missing\.astro/);
+    expect(() => runSetup(root, { tutorials: "tutorials", index: "home.md" })).toThrow(/"index" must be an \.astro page, got "home\.md"/);
+    expect(() => runSetup(projectWithTutorial(), { index: "home.astro" })).toThrow(/"index" .* needs "tutorials"/);
+    writeFileSync(join(root, "home.astro"), "<h1>Home</h1>\n");
+    writeFileSync(join(root, "tutorials", "index.mdx"), "# Index\n");
+    expect(() => runSetup(root, { tutorials: "tutorials", index: "home.astro" })).toThrow(/index\.mdx is not used with a custom "index" page/);
+  });
+
   it("rejects tutorial and tutorials together", () => {
     expect(() => runSetup(projectWithTutorial(), { tutorial: "tutorial", tutorials: "tutorials" })).toThrow(/either "tutorial".*or "tutorials"/);
   });

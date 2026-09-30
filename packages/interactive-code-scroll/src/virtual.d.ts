@@ -9,3 +9,8 @@ declare module "virtual:interactive-code-scroll/tutorial" {
   /** Image path (relative to the series folder's `images/`) → public URL. */
   export const seriesImages: Record<string, string>;
 }
+// Plain tsc (package build, `pnpm check`) cannot read `.astro` files; Astro's tooling resolves them first.
+declare module "*.astro" {
+  const Component: (props: Record<string, unknown>) => unknown;
+  export default Component;
+}

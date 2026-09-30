@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Added custom series index pages (Phase 2 task 2.1): integration option `index: "<path>.astro"` replaces the index at `/` (needs `tutorials`; build error with `tutorials/index.mdx`, a missing file or another extension). New public module `interactive-code-scroll/series` exports `tutorials` (slug, href, title and metadata in index order), `TutorialList`, `TutorialFilter` and the `SeriesCard` type. The two components now bring their own styles (`series-list.css`) and filter script. The pack smoke test builds a series with a custom page from the packed tarball.
+
 - Added the series index page (Phase 2 task 2.1): Calcite-styled cards with title, description, level, duration and tags, ordered by `order` then title; a tag filter (`<TutorialFilter />`, chips, counts tutorials once); optional `tutorials/index.mdx` with `title`, `description` (shown in the header), `logo` (from `tutorials/images/`), `theme`, free prose and `<TutorialList tags="…" level="…">` sections, validated at build (only those two components; unknown tags or levels fail the build). New tutorial frontmatter `description` (also the page's meta description), `tags`, `level`, `duration`, `order`. Tutorials in a series get an "All tutorials" link before the title. Dev revalidates the index when `tutorials/images/` changes.
 - `logo` (tutorial and series index frontmatter) accepts an absolute `https://` URL besides a path in `images/`.
 

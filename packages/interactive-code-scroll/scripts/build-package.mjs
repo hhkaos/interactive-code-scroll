@@ -31,6 +31,7 @@ for (const path of [
   "src/preview/page.astro",
   "src/styles/tutorial.css",
   "src/styles/series.css",
+  "src/styles/series-list.css",
 ]) {
   const source = join(packageRoot, path);
   const target = join(dist, path.replace(/^src\//, ""));

@@ -1,4 +1,4 @@
-/* Series index page: header from tutorial.css, then a centered column of prose, filter and cards. */
+/* Series index page: header from tutorial.css, then a centered column of prose, filter and cards (series-list.css). */
 
 body.series-page {
   height: auto;
@@ -17,15 +17,6 @@ body.series-page {
   overflow: hidden;
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 .series-main {
   box-sizing: border-box;
   width: 100%;
@@ -35,24 +26,6 @@ body.series-page {
   line-height: 1.6;
 }
 
-.series-filter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
-  margin-block: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--calcite-color-border-3);
-}
-
-.series-filter-label,
-.series-count {
-  font-size: var(--calcite-font-size-sm);
-  color: var(--calcite-color-text-2);
-}
-
-.series-count { margin-inline-start: auto; }
-
 /* index.mdx prose around the lists. */
 .series-content {
   > h2 { margin: 2rem 0 0.5rem; font-size: var(--calcite-font-size-xl); }
@@ -61,98 +34,6 @@ body.series-page {
   a:not(.series-card) { color: var(--calcite-color-text-link); }
 }
 
-.series-list { margin-block: 1rem 2rem; }
-
-.series-cards {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 1rem;
-}
-
-.series-card-item[hidden] { display: none; }
-
-.series-card {
-  box-sizing: border-box;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--calcite-color-border-2);
-  border-radius: var(--calcite-corner-radius-md, 4px);
-  background: var(--calcite-color-foreground-1);
-  color: var(--calcite-color-text-1);
-  text-decoration: none;
-  transition: border-color 150ms, box-shadow 150ms;
-
-  &:hover {
-    border-color: var(--calcite-color-brand);
-    box-shadow: var(--calcite-shadow-sm, 0 2px 8px rgb(0 0 0 / 0.12));
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand));
-    outline-offset: 2px;
-  }
-}
-
-.series-card-title {
-  margin: 0;
-  font-size: var(--calcite-font-size-md);
-  font-weight: var(--calcite-font-weight-semibold, 600);
-  line-height: 1.3;
-}
-
-.series-card:hover .series-card-title { color: var(--calcite-color-brand); }
-
-.series-card-description {
-  margin: 0;
-  font-size: var(--calcite-font-size-sm);
-  color: var(--calcite-color-text-2);
-}
-
-.series-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin: auto 0 0;
-  font-size: var(--calcite-font-size-sm);
-  color: var(--calcite-color-text-2);
-
-  > span { display: inline-flex; align-items: center; gap: 0.25rem; }
-}
-
-/* Meta and tags sit at the bottom, aligned across a row of cards. */
-.series-card-description + .series-card-tags { margin-top: auto; }
-
-.series-card-tags {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin: 0;
-  padding: 0;
-
-  > li {
-    padding: 0 0.5rem;
-    border-radius: 999px;
-    background: var(--calcite-color-foreground-3);
-    font-size: var(--calcite-font-size-xs);
-    line-height: 1.6rem;
-    color: var(--calcite-color-text-2);
-  }
-}
-
-.series-empty {
-  margin: 0;
-  color: var(--calcite-color-text-3);
-  font-size: var(--calcite-font-size-sm);
-}
-
 @media (max-width: 40rem) {
   .series-main { padding: 1.25rem 1rem 3rem; }
-  .series-count { margin-inline-start: 0; width: 100%; }
 }

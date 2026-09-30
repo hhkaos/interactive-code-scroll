@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -9,10 +9,12 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const temp = mkdtempSync(join(tmpdir(), "ics-pack-"));
 const packDir = join(temp, "pack");
 const projectDir = join(temp, "project");
+const seriesDir = join(temp, "series");
 let failed = true;
 
 mkdirSync(packDir);
 mkdirSync(projectDir);
+mkdirSync(seriesDir);
 
 try {
   run("pnpm", ["--filter", "interactive-code-scroll", "pack", "--pack-destination", packDir], root);
@@ -45,6 +47,50 @@ try {
   run("pnpm", ["build"], projectDir, { CI: "true" });
   if (!existsSync(join(projectDir, "dist", "index.html"))) {
     throw new Error("Pack smoke test did not produce dist/index.html");
+  }
+
+  // Series site with a custom index page: the public `interactive-code-scroll/series` module.
+  // The CLI has no series support yet, so this project builds with its own astro.config.mjs.
+  cpSync(join(root, "examples", "framework-fixture-series", "tutorials"), join(seriesDir, "tutorials"), { recursive: true });
+  rmSync(join(seriesDir, "tutorials", "index.mdx"));
+  writeFileSync(
+    join(seriesDir, "package.json"),
+    JSON.stringify(
+      {
+        private: true,
+        type: "module",
+        scripts: { build: "astro build" },
+        dependencies: { astro: "7.3.5", "interactive-code-scroll": `file:${tarball}` },
+      },
+      null,
+      2,
+    ),
+  );
+  writeFileSync(join(seriesDir, "pnpm-workspace.yaml"), "allowBuilds:\n  esbuild: true\n");
+  writeFileSync(
+    join(seriesDir, "astro.config.mjs"),
+    [
+      'import { defineConfig } from "astro/config";',
+      'import { interactiveCodeScroll } from "interactive-code-scroll";',
+      'export default defineConfig({ integrations: [interactiveCodeScroll({ tutorials: "tutorials", index: "home.astro" })] });',
+      "",
+    ].join("\n"),
+  );
+  writeFileSync(
+    join(seriesDir, "home.astro"),
+    [
+      "---",
+      'import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll/series";',
+      "---",
+      '<html><body><p id="count">{tutorials.length} tutorials</p><TutorialFilter /><TutorialList /></body></html>',
+      "",
+    ].join("\n"),
+  );
+  run("pnpm", ["install", "--prefer-offline"], seriesDir, { CI: "true" });
+  run("pnpm", ["build"], seriesDir, { CI: "true" });
+  const home = existsSync(join(seriesDir, "dist", "index.html")) ? readFileSync(join(seriesDir, "dist", "index.html"), "utf8") : "";
+  if (!home.includes('<p id="count">3 tutorials</p>') || !home.includes("series-card-title")) {
+    throw new Error("Pack smoke test did not render the custom series index page");
   }
   failed = false;
 } finally {

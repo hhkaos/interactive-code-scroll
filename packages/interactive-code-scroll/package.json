@@ -21,6 +21,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./series": {
+      "types": "./dist/series-public.d.ts",
+      "default": "./dist/series-public.js"
     }
   },
   "scripts": {

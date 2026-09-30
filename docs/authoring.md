@@ -96,6 +96,35 @@ Start with the REST tutorials if you are new to location services.
 - `<TutorialFilter>` renders the tag filter where you place it; it filters every list on the page and counts tutorials once even when they appear in several sections. At most one per page, no attributes. Leave it out to show no filter.
 - Without `index.mdx`, the index is the filter plus one list of every tutorial.
 
+#### Custom index page
+
+For full control, replace the index with your own Astro page. Keep it outside `src/pages/` (Astro would also publish it as a route of its own):
+
+```js
+interactiveCodeScroll({ tutorials: "tutorials", index: "src/series-home.astro" })
+```
+
+```astro
+---
+import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll/series";
+---
+<html lang="en">
+  <head><title>My tutorials</title></head>
+  <body>
+    <h1>{tutorials.length} tutorials</h1>
+    <ul>
+      {tutorials.map((t) => <li><a href={t.href}>{t.title}</a> {t.level}</li>)}
+    </ul>
+    <TutorialFilter />
+    <TutorialList tags="Python" />
+  </body>
+</html>
+```
+
+- `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set.
+- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. The page owns everything else (layout, header, theme).
+- `index` must be an `.astro` file, needs `tutorials`, and cannot be combined with `tutorials/index.mdx` (build error: the file would be ignored).
+
 ## Frontmatter
 
 ```yaml

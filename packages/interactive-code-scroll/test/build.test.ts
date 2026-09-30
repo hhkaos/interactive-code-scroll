@@ -56,3 +56,43 @@ it("publishes captured outputs as is and warns about outputs that look like they
     rmSync(root, { recursive: true, force: true });
   }
 }, 60_000);
+
+it("renders a custom series index page with the public series module", async () => {
+  const root = mkdtempSync(fileURLToPath(new URL("./fixtures/series-", import.meta.url)));
+  const outDir = join(root, "dist");
+  try {
+    for (const [slug, frontmatter] of [
+      ["alpha", "title: Alpha\norder: 2\ntags: [Web]"],
+      ["beta", "title: Beta\norder: 1\nlevel: Beginner\ntags: [Python]"],
+    ] as const) {
+      mkdirSync(join(root, "tutorials", slug, "code"), { recursive: true });
+      writeFileSync(join(root, "tutorials", slug, "tutorial.mdx"), `---\n${frontmatter}\npreview: off\n---\n\n# ${slug}\n`);
+      writeFileSync(join(root, "tutorials", slug, "code", "main.py"), "print(1)\n");
+    }
+    // The published package maps `interactive-code-scroll/series` to this file (smoke-pack covers the specifier).
+    writeFileSync(
+      join(root, "home.astro"),
+      [
+        "---",
+        'import { tutorials, TutorialFilter, TutorialList } from "../../../src/series-public.ts";',
+        "---",
+        "<html><body>",
+        '<ol id="custom">{tutorials.map((t) => <li><a href={t.href}>{t.title}</a> {t.level}</li>)}</ol>',
+        "<TutorialFilter />",
+        '<TutorialList tags="Python" />',
+        "</body></html>",
+        "",
+      ].join("\n"),
+    );
+    await build({ root, outDir, integrations: [interactiveCodeScroll({ tutorials: "tutorials", index: "home.astro" })], logLevel: "silent" });
+    const html = readFileSync(join(outDir, "index.html"), "utf8");
+    expect(html).toContain('<ol id="custom"><li><a href="/beta/">Beta</a> Beginner</li><li><a href="/alpha/">Alpha</a> </li></ol>');
+    expect(html).toContain('<calcite-chip-group id="series-filter"');
+    expect(html.match(/class="series-card-title"[^>]*>([^<]+)</g)).toEqual([expect.stringContaining(">Beta<")]);
+    expect(html).toMatch(/<link rel="stylesheet" href="[^"]+\.css"|<style>[^<]*\.series-card/);
+    expect(html).toMatch(/<script type="module" src="[^"]+\.js"/);
+    expect(readFileSync(join(outDir, "alpha", "index.html"), "utf8")).toContain("Alpha");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);

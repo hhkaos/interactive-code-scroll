@@ -5,7 +5,7 @@ import mdx from "@astrojs/mdx";
 import { isSatteriProcessor, satteri } from "@astrojs/markdown-satteri";
 import type { AstroIntegration } from "astro";
 import { tutorialValidation } from "./mdx-validation.ts";
-import { discoverTutorials } from "./series.ts";
+import { discoverTutorials, SERIES_INDEX } from "./series.ts";
 import { tutorialModule, type TutorialSource } from "./tutorial-module.ts";
 
 export { TutorialValidationError } from "./mdx-validation.ts";
@@ -18,6 +18,11 @@ export interface InteractiveCodeScrollOptions {
    * published at `/<slug>/`, with an index page at `/`. Cannot be combined with `tutorial`.
    */
   tutorials?: string;
+  /**
+   * Series site only: `.astro` page (relative to the project root) that replaces the index page at
+   * `/`. It may import the tutorial list and components from `interactive-code-scroll/series`.
+   */
+  index?: string;
 }
 
 export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}): AstroIntegration {
@@ -30,6 +35,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         }
         const seriesDir = options.tutorials === undefined ? undefined : fileURLToPath(new URL(`${options.tutorials}/`, config.root));
         const series = seriesDir !== undefined;
+        const indexPage = options.index === undefined ? undefined : customIndex(config.root, options.index, seriesDir);
         const sources: TutorialSource[] = series
           ? discoverTutorials(seriesDir, (message) => logger.warn(message))
           : [{ slug: "", dir: singleTutorial(config.root, options.tutorial ?? "tutorial") }];
@@ -54,7 +60,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         });
         // One set of routes; in a series each is prefixed with the tutorial's slug.
         const prefix = series ? "/[tutorial]" : "";
-        if (series) injectRoute({ pattern: "/", entrypoint: new URL("./pages/series-index.astro", import.meta.url) });
+        if (series) injectRoute({ pattern: "/", entrypoint: indexPage ?? new URL("./pages/series-index.astro", import.meta.url) });
         injectRoute({ pattern: prefix || "/", entrypoint: new URL("./pages/index.astro", import.meta.url) });
         injectRoute({ pattern: `${prefix}/preview`, entrypoint: new URL("./preview/page.astro", import.meta.url) });
         injectRoute({ pattern: `${prefix}/preview/[...file]`, entrypoint: new URL("./preview/code-file.ts", import.meta.url) });
@@ -62,6 +68,18 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
       },
     },
   };
+}
+
+function customIndex(root: URL, page: string, seriesDir: string | undefined): URL {
+  if (seriesDir === undefined) throw new Error('interactive-code-scroll: "index" replaces the index page of a series site; it needs "tutorials"');
+  if (!page.endsWith(".astro")) throw new Error(`interactive-code-scroll: "index" must be an .astro page, got "${page}"`);
+  const url = new URL(page, root);
+  if (!existsSync(url)) throw new Error(`interactive-code-scroll: index page not found at ${fileURLToPath(url)}`);
+  const indexMdx = join(seriesDir, SERIES_INDEX);
+  if (existsSync(indexMdx)) {
+    throw new Error(`interactive-code-scroll: ${indexMdx} is not used with a custom "index" page; remove it or the "index" option`);
+  }
+  return url;
 }
 
 function singleTutorial(root: URL, folder: string): string {

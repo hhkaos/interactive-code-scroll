@@ -62,19 +62,14 @@ const Content = seriesIndex?.Content;
     <script>
       import "@esri/calcite-components/main.css";
       import "@esri/calcite-components/components/calcite-action";
-      import "@esri/calcite-components/components/calcite-chip";
-      import "@esri/calcite-components/components/calcite-chip-group";
-      import "@esri/calcite-components/components/calcite-icon";
       import "@esri/calcite-components/components/calcite-navigation";
       import "@esri/calcite-components/components/calcite-navigation-logo";
       import "@esri/calcite-components/components/calcite-tooltip";
       import { startTooltips } from "../client/actions.ts";
       import { startLayout } from "../client/layout.ts";
-      import { startSeriesFilter } from "../client/series.ts";
 
       startTooltips();
       startLayout();
-      startSeriesFilter();
     </script>
   </body>
 </html>
