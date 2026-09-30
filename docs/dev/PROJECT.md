@@ -15,7 +15,7 @@ A framework that turns a tutorial folder (MDX + code + images) into an interacti
 
 InteractiveCodeScroll is generic. OAuth, ArcGIS and maps are example/tutorial concerns only; do not add topic-specific assumptions to the core package, runtime, validation, CLI or public documentation. Topic-specific helpers must be explicit opt-ins or example-level configuration.
 
-Status: in development. Base: Astro + MDX + Shiki; spike findings in `docs/research/technical-base-spike.md`.
+Status: in development. Base: Astro + MDX + Shiki; spike findings in `docs/dev/research/technical-base-spike.md`.
 
 ---
 
@@ -29,7 +29,7 @@ pnpm dev          # framework fixture through the generic CLI
 pnpm build        # build the framework fixture through the generic CLI
 pnpm playground   # multi-SDK playground (examples/multi-sdk-playground) in dev mode
 pnpm rest         # REST example tutorial (examples/rest-geocode) in dev mode
-pnpm variants     # code variants fixture (examples/framework-fixture-variants) in dev mode
+pnpm variants     # code variants fixture (fixtures/framework-fixture-variants) in dev mode
 pnpm variants:hide # same with `otherVariantSteps: hide`
 pnpm check        # tsc (core package) + astro check (example)
 pnpm preflight:docs    # whitespace/conflict check for docs/context-only changes
@@ -48,7 +48,7 @@ For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so p
 
 ## Next Session Plan
 
-Multi-SDK plan: `docs/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
+Multi-SDK plan: `docs/dev/research/arcgis-multi-sdk-plan.md` (phases, decisions, go/no-go review); requirements marked *planned* in `SPEC.md`; ordered tasks in `TODO.md`. Phase 0 is done (config-aware validation, languages + scoped markers, var escaping + shared defaults, `files:` + binaries + ZIP count badge, dev revalidation of `code/`/`images/`/`requests/`/`output/` with overlay `loc`).
 
 Phase 1 rules are in `SPEC.md`; task order in `TODO.md` (1a → 7). Done: 1a variants validation, 1b switcher + `only=` (`notice`/`hide`), 1c Preview and ZIP per variant (`da9f036`), 2 Result pane + captured output, 3 JSON viewer, 4a `.http` parser + validation + `requests/` in every ZIP, 4b runner UI, 5 error rule + Body/Headers tabs, 6 REST example (`examples/rest-geocode`), 7 presentation fit. Phase 1 is complete. Variants code: `src/variants.ts` (build helpers), `src/client/variants.ts` + `variant-values.ts` (switcher, choice, fit rule), variant handling in `src/client/steps.ts`, `preview.ts`, `downloads.ts`, `src/preview/code-file.ts` (per-variant preview page).
 
@@ -67,10 +67,10 @@ Phase 1 go/no-go review: GO (2026-09-30, in the plan). Phase 2 task 2.1 (rules i
 Docs rule: every feature commit updates `docs/features.md` (overview) and `docs/authoring.md` (reference).
 
 Working notes:
-- Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `examples/framework-fixture` + `e2e/`.
+- Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `fixtures/framework-fixture` + `e2e/`.
 - UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
-- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, `series.spec.ts` → `examples/framework-fixture-series` on :4404, the rest → :4400).
+- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, `series.spec.ts` → `fixtures/framework-fixture-series` on :4404, the rest → :4400).
 - E2E blocks every non-local host (`e2e/fixtures.ts`); mock services with `mockService()` (page routes win over the context route).
 - Full E2E was green (121/121) after task 2.1 commit 2; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
 - Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
@@ -102,14 +102,15 @@ Dependencies: recent, stable and secure versions.
 ## File map
 
 ```
-SPEC.md             # requirements source of truth
-PROJECT.md          # shared AI agent context (this file)
-TODO.md             # pending tasks only
 CHANGELOG.md        # implemented changes (Keep a Changelog)
 LICENSE             # Apache-2.0
-CLAUDE.md           # Claude Code-specific rules
-AGENTS.md           # Codex CLI-specific rules
+CLAUDE.md           # Claude Code-specific rules (must stay at the root: loaded automatically)
+AGENTS.md           # Codex CLI-specific rules (must stay at the root: loaded automatically)
 README.md
+docs/dev/SPEC.md    # requirements source of truth
+docs/dev/PROJECT.md # shared AI agent context (this file)
+docs/dev/TODO.md    # pending tasks only
+docs/dev/research/  # plans, spikes and go/no-go reviews
 docs/features.md   # public one-page overview of every capability, linking to the reference
 docs/authoring.md  # public authoring/API reference for tutorial writers
 docs/cli.md        # public CLI reference
@@ -149,16 +150,16 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/result/                      # output/ files published under output/
   test/                            # Astro build + dev-server (revalidation, overlay loc) integration tests + fixtures
 examples/oauth-pkce/               # example project: astro.config.mjs + tutorial/ (tutorial.mdx, code/, images/)
-examples/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
-examples/framework-fixture-variants/      # stable fake tutorial with code variants (`notice` mode) and captured outputs; E2E in e2e/variants.spec.ts, e2e/result.spec.ts, e2e/maximize-steps.spec.ts
-examples/framework-fixture-variants-hide/ # same, with `otherVariantSteps: hide`; E2E in e2e/variants-hide.spec.ts
-examples/framework-fixture-series/        # stable series site (tutorials alpha, beta, gamma, delta + skipped folders; alpha/beta/delta are one family); E2E in e2e/series.spec.ts
+fixtures/framework-fixture/        # stable fake tutorial for framework E2E coverage; do not edit for content polish
+fixtures/framework-fixture-variants/      # stable fake tutorial with code variants (`notice` mode) and captured outputs; E2E in e2e/variants.spec.ts, e2e/result.spec.ts, e2e/maximize-steps.spec.ts
+fixtures/framework-fixture-variants-hide/ # same, with `otherVariantSteps: hide`; E2E in e2e/variants-hide.spec.ts
+fixtures/framework-fixture-series/        # stable series site (tutorials alpha, beta, gamma, delta + skipped folders; alpha/beta/delta are one family); E2E in e2e/series.spec.ts
 examples/rest-geocode/              # public REST example (cURL / Python / JavaScript variants, requests/, output/, ArcGIS errors.json); `pnpm rest`; smoke E2E in e2e/rest-example.spec.ts (:4403)
 examples/getting-started/           # public dogfooding tutorial for new authors; published by GitHub Pages workflow
 examples/multi-sdk-playground/      # local hands-on tutorial for multi-SDK features (Python, Kotlin, C#, SQL); `pnpm playground`; no E2E, grows with each plan task
 .github/workflows/publish-getting-started.yml # builds/deploys examples/getting-started on default-branch pushes
 e2e/                               # Playwright tests (against the built example)
-docs/research/technical-base-spike.md # spike findings (prototype code in git history, commit f265e61)
+docs/dev/research/technical-base-spike.md  # spike findings (prototype code in git history, commit f265e61)
 ```
 
 
@@ -191,7 +192,7 @@ MDX + annotated code + images → build (validates references; fails on broken I
 
 ### Framework fixture
 
-`examples/framework-fixture` is the stable regression fixture for framework behavior. It is intentionally fake product content and must not be edited for tutorial narrative/design polish.
+`fixtures/framework-fixture` is the stable regression fixture for framework behavior. It is intentionally fake product content and must not be edited for tutorial narrative/design polish.
 
 When adding or changing framework behavior, update this fixture to include the new case whenever the behavior is observable through a tutorial, and add or adjust the corresponding Playwright assertions in `e2e/`. The real tutorials (for example `examples/oauth-pkce`) may change editorially; E2E tests for framework behavior should not depend on those editorial changes.
 
@@ -199,7 +200,7 @@ When adding or changing framework behavior, update this fixture to include the n
 
 Public author-facing docs live in `README.md` and `docs/`. `docs/features.md` is the one-page overview of every capability; `docs/authoring.md` is the how-to reference. Every feature commit updates both (features marked in progress there until they ship). The root README is the repository entry point; `packages/interactive-code-scroll/README.md` is the npm package entry point and should stay in sync at a high level.
 
-`examples/getting-started` is the dogfooding tutorial for first-time authors. It is not the regression fixture: use it for public author experience and docs validation, while keeping framework E2E behavior coverage in `examples/framework-fixture`.
+`examples/getting-started` is the dogfooding tutorial for first-time authors. It is not the regression fixture: use it for public author experience and docs validation, while keeping framework E2E behavior coverage in `fixtures/framework-fixture`.
 
 The getting-started tutorial is published by `.github/workflows/publish-getting-started.yml`. The workflow takes `site` and `base` from `actions/configure-pages` (project site, user site or custom domain) and can be overridden with repository variables `ICS_SITE` and `ICS_BASE`, like the author workflows in `docs/deployment.md`.
 
@@ -215,7 +216,7 @@ The getting-started tutorial is published by `.github/workflows/publish-getting-
 
 ### UI/UX workflow
 
-Subjective visual changes need a user review loop before they are treated as final. Prefer showing a screenshot or concrete layout measurements from `examples/framework-fixture`, then adjust from feedback before broad validation, publishing or tagging.
+Subjective visual changes need a user review loop before they are treated as final. Prefer showing a screenshot or concrete layout measurements from `fixtures/framework-fixture`, then adjust from feedback before broad validation, publishing or tagging.
 
 ### Test coverage workflow
 
@@ -301,7 +302,7 @@ The page structure is our own CSS grid (`div.layout` > `main.docs` + `div.gutter
 - Non-English text in the repo.
 - E2E tests that depend on the network: import `test` from `e2e/fixtures.ts` (blocks the Esri CDN: SDK and Calcite assets); opt in with `test.use({ network: true })` only when testing the SDK itself.
 - Do not update E2E tests just to follow editorial changes in `examples/oauth-pkce`; while the tutorial is being polished, prefer testing framework behavior against stable fixtures.
-- E2E coverage uses `examples/framework-fixture`, a dedicated fake tutorial that exercises framework cases and is not edited for content/design polish. New framework capabilities that should be protected from regressions should add a stable case there plus the corresponding E2E assertion.
+- E2E coverage uses `fixtures/framework-fixture`, a dedicated fake tutorial that exercises framework cases and is not edited for content/design polish. New framework capabilities that should be protected from regressions should add a stable case there plus the corresponding E2E assertion.
 - E2E assertions that check state the code under test just set; assert the user-visible outcome (what the component actually shows).
 - Generic class names in E2E selectors (e.g. `.progress`): Playwright pierces shadow DOM and matches Calcite internals; use ids or `data-*` attributes.
 - Global selectors for shared Calcite elements in client modules (e.g. `$$("calcite-tab-title")`, `querySelectorAll("calcite-notice")`): the page has several groups of the same component (file tabs, Result pane tabs, notices). Scope to the owning container or a `data-*` attribute (`calcite-tab-title[data-file]`), and when adding a second instance of a component, grep for unscoped selectors of it first.

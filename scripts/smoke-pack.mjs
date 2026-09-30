@@ -24,7 +24,7 @@ try {
   if (!tarballName) throw new Error("Pack smoke test did not create an interactive-code-scroll tarball");
   const tarball = join(packDir, tarballName);
 
-  cpSync(join(root, "examples", "framework-fixture", "tutorial"), join(projectDir, "tutorial"), { recursive: true });
+  cpSync(join(root, "fixtures", "framework-fixture", "tutorial"), join(projectDir, "tutorial"), { recursive: true });
   writeFileSync(
     join(projectDir, "package.json"),
     JSON.stringify(
@@ -53,7 +53,7 @@ try {
 
   // Series site with a custom index page, through the packed CLI (tutorials/ auto-detected) and the
   // public `interactive-code-scroll/series` module.
-  cpSync(join(root, "examples", "framework-fixture-series", "tutorials"), join(seriesDir, "tutorials"), { recursive: true });
+  cpSync(join(root, "fixtures", "framework-fixture-series", "tutorials"), join(seriesDir, "tutorials"), { recursive: true });
   rmSync(join(seriesDir, "tutorials", "index.mdx"));
   writeFileSync(
     join(seriesDir, "package.json"),

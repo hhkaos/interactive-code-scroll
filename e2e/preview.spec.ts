@@ -68,7 +68,7 @@ test("clicker keys pressed inside the preview move the tutorial", async ({ page 
 test("binary code/ files are published byte for byte with their media type", async ({ request }) => {
   const response = await request.get("/preview/assets/pixel.png");
   expect(response.headers()["content-type"]).toBe("image/png");
-  expect((await response.body()).equals(readFileSync("examples/framework-fixture/tutorial/code/assets/pixel.png"))).toBe(true);
+  expect((await response.body()).equals(readFileSync("fixtures/framework-fixture/tutorial/code/assets/pixel.png"))).toBe(true);
 });
 
 test("code/ files are published next to the preview page, markers stripped", async ({ request }) => {

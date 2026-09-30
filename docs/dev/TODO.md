@@ -15,7 +15,6 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 _Rules: `SPEC.md` (Project website and repository presentation)._
 
-- [ ] F1: move internal docs to `docs/dev/` and E2E fixtures to `fixtures/`.
 - [ ] F1: README as a mini landing (logo, badges, quick start, features, links) + `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue/PR templates.
 - [ ] F1: repository description, topics and homepage (`gh repo edit`), once the site exists.
 - [ ] F2: `site/` landing page (Astro) + logo + VHS terminal recordings; Pages workflow publishes the site with getting-started under `/demo/getting-started/`.
@@ -24,6 +23,6 @@ _Rules: `SPEC.md` (Project website and repository presentation)._
 
 ## Multi-SDK support
 
-_Plan: `docs/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before implementing each phase._
+_Plan: `docs/dev/research/arcgis-multi-sdk-plan.md`. Update `SPEC.md` before implementing each phase._
 
 Phase 1 — REST vertical slice (cURL / Python / JavaScript): done, go/no-go GO (2026-09-30). Next: Phase 2; Phase 2 is done (2.1–2.5), released as 0.2.0-beta.0. Next: Phase 3 (result views + renderer plugins) after a go/no-go review.

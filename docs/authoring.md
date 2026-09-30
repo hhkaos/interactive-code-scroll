@@ -1,6 +1,6 @@
 # Authoring and API Reference
 
-This reference describes the tutorial files authors write. For implementation details, see `SPEC.md`. To start from a working example of any layout below, run `npm create interactive-code-scroll@latest` ([Create a Project](cli.md#create-a-project)).
+This reference describes the tutorial files authors write. For the full requirements, see the [specification](dev/SPEC.md). To start from a working example of any layout below, run `npm create interactive-code-scroll@latest` ([Create a Project](cli.md#create-a-project)).
 
 ## Tutorial Layout
 

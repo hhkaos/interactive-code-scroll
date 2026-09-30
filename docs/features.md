@@ -87,6 +87,6 @@ See [Validation](authoring.md#validation).
 
 ## In progress
 
-These are specified and being built; see `SPEC.md` and `TODO.md`:
+These are specified and being built; see the [specification](dev/SPEC.md) and [task list](dev/TODO.md):
 
 - Custom result views through renderer plugins (e.g. "Preview on map", "Show as table"): write or install a renderer, register it, and choose per step in the MDX which views appear and with what label. A plugin guide will explain how to create, install and use them.

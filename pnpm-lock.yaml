@@ -21,42 +21,6 @@ importers:
         specifier: 5.0.2
         version: 5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))
 
-  examples/framework-fixture:
-    dependencies:
-      astro:
-        specifier: 7.3.5
-        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
-      interactive-code-scroll:
-        specifier: workspace:*
-        version: link:../../packages/interactive-code-scroll
-
-  examples/framework-fixture-series:
-    dependencies:
-      astro:
-        specifier: 7.3.5
-        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
-      interactive-code-scroll:
-        specifier: workspace:*
-        version: link:../../packages/interactive-code-scroll
-
-  examples/framework-fixture-variants:
-    dependencies:
-      astro:
-        specifier: 7.3.5
-        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
-      interactive-code-scroll:
-        specifier: workspace:*
-        version: link:../../packages/interactive-code-scroll
-
-  examples/framework-fixture-variants-hide:
-    dependencies:
-      astro:
-        specifier: 7.3.5
-        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
-      interactive-code-scroll:
-        specifier: workspace:*
-        version: link:../../packages/interactive-code-scroll
-
   examples/getting-started:
     dependencies:
       astro:
@@ -85,6 +49,42 @@ importers:
         version: link:../../packages/interactive-code-scroll
 
   examples/rest-geocode:
+    dependencies:
+      astro:
+        specifier: 7.3.5
+        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
+      interactive-code-scroll:
+        specifier: workspace:*
+        version: link:../../packages/interactive-code-scroll
+
+  fixtures/framework-fixture:
+    dependencies:
+      astro:
+        specifier: 7.3.5
+        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
+      interactive-code-scroll:
+        specifier: workspace:*
+        version: link:../../packages/interactive-code-scroll
+
+  fixtures/framework-fixture-series:
+    dependencies:
+      astro:
+        specifier: 7.3.5
+        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
+      interactive-code-scroll:
+        specifier: workspace:*
+        version: link:../../packages/interactive-code-scroll
+
+  fixtures/framework-fixture-variants:
+    dependencies:
+      astro:
+        specifier: 7.3.5
+        version: 7.3.5(@types/node@22.20.4)(yaml@2.9.1)
+      interactive-code-scroll:
+        specifier: workspace:*
+        version: link:../../packages/interactive-code-scroll
+
+  fixtures/framework-fixture-variants-hide:
     dependencies:
       astro:
         specifier: 7.3.5

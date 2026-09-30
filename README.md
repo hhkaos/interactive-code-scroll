@@ -94,7 +94,7 @@ The code remains runnable without the framework. Markers are stripped from rende
 - [CLI reference](docs/cli.md)
 - [Deployment guide](docs/deployment.md)
 - [Upgrade guide](docs/upgrade.md)
-- [Project specification](SPEC.md)
+- [Project specification](docs/dev/SPEC.md)
 
 The dogfooding tutorial lives in [examples/getting-started](examples/getting-started). It teaches the authoring flow using InteractiveCodeScroll itself.
 

@@ -50,7 +50,7 @@ Existing strength worth keeping: persisted vars use the key `ics:var:<name>` per
 
 ## Phases
 
-Sizes: S ≈ 1–2 days, M ≈ 3–5 days, L ≈ 1–2 weeks. Each item ships with focused Vitest and/or Playwright coverage and a `examples/framework-fixture` case when observable in a tutorial.
+Sizes: S ≈ 1–2 days, M ≈ 3–5 days, L ≈ 1–2 weeks. Each item ships with focused Vitest and/or Playwright coverage and a `fixtures/framework-fixture` case when observable in a tutorial.
 
 ### Phase 0 — Language-agnostic code model (foundation)
 
@@ -172,7 +172,7 @@ Phase 1:
 
 ### Phase 1 plan-mode pass (2026-09-29)
 
-Rules settled in `SPEC.md` before implementing: variants schema (all code in variant folders, per-variant `files`), `otherVariantSteps: notice | hide` chosen by the author, variant choice precedence (`?variant=` > `ics:variant` > first), per-variant ZIP with `requests/`, Result pane keeps the last result, captured output types and lookup, supported `.http` subset, 30 s runner timeout, Body/Headers tabs, error rule in `requests/errors.json`, JSON viewer truncation and keyboard. Variant regressions get a second fixture, `examples/framework-fixture-variants`, on its own Playwright web server.
+Rules settled in `SPEC.md` before implementing: variants schema (all code in variant folders, per-variant `files`), `otherVariantSteps: notice | hide` chosen by the author, variant choice precedence (`?variant=` > `ics:variant` > first), per-variant ZIP with `requests/`, Result pane keeps the last result, captured output types and lookup, supported `.http` subset, 30 s runner timeout, Body/Headers tabs, error rule in `requests/errors.json`, JSON viewer truncation and keyboard. Variant regressions get a second fixture, `fixtures/framework-fixture-variants`, on its own Playwright web server.
 
 Implementation order (one commit each): 1a variants config + validation; 1b page render, switcher, `?variant=`, `only=` behavior; 1c per-variant downloads and Preview; 2 Result pane + captured output; 3 JSON viewer; 4a `.http` parser + validation; 4b runner UI; 5 error rule + Headers tab; 6 REST example; 7 presentation fit + docs.
 
@@ -206,7 +206,7 @@ Implementation order (one commit each): 1a variants config + validation; 1b page
 
 ### Phase 2 task 2.1 plan-mode pass (2026-09-30)
 
-Rules settled in `SPEC.md` (Authoring and DX, series layout): one Astro build for the whole series; slug = folder name; generic metadata frontmatter (`description`, `tags`, `level`, `duration`, `order`); index customizable at three levels (default list, `tutorials/index.mdx` with `<TutorialList tags= level=>` sections, custom Astro page via the `index` option and the public `interactive-code-scroll/series` module); cards with a client-side tag filter; `--tutorials` plus auto-detection; Preview storage namespaced per tutorial, vars/theme/splits/variant choice site-wide. Regressions get `examples/framework-fixture-series` on its own Playwright server.
+Rules settled in `SPEC.md` (Authoring and DX, series layout): one Astro build for the whole series; slug = folder name; generic metadata frontmatter (`description`, `tags`, `level`, `duration`, `order`); index customizable at three levels (default list, `tutorials/index.mdx` with `<TutorialList tags= level=>` sections, custom Astro page via the `index` option and the public `interactive-code-scroll/series` module); cards with a client-side tag filter; `--tutorials` plus auto-detection; Preview storage namespaced per tutorial, vars/theme/splits/variant choice site-wide. Regressions get `fixtures/framework-fixture-series` on its own Playwright server.
 
 Implementation order (one commit each): SPEC; series model + routes + per-tutorial context and storage keys; index page + `TutorialList` + tag filter + `index.mdx`; custom index page + `interactive-code-scroll/series`; CLI `--tutorials` + auto-detection.
 

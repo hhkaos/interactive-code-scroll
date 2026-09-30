@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
 const cli = fileURLToPath(new URL("../bin/interactive-code-scroll.mjs", import.meta.url));
-const seriesFixture = fileURLToPath(new URL("../../../examples/framework-fixture-series/", import.meta.url));
+const seriesFixture = fileURLToPath(new URL("../../../fixtures/framework-fixture-series/", import.meta.url));
 const deploymentDoc = fileURLToPath(new URL("../../../docs/deployment.md", import.meta.url));
 
 const files = (dir: string): string[] =>

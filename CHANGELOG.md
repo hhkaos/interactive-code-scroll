@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Moved internal docs out of the repository root: `SPEC.md`, `PROJECT.md`, `TODO.md` and `docs/research/` now live in `docs/dev/`; `CLAUDE.md` and `AGENTS.md` stay at the root (agent tools load them from there) and point to the new paths. Moved the stable E2E fixtures (`framework-fixture*`) from `examples/` to `fixtures/`, so `examples/` only holds user-facing tutorials.
+
 ## [0.2.0-beta.0] - 2026-09-30
 
 First beta: code variants, the Result pane and `.http` runner, series sites, sibling tutorials, GitHub Pages workflows and the project wizard. Published under the `latest` dist-tag (alphas stay under `alpha`).
