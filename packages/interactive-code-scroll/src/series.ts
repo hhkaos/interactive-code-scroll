@@ -77,3 +77,41 @@ export function selectCards<T extends Pick<SeriesCard, "tags" | "level">>(cards:
 export function allTags(cards: readonly Pick<SeriesCard, "tags">[]): string[] {
   return [...new Set(cards.flatMap((card) => card.tags))];
 }
+
+/** What sibling logic needs of a tutorial: its slug, family and index position. */
+export interface FamilyMember {
+  slug: string;
+  family?: { id: string; label: string };
+  order?: number;
+}
+
+/** Cross-tutorial family rules: a label used twice in a family fails, a family of one only warns. */
+export function familyProblems(members: readonly FamilyMember[]): { errors: string[]; warnings: string[] } {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const byFamily = new Map<string, FamilyMember[]>();
+  for (const member of members) {
+    if (member.family) byFamily.set(member.family.id, [...(byFamily.get(member.family.id) ?? []), member]);
+  }
+  for (const [id, family] of byFamily) {
+    if (family.length === 1) {
+      warnings.push(`interactive-code-scroll: tutorial "${family[0]!.slug}" is the only one in family "${id}"; the language switcher needs a sibling`);
+    }
+    const byLabel = new Map<string, string[]>();
+    for (const member of family) byLabel.set(member.family!.label, [...(byLabel.get(member.family!.label) ?? []), member.slug]);
+    for (const [label, slugs] of byLabel) {
+      if (slugs.length > 1) errors.push(`tutorials ${slugs.map((s) => `"${s}"`).join(", ")} use the same familyLabel "${label}" in family "${id}"`);
+    }
+  }
+  return { errors, warnings };
+}
+
+/** The tutorials of `slug`'s family (itself included), by `order` then label; empty without a sibling. */
+export function familyOf<T extends FamilyMember>(members: readonly T[], slug: string): T[] {
+  const id = members.find((m) => m.slug === slug)?.family?.id;
+  if (id === undefined) return [];
+  const family = members.filter((m) => m.family?.id === id);
+  if (family.length < 2) return [];
+  const rank = (m: T) => m.order ?? Number.POSITIVE_INFINITY;
+  return family.sort((a, b) => rank(a) - rank(b) || a.family!.label.localeCompare(b.family!.label));
+}

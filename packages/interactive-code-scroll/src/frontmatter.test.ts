@@ -152,6 +152,22 @@ describe("series metadata", () => {
     expect(keyOf({ duration: [] })).toBe("duration");
     expect(keyOf({ order: "1" })).toBe("order");
   });
+
+  it("reads family and familyLabel together", () => {
+    expect(readTutorialConfig({ family: "display-map", familyLabel: "Python" }).family).toEqual({ id: "display-map", label: "Python" });
+    expect(readTutorialConfig({}).family).toBeUndefined();
+    const keyOf = (frontmatter: Record<string, unknown>) => {
+      try {
+        readTutorialConfig(frontmatter);
+      } catch (error) {
+        return (error as FrontmatterError).key;
+      }
+    };
+    expect(keyOf({ family: "display-map" })).toBe("family");
+    expect(keyOf({ familyLabel: "Python" })).toBe("familyLabel");
+    expect(keyOf({ family: "", familyLabel: "Python" })).toBe("family");
+    expect(keyOf({ family: "display-map", familyLabel: 3 })).toBe("familyLabel");
+  });
 });
 
 describe("readIndexConfig", () => {

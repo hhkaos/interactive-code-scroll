@@ -96,3 +96,46 @@ test('persist="tutorial" keeps a field to its tutorial', async ({ page }) => {
   await expect(layer).toHaveValue("alpha-layer");
   expect(await page.evaluate(() => localStorage.getItem("ics:var:layerName"))).toBeNull();
 });
+
+test("the family switcher lists sibling tutorials by order, then label", async ({ page }) => {
+  await page.goto("/alpha/");
+  const switcher = page.locator("#family-switcher");
+  await expect(switcher).toHaveAttribute("label", "Tutorial language");
+  await expect(switcher.locator("calcite-segmented-control-item")).toHaveText(["JavaScript", "Browser and Python", "Python only"]);
+  await expect(switcher.locator("calcite-segmented-control-item[checked]")).toHaveText("JavaScript");
+  // Gamma has no family: no switcher.
+  await page.goto("/gamma/");
+  await expect(page.locator(".family-switcher")).toHaveCount(0);
+});
+
+test("switching to a sibling lands on the same step, else its top", async ({ page }) => {
+  await page.goto("/alpha/#config");
+  await page.locator('#family-switcher calcite-segmented-control-item[value="delta"]').click();
+  await expect(page).toHaveURL(/\/delta\/#config$/);
+  await expect(page.locator("section.step#config")).toHaveAttribute("data-active", "");
+
+  await page.goto("/delta/#setup");
+  await page.locator('#family-switcher calcite-segmented-control-item[value="alpha"]').click();
+  await expect(page).toHaveURL(/\/alpha\/(#setup)?$/);
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+});
+
+test("switching to a sibling carries the variant only when the sibling has it", async ({ page }) => {
+  await page.goto("/beta/?variant=python#config");
+  await page.locator('#family-switcher calcite-segmented-control-item[value="delta"]').click();
+  await expect(page).toHaveURL(/\/delta\/\?variant=python#config$/);
+
+  await page.goto("/beta/?variant=web#config");
+  await page.locator('#family-switcher calcite-segmented-control-item[value="delta"]').click();
+  await expect(page).toHaveURL(/\/delta\/#config$/);
+});
+
+test("the family switcher becomes a dropdown when the header is narrow", async ({ page }) => {
+  await page.setViewportSize({ width: 480, height: 800 });
+  await page.goto("/alpha/");
+  await expect(page.locator("#family-dropdown")).toBeVisible();
+  await expect(page.locator("#family-switcher")).toBeHidden();
+  await page.locator("#family-dropdown calcite-button").click();
+  await page.locator('#family-dropdown calcite-dropdown-item[data-tutorial="beta"]').click();
+  await expect(page).toHaveURL(/\/beta\/$/);
+});

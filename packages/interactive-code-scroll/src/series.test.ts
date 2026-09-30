@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { allTags, discoverTutorials, parseTagList, selectCards, sortCards } from "./series.ts";
+import { allTags, discoverTutorials, familyOf, familyProblems, parseTagList, selectCards, sortCards } from "./series.ts";
 
 function seriesWith(folders: Record<string, boolean>): string {
   const dir = mkdtempSync(join(tmpdir(), "ics-series-"));
@@ -60,5 +60,33 @@ describe("index cards", () => {
 
   it("lists every tag once in first-seen order", () => {
     expect(allTags(cards)).toEqual(["Web", "Python", "JavaScript"]);
+  });
+});
+
+describe("sibling tutorials", () => {
+  const js = { slug: "map-js", family: { id: "map", label: "JavaScript" }, order: 1 };
+  const py = { slug: "map-py", family: { id: "map", label: "Python" } };
+  const kt = { slug: "map-kt", family: { id: "map", label: "Kotlin" } };
+  const lone = { slug: "rest", family: { id: "rest", label: "cURL" } };
+  const plain = { slug: "intro" };
+
+  it("orders a family by order, then label, and leaves others out", () => {
+    expect(familyOf([py, plain, kt, js], "map-py").map((m) => m.slug)).toEqual(["map-js", "map-kt", "map-py"]);
+    expect(familyOf([py, js, plain], "intro")).toEqual([]);
+  });
+
+  it("shows no switcher for a family of one", () => {
+    expect(familyOf([lone, js, py], "rest")).toEqual([]);
+  });
+
+  it("reports duplicate labels as errors and families of one as warnings", () => {
+    const { errors, warnings } = familyProblems([js, py, { slug: "map-ts", family: { id: "map", label: "JavaScript" } }, lone, plain]);
+    expect(errors).toEqual(['tutorials "map-js", "map-ts" use the same familyLabel "JavaScript" in family "map"']);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('"rest" is the only one in family "rest"');
+  });
+
+  it("accepts a valid family", () => {
+    expect(familyProblems([js, py, plain])).toEqual({ errors: [], warnings: [] });
   });
 });

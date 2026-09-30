@@ -135,6 +135,27 @@ import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll
 - `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
 - `index` must be an `.astro` file, needs `tutorials`, and cannot be combined with `tutorials/index.mdx` (build error: the file would be ignored).
 
+#### Sibling tutorials
+
+When the explanations differ by language (for example the JavaScript SDK and the Python API), write one tutorial per language and link them with the same `family`. Use [code variants](#code-variants) instead when the steps and prose are shared.
+
+```yaml
+# tutorials/display-map-js/tutorial.mdx
+family: display-map
+familyLabel: JavaScript
+```
+
+```yaml
+# tutorials/display-map-python/tutorial.mdx
+family: display-map
+familyLabel: Python
+```
+
+- The header shows a "Tutorial language" switcher after the title, listing the family's tutorials by `order`, then `familyLabel`. It is a segmented control for up to four tutorials while it fits the header, else a dropdown.
+- Choosing a sibling opens it on the step with the same id when it exists (give matching steps the same `id`), else at its top. The reader's code variant carries over when the sibling has a variant with that id.
+- `family` and `familyLabel` go together, and each label must be unique within its family (build errors). A family with one tutorial, or `family` outside a series site, only warns.
+- The index keeps one card per tutorial.
+
 ## Frontmatter
 
 ```yaml
@@ -162,7 +183,9 @@ logo: logo.svg
 | `tags` | list of strings | none | Series index card tags and filter values, e.g. `[REST, Python]`. No commas inside a tag. |
 | `level` | string | none | Series index card, e.g. `Beginner`; `<TutorialList level>` matches it exactly. |
 | `duration` | string | none | Series index card, e.g. `20 min`. |
-| `order` | number | none | Series index position: lower first; tutorials without it come after, by title. |
+| `order` | number | none | Series index position: lower first; tutorials without it come after, by title. Also orders the [sibling](#sibling-tutorials) switcher. |
+| `family` | string | none | Links [sibling tutorials](#sibling-tutorials) of a series site. Needs `familyLabel`. |
+| `familyLabel` | string | none | This tutorial's name in the sibling switcher, e.g. `Python`. Unique within the family. |
 
 Highlighting is chosen by file extension. Built in: JavaScript/TypeScript (`js`, `mjs`, `cjs`, `jsx`, `ts`, `tsx`), `vue`, `html`, `css`, `json`/`geojson`, Markdown (`md`, `mdx`), shell (`sh`, `bash`), `ps1`, `yaml`/`yml`, `toml`, `ini`, `http`, Python (`py`), Kotlin (`kt`, `kts`), Gradle Groovy (`gradle`), `swift`, `java`, C# (`cs`), XML/XAML (`xml`, `xaml`), C++ (`cpp`, `h`, `hpp`), `qml`, `dart`, `sql` and `lua`. Other files show as plain text.
 

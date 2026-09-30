@@ -913,3 +913,15 @@ body[data-maximized="code"] .media-panel:not([hidden]) ~ .media-restore {
   &:hover { color: var(--calcite-color-text-1); background: var(--calcite-color-foreground-2); }
   &:focus-visible { outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand)); outline-offset: -2px; }
 }
+
+/* Sibling tutorials: next to the title; shrinks first so client/family.ts can swap to the dropdown. */
+.family-switcher {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding-inline: 0.75rem;
+}
+/* Natural width: a squeezed control would wrap its labels instead of overflowing the slot. */
+.family-switcher calcite-segmented-control { flex: none; }

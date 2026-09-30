@@ -44,6 +44,8 @@ export interface TutorialConfig {
   duration?: string;
   /** Index position: lower first; tutorials without it come after, by title. */
   order?: number;
+  /** Sibling tutorials: same `family` on a series site, told apart by `familyLabel` in the header switcher. */
+  family?: { id: string; label: string };
 }
 
 /** Frontmatter of a series site's optional `index.mdx`. */
@@ -180,6 +182,8 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     level,
     duration,
     order,
+    family,
+    familyLabel,
   } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
@@ -204,7 +208,17 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     ...optionalEntry("level", optionalText("level", level)),
     ...optionalEntry("duration", optionalText("duration", duration)),
     ...(order === undefined ? {} : { order: order as number }),
+    ...readFamily(family, familyLabel),
   };
+}
+
+function readFamily(family: unknown, familyLabel: unknown): Pick<TutorialConfig, "family"> {
+  const id = optionalText("family", family);
+  const label = optionalText("familyLabel", familyLabel);
+  if (id === undefined && label === undefined) return {};
+  if (id === undefined) throw new FrontmatterError("familyLabel", '"familyLabel" needs "family" (the name shared by sibling tutorials)');
+  if (label === undefined) throw new FrontmatterError("family", '"family" needs "familyLabel" (this tutorial\'s name in the switcher, e.g. Python)');
+  return { family: { id, label } };
 }
 
 function optionalEntry<K extends string>(key: K, value: string | undefined): Partial<Record<K, string>> {

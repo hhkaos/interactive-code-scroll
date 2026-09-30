@@ -49,6 +49,9 @@ When a decision is open, recommend one option and explain the trade-offs; let th
 ### ArcGIS
 Explore first: before writing code for X, ask what already exists. Check official Esri developer documentation before assuming ArcGIS APIs.
 
+### Rendered attributes are a test contract
+When changing a rendered attribute or class (`data-*`, ids, CSS hooks), grep `e2e/` and `test/` for the old value before committing, even when running only focused specs. (Changing `data-persist` from `""` to `"site"` once broke `e2e/tutorial-page.spec.ts` unnoticed.)
+
 ### Shared components in the page
 Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).
 

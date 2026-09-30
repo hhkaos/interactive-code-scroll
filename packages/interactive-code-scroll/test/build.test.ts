@@ -21,7 +21,7 @@ it("fails the Astro build with MDX file:line for every broken reference and fron
   await expect(run).rejects.toThrow(/tutorial\.mdx:12:1 <Step> request "missing-request" not found in requests\//);
 }, 60_000);
 
-it("publishes captured outputs as is and warns about outputs that look like they hold a credential", async () => {
+it("publishes captured outputs as is and warns about outputs that look like they hold a credential, and about a family outside a series", async () => {
   // Inside test/fixtures so the injected pages resolve the package dependencies; removed after the run.
   const root = mkdtempSync(fileURLToPath(new URL("./fixtures/result-", import.meta.url)));
   const outDir = join(root, "dist");
@@ -29,7 +29,7 @@ it("publishes captured outputs as is and warns about outputs that look like they
     const tutorial = join(root, "tutorial");
     mkdirSync(join(tutorial, "code"), { recursive: true });
     mkdirSync(join(tutorial, "output", "shots"), { recursive: true });
-    writeFileSync(join(tutorial, "tutorial.mdx"), '---\ntitle: Result\npreview: off\n---\n\n<Step id="run" file="main.py" output="run.json">\nText.\n</Step>\n');
+    writeFileSync(join(tutorial, "tutorial.mdx"), '---\ntitle: Result\npreview: off\nfamily: result\nfamilyLabel: Python\n---\n\n<Step id="run" file="main.py" output="run.json">\nText.\n</Step>\n');
     writeFileSync(join(tutorial, "code", "main.py"), 'TOKEN = "DEMO"  # @var token\n');
     writeFileSync(join(tutorial, "output", "run.json"), '{ "url": "https://x.test/?token=DEMO", "next": "https://x.test/?token=REAL123" }\n');
     const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0xff]);
@@ -52,6 +52,7 @@ it("publishes captured outputs as is and warns about outputs that look like they
     const credential = warnings.filter((line) => line.includes("looks like it contains a credential"));
     expect(credential.join("")).toContain("output/run.json:1");
     expect(credential.join("")).not.toContain("REAL123");
+    expect(warnings.join("")).toContain('tutorial.mdx:4:1 frontmatter "family" has no effect outside a series site');
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -92,6 +93,21 @@ it("renders a custom series index page with the public series module", async () 
     expect(html).toMatch(/<link rel="stylesheet" href="[^"]+\.css"|<style>[^<]*\.series-card/);
     expect(html).toMatch(/<script type="module" src="[^"]+\.js"/);
     expect(readFileSync(join(outDir, "alpha", "index.html"), "utf8")).toContain("Alpha");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
+
+it("fails a series build when two sibling tutorials share a familyLabel", async () => {
+  const root = mkdtempSync(fileURLToPath(new URL("./fixtures/family-", import.meta.url)));
+  try {
+    for (const slug of ["map-js", "map-ts"]) {
+      mkdirSync(join(root, "tutorials", slug, "code"), { recursive: true });
+      writeFileSync(join(root, "tutorials", slug, "tutorial.mdx"), `---\ntitle: ${slug}\npreview: off\nfamily: map\nfamilyLabel: JavaScript\n---\n\n# ${slug}\n`);
+      writeFileSync(join(root, "tutorials", slug, "code", "main.js"), "run();\n");
+    }
+    const run = build({ root, outDir: join(root, "dist"), integrations: [interactiveCodeScroll({ tutorials: "tutorials" })], logLevel: "silent" });
+    await expect(run).rejects.toThrow('tutorials "map-js", "map-ts" use the same familyLabel "JavaScript" in family "map"');
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

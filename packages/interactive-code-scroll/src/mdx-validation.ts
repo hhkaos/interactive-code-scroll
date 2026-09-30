@@ -115,6 +115,7 @@ export function tutorialValidation(
       mdxJsxTextElement: collect,
       after() {
         const mdxFile = relative(process.cwd(), tutorial.mdxPath);
+        const frontmatterLines = frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8"));
         const problems = validateTutorial({
           mdxFile,
           uses,
@@ -125,7 +126,7 @@ export function tutorialValidation(
           requests: tutorial.requests,
           requestBinaries: tutorial.requestBinaries,
           frontmatter,
-          frontmatterLines: frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8")),
+          frontmatterLines,
         });
         if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
         const sources = [...parsedFiles(tutorial.files).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
@@ -134,6 +135,9 @@ export function tutorialValidation(
           .filter(isTextOutput)
           .map((path) => ({ path, text: readFileSync(join(tutorial.outputDir, path), "utf8") }));
         for (const warning of credentialWarnings(texts, defaults)) warn(warning);
+        if (seriesDir === undefined && frontmatter.family !== undefined) {
+          warn(`${mdxFile}:${frontmatterLines.family ?? 1}:1 frontmatter "family" has no effect outside a series site`);
+        }
       },
     });
   };

@@ -79,6 +79,7 @@ See [Presenting a tutorial](authoring.md#presenting-a-tutorial) and [CLI Referen
 - **Strict validation**: a wrong file, region, variable, image, variant or frontmatter value fails the build with the MDX file, line and column. In dev mode the error appears as a browser overlay and validation re-runs when code or images change.
 - **Generic CLI**: `dev`, `build`, `serve`, `doctor` and `init-scripts` for any tutorial folder or series site (`--tutorials`, or detected from `tutorials/`; `--index` for a custom index page).
 - **Series sites**: several tutorials published as one site, each under its own URL, with an index of cards (description, level, duration, tags), a tag filter and an "All tutorials" link in each tutorial's header. An optional `index.mdx` adds a title, description, logo, prose and sections (`<TutorialList tags=… level=…>`) and places the filter (`<TutorialFilter />`); a custom Astro page (`index` option) can replace the index and reuse the tutorial list and components from `interactive-code-scroll/series`. See [Series Sites](authoring.md#series-sites).
+- **Sibling tutorials**: tutorials with the same `family` (e.g. one per SDK language, with their own prose) get a language switcher in the header that opens the sibling on the same step and keeps the reader's code variant when it can. See [Sibling tutorials](authoring.md#sibling-tutorials).
 
 See [Validation](authoring.md#validation).
 

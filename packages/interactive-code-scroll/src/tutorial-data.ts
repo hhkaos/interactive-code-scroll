@@ -1,6 +1,6 @@
 import type { MDXContent } from "astro";
 import { readTutorialConfig } from "./frontmatter.ts";
-import { sortCards, type SeriesCard } from "./series.ts";
+import { familyOf, familyProblems, sortCards, type FamilyMember, type SeriesCard } from "./series.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 
 /** One tutorial as the virtual module exposes it to the injected pages. */
@@ -70,4 +70,45 @@ export function seriesCards(tutorials: readonly TutorialData[], base: string): S
       };
     }),
   );
+}
+
+/** A tutorial of the current one's family, as the header's language switcher lists it. */
+export interface Sibling {
+  slug: string;
+  label: string;
+  href: string;
+  /** Variant ids of the sibling: the active variant carries over only when it has it. */
+  variants: string[];
+  current: boolean;
+}
+
+function familyMembers(tutorials: readonly TutorialData[]): (FamilyMember & { variants: string[] })[] {
+  return tutorials.map(({ slug, frontmatter }) => {
+    const { family, order, variants } = readTutorialConfig(frontmatter);
+    return { slug, variants: variants?.map((v) => v.id) ?? [], ...(family && { family }), ...(order === undefined ? {} : { order }) };
+  });
+}
+
+const warned = new Set<string>();
+
+/** Cross-tutorial family rules (per-tutorial ones run at MDX compile time); each warning is logged once. */
+export function checkFamilies(tutorials: readonly TutorialData[], warn: (message: string) => void = console.warn): void {
+  const { errors, warnings } = familyProblems(familyMembers(tutorials));
+  for (const warning of warnings) {
+    if (warned.has(warning)) continue;
+    warned.add(warning);
+    warn(warning);
+  }
+  if (errors.length > 0) throw new Error(`interactive-code-scroll: sibling tutorials:\n  ${errors.join("\n  ")}`);
+}
+
+/** The switcher's entries for `slug` (itself included); empty when it has no sibling on the site. */
+export function siblingsOf(tutorials: readonly TutorialData[], slug: string, base: string): Sibling[] {
+  return familyOf(familyMembers(tutorials), slug).map((m) => ({
+    slug: m.slug,
+    label: m.family!.label,
+    href: tutorialBase(base, m.slug),
+    variants: m.variants,
+    current: m.slug === slug,
+  }));
 }
