@@ -9,6 +9,7 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] `pnpm create interactive-code-scroll` scaffolder.
 - [ ] GitHub Pages workflow for a series site (2.4).
 - [ ] Sibling tutorials: frontmatter `family` + `familyLabel`, header switcher that navigates to the same step id in the chosen tutorial (needs multi-tutorial repos).
+- [ ] Review with Calcite experts whether `calcite-shell` / `calcite-shell-panel` could replace the page grid (`div.layout`); requirements in PROJECT.md "Page layout".
 - [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.
 
 ## Multi-SDK support

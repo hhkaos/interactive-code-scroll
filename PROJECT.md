@@ -271,6 +271,16 @@ When the user wants to save tokens, prefer preparing exact commit commands and a
 - Iframe and tab both load a same-origin preview page (`preview/`) that renders the current files; iframe sandbox includes `allow-same-origin`. OAuth via popup (`OAuthInfo` with `popup: true`) + the tutorial's own `code/oauth-callback.html`, published at `preview/oauth-callback.html`.
 - New tab: standalone page with current files; OAuth via regular redirect.
 
+### Page layout (grid, not `calcite-shell`)
+The page structure is our own CSS grid (`div.layout` > `main.docs` + `div.gutter` + `aside.right`); Calcite provides the controls (`calcite-navigation`, actions, tabs, segmented control). Not a recorded upfront decision, but these requirements fit a plain grid better than `calcite-shell` / `calcite-shell-panel`:
+- Docs/code splitter as a percentage (`--split`, 20–70 %), remembered and keyboard-operable; `calcite-shell-panel resizable` works in px within `--calcite-shell-panel-min/max-width` and exposes no persistent width.
+- A second, nested splitter (code/Preview) inside `aside.right`; shell only has edge panels.
+- The step engine observes and centers the scroll of `main.docs` (center line, deep links, `ResizeObserver`); inside `calcite-shell-panel` / `calcite-panel` the scroll container lives in shadow DOM.
+- Layout correct from first paint, without waiting for Calcite hydration (late online, see Known issues).
+- Own states (`data-docs-hidden` with the toggle as a rail, maximized panes, presentation mode) are simple CSS on the grid.
+
+**Pending review:** not validated with Calcite experts. Ask whether current shell components can meet these requirements before any refactor (TODO.md).
+
 ---
 
 ## What to avoid
