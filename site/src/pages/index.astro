@@ -4,11 +4,10 @@ import CopyCommand from "../components/CopyCommand.astro";
 import DemoFrame from "../components/DemoFrame.astro";
 import Shot from "../components/Shot.astro";
 import { base } from "../../site-config.mjs";
+import { docsPageUrl, repo } from "../../docs-config.mjs";
 import core from "../../../packages/interactive-code-scroll/package.json";
 
-const repo = "https://github.com/hhkaos/interactive-code-scroll";
 const blob = `${repo}/blob/main`;
-const docs = `${blob}/docs`;
 const newIssue = `${repo}/issues/new`;
 const createCommand = "npm create interactive-code-scroll@latest";
 
@@ -112,7 +111,7 @@ const showcase = [
         <a href="#demo">Demo</a>
         <a href="#features">Features</a>
         <a href="#showcase">Showcase</a>
-        <a href={`${docs}/quick-start.md`}>Docs</a>
+        <a href={docsPageUrl("quick-start")}>Docs</a>
       </nav>
       <div class="nav-actions">
         <button class="icon-btn" id="theme" type="button" aria-label="Toggle light and dark theme">
@@ -195,7 +194,7 @@ const showcase = [
             <li><code>npm run dev</code> — edit <code>tutorial.mdx</code>, see it live</li>
             <li><code>git push</code> — published on GitHub Pages</li>
           </ol>
-          <a class="btn" href={`${docs}/quick-start.md`}>Read the quick start →</a>
+          <a class="btn" href={docsPageUrl("quick-start")}>Read the quick start →</a>
         </div>
         <div class="terminal reveal" aria-label="Example wizard session">
           <div class="terminal-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span> zsh</div>
@@ -256,7 +255,7 @@ const showcase = [
             ))
           }
         </div>
-        <p class="more reveal"><a href={`${docs}/features.md`}>See every feature →</a></p>
+        <p class="more reveal"><a href={docsPageUrl("features")}>See every feature →</a></p>
       </div>
     </section>
 
@@ -355,7 +354,7 @@ const showcase = [
               Used for real tutorials and talks. Authoring APIs may still change before 1.0; the upgrade guide covers every
               breaking change.
             </p>
-            <a href={`${docs}/upgrade.md`}>Upgrade guide →</a>
+            <a href={docsPageUrl("upgrade")}>Upgrade guide →</a>
           </div>
         </div>
         <div class="open-cta reveal">
@@ -375,7 +374,7 @@ const showcase = [
         <CopyCommand command={createCommand} />
         <div class="hero-buttons">
           <a class="btn btn-primary" href={repo}>★ Star on GitHub{starLabel && <span class="count">{starLabel}</span>}</a>
-          <a class="btn" href={`${docs}/quick-start.md`}>Read the docs</a>
+          <a class="btn" href={docsPageUrl("quick-start")}>Read the docs</a>
         </div>
         <p class="small">A star helps other trainers and speakers find it.</p>
       </div>
@@ -389,7 +388,7 @@ const showcase = [
         <span>InteractiveCodeScroll</span>
       </div>
       <nav aria-label="Footer">
-        <a href={`${docs}/quick-start.md`}>Docs</a>
+        <a href={docsPageUrl("quick-start")}>Docs</a>
         <a href={repo}>GitHub</a>
         <a href="https://www.npmjs.com/package/interactive-code-scroll">npm</a>
         <a href={`${blob}/CHANGELOG.md`}>Changelog</a>

@@ -1,0 +1,86 @@
+/* Starlight theme for the docs, mapped onto the landing tokens (tokens.css). Unlayered, so it wins over
+   Starlight's own light/dark definitions; the tokens themselves switch with data-theme. */
+:root,
+:root[data-theme="dark"],
+:root[data-theme="light"] {
+  --sl-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sl-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --sl-color-accent-low: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: color-mix(in srgb, var(--accent) 55%, var(--text));
+
+  --sl-color-white: var(--text);
+  --sl-color-gray-1: color-mix(in srgb, var(--text) 85%, var(--muted));
+  --sl-color-gray-2: color-mix(in srgb, var(--text) 45%, var(--muted));
+  --sl-color-gray-3: var(--muted);
+  --sl-color-gray-4: color-mix(in srgb, var(--muted) 55%, var(--border));
+  --sl-color-gray-5: var(--border);
+  --sl-color-gray-6: var(--surface);
+  --sl-color-gray-7: var(--bg-soft);
+  --sl-color-black: var(--bg);
+
+  --sl-color-text-accent: var(--accent);
+  --sl-color-bg-nav: color-mix(in srgb, var(--bg) 88%, transparent);
+  --sl-color-bg-sidebar: var(--bg);
+  --sl-color-hairline-light: var(--border);
+  --sl-color-hairline: var(--border);
+  --sl-color-hairline-shade: var(--border);
+}
+
+.header {
+  backdrop-filter: blur(12px);
+}
+
+/* The current page: same gradient as the landing's primary buttons. */
+.sidebar-content a[aria-current="page"] {
+  background: linear-gradient(100deg, var(--accent), var(--accent-2));
+  color: var(--accent-ink);
+}
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+h1#_top {
+  letter-spacing: -0.02em;
+}
+
+/* Light/dark screenshot pairs from docs/*.md (rewriteDocsPicture in docs-config.mjs); the page theme picks one. */
+.sl-markdown-content .docs-shot {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.sl-markdown-content .docs-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+
+:root[data-theme="dark"] .docs-shot-light,
+:root[data-theme="light"] .docs-shot-dark {
+  display: none !important;
+}
+
+/* Show code as typed: ligatures turn `<!--`, `-->` or `!=` into arrows and symbols in a syntax reference. */
+.sl-markdown-content code,
+.sl-markdown-content pre,
+.expressive-code {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* "On this page": subsections open only under the section being read (Starlight marks its link with
+   aria-current as the reader scrolls), so long pages show a short list of top-level sections. */
+starlight-toc li > ul,
+mobile-starlight-toc li > ul {
+  display: none;
+}
+
+starlight-toc li:has(a[aria-current="true"]) > ul,
+mobile-starlight-toc li:has(a[aria-current="true"]) > ul {
+  display: block;
+}

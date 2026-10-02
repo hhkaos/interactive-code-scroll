@@ -58,6 +58,9 @@ Never read `import.meta.env.BASE_URL` in framework code: a `BASE_URL` environmen
 ### Check dev mode, not only preview
 When a change touches how `site/` or a tutorial is served (routes, `public/`, base path, middleware), open it with the dev server too (`pnpm site`, `pnpm dev`), not only `astro preview`/E2E. E2E runs against built previews. (`astro dev` once 404'd the embedded showcase demo that preview and Pages served fine.)
 
+### Markdown transforms and the content cache
+After changing a Markdown transform (e.g. `docsMarkdown()` in `site/docs-config.mjs`), stop the dev server and delete `site/.astro/data-store.json` before reviewing in dev. The content layer reuses rendered HTML until a file's content changes, so dev keeps serving the old output while build/E2E are correct. (This once served raw `<picture>` tags and 404 screenshots in `pnpm site`.)
+
 ### Shared components in the page
 Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).
 

@@ -20,7 +20,7 @@ What the workflow does:
 
 ### npm
 
-```yaml
+```yaml title=".github/workflows/pages.yml"
 name: Deploy to GitHub Pages
 
 on:
@@ -81,7 +81,7 @@ jobs:
 
 The pnpm version comes from the `packageManager` field of your `package.json` (for example `"packageManager": "pnpm@11.13.1"`).
 
-```yaml
+```yaml title=".github/workflows/pages.yml"
 name: Deploy to GitHub Pages
 
 on:

@@ -1,0 +1,15 @@
+---
+// Replaces Starlight's ThemeProvider: dark by default and the `ics:theme` key, so the landing page,
+// the docs and the tutorials share one choice (Starlight's own key is `starlight-theme`).
+---
+
+<script is:inline>
+  try {
+    const stored = localStorage.getItem("ics:theme");
+    document.documentElement.dataset.theme = stored === "light" ? "light" : "dark";
+  } catch {
+    document.documentElement.dataset.theme = "dark";
+  }
+  // Starlight calls this from its theme picker; ThemeSelect.astro replaces that picker.
+  window.StarlightThemeProvider = { updatePickers() {} };
+</script>

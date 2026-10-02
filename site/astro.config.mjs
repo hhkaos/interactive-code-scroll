@@ -1,6 +1,8 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import { docsDir, docsMarkdown, docsPages, repo } from "./docs-config.mjs";
 import { base, site } from "./site-config.mjs";
 
 const publicDir = fileURLToPath(new URL("./public/", import.meta.url));
@@ -32,7 +34,27 @@ function publicFolderIndex() {
 export default defineConfig({
   site,
   base,
-  integrations: [publicFolderIndex()],
+  integrations: [
+    publicFolderIndex(),
+    starlight({
+      title: "InteractiveCodeScroll",
+      description: "Build guided, interactive code tutorials by writing MDX and annotating source code.",
+      favicon: "/favicon.svg",
+      social: [{ icon: "github", label: "GitHub", href: repo }],
+      sidebar: docsPages.map(({ file, label }) => ({ label, slug: `docs/${file}` })),
+      customCss: ["./src/styles/tokens.css", "./src/styles/docs.css"],
+      components: {
+        SiteTitle: "./src/components/docs/SiteTitle.astro",
+        ThemeProvider: "./src/components/docs/ThemeProvider.astro",
+        ThemeSelect: "./src/components/docs/ThemeSelect.astro",
+      },
+      // Asides and heading anchors for docs/*.md, which live outside src/content/docs/.
+      markdown: { processedDirs: [docsDir] },
+      // The landing page owns the rest of the site.
+      disable404Route: true,
+    }),
+    docsMarkdown(),
+  ],
   vite: {
     // Same as the core integration: bundle Astro's `cookie` import so a stray older copy up the tree never wins.
     environments: { prerender: { resolve: { noExternal: ["cookie"] } } },

@@ -1,10 +1,15 @@
 # Features
 
-What InteractiveCodeScroll can do, in one page. Each section links to the reference that shows how to use it. For the file formats and every option, see [Authoring and API Reference](authoring.md); for commands, see [CLI Reference](cli.md).
+What InteractiveCodeScroll can do, in one page. Each section links to the reference that shows how to use it. For the file formats and every option, see [Authoring Reference](authoring.md); for commands, see [CLI Reference](cli.md).
 
 A tutorial is a folder with `tutorial.mdx` (the explanations), `code/` (the final, runnable project) and `images/`. The build turns it into a static site: explanations on the left, code on the right, kept in sync as the reader moves through the steps.
 
 ## Reading a tutorial
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/reading-oauth-dark.png">
+  <img alt="A tutorial step with its explanation on the left and the JavaScript region it describes highlighted on the right; the rest of the file is dimmed." src="../site/public/screenshots/reading-oauth-light.png" width="900">
+</picture>
 
 - **Side-by-side layout**: explanations on the left, code on the right. Both splitters (explanations/code, code/Preview) can be dragged, and their sizes are remembered. A handle on the splitter hides or shows the explanations.
 - **Steps drive the code panel**: when a step becomes active, it can switch file, focus a region (the rest of the file turns gray and the region scrolls into view) or show images instead of code. A text-only step keeps the current file and clears the focus.
@@ -18,6 +23,11 @@ See [Components](authoring.md#components).
 
 ## Code
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/hero-rest-python-dark.png">
+  <img alt="Python code with the current step highlighted, a cURL / Python / JavaScript switcher above it and a Result pane with the JSON response below." src="../site/public/screenshots/hero-rest-python-light.png" width="900">
+</picture>
+
 - **Final code, highlighted**: every file is shown in its final version; steps only focus parts of it. Highlighting happens at build time for JavaScript/TypeScript, HTML, CSS, JSON, Markdown, shell, YAML, Python, Kotlin, Swift, C#, Java, C++, Dart, SQL, `.http` and more, and can be overridden per extension.
 - **Regions and variables as comments**: `#region id` / `#endregion` marks what a step focuses; `@var name` marks a literal a form field can change. The source stays valid and runnable; markers never reach the reader or the downloads.
 - **Large projects**: the `files` list picks which files get tabs. Everything else, including binary files such as a Gradle wrapper jar, still goes into the ZIP.
@@ -26,6 +36,11 @@ See [Components](authoring.md#components).
 See [Code Markers](authoring.md#code-markers) and [Files Not Shown in Tabs](authoring.md#files-not-shown-in-tabs).
 
 ## Forms that edit the code
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/forms-oauth-dark.png">
+  <img alt="A Client ID field in the explanations; the value typed there appears, masked, in the code on the right." src="../site/public/screenshots/forms-oauth-light.png" width="900">
+</picture>
 
 - `<VarField>` inputs in the explanations update the code as the reader types (client ID, API key, portal URL…). The literal in the code is the default.
 - **Secret fields** are masked in the form and in the code, with a reveal toggle.
@@ -36,6 +51,11 @@ See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables
 
 ## Preview
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/oauth-preview-dark.png">
+  <img alt="The current step highlights the HTML it explains, and the live Preview below the code shows the running app." src="../site/public/screenshots/oauth-preview-light.png" width="900">
+</picture>
+
 - Runs the tutorial's web code (`code/index.html`) from a real page of the site: embedded, in a new tab, or both.
 - Refreshes after form changes, or with Run. A step can expand or collapse it.
 - OAuth sign-in works from the embedded Preview through a popup, and in the new tab through a normal redirect.
@@ -43,6 +63,11 @@ See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables
 See [Preview](authoring.md#preview).
 
 ## Result pane
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/result-rest-text-dark.png">
+  <img alt="A Python script step: the Result pane under the code shows the captured terminal output of the script." src="../site/public/screenshots/result-rest-text-light.png" width="900">
+</picture>
 
 - Takes the Preview's place for code that cannot run in the browser (scripts, native apps): a step with `output="geocode.json"` shows a captured result from `output/`, with per-language overrides in `output/<variant>/`.
 - JSON is shown as a collapsible, colored tree (keyboard navigable, long lists paged by 100), text in terminal style (colored prompt lines and ANSI colors), images as images. Steps without an output keep the last result. Works offline.
@@ -57,6 +82,11 @@ See [Result Pane](authoring.md#result-pane).
 
 ## Images
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/oauth-images-dark.png">
+  <img alt="A step that shows a carousel of setup screenshots in place of the code." src="../site/public/screenshots/oauth-images-light.png" width="900">
+</picture>
+
 - A step can show one image or a carousel instead of code. Step keys page through the images first; clicking an image opens a full-screen viewer.
 
 See [`<Step>`](authoring.md#step).
@@ -67,11 +97,16 @@ See [`<Step>`](authoring.md#step).
 
 ## Presenting
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/present-rest-curl-dark.png">
+  <img alt="Presentation mode: the tutorial fills the screen with a compact toolbar, with the cURL request of the current step highlighted." src="../site/public/screenshots/present-rest-curl-light.png" width="900">
+</picture>
+
 - **Presentation mode** hides the header; the explanations can be hidden too. Step keys and clickers keep working, including while the focus is inside the Preview, a form field or the Result pane.
 - **Maximize a pane**: the code, the Preview or the Result pane fills the window from its header icon or from a step (`maximize=`); the icon or Esc restores the layout. Step keys keep working.
 - **Serve locally** with the CLI when the venue's network is unreliable.
 
-See [Presenting a tutorial](authoring.md#presenting-a-tutorial) and [CLI Reference](cli.md).
+See [Presenting a Tutorial](presenting.md).
 
 ## Writing tutorials
 

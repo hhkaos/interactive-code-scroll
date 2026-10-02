@@ -13,7 +13,7 @@ Write the story in MDX, keep your code runnable, and get a static site where exp
 [![Built with Astro](https://img.shields.io/badge/built%20with-Astro-bc52ee?logo=astro&logoColor=white)](https://astro.build)
 [![GitHub stars](https://img.shields.io/github/stars/hhkaos/interactive-code-scroll?style=social)](https://github.com/hhkaos/interactive-code-scroll/stargazers)
 
-[**Live demo**](https://www.rauljimenez.info/interactive-code-scroll/) · [Features](docs/features.md) · [Docs](docs/authoring.md) · [Examples](#examples) · [Report a bug / request a feature](https://github.com/hhkaos/interactive-code-scroll/issues/new/choose)
+[**Live demo**](https://www.rauljimenez.info/interactive-code-scroll/) · [Features](https://www.rauljimenez.info/interactive-code-scroll/docs/features/) · [Docs](https://www.rauljimenez.info/interactive-code-scroll/docs/) · [Examples](#examples) · [Report a bug / request a feature](https://github.com/hhkaos/interactive-code-scroll/issues/new/choose)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="site/public/screenshots/hero-rest-python-dark.png">
@@ -53,7 +53,7 @@ Built for people who teach developer technologies: developer advocates, trainers
 | 🚀 **Static output** | Deploy anywhere. A GitHub Pages workflow is one wizard answer away. |
 | 🌗 **Light and dark** | Follows the reader's system preference, with a toggle. |
 
-See every capability in [docs/features.md](docs/features.md).
+See every capability in [Features](https://www.rauljimenez.info/interactive-code-scroll/docs/features/).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="site/public/screenshots/oauth-preview-dark.png">
@@ -93,16 +93,19 @@ Built a tutorial with it? [Add it to the showcase](https://github.com/hhkaos/int
 
 ## Documentation
 
-- [Quick start](docs/quick-start.md) — from zero to a published tutorial
-- [Features](docs/features.md) — everything the tool can do, in one page
-- [Authoring and API reference](docs/authoring.md) — folder layout, frontmatter, components, code markers
-- [CLI reference](docs/cli.md) — `create`, `dev`, `build`, `serve`, `doctor`
-- [Deployment](docs/deployment.md) — GitHub Pages and other static hosts
-- [Upgrade guide](docs/upgrade.md)
+On the website, with search. The source is [`docs/`](docs/).
+
+- [Quick start](https://www.rauljimenez.info/interactive-code-scroll/docs/quick-start/) — from zero to a published tutorial
+- [Features](https://www.rauljimenez.info/interactive-code-scroll/docs/features/) — everything the tool can do, in one page
+- [Authoring reference](https://www.rauljimenez.info/interactive-code-scroll/docs/authoring/) — how a tutorial works, folder structure, frontmatter, components, code markers, build errors
+- [Presenting a tutorial](https://www.rauljimenez.info/interactive-code-scroll/docs/presenting/) — presentation mode, clickers, zoom and offline fallback for talks
+- [CLI reference](https://www.rauljimenez.info/interactive-code-scroll/docs/cli/) — `create`, `dev`, `build`, `serve`, `doctor`
+- [Deployment](https://www.rauljimenez.info/interactive-code-scroll/docs/deployment/) — GitHub Pages and other static hosts
+- [Upgrade guide](https://www.rauljimenez.info/interactive-code-scroll/docs/upgrade/)
 
 ## 🧪 Beta, and evolving fast
 
-InteractiveCodeScroll is in **beta**: it is used for real tutorials and talks, and authoring APIs may still change before 1.0 (the [upgrade guide](docs/upgrade.md) covers every breaking change).
+InteractiveCodeScroll is in **beta**: it is used for real tutorials and talks, and authoring APIs may still change before 1.0 (the [upgrade guide](https://www.rauljimenez.info/interactive-code-scroll/docs/upgrade/) covers every breaking change).
 
 The first beta was built in under a week, driven by the needs of real tutorials — and it can keep moving at that pace with yours. **Missing something? Found a bug? [Open an issue](https://github.com/hhkaos/interactive-code-scroll/issues/new/choose).** Ideas from people who teach are what shape the roadmap.
 

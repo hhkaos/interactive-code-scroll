@@ -1,0 +1,20 @@
+---
+// <base>docs/ opens the first page. A static page, because GitHub Pages cannot send redirects.
+import { docsPages, docsPageUrl } from "../../../docs-config.mjs";
+
+const target = docsPageUrl(docsPages[0]!.file);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>InteractiveCodeScroll docs</title>
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={new URL(target, Astro.site).href} />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <a href={target}>Go to the quick start</a>
+  </body>
+</html>

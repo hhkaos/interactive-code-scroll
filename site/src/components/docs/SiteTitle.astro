@@ -1,0 +1,52 @@
+---
+// Replaces Starlight's site title with the landing page's brand; it links back to the landing page.
+import { base } from "../../../site-config.mjs";
+---
+
+<a class="brand" href={base}>
+  <img src={`${base}logo.svg`} alt="" width="30" height="30" />
+  <span>InteractiveCodeScroll</span>
+  <span class="docs-pill">docs</span>
+</a>
+
+<style>
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text);
+    font-size: var(--sl-text-h4);
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .brand span:first-of-type {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 50rem) {
+    .brand {
+      gap: 0.5rem;
+      font-size: 1.05rem;
+    }
+
+    .docs-pill {
+      display: none;
+    }
+  }
+
+  .docs-pill {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+</style>

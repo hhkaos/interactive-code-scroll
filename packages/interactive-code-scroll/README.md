@@ -21,7 +21,7 @@ Or add it to an existing project:
 npm install -D astro interactive-code-scroll
 ```
 
-## Tutorial Layout
+## Folder Structure
 
 ```text
 tutorial/

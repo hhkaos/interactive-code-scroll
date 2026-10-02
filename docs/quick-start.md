@@ -20,7 +20,7 @@ npm run dev
 
 Open the URL it prints. Edits to `tutorial.mdx` and the files in `code/` reload the page, and broken references show an error overlay with the file and line.
 
-## 2. Know the layout
+## 2. Know the folder structure
 
 ```text
 tutorial/
@@ -29,13 +29,13 @@ tutorial/
   images/        # optional screenshots and diagrams
 ```
 
-Series sites use `tutorials/<name>/` with the same layout per tutorial. REST and script tutorials add `requests/` (`.http` files the reader can run) and `output/` (captured results). See the [authoring reference](authoring.md) for every option.
+Series sites use `tutorials/<name>/` with the same structure per tutorial. REST and script tutorials add `requests/` (`.http` files the reader can run) and `output/` (captured results). See the [authoring reference](authoring.md) for every option.
 
 ## 3. Mark your code
 
 Your source files stay plain and runnable. Comments in the file's own syntax mark the regions a step focuses on, and `@var` marks string literals readers can edit:
 
-```js
+```js title="tutorial/code/main.js"
 // #region config
 const title = "My first tutorial"; // @var title
 // #endregion config
@@ -47,7 +47,7 @@ Markers are stripped from the rendered code, the Preview and the downloads.
 
 The frontmatter configures the page; `<Intro>` holds the context before the first step; each `<Step>` points at a file and region:
 
-```mdx
+```mdx title="tutorial/tutorial.mdx"
 ---
 title: My first tutorial
 preview: both   # embedded Preview + "open in new tab"

@@ -1,37 +1,4 @@
-:root,
-:root[data-theme="dark"] {
-  --bg: #070b14;
-  --bg-soft: #0c1322;
-  --surface: #111a2c;
-  --surface-2: #16223a;
-  --border: #1f2c45;
-  --text: #e6ebf5;
-  --muted: #94a3b8;
-  --accent: #60a5fa;
-  --accent-2: #22d3ee;
-  --accent-ink: #04111f;
-  --glow: rgba(56, 142, 255, 0.28);
-  --shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
-  --code-bg: #0a1120;
-  color-scheme: dark;
-}
-
-:root[data-theme="light"] {
-  --bg: #f7f9fc;
-  --bg-soft: #eef2f8;
-  --surface: #ffffff;
-  --surface-2: #f1f5fb;
-  --border: #dbe3ef;
-  --text: #0b1220;
-  --muted: #526077;
-  --accent: #2563eb;
-  --accent-2: #0891b2;
-  --accent-ink: #ffffff;
-  --glow: rgba(37, 99, 235, 0.16);
-  --shadow: 0 30px 70px -25px rgba(15, 30, 60, 0.35);
-  --code-bg: #0b1220;
-  color-scheme: light;
-}
+@import "./tokens.css";
 
 *,
 *::before,

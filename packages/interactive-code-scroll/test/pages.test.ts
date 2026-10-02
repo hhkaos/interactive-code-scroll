@@ -59,7 +59,7 @@ it("builds a series site whose internal URLs all carry a project-site base, as t
 
 it("documents the scaffolder's npm and pnpm Pages workflows, which differ only in package manager commands", () => {
   const doc = readFileSync(deploymentDoc, "utf8");
-  const documented = [...doc.matchAll(/```yaml\n(name: Deploy to GitHub Pages\n[\s\S]*?)```/g)].map((match) => match[1]!);
+  const documented = [...doc.matchAll(/```yaml[^\n]*\n(name: Deploy to GitHub Pages\n[\s\S]*?)```/g)].map((match) => match[1]!);
   // The scaffolder's templates are the source; the guide shows them verbatim.
   const workflows = ["npm", "pnpm"].map((pm) => readFileSync(new URL(`../../create-interactive-code-scroll/src/templates/pages/pages-${pm}.yml`, import.meta.url), "utf8"));
   expect(documented).toEqual(workflows);
