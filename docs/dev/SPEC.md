@@ -64,6 +64,7 @@ When a step comes into focus, its text block can:
 - highlight parts of the code (focus + gray out the rest + auto-scroll so the whole region is visible when it fits, else its start; no scroll when it is already in view),
 - switch from one file to another (`server.js`, `checkout.html`, etc.),
 - switch the right panel from code to an image or image carousel.
+- switch the right panel from code to an embedded page (`embed=`), e.g. a small app or a sli.dev slide deck that explains a concept.
 - A step with a `file` and no `region` shows that file with no focused lines; a text-only step (no `file`) keeps the current file visible but also clears any previous focus.
 
 ### Step navigation
@@ -78,6 +79,13 @@ When a step comes into focus, its text block can:
 - Step keys (arrows, PageUp/PageDown, clickers) first page through the carousel's images; past the last image they move to the next step, before the first image to the previous step. Entering a carousel step backwards starts at its last image.
 - The carousel's own controls also work.
 - Clicking an image opens it in a full-screen viewer; step keys keep paging the images there, and leaving the step's images (or Esc) closes it.
+
+### Embedded page
+- `<Step embed="…">` shows an iframe in the code area instead of code, like images. Source: an `https://` URL, or a path under the tutorial's `embeds/` folder (e.g. `embeds/oauth-slides/` with a static build such as `slidev build --base ./`), published as static files; a `#…` fragment is kept (e.g. `embed="oauth-slides/#/3"` opens slide 3 of a hash-routed deck). Local embeds work offline.
+- Build errors: a local path that does not exist, a URL that is not `https://`, and `embed=` combined with `images=` on the same step. External sites that refuse framing (`X-Frame-Options`, CSP `frame-ancestors`) cannot be detected at build; the docs say so, and the embed header offers "open in new tab" as fallback.
+- Sandbox: `allow-scripts allow-popups allow-forms`; local embeds also get `allow-same-origin` (author-trusted, like Preview code); external URLs do not.
+- Maximizable like the carousel.
+- Step keys: the iframe takes focus when clicked; PageUp/PageDown and arrows pressed inside a same-origin embed are forwarded to the tutorial so the clicker keeps moving steps (as Esc in the Preview). Paging inside the embed first (slides before steps, as in the carousel) is a later phase.
 
 ### Preview
 - **Optional**: the author can disable it per tutorial.
@@ -279,7 +287,7 @@ Goal: a first visit makes people want to try it now or save it for later, and le
 - **Tutorial code runs with its own standard toolchain**: the framework never adds a build step. Web code runs as-is in the Preview with dependencies via CDN (script tags / import maps, e.g. `js.arcgis.com`); its ZIP works by opening `index.html` or with a static server. Other code (scripts, native projects, `.http` requests) runs with its usual tools after download (e.g. `python`, Gradle, Xcode, VS Code REST Client); the ZIP contains the complete project, including binary files.
 - **Code markup in comments**: tutorial source code must remain valid, runnable and lintable without the framework. Supported marker comment styles are JavaScript/TypeScript line comments (`//`), CSS block comments (`/* */`), HTML comments (`<!-- -->`) and shell/YAML-style comments (`#`). Native styles, each recognized only in its own file types so existing comments never change meaning: C# native `#region id` / `#endregion` in `.cs`; `# region id` / `# endregion` (Python/VS Code folding style) in `.py`; `-- #region id` in `.sql` and `.lua`.
 - **Technical base: Astro + MDX + Shiki** (decided after a spike; see Decisions and `docs/dev/research/technical-base-spike.md`).
-- **Tutorial folder layout**: `tutorial.mdx` + `code/` + `images/`.
+- **Tutorial folder layout**: `tutorial.mdx` + `code/` + `images/` (+ optional `embeds/`, `requests/`, `output/`).
 - **Code markup rules** (enforced by the build):
   - `@var` targets the first string literal on its line; one `@var` per line; var names are unique per file. A var name used in several files (or variants) must have the same default literal everywhere; otherwise the build fails naming each file. Runtime values replace the literal in place in the pre-highlighted code, escaped by file type and quote style (backslash for JS-like languages and Python, plus `$` for Kotlin/Dart/Groovy templates; shell and PowerShell quoting; quote doubling for SQL and YAML single quotes; entities for HTML/XML/XAML attributes); literal forms that cannot be escaped safely (Python f-strings, raw and triple-quoted strings, TOML literal strings) are build errors. SQL and Lua also accept `-- @var` comments. In `.http` files, a file-variable line `@name = value` is an unquoted var named `name` whose default is the rest of the line.
   - Region ids are unique per file; regions may nest; empty regions are errors; `#endregion <id>` (optional id) must match the region it closes.
@@ -343,6 +351,7 @@ Goal: a first visit makes people want to try it now or save it for later, and le
 - **Scaffolder as a wizard** (plan-mode pass 2026-09-30, task 2.3): questions compose the project instead of picking one of a few fixed templates; kind and language are one grouped checkbox list (2026-09-30 UX review; kinds can be mixed, languages are runtimes); several entries offer both variants and sibling tutorials; generated tutorials are minimal working examples; `@clack/prompts` for the terminal UI (dependency of the create package only); every answer has a flag for tests, agents and repeatable setups.
 - **Sibling tutorials** (2026-09-30, task 2.5; UX review the same day): a labeled menu of links in the page header, deliberately unlike the segmented variant switcher (navigation vs. in-place setting); navigation carries the step hash and the variant when the sibling has it; duplicate labels in a family are errors, one-tutorial families and `family` outside a series are warnings; index cards are not grouped.
 - **Project website** (2026-09-30): Astro + Starlight in `site/`, custom landing, docs under `/docs/`; published under the owner's GitHub Pages domain as a personal project that may move to Esri later; terminal recordings with VHS (reproducible, GIF works in the GitHub README) instead of asciinema (its player cannot be embedded in a README and does not show the browser). `CLAUDE.md`/`AGENTS.md` stay at the root because agent tools only load them from there; other internal docs move to `docs/dev/`. The getting-started tutorial is removed in favor of `docs/quick-start.md`; the landing page embeds a real-topic tutorial instead. Landing look: dark-by-default developer-tool style rather than Calcite, which stays inside tutorials.
+- **Embedded pages** (2026-10-09): a step can show an iframe in the code area (`embed=`), for apps or sli.dev decks that explain a concept better than images; local `embeds/` folder plus `https://` URLs; phase 1 is a static iframe with step keys forwarded to the tutorial, paging inside the embed comes later.
 - **ArcGIS boundary for multi-SDK work**: the core stays generic; ArcGIS content ships as scaffolder templates and an optional preset package (e.g. map renderer for results). Nothing ArcGIS-specific enters core packages.
 
 ---
