@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.1] - 2026-10-09
+
 ### Added
 
 - `<Step embed="…">`: shows a page in an iframe instead of code, from the tutorial's new `embeds/` folder (published as is, also in dev; e.g. a Slidev deck's static build, `embed="oauth-slides/#/3"`) or an `https://` URL. Build errors for missing paths, non-`https` URLs and `embed` with `images`. The next fragment of the same page navigates in place; PageUp/PageDown inside a local embed move steps and Esc restores a maximized pane; a floating "Open in new tab" action covers sites that refuse framing. Documented in the authoring reference. Unit tests in `embed.test.ts` and `validate.test.ts`, E2E in `e2e/embed.spec.ts` (two embed steps added at the end of `fixtures/framework-fixture`, which excludes `embeds/` from `astro check`).
