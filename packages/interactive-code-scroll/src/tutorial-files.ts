@@ -18,6 +18,9 @@ export interface TutorialFiles {
   binaries: string[];
   /** Image paths relative to `images/`, with forward slashes. */
   images: string[];
+  embedsDir: string;
+  /** Files under `embeds/` (paths relative to it): pages a step shows with `embed=`, published as is. */
+  embeds: string[];
   outputDir: string;
   /** Captured output paths relative to `output/`, with forward slashes. */
   outputs: string[];
@@ -47,10 +50,11 @@ function readFolder(dir: string): { files: SourceFile[]; binaries: string[] } {
   return { files, binaries };
 }
 
-/** Reads a tutorial folder: `tutorial.mdx`, `code/**`, `images/**`, `output/**` and `requests/**`. */
+/** Reads a tutorial folder: `tutorial.mdx`, `code/**`, `images/**`, `embeds/**`, `output/**` and `requests/**`. */
 export function readTutorialFiles(tutorialDir: string): TutorialFiles {
   const codeDir = join(tutorialDir, "code");
   const imagesDir = join(tutorialDir, "images");
+  const embedsDir = join(tutorialDir, "embeds");
   const outputDir = join(tutorialDir, "output");
   const requestsDir = join(tutorialDir, "requests");
   const code = readFolder(codeDir);
@@ -62,6 +66,8 @@ export function readTutorialFiles(tutorialDir: string): TutorialFiles {
     files: code.files,
     binaries: code.binaries,
     images: listFiles(imagesDir),
+    embedsDir,
+    embeds: listFiles(embedsDir),
     outputDir,
     outputs: listFiles(outputDir),
     requestsDir,

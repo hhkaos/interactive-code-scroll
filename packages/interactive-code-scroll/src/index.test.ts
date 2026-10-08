@@ -54,7 +54,7 @@ describe("interactiveCodeScroll", () => {
     writeFileSync(join(root, "tutorials", "beta", "tutorial.mdx"), "# Beta\n");
     const { injectRoute, updateConfig } = runSetup(root, { tutorials: "tutorials" });
     const patterns = injectRoute.mock.calls.map(([route]) => route.pattern);
-    expect(patterns).toEqual(["/", "/[tutorial]", "/[tutorial]/preview", "/[tutorial]/preview/[...file]", "/[tutorial]/output/[...file]"]);
+    expect(patterns).toEqual(["/", "/[tutorial]", "/[tutorial]/preview", "/[tutorial]/preview/[...file]", "/[tutorial]/output/[...file]", "/[tutorial]/embeds/[...file]"]);
     expect(injectRoute.mock.calls[0]![0].entrypoint.href).toMatch(/pages\/series-index\.astro$/);
     const plugin = updateConfig.mock.calls[0]![0].vite.plugins[0] as ReturnType<typeof tutorialModule>;
     const code = plugin.load(plugin.resolveId(TUTORIAL_MODULE_ID)!)!;
@@ -149,7 +149,7 @@ describe("tutorialModule", () => {
     ]);
     const add = vi.fn();
     plugin.configureServer({ watcher: { add } });
-    const folders = ["code", "images", "requests", "output"];
+    const folders = ["code", "images", "embeds", "requests", "output"];
     expect(add).toHaveBeenCalledWith([...folders.map((folder) => join(alpha, folder)), ...folders.map((folder) => join(beta, folder))]);
 
     const alphaMdx = { id: "alpha" };

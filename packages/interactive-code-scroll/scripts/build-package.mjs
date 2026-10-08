@@ -16,7 +16,10 @@ const tsc = spawnSync("tsc", ["-p", "tsconfig.build.json"], {
 if (tsc.status !== 0) process.exit(tsc.status ?? 1);
 
 rewriteFile(join(dist, "index.js"), (text) =>
-  text.replaceAll("./preview/code-file.ts", "./preview/code-file.js").replaceAll("./result/output-file.ts", "./result/output-file.js"),
+  text
+    .replaceAll("./preview/code-file.ts", "./preview/code-file.js")
+    .replaceAll("./result/output-file.ts", "./result/output-file.js")
+    .replaceAll("./embed/embed-file.ts", "./embed/embed-file.js"),
 );
 
 for (const path of [

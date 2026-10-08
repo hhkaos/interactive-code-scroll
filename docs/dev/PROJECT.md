@@ -72,7 +72,7 @@ Working notes:
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
 - Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, `series.spec.ts` → `fixtures/framework-fixture-series` on :4404, `site.spec.ts` → `site/` on :4405 (waits for `/interactive-code-scroll/`, the site has no root page), the rest → :4400).
 - E2E blocks every non-local host (`e2e/fixtures.ts`); mock services with `mockService()` (page routes win over the context route).
-- Full E2E was green (121/121) after task 2.1 commit 2; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load.
+- Full E2E was green (121/121) after task 2.1 commit 2; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load. On macOS (2026-10-09) it fails every time locally, also on a clean checkout of `b78617b` (clicking a `<VarField>` in a later step scrolls it to the center line, which activates that step); CI on Linux passes.
 - Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
 
 ---
@@ -365,6 +365,8 @@ The page structure is our own CSS grid (`div.layout` > `main.docs` + `div.gutter
 | Astro pages and `<meta charset>` | Astro does not add a charset: a page without `<meta charset="utf-8" />` is decoded as Windows-1252, so `—` shows as `â€”` | Every example `.astro` page (docs, tests, fixtures) includes `<meta charset="utf-8" />` | Seen in the custom series index example (`docs/authoring.md`); the injected pages already have it |
 | `import.meta.env.BASE_URL` in Astro pages | Build with a `BASE_URL` environment variable (Vitest sets `BASE_URL=/`): pages read the variable, while Astro's own asset URLs keep `config.base`, so links and `clientData.base` lose the base | Framework code reads `base` from the virtual module (`config.base` captured in `astro:config:done`), never `import.meta.env.BASE_URL` | Found by `test/pages.test.ts`; the test sets `BASE_URL` explicitly to guard it |
 | `calcite-navigation-logo` with `description` on phones | Default: the navigation slot does not constrain the logo; the heading/description do not ellipsize and widen the page (414 px at 390 px) | `max-width` + `overflow: hidden` on the logo host: no page overflow, text clipped (no ellipsis) | `styles/series.css`; E2E guards the index at 390 px. Tutorial headers have no description, so they are unaffected so far |
+| Folder URLs of `embeds/` | Built site / static hosts: `embeds/<folder>/` serves its `index.html` | `astro dev`: only declared routes exist | `embed-file.ts` adds a `<folder>` route per `index.html` in dev only (in a build it would write the same file twice) |
+| A Slidev build in `embeds/` | `astro build`: published as is | `astro check`: type-checks the bundled JS (hundreds of warnings) | Exclude it: `"exclude": ["dist", "**/embeds/**"]` in the project `tsconfig.json` (done in `fixtures/framework-fixture`; documented for authors) |
 
 ---
 

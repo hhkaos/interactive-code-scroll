@@ -21,7 +21,7 @@ export const TUTORIAL_MODULE_ID = "virtual:interactive-code-scroll/tutorial";
 const RESOLVED_ID = `\0${TUTORIAL_MODULE_ID}`;
 
 /** Folders the MDX validation reads besides `tutorial.mdx`. */
-export const WATCHED_FOLDERS = ["code", "images", "requests", "output"];
+export const WATCHED_FOLDERS = ["code", "images", "embeds", "requests", "output"];
 
 /** Folder of a tutorial and its URL segment (`""` for a single-tutorial site at `/`). */
 export interface TutorialSource {
@@ -64,6 +64,8 @@ export function tutorialModule(sources: readonly TutorialSource[], seriesDir?: s
           `codeDir: ${JSON.stringify(tutorial.codeDir)},`,
           `outputs: ${JSON.stringify(tutorial.outputs)},`,
           `outputDir: ${JSON.stringify(tutorial.outputDir)},`,
+          `embeds: ${JSON.stringify(tutorial.embeds)},`,
+          `embedsDir: ${JSON.stringify(tutorial.embedsDir)},`,
           `requests: ${JSON.stringify(tutorial.requests)},`,
           `images: {${tutorial.images.map((image, i) => `${JSON.stringify(image)}: image${t}_${i}`).join(", ")}},`,
           "}",

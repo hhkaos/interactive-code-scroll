@@ -1,0 +1,21 @@
+
+.sdk-view[data-v-cc01911c] { display: flex; flex-direction: column; height: 100%; gap: 6px;
+}
+.sdk-view[data-v-cc01911c] svg { flex: 1; min-height: 0;
+}
+.caption[data-v-cc01911c] { min-height: 58px;
+}
+.lines[data-v-cc01911c] { display: flex; flex-direction: column; gap: 4px;
+}
+.row[data-v-cc01911c] { display: flex; align-items: center; gap: 10px; font-size: 16px; color: var(--c-ink);
+}
+.row i[data-v-cc01911c] { width: 22px; height: 6px; border-radius: 3px; flex: none;
+}
+.row b[data-v-cc01911c] { width: 66px; flex: none;
+}
+.row span[data-v-cc01911c] { color: var(--c-ink-2);
+}
+.swap-enter-active[data-v-cc01911c], .swap-leave-active[data-v-cc01911c] { transition: opacity .2s;
+}
+.swap-enter-from[data-v-cc01911c], .swap-leave-to[data-v-cc01911c] { opacity: 0;
+}

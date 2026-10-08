@@ -18,8 +18,8 @@ test("a deep link activates its step, file and region", async ({ page }) => {
   await expect(page.locator("section.step#oauth")).toHaveAttribute("data-active", "");
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "main.js");
   await expect(focused(page).first()).toContainText("fixtureState");
-  await expect(page.locator("#step-count")).toHaveText("Step 5 of 8");
-  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 62.5);
+  await expect(page.locator("#step-count")).toHaveText("Step 5 of 10");
+  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 50);
   await expect(page).toHaveURL(/#oauth$/);
 });
 
@@ -191,7 +191,7 @@ test("the last step is reachable by scrolling, with no more blank room than need
   await page.goto("/#config");
   await page.locator("main.docs").hover();
   await page.mouse.wheel(0, 10_000);
-  await expect(page.locator("section.step#styles")).toHaveAttribute("data-active", "");
+  await expect(page.locator("section.step#embed-next-slide")).toHaveAttribute("data-active", "");
   const room = await page.locator("main.docs").evaluate((docs) => {
     const last = [...docs.querySelectorAll("section.step")].at(-1)!;
     const below = docs.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom;

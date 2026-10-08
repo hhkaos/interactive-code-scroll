@@ -1,3 +1,4 @@
+import { resolveEmbed } from "./embed.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
@@ -25,6 +26,8 @@ export interface ValidationInput {
   /** Binary files under `code/`. */
   binaries?: string[];
   images: string[];
+  /** Files under `embeds/`. */
+  embeds?: string[];
   /** Captured outputs, relative to `output/`. */
   outputs?: string[];
   /** Text files under `requests/`. */
@@ -134,6 +137,7 @@ export function validateTutorial({
   files,
   binaries = [],
   images,
+  embeds = [],
   outputs = [],
   requests = [],
   requestBinaries = [],
@@ -304,6 +308,12 @@ export function validateTutorial({
         for (const image of list ?? []) {
           if (!images.includes(image)) report(`image "${image}" not found in images/`);
         }
+      }
+      const embed = text("embed");
+      if (embed !== undefined) {
+        const resolved = resolveEmbed(embed, embeds);
+        if ("error" in resolved) report(resolved.error);
+        if (imagesAttr !== undefined) report('"embed" and "images" cannot be combined; use one step for each');
       }
     }
 

@@ -9,7 +9,7 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] ArcGIS starters as scaffolder templates (`arcgis-js`, `arcgis-rest`, `arcgis-python`, `arcgis-kotlin`), after 2.3.
 - [ ] `interactive-code-scroll add`: add a tutorial to an existing project (single → series conversion included).
 - [ ] Review with Calcite experts whether `calcite-shell` / `calcite-shell-panel` could replace the page grid (`div.layout`); requirements in PROJECT.md "Page layout".
-- [ ] Embedded page steps (`<Step embed="…">`): local `embeds/` folder + `https://` URLs, build validation, sandbox, maximize, step keys forwarded from same-origin embeds; E2E fixture with a small sli.dev build. Rules: `SPEC.md` (Embedded page). Later: page slides before steps.
+- [ ] Embedded pages, phase 2: step keys page through a same-origin slide deck before moving steps (as in the carousel). Rules: `SPEC.md` (Embedded page).
 - [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.
 
 ## Project website and repository presentation

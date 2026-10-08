@@ -251,6 +251,8 @@ const clientData = JSON.stringify({
         <div class="media-panel" hidden></div>
         {/* Outside .media-panel (the step engine replaces its children); shown while the images are maximized. */}
         <calcite-action id="media-restore" class="media-restore" data-maximize="code" icon="maximize" text="Maximize images" />
+        {/* Shown over a step's embedded page: the fallback for sites that refuse to be framed. */}
+        <calcite-action id="embed-open" class="embed-open" icon="launch" text="Open in new tab" />
         {
           preview !== "off" && (
             <section class="preview" aria-label="Preview" hidden={!firstIsWeb || undefined}>
@@ -352,6 +354,7 @@ const clientData = JSON.stringify({
       import { keyToDelta } from "../client/navigation.ts";
       import { startTooltips } from "../client/actions.ts";
       import { startDownloads } from "../client/downloads.ts";
+      import { startEmbedOpen } from "../client/embed.ts";
       import { startFamily, type SiblingInfo } from "../client/family.ts";
       import { startImageViewer } from "../client/image-viewer.ts";
       import { startLayout } from "../client/layout.ts";
@@ -390,6 +393,7 @@ const clientData = JSON.stringify({
       startFamily(data.siblings, variants);
       const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
       startImageViewer();
+      startEmbedOpen();
       let refreshPreview = () => {};
       let refreshRequest = () => {};
       const vars = startVars(() => {

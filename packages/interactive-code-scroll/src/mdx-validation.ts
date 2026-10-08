@@ -122,6 +122,7 @@ export function tutorialValidation(
           files: tutorial.files,
           binaries: tutorial.binaries,
           images: tutorial.images,
+          embeds: tutorial.embeds,
           outputs: tutorial.outputs,
           requests: tutorial.requests,
           requestBinaries: tutorial.requestBinaries,

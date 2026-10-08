@@ -400,6 +400,8 @@ body[data-docs-hidden] {
 /* ——— Right panel (code, images, preview, result) ——— */
 
 .right {
+  /* Anchors the floating action over an embedded page (.embed-open). */
+  position: relative;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -557,6 +559,15 @@ body[data-docs-hidden] {
 
   &[hidden] { display: none; }
   calcite-carousel { width: 100%; }
+  /* An embedded page fills the panel. */
+  &:has(.step-embed) { padding: 0; }
+}
+
+.step-embed {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--calcite-color-foreground-1);
 }
 
 /* Fits the panel (room left for the carousel's pagination) and stays centered. */
@@ -609,7 +620,8 @@ body[data-maximized="preview"] .right::after {
   flex: 0 0 var(--preview-split, 50%);
 }
 /* Images have no header: a floating restore action while they are maximized. */
-.media-restore { display: none; }
+.media-restore, .embed-open { display: none; }
+.media-panel:not([hidden]):has(.step-embed) ~ .embed-open,
 body[data-maximized="code"] .media-panel:not([hidden]) ~ .media-restore {
   display: flex;
   position: fixed;
@@ -619,6 +631,12 @@ body[data-maximized="code"] .media-panel:not([hidden]) ~ .media-restore {
   background: var(--calcite-color-foreground-1);
   border-radius: var(--calcite-corner-radius-round);
   box-shadow: var(--calcite-shadow-sm);
+}
+/* Over the embedded page (top of the right column); next to the restore action while maximized. */
+.media-panel:not([hidden]):has(.step-embed) ~ .embed-open { position: absolute; }
+body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed-open {
+  position: fixed;
+  right: 3.25rem;
 }
 
 /* Where the shown result comes from: a captured file, a live (or kept) response, or a fallback. */

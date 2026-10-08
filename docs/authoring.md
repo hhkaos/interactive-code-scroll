@@ -90,6 +90,9 @@ tutorial/
   images/
     logo.svg
     screenshot.png
+  embeds/            # optional: pages shown instead of code (e.g. a slide deck's build)
+    oauth-slides/
+      index.html
   output/            # optional: captured results for the Result pane
     geocode.json
   requests/          # optional: .http requests, zipped with the project
@@ -99,6 +102,7 @@ tutorial/
 - `tutorial.mdx` contains [frontmatter](#frontmatter), prose and [MDX components](#components).
 - `code/` contains the final runnable project files, with [code markers](#code-markers) in comments. Large projects can keep everything here (Gradle wrappers, asset catalogs, binaries) and pick the files that get tabs with the [`files`](#files-not-shown-in-tabs) frontmatter.
 - `images/` contains the logo, screenshots and carousel images referenced by [steps](#step).
+- `embeds/` (optional) contains pages a step shows in an iframe instead of code with `embed=`, published as they are: a small app, or the static build of a slide deck. See [Show an embedded page](#show-an-embedded-page-instead-of-code).
 - `output/` (optional) contains captured results of code that cannot run in the browser, shown by steps with `output=` in the [Result pane](#result-pane).
 - `requests/` (optional) contains [HTTP requests](#http-requests) (`.http` files) bound by steps with `request=`, plus supporting files; it is added to every ZIP.
 
@@ -239,10 +243,11 @@ Explain the change here.
 | [`file`](#folder-structure) | path | current file | File to show, relative to `code/` (to the variant folder with `variants`). |
 | [`region`](#regions) | region id | none: no highlight | Region to highlight in `file`. With `variants`, `region` alone is enough: it names one file per variant. |
 | [`images`](#show-images-instead-of-code) | `{["a.png", "b.png"]}` | none | Images in `images/` shown as a carousel instead of code. Must be a static array. |
+| [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown in an iframe instead of code, e.g. `embed="oauth-slides/#/3"`. Cannot be combined with `images`. |
 | [`output`](#result-pane) | file name in `output/` | none | Captured result shown in the Result pane, e.g. `output="geocode.json"`. |
 | [`request`](#http-requests) | request names | none | Space-separated `# @name`s from `requests/`, e.g. `request="geocode-get geocode-post"`; the first is the default. |
 | [`preview`](#preview) | `expanded`, `collapsed`, `keep` | `keep` | Expands or collapses the Preview (or the Result pane) when the step activates. |
-| [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Maximizes the code area (code or images) or the pane under it (Preview or Result pane); `none` restores the layout. |
+| [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Maximizes the code area (code, images or embedded page) or the pane under it (Preview or Result pane); `none` restores the layout. |
 | [`only`](#steps-across-variants) | variant ids | all variants | With `variants`: space-separated ids the step applies to, e.g. `only="python curl"`. |
 
 A [text-only step](#how-a-tutorial-works) keeps the current file visible and clears any previous region focus.
@@ -264,6 +269,27 @@ Without `region`, the whole file shows with no highlight. Without `file`, the st
 ```
 
 Paths are relative to `images/`. Step keys page through the images before moving to the next step; clicking one opens a full-screen viewer. The value must be a JSX array written in place (`images={[â€¦]}`), not a string or a variable.
+
+##### Show an embedded page instead of code
+
+```mdx title="tutorial/tutorial.mdx"
+<Step id="why-pkce" embed="oauth-slides/#/3">
+```
+
+Some concepts are easier to explain with a small app or a few slides than with code. `embed` shows a page in an iframe in place of the code:
+
+- A path in `embeds/`: a file, or a folder with an `index.html`. Files there are published as they are and work offline. A `?query` or `#fragment` is kept, so a hash-routed slide deck opens at a given slide.
+- An `https://` URL. Some sites refuse to be shown in an iframe (`X-Frame-Options` or CSP `frame-ancestors`); the build cannot detect it, so check the step in the browser. The **Open in new tab** action over the page is the fallback.
+
+Consecutive steps that embed the same page with a different fragment (`oauth-slides/#/3`, then `oauth-slides/#/4`) move it in place, without reloading it. Inside a page from `embeds/`, PageDown/PageUp (what clickers send) still move steps and Esc restores a maximized pane; arrows stay with the page. Inside an external page the browser gives the keys to that page: click the explanations to take them back.
+
+For a [Slidev](https://sli.dev) deck, set `routerMode: hash` in its headmatter, build it with relative paths and copy the result into `embeds/`:
+
+```sh
+npx slidev build --base ./ --out ../tutorial/embeds/oauth-slides
+```
+
+If `astro check` reports the deck's bundled JavaScript, exclude the folder in `tsconfig.json`: `"exclude": ["dist", "**/embeds/**"]`.
 
 ##### Show a saved result
 
@@ -834,6 +860,9 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> â
 | `<Step> file "x" is not shown in tabs; add it to frontmatter "files"` | The file is left out by [`files`](#files-not-shown-in-tabs). |
 | `<Step> "images" must be a static array of strings, e.g. images={["a.png"]}` | Write the array in place, in braces: `images={["a.png"]}`. |
 | `<Step> image "x" not found in images/` | Paths are relative to `images/`. |
+| `<Step> embed "x" not found in embeds/ (a folder needs an index.html)` | Paths are relative to `embeds/`; a folder needs an `index.html`. |
+| `<Step> embed "x" must be an https:// URL or a path in embeds/` | Use `https://` (not `http://`), or a relative path without `..` or a leading `/`. |
+| `<Step> "embed" and "images" cannot be combined; use one step for each` | Split the step in two. |
 | `<Step> output "x" not found in output/` | Add the file to `output/` (or `output/<variant id>/`). |
 | `<Step> output "x" has no effect: code/index.html makes the tutorial web code, which shows the Preview` | Web code has no Result pane: remove `output` or `index.html`. |
 | `<Step> request "x" not found in requests/ (# @name x)` | Name the request with `# @name x` in a `.http` file under `requests/`. |

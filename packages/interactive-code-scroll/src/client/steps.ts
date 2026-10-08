@@ -1,4 +1,5 @@
 import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, revealScroll, type RevealOptions } from "./navigation.ts";
+import { forwardStepKeys, samePage } from "./embed.ts";
 import { MEDIA_EVENT } from "./image-viewer.ts";
 import { MAXIMIZE_EVENT } from "./maximize-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
@@ -159,6 +160,11 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   function showMedia(template: HTMLTemplateElement, index: number): void {
     const fragment = template.content.cloneNode(true) as DocumentFragment;
+    const embed = fragment.querySelector<HTMLIFrameElement>("iframe.step-embed");
+    if (embed) {
+      showEmbed(embed);
+      return;
+    }
     const items = [...fragment.querySelectorAll("calcite-carousel-item")];
     mediaIndex = clampIndex(index, items.length);
     items.forEach((item, i) => item.toggleAttribute("selected", i === mediaIndex));
@@ -170,6 +176,20 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
       announceMedia();
     });
     mediaPanel.replaceChildren(fragment);
+    announceMedia();
+  }
+
+  /** Another fragment of the page already shown (e.g. the next slide of a deck) navigates in place, without reloading it. */
+  function showEmbed(embed: HTMLIFrameElement): void {
+    const src = new URL(embed.getAttribute("src")!, location.href).href;
+    const shown = mediaPanel.querySelector<HTMLIFrameElement>("iframe.step-embed");
+    if (shown && samePage(shown.src, src)) {
+      shown.src = src;
+      shown.title = embed.title;
+    } else {
+      forwardStepKeys(embed);
+      mediaPanel.replaceChildren(embed);
+    }
     announceMedia();
   }
 

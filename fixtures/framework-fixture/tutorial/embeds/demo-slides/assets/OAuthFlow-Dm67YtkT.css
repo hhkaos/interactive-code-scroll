@@ -1,0 +1,65 @@
+
+.oauth-flow[data-v-37b86769] { width: 100%; height: 100%; overflow: visible; font-family: var(--font-sans);
+}
+.lifeline[data-v-37b86769] { stroke: rgba(255,255,255,.28); stroke-width: 1.2; stroke-dasharray: 4 5;
+}
+.lane-icon[data-v-37b86769] { fill: var(--c-ink); stroke: var(--c-ink); stroke-width: 0; transition: filter .4s;
+}
+.lane-icon .hollow[data-v-37b86769] { fill: none; stroke-width: 2.4;
+}
+.lane-icon .cut[data-v-37b86769] { fill: var(--c-bg);
+}
+.lane-icon.glow[data-v-37b86769] { filter: drop-shadow(0 0 8px var(--c-you)); fill: var(--c-you); stroke: var(--c-you);
+}
+.lane-title[data-v-37b86769] { fill: var(--c-ink); font-size: 16px; font-weight: 700;
+}
+.lane-sub[data-v-37b86769] { fill: var(--c-muted); font-size: 11.5px;
+}
+.fade[data-v-37b86769] { opacity: 0; transition: opacity .5s;
+}
+.fade.shown[data-v-37b86769] { opacity: 1;
+}
+.popup-box[data-v-37b86769] { fill: rgba(110,193,255,.07); stroke: rgba(110,193,255,.45); stroke-dasharray: 6 5;
+}
+.popup-label[data-v-37b86769] { fill: var(--c-front); font-size: 11px; letter-spacing: .04em;
+}
+.setup-pill[data-v-37b86769] { fill: var(--c-you);
+}
+.setup-text[data-v-37b86769] { fill: #1d1f4a; font-size: 11.5px; font-weight: 700; font-family: var(--font-mono);
+}
+.separator[data-v-37b86769] { stroke: rgba(255,255,255,.35); stroke-dasharray: 2 6;
+}
+.sep-pill[data-v-37b86769] { fill: #23255f; stroke: rgba(255,255,255,.3);
+}
+.sep-text[data-v-37b86769] { fill: var(--c-muted); font-size: 11.5px;
+}
+.msg[data-v-37b86769] { transition: opacity .45s;
+}
+.msg .line[data-v-37b86769] { fill: none; stroke: var(--c); stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .7s ease-out, stroke-width .3s;
+}
+.msg.shown .line[data-v-37b86769] { stroke-dashoffset: 0;
+}
+.msg .head[data-v-37b86769] { fill: var(--c); opacity: 0; transition: opacity .2s .55s;
+}
+.msg.shown .head[data-v-37b86769] { opacity: 1;
+}
+.msg .label[data-v-37b86769] { fill: var(--c-ink); font-size: 13.5px; font-family: var(--font-mono); cursor: pointer;
+}
+.msg .label[data-v-37b86769]:hover { fill: var(--c); text-decoration: underline;
+}
+.msg .num[data-v-37b86769] { cursor: pointer;
+}
+.msg .num circle[data-v-37b86769] { fill: none; stroke: var(--c); stroke-width: 1.5;
+}
+.msg .num text[data-v-37b86769] { fill: var(--c); font-size: 11px; font-weight: 700;
+}
+.msg.current .line[data-v-37b86769] { stroke-width: 3.6; filter: drop-shadow(0 0 6px var(--c));
+}
+.msg.current .num circle[data-v-37b86769] { fill: var(--c);
+}
+.msg.current .num text[data-v-37b86769] { fill: #1d1f4a;
+}
+.msg.current .label[data-v-37b86769] { font-weight: 700;
+}
+.packet[data-v-37b86769] { fill: #fff; filter: drop-shadow(0 0 6px var(--c));
+}

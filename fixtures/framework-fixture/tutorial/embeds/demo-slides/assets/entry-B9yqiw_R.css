@@ -1,0 +1,7 @@
+
+.page-link[data-v-d5062f01] {
+  height:10rem;min-width:10rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;border-radius:0.25rem;background-color:rgb(156 163 175 / 0.1);padding:1rem;
+}.page-link[data-v-d5062f01]:hover{background-color:rgb(156 163 175 / 0.2);}
+.page-link > svg[data-v-d5062f01] {
+  font-size:3em;opacity:0.5;
+}

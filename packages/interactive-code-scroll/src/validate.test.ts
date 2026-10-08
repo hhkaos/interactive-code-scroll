@@ -6,6 +6,7 @@ const files = [
   { path: "index.html", source: "<p>hi</p>" },
 ];
 const images = ["a.png", "shots/b.png"];
+const embeds = ["slides/index.html"];
 
 const use = (name: string, attributes: ComponentUse["attributes"], line = 3): ComponentUse => ({
   name,
@@ -13,7 +14,7 @@ const use = (name: string, attributes: ComponentUse["attributes"], line = 3): Co
   line,
   column: 1,
 });
-const validate = (...uses: ComponentUse[]) => validateTutorial({ mdxFile: "tutorial.mdx", uses, files, images });
+const validate = (...uses: ComponentUse[]) => validateTutorial({ mdxFile: "tutorial.mdx", uses, files, images, embeds });
 
 describe("validateTutorial", () => {
   it("accepts valid references", () => {
@@ -22,6 +23,8 @@ describe("validateTutorial", () => {
         use("Step", { id: "config", file: "main.js", region: "config" }),
         use("Step", { id: "shots", images: { expression: '["a.png", "shots/b.png"]' } }),
         use("Step", { id: "text-only", preview: "collapsed" }),
+        use("Step", { id: "slides", embed: "slides/#/3" }),
+        use("Step", { id: "app", embed: "https://example.com/app" }),
         use("Step", { id: "big-code", maximize: "code" }),
         use("Step", { id: "big-preview", maximize: "preview", preview: "expanded" }),
         use("Step", { id: "restore", maximize: "none", preview: "collapsed" }),
@@ -45,6 +48,10 @@ describe("validateTutorial", () => {
     [use("Step", { id: "a", images: { expression: "shots" } }), '"images" must be a static array of strings'],
     [use("Step", { id: "a", images: "a.png" }), '"images" must be a static array of strings'],
     [use("Step", { id: "a", file: true }), '"file" must be a string'],
+    [use("Step", { id: "a", embed: "deck/" }), 'embed "deck/" not found in embeds/'],
+    [use("Step", { id: "a", embed: "http://example.com" }), 'embed "http://example.com" must be an https:// URL or a path in embeds/'],
+    [use("Step", { id: "a", embed: { expression: "url" } }), '"embed" must be a string'],
+    [use("Step", { id: "a", embed: "slides/", images: { expression: '["a.png"]' } }), '"embed" and "images" cannot be combined'],
     [use("Step", { id: "a", preview: "closed" }), '"preview" must be one of expanded, collapsed, keep'],
     [use("Step", { id: "a", maximize: "result" }), '"maximize" must be one of code, preview, none'],
     [use("Step", { id: "a", maximize: "preview", preview: "collapsed" }), 'maximize="preview" conflicts with preview="collapsed"'],

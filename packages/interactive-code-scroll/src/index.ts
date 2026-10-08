@@ -11,7 +11,7 @@ import { tutorialModule, type TutorialSource } from "./tutorial-module.ts";
 export { TutorialValidationError } from "./mdx-validation.ts";
 
 export interface InteractiveCodeScrollOptions {
-  /** Tutorial folder (holds `tutorial.mdx`, `code/`, `images/`), relative to the project root. */
+  /** Tutorial folder (holds `tutorial.mdx`, `code/`, `images/`, `embeds/`), relative to the project root. */
   tutorial?: string;
   /**
    * Series site: folder whose subfolders are tutorials (`<dir>/<slug>/tutorial.mdx`), each
@@ -66,6 +66,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         injectRoute({ pattern: `${prefix}/preview`, entrypoint: new URL("./preview/page.astro", import.meta.url) });
         injectRoute({ pattern: `${prefix}/preview/[...file]`, entrypoint: new URL("./preview/code-file.ts", import.meta.url) });
         injectRoute({ pattern: `${prefix}/output/[...file]`, entrypoint: new URL("./result/output-file.ts", import.meta.url) });
+        injectRoute({ pattern: `${prefix}/embeds/[...file]`, entrypoint: new URL("./embed/embed-file.ts", import.meta.url) });
       },
       // The final base, after every integration's config updates.
       "astro:config:done": ({ config }) => {

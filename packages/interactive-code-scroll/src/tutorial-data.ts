@@ -18,6 +18,10 @@ export interface TutorialData {
   outputs: string[];
   /** Absolute path of the tutorial's `output/` folder (build time only). */
   outputDir: string;
+  /** Files under `embeds/`, relative to it. */
+  embeds: string[];
+  /** Absolute path of the tutorial's `embeds/` folder (build time only). */
+  embedsDir: string;
   /** Text files under `requests/`, relative to it (binaries there are validation errors). */
   requests: SourceFile[];
   /** Image path (relative to `images/`) → public URL. */
@@ -47,7 +51,7 @@ export function tutorialFor(tutorials: readonly TutorialData[], slug: string | u
   return tutorial;
 }
 
-/** URL prefix of a tutorial's page, Preview and outputs (`<base>` or `<base><slug>/`). */
+/** URL prefix of a tutorial's page, Preview, outputs and embeds (`<base>` or `<base><slug>/`). */
 export function tutorialBase(base: string, slug: string): string {
   const root = base.replace(/\/?$/, "/");
   return slug === "" ? root : `${root}${slug}/`;
