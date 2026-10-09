@@ -4,6 +4,8 @@ import { expect, test } from "./fixtures.ts";
 // REST geocoding tutorial built into showcase/ and embedded as the live demo.
 
 const BASE = "/interactive-code-scroll/";
+const SUMMIT_PAGE = "https://www.rauljimenez.info/arcgis-tutorials/arcgis-js-sdk-user-auth/";
+const SUMMIT = `${SUMMIT_PAGE}#oauth`;
 const demo = (page: import("./fixtures.ts").Page) => page.frameLocator(".browser iframe");
 
 test("internal links carry the base path and resolve", async ({ page, request }) => {
@@ -31,6 +33,55 @@ test("the live demo embeds the tutorial on the request step and follows the page
   await expect(frame.locator("body")).toHaveClass(/calcite-mode-light/);
 });
 
+test("the live demo opens its step without scrolling the landing page", async ({ page }) => {
+  await page.goto(BASE);
+  // The lazy iframe is close enough to the fold to load while the page stays at the top.
+  await expect(demo(page).locator(".result-badge")).toHaveText("Captured · output/geocode.json");
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+  await page.locator("#theme").click();
+  await expect(demo(page).locator("body")).toHaveClass(/calcite-mode-light/);
+  await expect(demo(page).locator(".result-badge")).toHaveText("Captured · output/geocode.json");
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});
+
+test("demo tabs switch the tutorial, its address and its full-screen link", async ({ page }) => {
+  // The second tab is a published tutorial outside this repository: stub it.
+  await page.route(`${SUMMIT_PAGE}**`, (route) => route.fulfill({ contentType: "text/html", body: "<h1>Summit tutorial</h1>" }));
+  await page.goto(BASE);
+  const tabs = page.getByRole("tablist", { name: "Live tutorials" }).getByRole("tab");
+  await expect(tabs).toHaveText(["Geocoding · REST API", "User Auth (OAuth) · ArcGIS Maps SDK for JS"]);
+  await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator(".browser .url")).toHaveText("www.rauljimenez.info/interactive-code-scroll/showcase/rest-geocode/");
+
+  await tabs.last().click();
+  await expect(tabs.last()).toHaveAttribute("aria-selected", "true");
+  await expect(tabs.first()).toHaveAttribute("aria-selected", "false");
+  await expect(page.locator(".browser iframe")).toHaveAttribute("src", SUMMIT_PAGE);
+  await expect(demo(page).locator("h1")).toHaveText("Summit tutorial");
+  await expect(page.locator(".browser .url")).toHaveText("www.rauljimenez.info/arcgis-tutorials/arcgis-js-sdk-user-auth/");
+  await expect(page.locator(".browser .url")).toHaveAttribute("href", SUMMIT);
+  await expect(page.locator(".browser .open")).toHaveAttribute("href", SUMMIT);
+
+  // Arrow keys move between tabs (WAI-ARIA tabs pattern).
+  await tabs.last().press("ArrowLeft");
+  await expect(tabs.first()).toBeFocused();
+  await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
+  await expect(demo(page).locator(".result-badge")).toHaveText("Captured · output/geocode.json");
+});
+
+test("showcase cards link the tutorials and credit published ones", async ({ page }) => {
+  await page.goto(BASE);
+  const cards = page.locator(".showcase-card:not(.yours)");
+  await expect(cards.locator("h3")).toHaveText(["Geocode an address with the ArcGIS REST API", "Security and authentication for custom applications"]);
+  await expect(cards.first()).toHaveAttribute("href", `${BASE}showcase/rest-geocode/`);
+  await expect(cards.first().locator(".by")).toHaveCount(0);
+  await expect(cards.last()).toHaveAttribute("href", SUMMIT_PAGE);
+  await expect(cards.last().locator(".by")).toHaveText("by Raul Jimenez (@hhkaos) · Esri European DevTech Summit 2026");
+});
+
 test("the create command can be copied", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(BASE);
@@ -40,11 +91,36 @@ test("the create command can be copied", async ({ page, context }) => {
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("npm create interactive-code-scroll@latest");
 });
 
+test("the terminal recording plays muted in a loop from base-path sources", async ({ page, request }) => {
+  await page.goto(BASE);
+  const video = page.locator(".start video.terminal-video");
+  await video.scrollIntoViewIfNeeded();
+  const urls = [await video.getAttribute("poster"), ...(await video.locator("source").evaluateAll((sources) => sources.map((source) => source.getAttribute("src"))))];
+  expect(urls).toEqual([`${BASE}recordings/start.png`, `${BASE}recordings/start.webm`, `${BASE}recordings/start.mp4`]);
+  for (const url of urls) expect((await request.get(url!)).status(), url!).toBe(200);
+  await expect(video).toHaveJSProperty("muted", true);
+  await expect(video).toHaveJSProperty("loop", true);
+  await expect(video).toHaveJSProperty("controls", false);
+  await expect(video).toHaveJSProperty("paused", false);
+});
+
+test("with reduced motion the terminal recording keeps its poster and controls", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(BASE);
+  const video = page.locator(".start video.terminal-video");
+  await video.scrollIntoViewIfNeeded();
+  await expect(video).toHaveJSProperty("controls", true);
+  await expect(video).toHaveJSProperty("paused", true);
+});
+
 test("phones get a screenshot link instead of the embedded demo, without horizontal scroll", async ({ page }) => {
+  await page.route(`${SUMMIT_PAGE}**`, (route) => route.fulfill({ contentType: "text/html", body: "" }));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(BASE);
   await expect(page.locator(".browser .viewport")).toBeHidden();
-  await expect(page.locator(".browser .fallback")).toBeVisible();
+  await expect(page.locator(".browser .fallback:visible")).toHaveAttribute("href", `${BASE}showcase/rest-geocode/?variant=python#request`);
+  await page.getByRole("tab", { name: /User Auth/ }).click();
+  await expect(page.locator(".browser .fallback:visible")).toHaveAttribute("href", SUMMIT);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
 });
 

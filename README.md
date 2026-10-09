@@ -24,6 +24,8 @@ Write the story in MDX, keep your code runnable, and get a static site where exp
 
 ## Start in 30 seconds
 
+https://github.com/user-attachments/assets/ca9f9dc5-aad5-4f57-bc1f-159b278f2dec
+
 ```sh
 npm create interactive-code-scroll@latest my-tutorial
 cd my-tutorial
@@ -87,7 +89,7 @@ Markers are stripped from rendered and downloaded code. Broken references fail t
 ## Examples
 
 - **[Geocode an address with the ArcGIS REST API](examples/rest-geocode)** — cURL, Python and JavaScript variants, live requests, captured output and error explanations.
-- **[OAuth PKCE with the ArcGIS Maps SDK for JavaScript](https://github.com/EsriDevEvents/security-and-authentication-for-custom-applications-dtseu-2026/tree/main/demos/arcgis-js-sdk-user-auth)** — user authentication with a live Preview.
+- **[Security and authentication for custom applications](https://www.rauljimenez.info/arcgis-tutorials/arcgis-js-sdk-user-auth/)** — OAuth 2.0 with PKCE and the ArcGIS Maps SDK for JavaScript: embedded slides, portal walkthrough and a live sign-in Preview. By Raul Jimenez ([@hhkaos](https://github.com/hhkaos)) for the Esri European DevTech Summit 2026 ([source](https://github.com/EsriDevEvents/security-and-authentication-for-custom-applications-dtseu-2026/tree/main/demos/arcgis-js-sdk-user-auth)).
 
 Built a tutorial with it? [Add it to the showcase](https://github.com/hhkaos/interactive-code-scroll/issues/new/choose).
 

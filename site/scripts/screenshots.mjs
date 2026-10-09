@@ -10,9 +10,11 @@ import { base } from "../site-config.mjs";
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
 const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2" };
 
-/** name → page, step hash and optional action before the shot. */
+/** name → page (or absolute `url`), step hash and optional action before the shot. */
 const shots = [
   { name: "hero-rest-python", path: "showcase/rest-geocode/?variant=python#request" },
+  // A published tutorial outside this repository (second tab of the landing demo).
+  { name: "summit-user-auth", url: "https://www.rauljimenez.info/arcgis-tutorials/arcgis-js-sdk-user-auth/#oauth" },
   { name: "oauth-preview", path: "showcase/oauth-pkce/#ui" },
   { name: "oauth-images", path: "showcase/oauth-pkce/#register-app" },
   { name: "present-rest-curl", path: "showcase/rest-geocode/?variant=curl#header", action: (page) => page.click("#present-toggle") },
@@ -82,12 +84,14 @@ const server = createServer((req, res) => {
 }).listen(0);
 const origin = `http://localhost:${server.address().port}`;
 
+// `node scripts/screenshots.mjs <name>…` regenerates only those scenes.
+const only = process.argv.slice(2);
 const browser = await chromium.launch();
 for (const colorScheme of ["light", "dark"]) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 860 }, deviceScaleFactor: 2, colorScheme });
   const page = await context.newPage();
-  for (const { name, path, action, highlight } of shots) {
-    await page.goto(`${origin}${base}${path}`, { waitUntil: "networkidle" });
+  for (const { name, path, url, action, highlight } of shots.filter(({ name }) => !only.length || only.includes(name))) {
+    await page.goto(url ?? `${origin}${base}${path}`, { waitUntil: "networkidle" });
     await action?.(page);
     await page.waitForTimeout(2000);
     if (highlight) await page.evaluate(highlightArea, highlight);

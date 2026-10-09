@@ -17,7 +17,6 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 _Rules: `SPEC.md` (Project website and repository presentation)._
 
 - [ ] F1: npm package READMEs aligned with the root README.
-- [ ] F2: VHS terminal recording (`.tape` script, GIF for the README, video for the landing "Start in 30 seconds" section in place of the static terminal); needs the core (`0.2.0-beta.0` or later) on npm.
 - [ ] F4: community showcase list (from showcase issues), social preview image (1280×640), GitHub release, announcement.
 
 ## Multi-SDK support

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Terminal recording of the project wizard (one REST tutorial with cURL, Python and Node.js, then `npm run dev`): `site/recordings/start.tape` renders `site/public/recordings/start.{gif,webm,mp4,png}` with VHS (`pnpm record`). The landing "Start in 30 seconds" section plays the video in place of the static terminal (muted loop while visible; poster and controls with reduced motion or without JavaScript); the root README embeds it as a GitHub video attachment (the GIF stays for npm READMEs). E2E in `e2e/site.spec.ts`.
+- Landing showcase: the "Security and authentication for custom applications" tutorial (published by Raul Jimenez for the Esri European DevTech Summit 2026) replaces the in-repo OAuth PKCE example's card, with an author line; cards of published tutorials credit their author. `examples/oauth-pkce` stays (docs screenshots) and is still built under `showcase/oauth-pkce/`. The README Examples entry links the live tutorial and its source.
+- Landing live demo: browser-style tabs switch between the REST geocoding showcase and the published "Security and authentication for custom applications" tutorial (Esri European DevTech Summit 2026); the address bar shows each tutorial's real URL as a link, "Open full screen" follows the tab, arrow keys move between tabs, phones get one screenshot per tab, and a link points to the showcase. `site/scripts/screenshots.mjs` accepts scenes with an absolute `url` and scene names as arguments (`summit-user-auth`). E2E in `e2e/site.spec.ts`.
+
+### Fixed
+
+- Landing page: it no longer jumps to the live demo on load (or when the theme changes). The demo iframe loads without its `#step` (native fragment scrolling in a same-origin iframe also scrolls the parent page) and applies the step after load through the tutorial's `hashchange` handler. E2E in `e2e/site.spec.ts`.
+
 ## [0.2.0-beta.1] - 2026-10-09
 
 ### Added

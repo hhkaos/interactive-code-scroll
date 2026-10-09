@@ -78,7 +78,8 @@ const audiences = [
   { title: "Technical writers", text: "Keep the sample runnable and the prose in sync — the build tells you when they drift." },
 ];
 
-const showcase = [
+/** Showcase cards; `by` credits the author of a published tutorial (the in-repo demo has none). */
+const showcase: { title: string; text: string; href: string; shot: string; tags: string[]; by?: string }[] = [
   {
     title: "Geocode an address with the ArcGIS REST API",
     text: "cURL, Python and JavaScript variants, live requests, captured output and error explanations.",
@@ -87,11 +88,12 @@ const showcase = [
     tags: ["REST", "cURL", "Python", "JavaScript"],
   },
   {
-    title: "User authentication with the ArcGIS Maps SDK for JavaScript",
-    text: "OAuth 2.0 PKCE in the browser, with portal walkthrough screenshots and a live Preview.",
-    href: `${base}showcase/oauth-pkce/`,
-    shot: "oauth-preview",
-    tags: ["OAuth", "JavaScript", "Preview"],
+    title: "Security and authentication for custom applications",
+    text: "OAuth 2.0 with PKCE and the ArcGIS Maps SDK for JavaScript: embedded slides, portal walkthrough and a live sign-in Preview.",
+    href: "https://www.rauljimenez.info/arcgis-tutorials/arcgis-js-sdk-user-auth/",
+    shot: "summit-user-auth",
+    tags: ["OAuth", "JavaScript", "Slides", "Preview"],
+    by: "Raul Jimenez (@hhkaos) · Esri European DevTech Summit 2026",
   },
 ];
 ---
@@ -165,16 +167,26 @@ const showcase = [
           <span class="eyebrow">Live demo</span>
           <h2>Scroll it. Switch the language. Run the request.</h2>
           <p>
-            This is a real tutorial built with InteractiveCodeScroll, running right here. Scroll the explanations, pick
-            cURL, Python or JavaScript, and watch the code and the result follow.
+            Real tutorials built with InteractiveCodeScroll, running right here. Pick a tab, scroll the explanations,
+            switch between cURL, Python and JavaScript, and watch the code and the result follow.
           </p>
         </div>
         <div class="reveal">
           <DemoFrame
-            src={`${base}showcase/rest-geocode/?variant=python#request`}
-            label="showcase/rest-geocode — Geocode an address with the ArcGIS REST API"
-            fallback="hero-rest-python"
+            tabs={[
+              {
+                label: "Geocoding · REST API",
+                src: `${base}showcase/rest-geocode/?variant=python#request`,
+                fallback: "hero-rest-python",
+              },
+              {
+                label: "User Auth (OAuth) · ArcGIS Maps SDK for JS",
+                src: "https://www.rauljimenez.info/arcgis-tutorials/arcgis-js-sdk-user-auth/#oauth",
+                fallback: "summit-user-auth",
+              },
+            ]}
           />
+          <p class="demo-more"><a href="#showcase">More tutorials in the showcase ↓</a></p>
         </div>
       </div>
     </section>
@@ -196,30 +208,23 @@ const showcase = [
           </ol>
           <a class="btn" href={docsPageUrl("quick-start")}>Read the quick start →</a>
         </div>
-        <div class="terminal reveal" aria-label="Example wizard session">
+        <div class="terminal reveal">
           <div class="terminal-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span> zsh</div>
-          <pre><code><span class="t-prompt">$</span> {createCommand} my-talk
-<span class="t-dim">┌</span>  Create an InteractiveCodeScroll project
-<span class="t-dim">│</span>
-<span class="t-ok">◇</span>  What do you want to create?
-<span class="t-dim">│</span>  One tutorial
-<span class="t-dim">│</span>
-<span class="t-ok">◇</span>  What will the tutorial use?
-<span class="t-dim">│</span>  cURL, Python, Node.js
-<span class="t-dim">│</span>
-<span class="t-ok">◇</span>  Package manager
-<span class="t-dim">│</span>  npm
-<span class="t-dim">│</span>
-<span class="t-ok">◇</span>  Add a GitHub Pages workflow?
-<span class="t-dim">│</span>  Yes
-<span class="t-dim">│</span>
-<span class="t-accent">◆</span>  Created 10 files in my-talk
-<span class="t-dim">│</span>
-<span class="t-dim">└</span>  Happy writing!
-
-<span class="t-prompt">$</span> cd my-talk && npm install && npm run dev
-  <span class="t-accent">astro</span>  ready
-  ┃ Local    <span class="t-link">http://localhost:4321/</span><span class="cursor" aria-hidden="true"></span></code></pre>
+          <video
+            class="terminal-video"
+            width="1160"
+            height="800"
+            poster={`${base}recordings/start.png`}
+            preload="none"
+            controls
+            muted
+            loop
+            playsinline
+            aria-label="Terminal recording: the wizard creates a REST tutorial with cURL, Python and Node.js, then npm run dev serves it at localhost:4321."
+          >
+            <source src={`${base}recordings/start.webm`} type="video/webm" />
+            <source src={`${base}recordings/start.mp4`} type="video/mp4" />
+          </video>
         </div>
       </div>
     </section>
@@ -297,6 +302,7 @@ const showcase = [
                 <div class="showcase-body">
                   <h3>{item.title}</h3>
                   <p>{item.text}</p>
+                  {item.by && <p class="by">by {item.by}</p>}
                   <ul class="tags">
                     {item.tags.map((tag) => (
                       <li>{tag}</li>
@@ -426,6 +432,17 @@ const showcase = [
     { rootMargin: "0px 0px -8% 0px" },
   );
   document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+
+  // Terminal recording: plays while visible unless the reader prefers reduced
+  // motion; then (and without JS) it keeps the poster and native controls.
+  const recording = document.querySelector<HTMLVideoElement>(".terminal-video");
+  if (recording && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    recording.controls = false;
+    new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) recording.play().catch(() => (recording.controls = true));
+      else recording.pause();
+    }).observe(recording);
+  }
 </script>
 
 <style>
@@ -685,47 +702,23 @@ const showcase = [
     background: #334155;
   }
 
-  .terminal pre {
-    margin: 0;
-    padding: 1.2rem 1.4rem 1.4rem;
-    font-size: 0.84rem;
-    line-height: 1.55;
-    overflow-x: auto;
+  .terminal-video {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #0a1120;
   }
 
-  .t-prompt,
-  .t-ok {
-    color: #22d3ee;
+  .demo-more {
+    margin-top: 1.1rem;
+    text-align: center;
+    font-size: 0.95rem;
   }
 
-  .t-accent {
-    color: #60a5fa;
-    font-weight: 700;
-  }
-
-  .t-dim {
-    color: #475569;
-  }
-
-  .t-link {
-    color: #93c5fd;
-    text-decoration: underline;
-  }
-
-  .cursor {
-    display: inline-block;
-    width: 0.55em;
-    height: 1.1em;
-    margin-left: 0.2em;
-    vertical-align: text-bottom;
-    background: #22d3ee;
-    animation: blink 1.1s steps(1) infinite;
-  }
-
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
+  .demo-more a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
   }
 
   /* Highlights */
@@ -860,6 +853,12 @@ const showcase = [
     margin: 0 0 1rem;
     color: var(--muted);
     font-size: 0.95rem;
+  }
+
+  .showcase-body .by {
+    margin-top: -0.5rem;
+    font-size: 0.85rem;
+    font-style: italic;
   }
 
   .tags {

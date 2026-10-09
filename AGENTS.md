@@ -62,7 +62,7 @@ When changing a rendered attribute or class (`data-*`, ids, CSS hooks), grep `e2
 Never read `import.meta.env.BASE_URL` in framework code: a `BASE_URL` environment variable (Vitest sets one) overrides it at build time while Astro's asset URLs keep `config.base`. Import `base` from `virtual:interactive-code-scroll/tutorial` (or use `clientData.base` in the browser). (This once dropped `/<repo>/` from every series link; `test/pages.test.ts` guards it.)
 
 ### Check dev mode, not only preview
-When a change touches how `site/` or a tutorial is served (routes, `public/`, base path, middleware), open it with the dev server too (`pnpm site`, `pnpm dev`), not only `astro preview`/E2E. E2E runs against built previews. (`astro dev` once 404'd the embedded showcase demo that preview and Pages served fine.)
+When a change touches how `site/` or a tutorial is served (routes, `public/`, base path, middleware), open it with the dev server too (`pnpm site`, `pnpm dev`), not only `astro preview`/E2E. E2E runs against built previews. (`astro dev` once 404'd the embedded showcase demo that preview and Pages served fine.) Under an AI agent, `astro dev` starts in the background (agent environment variables) and outlives the command: stop it when done (`astro dev stop`, or `kill` its PID) and check `pgrep -fl "astro.mjs dev"`, or the user's next `pnpm site` fails with "Another astro dev server is already running".
 
 ### Shared components in the page
 Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).

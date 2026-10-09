@@ -1,29 +1,72 @@
 ---
 import Shot from "./Shot.astro";
+import { site } from "../../site-config.mjs";
+
+interface Tab {
+  /** Tab label. */
+  label: string;
+  /** Tutorial URL, optionally with a `#step` to open. */
+  src: string;
+  /** Screenshot name (public/screenshots/<name>-<scheme>.png) shown on narrow screens. */
+  fallback: string;
+}
 
 interface Props {
-  src: string;
-  label: string;
-  fallback: string;
+  tabs: Tab[];
 }
 
 // The tutorial is desktop-first: render it at a desktop size and scale it down to fit.
 // Narrow screens get a screenshot that opens the tutorial instead.
-const { src, label, fallback } = Astro.props;
+// Each tab loads without its #step: native fragment scrolling in a same-origin iframe
+// also scrolls this page. The script applies the step after load instead.
+const tabs = Astro.props.tabs.map((tab) => {
+  const [page = tab.src, step = ""] = tab.src.split("#");
+  const url = new URL(tab.src, site);
+  return { ...tab, page, step, address: `${url.host}${url.pathname}` };
+});
+const first = tabs[0]!;
 ---
 
 <div class="browser" data-demo>
   <div class="chrome">
     <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-    <span class="url">{label}</span>
-    <a class="open" href={src} target="_blank" rel="noopener">Open full screen ↗</a>
+    <div class="tabs" role="tablist" aria-label="Live tutorials">
+      {
+        tabs.map((tab, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`demo-tab-${index}`}
+            aria-controls="demo-panel"
+            aria-selected={index === 0 ? "true" : "false"}
+            tabindex={index === 0 ? 0 : -1}
+            data-page={tab.page}
+            data-step={tab.step}
+            data-src={tab.src}
+            data-address={tab.address}
+          >
+            {tab.label}
+          </button>
+        ))
+      }
+    </div>
   </div>
-  <div class="viewport">
-    <iframe src={src} title="Live tutorial demo" loading="lazy"></iframe>
+  <div class="address">
+    <a class="url" href={first.src} target="_blank" rel="noopener">{first.address}</a>
+    <a class="open" href={first.src} target="_blank" rel="noopener">Open full screen ↗</a>
   </div>
-  <a class="fallback" href={src}>
-    <Shot name={fallback} alt="The embedded tutorial. Tap to open it." />
-  </a>
+  <div class="panel" id="demo-panel" role="tabpanel" aria-labelledby="demo-tab-0">
+    <div class="viewport">
+      <iframe src={first.page} title="Live tutorial demo" loading="lazy"></iframe>
+    </div>
+    {
+      tabs.map((tab, index) => (
+        <a class="fallback" href={tab.src} hidden={index !== 0}>
+          <Shot name={tab.fallback} alt={`${tab.label}: the embedded tutorial. Tap to open it.`} />
+        </a>
+      ))
+    }
+  </div>
 </div>
 
 <style>
@@ -40,10 +83,9 @@ const { src, label, fallback } = Astro.props;
 
   .chrome {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 1rem;
-    padding: 0.7rem 1rem;
-    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1rem 0;
     background: var(--surface-2);
     font-size: 0.85rem;
   }
@@ -51,6 +93,8 @@ const { src, label, fallback } = Astro.props;
   .dots {
     display: flex;
     gap: 0.4rem;
+    align-self: center;
+    padding-bottom: 0.55rem;
   }
 
   .dots i {
@@ -68,6 +112,54 @@ const { src, label, fallback } = Astro.props;
     background: #34d399;
   }
 
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  [role="tab"] {
+    flex: none;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: 0.6rem 0.6rem 0 0;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  [role="tab"]:hover {
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface) 60%, transparent);
+  }
+
+  [role="tab"][aria-selected="true"] {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  [role="tab"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .address {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.55rem 1rem;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+
   .url {
     flex: 1;
     min-width: 0;
@@ -76,9 +168,14 @@ const { src, label, fallback } = Astro.props;
     background: var(--bg);
     color: var(--muted);
     font-family: ui-monospace, Menlo, monospace;
+    text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .url:hover {
+    color: var(--text);
   }
 
   .open {
@@ -120,8 +217,30 @@ const { src, label, fallback } = Astro.props;
       display: none;
     }
 
-    .fallback {
+    .fallback:not([hidden]) {
       display: block;
+    }
+
+    .open,
+    .dots {
+      display: none;
+    }
+
+    .chrome {
+      padding: 0.45rem 0.5rem 0;
+    }
+
+    [role="tab"] {
+      padding: 0.45rem 0.7rem;
+      font-size: 0.78rem;
+    }
+
+    .address {
+      padding: 0.45rem 0.5rem;
+    }
+
+    .url {
+      font-size: 0.75rem;
     }
   }
 </style>
@@ -130,6 +249,10 @@ const { src, label, fallback } = Astro.props;
   for (const demo of document.querySelectorAll<HTMLElement>("[data-demo]")) {
     const viewport = demo.querySelector<HTMLElement>(".viewport")!;
     const frame = demo.querySelector<HTMLIFrameElement>("iframe")!;
+    const tabs = [...demo.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const panel = demo.querySelector<HTMLElement>('[role="tabpanel"]')!;
+    const fallbacks = [...demo.querySelectorAll<HTMLAnchorElement>(".fallback")];
+    const links = demo.querySelectorAll<HTMLAnchorElement>(".url, .open");
     const width = 1280;
 
     new ResizeObserver(([entry]) => {
@@ -144,9 +267,55 @@ const { src, label, fallback } = Astro.props;
       } catch {}
     };
     storeTheme();
+
+    let current = tabs[0]!;
+    let step = current.dataset.step ? `#${current.dataset.step}` : "";
+
+    // Go to the step through the tutorial's hashchange handler, which scrolls only its own panel.
+    // A tutorial on another origin (e.g. in local dev) cannot be reached: it opens at its start.
+    frame.addEventListener("load", () => {
+      if (!step) return;
+      try {
+        const tutorial = frame.contentWindow!;
+        tutorial.history.replaceState(null, "", `${tutorial.location.pathname}${tutorial.location.search}${step}`);
+        tutorial.dispatchEvent(new Event("hashchange"));
+      } catch {}
+    });
+
     document.addEventListener("themechange", () => {
       storeTheme();
-      frame.contentWindow?.location.reload();
+      try {
+        step = frame.contentWindow!.location.hash || step;
+      } catch {}
+      frame.src = current.dataset.page!;
     });
+
+    const select = (tab: HTMLButtonElement) => {
+      if (tab === current) return;
+      current = tab;
+      for (const [index, other] of tabs.entries()) {
+        const selected = other === tab;
+        other.setAttribute("aria-selected", String(selected));
+        other.tabIndex = selected ? 0 : -1;
+        fallbacks[index]!.hidden = !selected;
+      }
+      panel.setAttribute("aria-labelledby", tab.id);
+      for (const link of links) link.href = tab.dataset.src!;
+      demo.querySelector(".url")!.textContent = tab.dataset.address!;
+      step = tab.dataset.step ? `#${tab.dataset.step}` : "";
+      frame.src = tab.dataset.page!;
+    };
+
+    for (const [index, tab] of tabs.entries()) {
+      tab.addEventListener("click", () => select(tab));
+      tab.addEventListener("keydown", (event) => {
+        const next = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: tabs.length - 1 }[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        const target = tabs[(next + tabs.length) % tabs.length]!;
+        target.focus();
+        select(target);
+      });
+    }
   }
 </script>
