@@ -248,6 +248,7 @@ describe("validateTutorial JSON pointer regions", () => {
       check(
         use("Step", { id: "install", file: "package.json", region: "/dependencies" }),
         use("Step", { id: "vite", file: "package.json", region: "/dependencies/vite" }),
+        use("Step", { id: "manifest", file: "package.json", region: "/name../dependencies" }),
         use("Step", { id: "config", file: "main.js", region: "config" }),
       ),
     ).toEqual([]);
@@ -258,6 +259,8 @@ describe("validateTutorial JSON pointer regions", () => {
     [{ file: "main.js", region: "/config" }, 'region "/config" is a JSON Pointer, but code/main.js is not a .json file; mark the region with #region comments'],
     [{ file: "broken.json", region: "/a" }, 'region "/a": code/broken.json: invalid JSON: expected """ at line 3'],
     [{ region: "/dependencies" }, 'region "/dependencies" requires a "file"'],
+    [{ file: "package.json", region: "/name../scripts" }, 'region "/name../scripts": code/package.json: pointer "/scripts" not found'],
+    [{ file: "package.json", region: "/dependencies../name" }, 'region "/dependencies../name": code/package.json: "/name" must come after "/dependencies"'],
     [{ file: "package.json", region: "dependencies" }, 'region "dependencies" not found in code/package.json'],
   ])("reports %j", (attributes, message) => {
     expect(check(use("Step", { id: "a", ...attributes }))).toEqual([`tutorial.mdx:3:1 <Step> ${message}`]);

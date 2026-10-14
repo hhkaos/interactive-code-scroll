@@ -22,7 +22,8 @@ export function jsonVarsOf(frontmatter: Readonly<Record<string, unknown>>): Json
 
 /**
  * `<Step file="package.json" region="/dependencies">`: a `region` starting with `/` is a JSON Pointer
- * into the step's `.json` file (marker region ids never start with `/`).
+ * into the step's `.json` file (marker region ids never start with `/`). `/name../scripts` is a
+ * range of sibling members, split at the first `../`.
  */
 export function isJsonRegion(region: string): boolean {
   return region.startsWith("/");
@@ -81,6 +82,25 @@ export function locateJsonValue(source: string, pointer: string): JsonValueSpan 
 export function locateJsonMember(source: string, pointer: string): { start: number; end: number } | string {
   const node = findNode(source, pointer);
   return typeof node === "string" ? node : { start: node.keyStart ?? node.start, end: node.end };
+}
+
+/**
+ * Where a JSON region is: one member ({@link locateJsonMember}), or for `/a../b` the sibling members
+ * from `/a` to `/b`, both included.
+ */
+export function locateJsonRegion(source: string, region: string): { start: number; end: number } | string {
+  const split = region.indexOf("../");
+  if (split < 0) return locateJsonMember(source, region);
+  const from = region.slice(0, split);
+  const to = region.slice(split + 2);
+  const parent = (pointer: string) => pointer.slice(0, pointer.lastIndexOf("/"));
+  if (parent(from) !== parent(to)) return `"${from}" and "${to}" must be in the same object or array`;
+  const first = locateJsonMember(source, from);
+  if (typeof first === "string") return first;
+  const last = locateJsonMember(source, to);
+  if (typeof last === "string") return last;
+  if (last.start <= first.start) return `"${to}" must come after "${from}"`;
+  return { start: first.start, end: last.end };
 }
 
 function findNode(source: string, pointer: string): Node | string {

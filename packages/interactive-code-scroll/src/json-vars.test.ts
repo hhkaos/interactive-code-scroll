@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jsonRegionId, locateJsonMember, locateJsonValue, parseJsonTarget } from "./json-vars.ts";
+import { jsonRegionId, locateJsonMember, locateJsonRegion, locateJsonValue, parseJsonTarget } from "./json-vars.ts";
 import { applyVars, parseSource } from "./markers.ts";
 
 const config = `{
@@ -110,14 +110,35 @@ describe("locateJsonMember", () => {
   });
 });
 
+describe("locateJsonRegion", () => {
+  const region = (pointer: string) => {
+    const span = locateJsonRegion(pkg, pointer);
+    return typeof span === "string" ? span : pkg.slice(span.start, span.end);
+  };
+
+  it("spans one member, or sibling members from the first key to the end of the last value", () => {
+    expect(region("/scripts/dev")).toBe('"dev": "vite"');
+    expect(region("/name../dependencies")).toBe(pkg.slice(pkg.indexOf('"name"'), pkg.indexOf("  },") + 3));
+    expect(region("/keywords/0../keywords/1")).toBe('"maps",\n    "demo"');
+  });
+
+  it("explains ranges that are not siblings in order", () => {
+    expect(region("/name../nope")).toBe('pointer "/nope" not found');
+    expect(region("/name../dependencies/vite")).toBe('"/name" and "/dependencies/vite" must be in the same object or array');
+    expect(region("/dependencies../name")).toBe('"/name" must come after "/dependencies"');
+    expect(region("/name../name")).toBe('"/name" must come after "/name"');
+  });
+});
+
 describe("JSON pointer regions in parseSource", () => {
   it("adds a region per pointer over the member's lines, keeping the code unchanged", () => {
-    const parsed = parseSource(pkg, "code/package.json", [], ["/dependencies", "/scripts/dev", "/keywords/1", "/dependencies"]);
+    const parsed = parseSource(pkg, "code/package.json", [], ["/dependencies", "/scripts/dev", "/keywords/1", "/dependencies", "/name../scripts"]);
     expect(parsed.code).toBe(pkg);
     expect(parsed.regions).toEqual([
       { id: "/dependencies", fromLine: 4, toLine: 7 },
       { id: "/scripts/dev", fromLine: 3, toLine: 3 },
       { id: "/keywords/1", fromLine: 10, toLine: 10 },
+      { id: "/name../scripts", fromLine: 2, toLine: 3 },
     ]);
   });
 

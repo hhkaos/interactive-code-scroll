@@ -3,7 +3,7 @@ import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { CHOICE_TYPES, FIELD_TYPES, parseStaticLiteral, resolveOptions } from "./field-options.ts";
 import { extensionOf } from "./file-types.ts";
-import { isJsonRegion, locateJsonMember, locateJsonValue, parseJsonTarget, type JsonVar } from "./json-vars.ts";
+import { isJsonRegion, locateJsonRegion, locateJsonValue, parseJsonTarget, type JsonVar } from "./json-vars.ts";
 import { formValue, parseSource, varKind, type ParsedSource, type VarKind } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
@@ -135,11 +135,11 @@ export function jsonRegionTargets(
       } catch {
         continue; // Marker errors are reported with the file.
       }
-      const span = locateJsonMember(code, region);
+      const span = locateJsonRegion(code, region);
       if (typeof span !== "string") {
         if (!jsonRegions[path]?.includes(region)) (jsonRegions[path] ??= []).push(region);
-      } else if (span.startsWith("invalid JSON")) report(`region "${region}": code/${path}: ${span}`);
-      else report(`region "${region}" not found in code/${path}`);
+      } else if (span === `pointer "${region}" not found`) report(`region "${region}" not found in code/${path}`);
+      else report(`region "${region}": code/${path}: ${span}`);
     }
   }
   return { jsonRegions, errors };

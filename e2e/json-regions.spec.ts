@@ -23,3 +23,9 @@ test("pointer and marker regions switch like any other region", async ({ page })
   await expect(focused(page)).toHaveCount(2);
   await expect(focused(page).first()).toContainText("const port = 3000;");
 });
+
+test("a range of JSON Pointers focuses the sibling members between them", async ({ page }) => {
+  await page.goto("/#manifest");
+  await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "package.json");
+  await expect(focused(page)).toHaveText(['  "name": "json-regions-fixture",', '  "private": true,', '  "type": "module",']);
+});
