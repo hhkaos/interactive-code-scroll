@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.2] - 2026-10-14
+
 ### Added
 
 - Terminal recording of the project wizard (one REST tutorial with cURL, Python and Node.js, then `npm run dev`): `site/recordings/start.tape` renders `site/public/recordings/start.{gif,webm,mp4,png}` with VHS (`pnpm record`). The landing "Start in 30 seconds" section plays the video in place of the static terminal (muted loop while visible; poster and controls with reduced motion or without JavaScript); the root README embeds it as a GitHub video attachment (the GIF stays for npm READMEs). E2E in `e2e/site.spec.ts`.
