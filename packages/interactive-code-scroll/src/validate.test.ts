@@ -420,6 +420,21 @@ describe("validateTutorial variants", () => {
       frontmatterLines: { variants: 2, files: 9 },
     });
 
+  it("checks variant logos like the tutorial logo, at the variants line", () => {
+    const withLogos = (logos: (string | undefined)[]) => ({
+      variants: variants.map((v, i) => (logos[i] === undefined ? v : { ...v, logo: logos[i] })),
+      preview: "both",
+    });
+    expect(run({ frontmatter: withLogos(["a.png", "https://example.com/py.svg", undefined]) })).toEqual([]);
+    expect(run({ frontmatter: withLogos(["missing.svg", "http://example.com/py.svg", "shots/b.png"]) })).toEqual([
+      'tutorial.mdx:2:1 frontmatter variants[0].logo "missing.svg" not found in images/ (or use an https:// URL)',
+      'tutorial.mdx:2:1 frontmatter variants[1].logo "http://example.com/py.svg" not found in images/ (or use an https:// URL)',
+    ]);
+    expect(run({ frontmatter: { variants: [{ ...variants[0], logo: 3 }, variants[1], variants[2]], preview: "both" } })).toEqual([
+      'tutorial.mdx:2:1 frontmatter "variants[0]".logo must be a string',
+    ]);
+  });
+
   it("accepts region-only steps, only=, and files relative to the variant", () => {
     expect(
       run(

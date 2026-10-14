@@ -52,6 +52,10 @@ export interface SeriesCard {
   level?: string;
   duration?: string;
   order?: number;
+  /** URL of the tutorial `logo`. */
+  logo?: string;
+  /** Variant logos (distinct URLs), shown when the tutorial has no `logo`. */
+  variantLogos?: { label: string; src: string }[];
 }
 
 /** Index order: `order` first (lower first), then tutorials without it; ties by title. */

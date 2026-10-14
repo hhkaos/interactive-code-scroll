@@ -21,6 +21,8 @@ export interface Variant {
   entry: string;
   /** Ordered globs (relative to `dir`) choosing the files that get tabs; all text files when absent. */
   files?: string[];
+  /** Image in `images/` (or an `https://` URL) shown next to the label in the switcher, as the tutorial `logo`. */
+  logo?: string;
 }
 
 export interface TutorialConfig {
@@ -118,16 +120,18 @@ function readVariants(value: unknown): Variant[] | undefined {
   for (const [index, item] of (value as unknown[]).entries()) {
     const at = `"variants[${index}]"`;
     if (typeof item !== "object" || item === null || Array.isArray(item)) fail(`${at} must be an object with id, label, dir and entry`);
-    const { id, label, dir, entry, files } = item as Record<string, unknown>;
+    const { id, label, dir, entry, files, logo } = item as Record<string, unknown>;
     if (typeof id !== "string" || !VARIANT_ID.test(id)) fail(`${at}.id must be lowercase letters, digits and dashes`);
     if (typeof label !== "string" || label.trim() === "") fail(`${at}.label must be a non-empty string`);
     const folder = typeof dir === "string" ? relativePath(dir) : undefined;
     if (folder === undefined) fail(`${at}.dir must be a folder relative to code/, e.g. "python"`);
     const file = typeof entry === "string" ? relativePath(entry) : undefined;
     if (file === undefined) fail(`${at}.entry must be a file path relative to the variant folder`);
+    if (logo !== undefined && typeof logo !== "string") fail(`${at}.logo must be a string`);
     const variant: Variant = { id: id as string, label: label as string, dir: folder!, entry: file! };
     const globs = readFiles(files, "variants", `${at}.files`, `code/${folder}/`);
     if (globs !== undefined) variant.files = globs;
+    if (logo !== undefined) variant.logo = logo as string;
     variants.push(variant);
   }
   for (const [index, variant] of variants.entries()) {
@@ -146,6 +150,21 @@ export const isRemoteLogo = (logo: string) => /^https:\/\/\S+$/i.test(logo);
 export function logoUrl(logo: string | undefined, images: Readonly<Record<string, string>>): string | undefined {
   if (logo === undefined) return undefined;
   return isRemoteLogo(logo) ? logo : images[logo];
+}
+
+/** A card's logos: the tutorial `logo`, else each distinct variant logo (with its label for the alt text). */
+export function cardLogos(
+  config: Pick<TutorialConfig, "logo" | "variants">,
+  images: Readonly<Record<string, string>>,
+): { logo?: string; variantLogos?: { label: string; src: string }[] } {
+  const logo = logoUrl(config.logo, images);
+  if (logo !== undefined) return { logo };
+  const variantLogos: { label: string; src: string }[] = [];
+  for (const variant of config.variants ?? []) {
+    const src = logoUrl(variant.logo, images);
+    if (src !== undefined && !variantLogos.some((v) => v.src === src)) variantLogos.push({ label: variant.label, src });
+  }
+  return variantLogos.length > 0 ? { variantLogos } : {};
 }
 
 function optionalText(name: string, value: unknown): string | undefined {

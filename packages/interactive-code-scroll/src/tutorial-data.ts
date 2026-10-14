@@ -1,5 +1,5 @@
 import type { MDXContent } from "astro";
-import { readTutorialConfig } from "./frontmatter.ts";
+import { cardLogos, readTutorialConfig } from "./frontmatter.ts";
 import { familyOf, familyProblems, sortCards, type FamilyMember, type SeriesCard } from "./series.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 
@@ -62,8 +62,9 @@ export function tutorialBase(base: string, slug: string): string {
 /** Index cards of a series, in index order (frontmatter was validated at MDX compile time). */
 export function seriesCards(tutorials: readonly TutorialData[], base: string): SeriesCard[] {
   return sortCards(
-    tutorials.map(({ slug, frontmatter }) => {
-      const { title, description, tags, level, duration, order } = readTutorialConfig(frontmatter);
+    tutorials.map(({ slug, frontmatter, images }) => {
+      const config = readTutorialConfig(frontmatter);
+      const { title, description, tags, level, duration, order } = config;
       return {
         slug,
         href: tutorialBase(base, slug),
@@ -73,6 +74,7 @@ export function seriesCards(tutorials: readonly TutorialData[], base: string): S
         ...(level === undefined ? {} : { level }),
         ...(duration === undefined ? {} : { duration }),
         ...(order === undefined ? {} : { order }),
+        ...cardLogos(config, images),
       };
     }),
   );

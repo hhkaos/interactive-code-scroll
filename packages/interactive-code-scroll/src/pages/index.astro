@@ -33,9 +33,14 @@ setCurrentTutorial(Astro.locals, tutorial);
 const { binaries, Content, files, frontmatter, images, outputs, requests, slug } = tutorial;
 // Frontmatter and references are validated at MDX compile time (mdx-validation.ts).
 const config = readTutorialConfig(frontmatter);
-const logo = logoUrl(config.logo, images);
 const textPaths = files.map((f) => f.path);
 const { variants } = config;
+const logo = logoUrl(config.logo, images);
+const variantLogos = variants?.map((v) => logoUrl(v.logo, images));
+// The header shows the active variant's logo (client/variants.ts follows the switch), else the tutorial's;
+// the favicon stays put: the tutorial logo, else the first variant's.
+const headerLogo = variantLogos?.[0] ?? logo;
+const favicon = logo ?? variantLogos?.find((url) => url !== undefined);
 // Each variant's tabs, in order; a tutorial without variants is one unnamed group.
 const groups = variants
   ? variants.map((v) => ({ variant: v, prefix: `${v.dir}/`, entry: `${v.dir}/${v.entry}`, paths: variantVisible(v, textPaths).visible }))
@@ -88,10 +93,11 @@ const withTab = preview === "tab" || preview === "both";
 // Sibling tutorials (same `family`) for the header's language switcher; empty without one.
 const siblings = series ? siblingsOf(tutorials, slug, base) : [];
 const currentSibling = siblings.find((s) => s.current);
-const clientVariants = variants?.map(({ id, label, dir, entry }) => ({ id, label, dir, entry }));
+const clientVariants = variants?.map(({ id, label, dir, entry }, i) => ({ id, label, dir, entry, ...(variantLogos![i] && { logo: variantLogos![i] }) }));
 // Escape "<" so embedded code containing </script> cannot close the data block.
 const clientData = JSON.stringify({
   title: config.title,
+  logo,
   // Where this tutorial's Preview page, published code and outputs live.
   base: tutorialBase(base, slug),
   tutorial: slug,
@@ -115,7 +121,7 @@ const clientData = JSON.stringify({
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{config.title}</title>
     {config.description && <meta name="description" content={config.description} />}
-    {logo && <link rel="icon" href={logo} />}
+    {favicon && <link rel="icon" href={favicon} />}
   </head>
   <body data-preview={preview} data-theme={config.theme} data-code-wrap={config.codeWrap ? "" : undefined}>
     <script is:inline>
@@ -139,7 +145,7 @@ const clientData = JSON.stringify({
         )
       }
       {/* The page's h1: tutorial.mdx should not repeat the title. */}
-      <calcite-navigation-logo slot="logo" heading={config.title} heading-level="1" thumbnail={logo} />
+      <calcite-navigation-logo slot="logo" heading={config.title} heading-level="1" thumbnail={headerLogo} />
       {
         currentSibling && (
           <div slot="content-start" class="family-switcher">
@@ -203,6 +209,7 @@ const clientData = JSON.stringify({
                     <calcite-segmented-control id="variant-switcher" label="Code language" scale="s">
                       {variants.map((v, i) => (
                         <calcite-segmented-control-item value={v.id} checked={i === 0 || undefined}>
+                          {variantLogos![i] && <img class="variant-logo" src={variantLogos![i]} alt="" />}
                           {v.label}
                         </calcite-segmented-control-item>
                       ))}
@@ -210,11 +217,13 @@ const clientData = JSON.stringify({
                   )}
                   <calcite-dropdown id="variant-dropdown" scale="s" hidden={variants.length <= MAX_SEGMENTED || undefined}>
                     <calcite-button slot="trigger" kind="neutral" appearance="outline" scale="s" icon-end="chevron-down" label="Code language">
+                      {variantLogos![0] && <img class="variant-logo" src={variantLogos![0]} alt="" />}
                       {variants[0]!.label}
                     </calcite-button>
                     <calcite-dropdown-group selection-mode="single" group-title="Code language">
                       {variants.map((v, i) => (
                         <calcite-dropdown-item data-variant={v.id} selected={i === 0 || undefined}>
+                          {variantLogos![i] && <img class="variant-logo" src={variantLogos![i]} alt="" />}
                           {v.label}
                         </calcite-dropdown-item>
                       ))}
@@ -373,6 +382,7 @@ const clientData = JSON.stringify({
 
       const data = JSON.parse(document.querySelector("#ics-data")!.textContent!) as {
         title: string;
+        logo?: string;
         base: string;
         tutorial: string;
         preview: "off" | "iframe" | "tab" | "both";
@@ -394,7 +404,7 @@ const clientData = JSON.stringify({
       // Before presentation: Esc restores a maximized pane before it leaves presentation mode.
       startMaximize();
       startPresentation();
-      const variants = data.variants && startVariants(data.variants);
+      const variants = data.variants && startVariants(data.variants, data.logo);
       startFamily(data.siblings, variants);
       const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
       startImageViewer();

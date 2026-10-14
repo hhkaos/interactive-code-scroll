@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FrontmatterError, frontmatterKeyLines, isRemoteLogo, logoUrl, readIndexConfig, readTutorialConfig } from "./frontmatter.ts";
+import { cardLogos, FrontmatterError, frontmatterKeyLines, isRemoteLogo, logoUrl, readIndexConfig, readTutorialConfig } from "./frontmatter.ts";
 
 describe("readTutorialConfig", () => {
   it("applies defaults", () => {
@@ -81,6 +81,15 @@ describe("readTutorialConfig", () => {
       expect(readTutorialConfig({ variants: [curl] }).variants![0]).not.toHaveProperty("files");
     });
 
+    it("accepts an optional logo per variant, local or remote", () => {
+      const variants = [
+        { ...curl, logo: "curl.svg" },
+        { ...python, logo: "https://example.com/python.png" },
+      ];
+      expect(readTutorialConfig({ variants }).variants!.map((v) => v.logo)).toEqual(["curl.svg", "https://example.com/python.png"]);
+      expect(readTutorialConfig({ variants: [curl] }).variants![0]).not.toHaveProperty("logo");
+    });
+
     it.each([
       ["python", /"variants" must be a non-empty list/],
       [[], /"variants" must be a non-empty list/],
@@ -90,6 +99,8 @@ describe("readTutorialConfig", () => {
       [[{ ...curl, dir: "../curl" }], /"variants\[0\]"\.dir must be a folder relative to code/],
       [[{ ...curl, dir: "/curl" }], /"variants\[0\]"\.dir must be a folder relative to code/],
       [[{ ...curl, entry: 3 }], /"variants\[0\]"\.entry must be a file path/],
+      [[{ ...curl, logo: true }], /"variants\[0\]"\.logo must be a string/],
+      [[curl, { ...python, logo: ["a.svg"] }], /"variants\[1\]"\.logo must be a string/],
       [[{ ...curl, files: [] }], /"variants\[0\]"\.files must be a non-empty list of paths or globs relative to code\/curl\//],
       [[curl, { ...python, id: "curl" }], /id "curl" is used twice/],
       [[curl, { ...python, dir: "curl/py" }], /folders must not overlap: "curl" \(curl\) and "curl\/py" \(python\)/],
@@ -204,5 +215,29 @@ describe("logo", () => {
     expect(logoUrl("https://example.com/logo.png", {})).toBe("https://example.com/logo.png");
     expect(logoUrl("logo.png", { "logo.png": "/_astro/logo.123.png" })).toBe("/_astro/logo.123.png");
     expect(logoUrl(undefined, {})).toBeUndefined();
+  });
+
+  describe("cardLogos", () => {
+    const images = { "t.svg": "/_astro/t.svg", "py.svg": "/_astro/py.svg" };
+    const variant = (id: string, logo?: string) => ({ id, label: id.toUpperCase(), dir: id, entry: "x", ...(logo && { logo }) });
+
+    it("prefers the tutorial logo", () => {
+      expect(cardLogos({ logo: "t.svg", variants: [variant("py", "py.svg")] }, images)).toEqual({ logo: "/_astro/t.svg" });
+    });
+
+    it("falls back to distinct variant logos, with labels, skipping variants without one", () => {
+      const variants = [variant("py", "py.svg"), variant("sh"), variant("web", "https://example.com/w.png"), variant("py2", "py.svg")];
+      expect(cardLogos({ variants }, images)).toEqual({
+        variantLogos: [
+          { label: "PY", src: "/_astro/py.svg" },
+          { label: "WEB", src: "https://example.com/w.png" },
+        ],
+      });
+    });
+
+    it("is empty without any logo", () => {
+      expect(cardLogos({}, images)).toEqual({});
+      expect(cardLogos({ variants: [variant("sh")] }, images)).toEqual({});
+    });
   });
 });

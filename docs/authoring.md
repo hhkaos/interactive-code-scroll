@@ -146,7 +146,7 @@ order: 1
 | `title` | string | required | Rendered in the app header. Do not repeat it as an MDX `#` heading. |
 | [`description`](#index-page) | string | none | One sentence: the page's meta description (search results, link previews) and, in a [series site](#series-sites), the index card text. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
-| [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. |
+| [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. In a [series](#series-sites) it is also the index card's logo. Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |
 
 ### Code and Preview
 
@@ -778,6 +778,8 @@ tutorial/
     node/
       index.mjs
       api.mjs
+  images/
+    nodejs.svg
 ```
 
 ```yaml title="tutorial/tutorial.mdx"
@@ -786,7 +788,7 @@ title: Call the items API
 variants:
   - { id: python, label: Python, dir: python, entry: request.py, files: ["request.py", "requirements.txt"] }
   - { id: curl, label: cURL, dir: curl, entry: request.sh }
-  - { id: node, label: Node.js, dir: node, entry: index.mjs }
+  - { id: node, label: Node.js, dir: node, entry: index.mjs, logo: nodejs.svg }
 ---
 ```
 
@@ -797,6 +799,7 @@ variants:
 | `dir` | folder | required | Relative to `code/`. Folders must not overlap. |
 | `entry` | file | required | File shown first, relative to `dir`. |
 | `files` | list of paths/globs | all text files | Like the top-level [`files`](#frontmatter), relative to `dir`. The top-level `files` cannot be combined with `variants`. |
+| `logo` | image path or `https://` URL | none | Icon next to `label` in the language switcher, with the same rules as the tutorial [`logo`](#frontmatter) (a file in `images/` or an `https://` URL). While the variant is active, the page header shows it instead of the tutorial logo. |
 
 ### Steps across variants
 
@@ -830,6 +833,7 @@ variants:
 ### Reader experience
 
 - The language switcher sits at the start of the code header: a segmented control for up to four variants whose file tabs fit next to it, a dropdown otherwise. This is automatic.
+- Variant `logo`s appear next to their labels in the switcher (decorative: the label names the variant). The page header shows the active variant's logo, or the tutorial `logo` for a variant without one; the favicon stays the tutorial `logo` (the first variant logo when the tutorial has none).
 - Switching keeps the current step and focuses the same region in the new variant's file. A text-only step keeps the file with the same path when the new variant has it, else shows the new variant's `entry`.
 - The choice is remembered for the whole site and can be linked: `?variant=curl#request`. An unknown id is ignored.
 - Form fields are shared: one [`@var`](#variables) name fills every variant, and all its occurrences need the same default literal.
@@ -869,7 +873,9 @@ interactiveCodeScroll({ tutorials: "tutorials" })
 
 ### Index page
 
-`/` lists every tutorial as a card: title, `description`, `level`, `duration` and `tags` from each tutorial's [frontmatter](#frontmatter), ordered by `order` (lower first; tutorials without it follow, by title). When any tutorial has tags, a tag filter shows only the cards with any of the selected tags.
+`/` lists every tutorial as a card: logo, title, `description`, `level`, `duration` and `tags` from each tutorial's [frontmatter](#frontmatter), ordered by `order` (lower first; tutorials without it follow, by title). When any tutorial has tags, a tag filter shows only the cards with any of the selected tags.
+
+A card shows the tutorial's `logo` next to its title. A tutorial without `logo` whose [variants](#code-variants) have logos shows each distinct variant logo instead, labeled with the variant's name for screen readers. Cards without any logo keep the title at the start.
 
 To customize the index, add `tutorials/index.mdx`:
 
@@ -945,7 +951,7 @@ import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll
 </html>
 ```
 
-- `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set.
+- `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set; `logo` (URL of the tutorial logo) or else `variantLogos` (`{ label, src }` per distinct variant logo) when any.
 - `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
 - `index` must be an `.astro` file, needs `tutorials`, and cannot be combined with `tutorials/index.mdx` (build error: the file would be ignored).
 
@@ -1013,6 +1019,7 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `#region "x" is empty` · `unclosed #region "x"` · `#endregion "a" closes #region "b"` | Fix the [region markers](#regions) in that file. |
 | `frontmatter include "x" matches no path starting with "." in code/ …` | Fix the glob (relative to `code/`). Paths without a segment starting with `.` are published anyway, and generated folders such as `node_modules/` cannot be included. See [Files left out of the tutorial](#files-left-out-of-the-tutorial). |
 | `frontmatter logo "x" not found in images/ (or use an https:// URL)` | Put the logo in `images/` or use an `https://` URL. |
+| `frontmatter variants[n].logo "x" not found in images/ (or use an https:// URL)` | Same for a [variant](#code-variants) logo. |
 | `code/x: file is outside every variant folder; move it into one of …` | With variants, every code file belongs to a variant folder. |
 
 The build also warns, without failing, about each `code/` folder starting with `.` that is not published: `code/.github/ is not published (paths starting with "." are skipped); add ".github/**" to frontmatter "include" to publish it`.

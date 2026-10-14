@@ -262,6 +262,11 @@ export function validateTutorial({
   if (config?.logo !== undefined && !isRemoteLogo(config.logo) && !images.includes(config.logo)) {
     reportFrontmatter("logo", `logo "${config.logo}" not found in images/ (or use an https:// URL)`);
   }
+  for (const [index, variant] of (config?.variants ?? []).entries()) {
+    if (variant.logo !== undefined && !isRemoteLogo(variant.logo) && !images.includes(variant.logo)) {
+      reportFrontmatter("variants", `variants[${index}].logo "${variant.logo}" not found in images/ (or use an https:// URL)`);
+    }
+  }
   // With variants, the Preview applies to web variants only, so no variant is required to have it.
   if (config && !config.variants && config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
     reportFrontmatter("preview", `preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);

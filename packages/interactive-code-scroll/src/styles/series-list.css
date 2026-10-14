@@ -65,6 +65,32 @@
   }
 }
 
+.series-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Fixed boxes: any logo shape fits without moving the title, and cards without one are unchanged. */
+.series-card-logo {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.series-card-variant-logos {
+  flex: none;
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.series-card-variant-logo {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
 .series-card-title {
   margin: 0;
   font-size: var(--calcite-font-size-md);

@@ -436,6 +436,15 @@ body[data-docs-hidden] {
   background: var(--calcite-color-border-3);
 }
 
+/* Variant logo before its label in the switcher (segmented items, dropdown items and trigger). */
+.variant-logo {
+  width: 1rem;
+  height: 1rem;
+  margin-inline-end: 0.375rem;
+  object-fit: contain;
+  vertical-align: -0.1875rem;
+}
+
 /* Code panel notice for steps that apply to other variants. */
 #variant-notice { flex: none; }
 

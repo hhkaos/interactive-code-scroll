@@ -32,7 +32,18 @@ const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : 
       shown.map((card) => (
         <li class="series-card-item" data-slug={card.slug} data-tags={JSON.stringify(card.tags)}>
           <a class="series-card" href={card.href}>
-            <h3 class="series-card-title">{card.title}</h3>
+            <div class="series-card-head">
+              {/* Next to the title, the tutorial logo is decorative; variant logos stand alone, so they keep their label. */}
+              {card.logo && <img class="series-card-logo" src={card.logo} alt="" />}
+              {card.variantLogos && (
+                <span class="series-card-variant-logos">
+                  {card.variantLogos.map((v) => (
+                    <img class="series-card-variant-logo" src={v.src} alt={v.label} title={v.label} />
+                  ))}
+                </span>
+              )}
+              <h3 class="series-card-title">{card.title}</h3>
+            </div>
             {card.description && <p class="series-card-description">{card.description}</p>}
             {(card.level || card.duration) && (
               <p class="series-card-meta">

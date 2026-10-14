@@ -184,3 +184,37 @@ test("a narrow header keeps the current label and drops the prefix", async ({ pa
   await familyItem(page, "beta").click();
   await expect(page).toHaveURL(/\/beta\/$/);
 });
+
+// Small SVGs are inlined as data URLs: match the file name or the logo's fill color.
+const logoSrc = (name: string, fill: string) => new RegExp(`${name}.*\\.svg$|%23${fill}`);
+
+test("cards show the tutorial logo, else the variant logos, at fixed sizes", async ({ page }) => {
+  await page.goto("/");
+  const cards = page.locator(".series-list").nth(0).locator(".series-card");
+  // Alpha: tutorial logo next to the title (decorative).
+  const alphaLogo = cards.nth(0).locator(".series-card-logo");
+  await expect(alphaLogo).toHaveAttribute("src", logoSrc("alpha-logo", "2b7bd6"));
+  await expect(alphaLogo).toHaveAttribute("alt", "");
+  await expect(alphaLogo).toHaveCSS("width", "32px");
+  // Beta: no tutorial logo, so one logo per variant, labelled.
+  await expect(cards.nth(1).locator(".series-card-logo")).toHaveCount(0);
+  expect(await cards.nth(1).locator(".series-card-variant-logo").evaluateAll((imgs) => imgs.map((i) => i.getAttribute("alt")))).toEqual([
+    "Browser",
+    "Python",
+  ]);
+  // Gamma: no logo at all.
+  await expect(cards.nth(2).locator("img")).toHaveCount(0);
+});
+
+test("the variant switcher shows variant logos and the header follows the active one", async ({ page }) => {
+  await page.goto("/beta/");
+  const header = page.locator(".app-header calcite-navigation-logo");
+  const items = page.locator("#variant-switcher calcite-segmented-control-item");
+  await expect(items.nth(0).locator("img.variant-logo")).toHaveAttribute("src", logoSrc("browser", "e8a317"));
+  await expect(items.nth(1).locator("img.variant-logo")).toHaveAttribute("alt", "");
+  await expect(header).toHaveJSProperty("thumbnail", await items.nth(0).locator("img").getAttribute("src"));
+  await items.nth(1).click();
+  await expect(header).toHaveJSProperty("thumbnail", await items.nth(1).locator("img").getAttribute("src"));
+  // The favicon stays on the first variant's logo (beta has no tutorial logo).
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", logoSrc("browser", "e8a317"));
+});

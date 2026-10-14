@@ -5,6 +5,8 @@ export interface VariantInfo {
   label: string;
   dir: string;
   entry: string;
+  /** Logo URL, shown next to the label and in the page header while active. */
+  logo?: string;
 }
 
 /** Fired on `document` after the reader switches variants. */
@@ -40,8 +42,21 @@ function fitSwitcher(header: HTMLElement, segmented: HTMLElement, dropdown: HTML
   dropdown.hidden = segmentedFits;
 }
 
-/** Language switcher in the code header: shows the active variant's tabs. */
-export function startVariants(list: readonly VariantInfo[]): VariantsHandle {
+/** Label of the dropdown trigger: the variant's logo (decorative) and name. */
+function setTriggerLabel(trigger: Element, variant: VariantInfo): void {
+  const content: (Node | string)[] = [variant.label];
+  if (variant.logo) {
+    const img = document.createElement("img");
+    img.className = "variant-logo";
+    img.src = variant.logo;
+    img.alt = "";
+    content.unshift(img);
+  }
+  trigger.replaceChildren(...content);
+}
+
+/** Language switcher in the code header: shows the active variant's tabs; the page header shows its logo, else `tutorialLogo`. */
+export function startVariants(list: readonly VariantInfo[], tutorialLogo?: string): VariantsHandle {
   const byId = new Map(list.map((v) => [v.id, v]));
   let active = byId.get(
     pickVariant(
@@ -52,6 +67,7 @@ export function startVariants(list: readonly VariantInfo[]): VariantsHandle {
   )!;
   const control = document.querySelector<HTMLElement & { value: string }>("#variant-switcher");
   const dropdown = document.querySelector<HTMLElement>("#variant-dropdown");
+  const headerLogo = document.querySelector<HTMLElement & { thumbnail?: string }>(".app-header calcite-navigation-logo");
 
   const apply = () => {
     for (const nav of document.querySelectorAll<HTMLElement>("calcite-tab-nav[data-variant]")) nav.hidden = nav.dataset.variant !== active.id;
@@ -62,7 +78,8 @@ export function startVariants(list: readonly VariantInfo[]): VariantsHandle {
       item.selected = item.dataset.variant === active.id;
     }
     const trigger = dropdown?.querySelector("[slot=trigger]");
-    if (trigger) trigger.textContent = active.label;
+    if (trigger) setTriggerLabel(trigger, active);
+    if (headerLogo) headerLogo.thumbnail = active.logo ?? tutorialLogo;
   };
 
   const set = (id: string) => {
