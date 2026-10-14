@@ -15,7 +15,7 @@ A tutorial is a folder with `tutorial.mdx` (the explanations), `code/` (the fina
 - **Steps drive the code panel**: when a step becomes active, it can switch file, focus a region (the rest of the file turns gray and the region scrolls into view) or show images instead of code. A text-only step keeps the current file and clears the focus.
 - **Several ways to move**: scrolling (the step crossing the middle of the panel becomes active), clicking a step, arrow keys and PageUp/PageDown (presentation clickers work too, even while the focus is in a field or the Result pane).
 - **Numbered steps, progress bar and deep links**: every step heading carries its number; `#step-id` links open the tutorial at that step.
-- **Optional introduction**: content before the first step that is not numbered and does not focus any code.
+- **Optional introduction**: content before the first step that is not numbered and does not focus any code. It can start with the Preview or Result pane collapsed or maximized (`<Intro preview="collapsed">`).
 - **Light and dark**: follows the OS by default; the author can set a default and the reader's toggle wins. The code panel and the Preview follow the page.
 - **Readable at high zoom**, with line numbers and optional wrapping of long lines. The Result pane header turns long labels into icons instead of clipping them, and a short pane scrolls as a whole.
 
@@ -30,7 +30,7 @@ See [Components](authoring.md#components).
 
 - **Final code, highlighted**: every file is shown in its final version; steps only focus parts of it. Highlighting happens at build time for JavaScript/TypeScript, HTML, CSS, JSON, Markdown, shell, YAML, Python, Kotlin, Swift, C#, Java, C++, Dart, SQL, `.http` and more, and can be overridden per extension.
 - **Regions and variables as comments**: `#region id` / `#endregion` marks what a step focuses; `@var name` marks a literal a form field can change. The source stays valid and runnable; markers never reach the reader or the downloads.
-- **Large projects**: the `files` list picks which files get tabs. Everything else, including binary files such as a Gradle wrapper jar, still goes into the ZIP.
+- **Large projects**: the `files` list picks which files get tabs. Everything else, including binary files such as a Gradle wrapper jar, still goes into the ZIP. Local and generated files are left out (`.env`, `.venv/`, `node_modules/`, `__pycache__/`), so the tutorial's own setup can run in `code/`; `include` publishes project files such as `.github/workflows/` ([Files left out of the tutorial](authoring.md#files-left-out-of-the-tutorial)).
 - **Code variants**: the same steps in several languages (for example cURL, Python and Node.js) with a language switcher, deep links such as `?variant=curl`, steps that apply to only some languages, a Preview for web variants and a ZIP per variant. See [Code Variants](authoring.md#code-variants).
 
 See [Code Markers](authoring.md#code-markers) and [Files Not Shown in Tabs](authoring.md#files-not-shown-in-tabs).
@@ -103,7 +103,7 @@ See [`<Step>`](authoring.md#step).
 </picture>
 
 - **Presentation mode** hides the header; the explanations can be hidden too. Step keys and clickers keep working, including while the focus is inside the Preview, a form field or the Result pane.
-- **Maximize a pane**: the code, the Preview or the Result pane fills the window from its header icon or from a step (`maximize=`); the icon or Esc restores the layout. Step keys keep working.
+- **Maximize a pane**: the code, the Preview or the Result pane fills the window from its header icon or from a step or the intro (`maximize=`); the icon or Esc restores the layout. Step keys keep working.
 - **Serve locally** with the CLI when the venue's network is unreliable.
 
 See [Presenting a Tutorial](presenting.md).

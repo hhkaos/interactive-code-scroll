@@ -26,7 +26,7 @@ How to show a tutorial in a talk, a workshop or a screen share. For writing one,
 
 The code panel, the iframe Preview and the Result pane each have a maximize icon in their header. A maximized pane fills the browser window (the whole screen in presentation mode); its icon or Esc restores the layout with the same splitter sizes. One pane is maximized at a time, and step keys keep moving steps underneath. On a step with images, the maximized code area shows the carousel with a floating restore action. Maximizing a collapsed Preview or Result pane expands it; collapsing it restores the layout. The state is not remembered across reloads.
 
-Authors can maximize a pane from a step, for example to show a big result and restore the layout on the next step: see [`maximize`](authoring.md#maximize-from-a-step).
+Authors can maximize a pane from a step (or from the intro), for example to show a big result and restore the layout on the next step: see [`maximize`](authoring.md#maximize-from-a-step).
 
 ## Leaving with Esc
 

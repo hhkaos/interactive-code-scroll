@@ -193,7 +193,7 @@ Components render the explanations panel on the left: the tags you write in MDX.
 
 | Component | Where | What it does |
 |---|---|---|
-| [`<Intro>`](#intro) | `tutorial.mdx` | Content before the first step: not numbered, no code focus. |
+| [`<Intro>`](#intro) | `tutorial.mdx` | Content before the first step: not numbered, no code focus. Can set the Preview / Result pane state. |
 | [`<Step>`](#step) | `tutorial.mdx` | One step: its explanation and what the code panel shows. |
 | [`<VarField>`](#varfield) | `tutorial.mdx`, inside a step | A form field that edits a value in the code. |
 | [`<Hint>`](#hint) | `tutorial.mdx`, inline | A short popover for a side note. |
@@ -505,18 +505,18 @@ The [`preview`](#frontmatter) frontmatter field picks the mode:
 | `tab` | The open-in-tab button only |
 | `off` | No Preview; `code/index.html` is not required |
 
-Form changes refresh the Preview after a short debounce; the Run button refreshes it manually. A step's [`preview`](#step) prop expands or collapses it.
+Form changes refresh the Preview after a short debounce; the Run button refreshes it manually. A step's [`preview`](#step) prop expands or collapses it, and so does the intro's ([`<Intro preview>`](#intro)), for example to start with the pane collapsed.
 
 ### Maximize from a step
 
-Readers can maximize the code panel, the iframe Preview or the Result pane from their headers (see [Maximized panes](presenting.md#maximized-panes)). A step can do it for a talk, for example to show a big result and restore the layout on the next step:
+Readers can maximize the code panel, the iframe Preview or the Result pane from their headers (see [Maximized panes](presenting.md#maximized-panes)). A step can do it for a talk, for example to show a big result and restore the layout on the next step. [`<Intro>`](#intro) takes the same `maximize` prop, applied while the intro is shown:
 
 ```mdx title="tutorial/tutorial.mdx"
 <Step id="run-it" maximize="preview">…</Step>
 <Step id="back" maximize="none">…</Step>
 ```
 
-Build errors: `maximize="preview"` together with `preview="collapsed"`, and `maximize="preview"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
+Build errors (on `<Step>` and `<Intro>`): `maximize="preview"` together with `preview="collapsed"`, and `maximize="preview"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
 
 To show a tutorial in a talk or workshop (presentation mode, clickers, zoom, offline fallback), see [Presenting a Tutorial](presenting.md).
 
@@ -527,7 +527,7 @@ To show a tutorial in a talk or workshop (presentation mode, clickers, zoom, off
   <img alt="The Result pane under the code panel is highlighted: the captured terminal output of a Python script." src="../site/public/screenshots/area-result-light.png" width="900">
 </picture>
 
-Code that cannot run in the browser (scripts, native apps, [HTTP requests](#http-requests)) shows its result in the Result pane, which takes the Preview's place under the code. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`.
+Code that cannot run in the browser (scripts, native apps, [HTTP requests](#http-requests)) shows its result in the Result pane, which takes the Preview's place under the code. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`. Like the Preview, a step's or the intro's [`preview`](#step) prop expands or collapses it.
 
 ```mdx title="tutorial/tutorial.mdx"
 <Step id="request" region="request" output="geocode.json">
@@ -895,10 +895,14 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> request "x" not found in requests/ (# @name x)` | Name the request with `# @name x` in a `.http` file under `requests/`. |
 | `<Step> maximize="preview" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
 | `<Step> duplicate id "x"` | Step ids are unique per tutorial. |
+| `<Intro> "x" is not available on <Intro> (only preview, maximize)` | Move `file`, `region`, `images`, `embed`, `output` or `request` to the first step. |
 | `<VarField> no "@var x" found in code/` | Add `// @var x` next to the literal in the code, or fix the name. |
 | `@var "x" must have the same default in every file: …` | Use the same literal in every file that marks `x`. |
 | `code/x: @var "y" is in a file not shown in tabs; …` | Show the file in tabs or remove the marker. |
 | `@var x has no string literal on its line` | Put the marker on the line of a plain string literal. |
 | `#region "x" is empty` · `unclosed #region "x"` · `#endregion "a" closes #region "b"` | Fix the [region markers](#regions) in that file. |
+| `frontmatter include "x" matches no path starting with "." in code/ …` | Fix the glob (relative to `code/`). Paths without a segment starting with `.` are published anyway, and generated folders such as `node_modules/` cannot be included. See [Files left out of the tutorial](#files-left-out-of-the-tutorial). |
 | `frontmatter logo "x" not found in images/ (or use an https:// URL)` | Put the logo in `images/` or use an `https://` URL. |
 | `code/x: file is outside every variant folder; move it into one of …` | With variants, every code file belongs to a variant folder. |
+
+The build also warns, without failing, about each `code/` folder starting with `.` that is not published: `code/.github/ is not published (paths starting with "." are skipped); add ".github/**" to frontmatter "include" to publish it`.
