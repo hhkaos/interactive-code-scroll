@@ -983,7 +983,11 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> â
 |---|---|
 | `<Step> file "x" not found in code/` | `file` is relative to `code/` (to the variant folder with variants). Check the path and extension. |
 | `<Step> region "x" not found in code/main.js` | Add `#region x` / `#endregion x` to that file, or fix the id. |
-| `<Step> region "x" requires a "file"` | Without variants, a region needs `file`. |
+| `<Step> region "x" requires a "file"` | Without variants, a region needs `file`. A [JSON region](#json-regions) always needs `file`. |
+| `<Step> region "/x" not found in code/package.json` | Fix the [JSON Pointer](#json-regions): keys are case-sensitive, nested keys are separated by `/`. |
+| `<Step> region "/x" is a JSON Pointer, but code/main.js is not a .json file; â€¦` | A `region` starting with `/` only works in `.json` files; use `#region` comments elsewhere. |
+| `<Step> region "/a../b": code/x.json: "/a" and "/b" must be in the same object or array` | A [range](#json-regions) joins sibling members only; point both ends at the same level. |
+| `<Step> region "/a../b": code/x.json: "/b" must come after "/a"` | Write the range in file order. |
 | `<Step> region "x" not found in variant "y" (code/y/); add it or set "only"` | Every variant needs the region, unless the step sets [`only`](#steps-across-variants). |
 | `<Step> file "x" is not shown in tabs; add it to frontmatter "files"` | The file is left out by [`files`](#files-not-shown-in-tabs). |
 | `<Step> "images" must be a static array of strings, e.g. images={["a.png"]}` | Write the array in place, in braces: `images={["a.png"]}`. |

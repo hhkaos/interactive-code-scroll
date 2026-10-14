@@ -266,7 +266,7 @@ Goal: a first visit makes people want to try it now or save it for later, and le
 | Tutorial metadata | slug (folder), title, description, tags, level, duration, order | Frontmatter shown on the index cards |
 | Step / Text block | id (deep link), MDX content, associated action | Fires its action when it comes into focus (scroll or keyboard) |
 | Code file | path (`server.js`, `checkout.html`…) | Final version; downloadable individually or as ZIP |
-| Code region | id | Marked with `#region <id>` / `#endregion`; referenced from MDX |
+| Code region | id | Marked with `#region <id>` / `#endregion`; referenced from MDX. In `.json` files, a JSON Pointer (or `/a../b` range) in the step's `region` instead |
 | Action | type: highlight / switch file / show image(s) | Links a Step to a Region, File or Image |
 | Form | fields | Defined in MDX |
 | Field ↔ Variable | variable name, field type (text, textarea, select, radio, combobox) and options, JSON target (optional `<file>#<pointer>`), type (string, number, boolean; from the literal), persist (off, site-wide or `"tutorial"`), secret (bool, strings only) | Variable marked with `// @var <name>`; default = code literal |
