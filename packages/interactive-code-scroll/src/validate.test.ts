@@ -30,6 +30,8 @@ describe("validateTutorial", () => {
         use("Step", { id: "restore", maximize: "none", preview: "collapsed" }),
         use("Hint", { id: "redirect-uri", label: "redirect URI" }),
         use("VarField", { name: "clientId", label: "Client ID", secret: true }),
+        use("Intro", {}),
+        use("Intro", { preview: "collapsed", maximize: "code" }),
       ),
     ).toEqual([]);
   });
@@ -55,6 +57,12 @@ describe("validateTutorial", () => {
     [use("Step", { id: "a", preview: "closed" }), '"preview" must be one of expanded, collapsed, keep'],
     [use("Step", { id: "a", maximize: "result" }), '"maximize" must be one of code, preview, none'],
     [use("Step", { id: "a", maximize: "preview", preview: "collapsed" }), 'maximize="preview" conflicts with preview="collapsed"'],
+    [use("Intro", { preview: "closed" }), '<Intro> "preview" must be one of expanded, collapsed, keep'],
+    [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, preview, none'],
+    [use("Intro", { maximize: "preview", preview: "collapsed" }), '<Intro> maximize="preview" conflicts with preview="collapsed"'],
+    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize)'],
+    [use("Intro", { file: "main.js" }), '<Intro> "file" is not available on <Intro>'],
+    [use("Intro", { images: { expression: '["a.png"]' } }), '<Intro> "images" is not available on <Intro>'],
     [use("Hint", { label: "Redirect URI" }), '<Hint> requires an "id"'],
     [use("Hint", { id: "Redirect URI", label: "Redirect URI" }), 'id "Redirect URI" must be lowercase letters, digits and dashes'],
     [use("Hint", { id: "redirect-uri" }), '<Hint> requires a "label"'],
@@ -196,6 +204,9 @@ describe("validateTutorial frontmatter", () => {
     expect(check("off")).toHaveLength(1);
     expect(check("iframe")).toEqual([]);
     expect(check("both")).toEqual([]);
+    expect(check("tab", [use("Intro", { maximize: "preview" })])).toEqual([
+      'tutorial.mdx:3:1 <Intro> maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
+    ]);
   });
 
   it("falls back to line 1 for a key without a known line", () => {

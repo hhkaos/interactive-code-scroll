@@ -132,6 +132,37 @@ test("switching to a sibling lands on the same step, else its top", async ({ pag
   await expect(page.locator("section.step[data-active]")).toHaveCount(0);
 });
 
+test("<Intro preview> sets the Result pane on load and each time the reader returns to the intro", async ({ page }) => {
+  // Short enough for the docs panel to scroll back to the intro.
+  await page.setViewportSize({ width: 1440, height: 420 });
+  const frame = page.locator(".result-frame");
+  await page.goto("/delta/");
+  await expect(page.locator("section.result")).toBeVisible();
+  await expect(frame).toBeHidden();
+
+  // A deep link applies the step's own state, not the intro's.
+  await page.goto("/delta/#setup");
+  await expect(frame).toBeVisible();
+  await page.goto("/delta/#config");
+  await expect(frame).toBeHidden();
+
+  await page.goto("/delta/#setup");
+  await expect(frame).toBeVisible();
+  await page.locator("main.docs").hover();
+  await page.mouse.wheel(0, -10_000);
+  await expect.poll(() => page.locator("main.docs").evaluate((docs) => docs.scrollTop)).toBe(0);
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+  await expect(frame).toBeHidden();
+
+  // Step keys back from the first step return to the intro too.
+  await page.goto("/delta/#config");
+  await page.locator("section.result calcite-action#result-toggle").click();
+  await expect(frame).toBeVisible();
+  await page.keyboard.press("PageUp");
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+  await expect(frame).toBeHidden();
+});
+
 test("switching to a sibling carries the variant only when the sibling has it", async ({ page }) => {
   await page.goto("/beta/?variant=python#config");
   await openFamilyMenu(page);

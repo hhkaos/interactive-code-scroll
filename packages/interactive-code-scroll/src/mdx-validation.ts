@@ -10,7 +10,7 @@ import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
 import { validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 import { parsedFiles } from "./variants.ts";
 
-const COMPONENTS = new Set(["Hint", "Step", "VarField"]);
+const COMPONENTS = new Set(["Hint", "Intro", "Step", "VarField"]);
 
 export class TutorialValidationError extends Error {
   /** Position in the MDX of the first problem that has one: the MDX compiler turns it into the dev overlay `loc`. */

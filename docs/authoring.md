@@ -218,6 +218,13 @@ Install the prerequisites and keep this page open.
 </Intro>
 ```
 
+| Prop | Values | Default | Description |
+|---|---|---|---|
+| [`preview`](#preview) | `expanded`, `collapsed`, `keep` | `keep` | Expands or collapses the Preview (or the Result pane) while the intro is shown: on load without a step in the URL, and each time the reader scrolls or steps back to it. |
+| [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Same as on `<Step>`, applied when the intro is shown. |
+
+For a calm first screen, `<Intro preview="collapsed">` starts with the pane collapsed; the first step that sets `preview="expanded"` opens it. Other `<Step>` props (`file`, `region`, `images`, `embed`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
+
 ### `<Step>`
 
 <picture>

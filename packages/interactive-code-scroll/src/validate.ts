@@ -44,6 +44,8 @@ const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
 const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
 const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
 const MAXIMIZE_STATES = new Set(["code", "preview", "none"]);
+/** The intro comes before any step: only the pane state, no code, media or result. */
+const INTRO_PROPS = new Set(["preview", "maximize"]);
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -266,18 +268,7 @@ export function validateTutorial({
 
       const file = text("file");
       const region = text("region");
-      const preview = text("preview");
-      if (preview !== undefined && !PREVIEW_STATES.has(preview)) {
-        report('"preview" must be one of expanded, collapsed, keep');
-      }
-      const maximize = text("maximize");
-      if (maximize !== undefined && !MAXIMIZE_STATES.has(maximize)) {
-        report('"maximize" must be one of code, preview, none');
-      } else if (maximize === "preview" && preview === "collapsed") {
-        report('maximize="preview" conflicts with preview="collapsed"');
-      } else if (maximize === "preview" && config && !hasPane) {
-        report('maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result');
-      }
+      checkPaneState(text, report);
       const only = text("only");
       const output = text("output");
       if (output !== undefined && !skipFileChecks) checkOutput(output, only, report);
@@ -317,6 +308,13 @@ export function validateTutorial({
       }
     }
 
+    if (use.name === "Intro") {
+      checkPaneState(text, report);
+      for (const attr of Object.keys(use.attributes)) {
+        if (!INTRO_PROPS.has(attr)) report(`"${attr}" is not available on <Intro> (only preview, maximize)`);
+      }
+    }
+
     if (use.name === "Hint") {
       const id = text("id");
       if (!id) report('requires an "id"');
@@ -339,6 +337,22 @@ export function validateTutorial({
     }
   }
   return errors;
+
+  /** `preview=` and `maximize=`, shared by <Step> and <Intro>. */
+  function checkPaneState(text: (attr: string) => string | undefined, report: (message: string) => void): void {
+    const preview = text("preview");
+    if (preview !== undefined && !PREVIEW_STATES.has(preview)) {
+      report('"preview" must be one of expanded, collapsed, keep');
+    }
+    const maximize = text("maximize");
+    if (maximize !== undefined && !MAXIMIZE_STATES.has(maximize)) {
+      report('"maximize" must be one of code, preview, none');
+    } else if (maximize === "preview" && preview === "collapsed") {
+      report('maximize="preview" conflicts with preview="collapsed"');
+    } else if (maximize === "preview" && config && !hasPane) {
+      report('maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result');
+    }
+  }
 
   /** Web code shows the Preview, so only the non-web variants a step covers must resolve its output. */
   function checkOutput(output: string, only: string | undefined, report: (message: string) => void): void {

@@ -1,3 +1,15 @@
-<section class="intro">
+---
+// Props are validated at MDX compile time (mdx-validation.ts).
+interface Props {
+  /** Preview / Result pane state while the intro is shown (on load and when the reader returns to it). */
+  preview?: "expanded" | "collapsed" | "keep";
+  /** Maximizes the code area or the pane under it while the intro is shown; `none` restores. */
+  maximize?: "code" | "preview" | "none";
+}
+
+const { preview, maximize } = Astro.props;
+---
+
+<section class="intro" data-preview={preview} data-maximize={maximize}>
   <slot />
 </section>

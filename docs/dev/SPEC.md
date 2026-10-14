@@ -58,7 +58,9 @@ It targets tutorials in any programming language and toolchain, not only browser
 An optional `<Intro>` block can appear before the first `<Step>`. It is rendered as tutorial introduction content,
 does not count as a step, does not get a step number, and does not activate code focus. When a tutorial has an
 intro, the top of the explanations panel is a no-step state; the first real step activates only when reached by
-scrolling, clicking or step-key navigation.
+scrolling, clicking or step-key navigation. The intro accepts only the pane props of `<Step>`, `preview` and `maximize`
+(same values and validation), applied on load without a step hash and each time the reader returns to the intro; without
+them the pane keeps its state. Any other prop on `<Intro>` is a build error.
 
 When a step comes into focus, its text block can:
 - highlight parts of the code (focus + gray out the rest + auto-scroll so the whole region is visible when it fits, else its start; no scroll when it is already in view),

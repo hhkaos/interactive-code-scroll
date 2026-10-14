@@ -65,21 +65,37 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   const docs = firstStep.closest<HTMLElement>(".docs")!;
   const notice = document.querySelector<HTMLElement & { open: boolean }>("#variant-notice");
-  const hasIntro = !!docs.querySelector(".intro");
+  const intro = docs.querySelector<HTMLElement>(".intro");
+  const hasIntro = !!intro;
   const codePanel = document.querySelector<HTMLElement>(".code-panel")!;
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
   const progress = document.querySelector<HTMLElement>("#step-count");
   const progressBar = document.querySelector<HTMLElement & { value: number }>("#progress-bar");
 
-  /** Applies to the Preview and to the Result pane, whichever the active variant shows. */
+  /**
+   * Applies to the Preview and to the Result pane, whichever the active variant shows. Both start
+   * after the step engine, so the state on load is written here too (they miss the first event).
+   */
   function setPreviewState(state: string | undefined): void {
     if (state !== "expanded" && state !== "collapsed") return;
-    const frame = document.querySelector<HTMLElement>(".preview-frame");
-    if (frame) {
+    for (const [selector, toggle, label] of [
+      [".preview-frame", "#preview-toggle", "Preview"],
+      [".result-frame", "#result-toggle", "Result"],
+    ] as const) {
+      const frame = document.querySelector<HTMLElement>(selector);
+      if (!frame) continue;
       frame.hidden = state === "collapsed";
-      setAction(document.querySelector("#preview-toggle"), frame.hidden ? "chevron-right" : "chevron-down", "Preview");
+      setAction(document.querySelector(toggle), frame.hidden ? "chevron-right" : "chevron-down", label);
     }
     document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
+  }
+
+  /** Pane state (`preview=`, `maximize=`) of a step or the intro, applied each time it becomes active. */
+  function applyPaneState(block: HTMLElement | null): void {
+    if (!block) return;
+    setPreviewState(block.dataset.preview);
+    // After the Preview state: maximizing the pane expands it; `none` restores the layout.
+    if (block.dataset.maximize) document.dispatchEvent(new CustomEvent<string>(MAXIMIZE_EVENT, { detail: block.dataset.maximize }));
   }
 
   /** File the step shows in the active variant (`data-files` maps variant id → file). */
@@ -117,6 +133,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   }
 
   let current = -1;
+  let atIntro = false;
   let mediaIndex = 0;
 
   function clearFocus(): void {
@@ -137,6 +154,9 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (progress) progress.textContent = "";
     if (progressBar) progressBar.value = 0;
     if (location.hash) history.replaceState(null, "", `${location.pathname}${location.search}`);
+    // Once per visit: scrolling at the top calls this again, and re-expanding reloads the Preview.
+    if (!atIntro) applyPaneState(intro);
+    atIntro = true;
   }
 
   function goToIntro(behavior: ScrollBehavior): void {
@@ -201,14 +221,13 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   function activate(index: number, fromEnd = false): void {
     if (index === current || index < 0) return;
     current = index;
+    atIntro = false;
     const step = steps[index]!;
     allSteps.forEach((s) => s.toggleAttribute("data-active", s === step));
     history.replaceState(null, "", `#${step.id}`);
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
     if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
-    setPreviewState(step.dataset.preview);
-    // After the Preview state: maximizing the pane expands it; `none` restores the layout.
-    if (step.dataset.maximize) document.dispatchEvent(new CustomEvent<string>(MAXIMIZE_EVENT, { detail: step.dataset.maximize }));
+    applyPaneState(step);
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: step }));
 
     const media = step.querySelector<HTMLTemplateElement>("template.step-media");
