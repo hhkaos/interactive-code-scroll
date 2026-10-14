@@ -1,10 +1,14 @@
 ---
 import { formValue, parseSource, varKind } from "../markers.ts";
 import { currentTutorial } from "../tutorial-data.ts";
+import { parsedFiles } from "../variants.ts";
+import { jsonVarsOf } from "../json-vars.ts";
 
 interface Props {
   name: string;
   label: string;
+  /** `config.json#/a/b`: a value of a JSON file (no comments for `@var` there); a list for several files. */
+  json?: string | string[];
   placeholder?: string;
   secret?: boolean;
   /** `persist` shares the value with every tutorial of the site; `persist="tutorial"` keeps it to this one. */
@@ -12,10 +16,10 @@ interface Props {
 }
 
 const { name, label, placeholder, secret = false, persist = false } = Astro.props;
-const { files, requests } = currentTutorial(Astro.locals);
+const { files, frontmatter, requests } = currentTutorial(Astro.locals);
 // Validation guarantees every file that marks the var (code/ or requests/) has the same type and default.
 const ref = [
-  ...files.map((f) => parseSource(f.source, `code/${f.path}`)),
+  ...parsedFiles(files, jsonVarsOf(frontmatter)).values(),
   ...requests.map((f) => parseSource(f.source, `requests/${f.path}`)),
 ]
   .flatMap((parsed) => parsed.vars)

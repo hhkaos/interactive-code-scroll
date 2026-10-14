@@ -46,6 +46,16 @@ test("number and boolean fields write unquoted literals in the file's spelling",
   await expect(page.locator('calcite-switch[data-var="verbose"]')).toHaveAttribute("checked");
 });
 
+test("a JSON value targeted by pointer follows the shared field", async ({ page }) => {
+  await page.goto("/#config");
+  const settings = page.locator('.code[data-file="settings.json"]');
+  await page.locator('calcite-input[data-var="maxResults"] input').fill("25");
+  await expect(settings.locator('[data-var="maxResults"]')).toHaveText("25");
+  await page.locator('calcite-switch[data-var="verbose"]').click();
+  await expect(settings.locator('[data-var="verbose"]')).toHaveText("true");
+  await expect(page.locator('.code[data-file="report.py"] [data-var="verbose"]')).toHaveText("True");
+});
+
 test("clearing a field restores the default from the code", async ({ page }) => {
   await page.goto("/#config");
   await clientIdInput(page).fill("abc");

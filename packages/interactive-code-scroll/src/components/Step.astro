@@ -2,6 +2,7 @@
 import { base } from "virtual:interactive-code-scroll/tutorial";
 import { embedUrl, resolveEmbed } from "../embed.ts";
 import { readTutorialConfig } from "../frontmatter.ts";
+import { jsonVarsOf } from "../json-vars.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { currentTutorial, tutorialBase } from "../tutorial-data.ts";
 import { parsedFiles, resultVariants, stepFiles, stepOutputs } from "../variants.ts";
@@ -31,7 +32,7 @@ const resolvedEmbed = embed === undefined ? undefined : resolveEmbed(embed, embe
 const embedSrc = resolvedEmbed && !("error" in resolvedEmbed) ? embedUrl(resolvedEmbed, tutorialBase(base, slug)) : undefined;
 const { variants } = readTutorialConfig(frontmatter);
 // With variants, `file` is relative to each variant folder and a lone `region` names a file per variant.
-const variantFiles = variants && stepFiles(variants, parsedFiles(files), { file, region, only });
+const variantFiles = variants && stepFiles(variants, parsedFiles(files, jsonVarsOf(frontmatter)), { file, region, only });
 // Web code shows the Preview: validation rejects `output` there without variants, and web variants get none.
 const webDirs = new Set(variants?.filter((v) => files.some((f) => f.path === `${v.dir}/${PREVIEW_ENTRY}`)).map((v) => v.dir));
 const variantOutputs = variants && output !== undefined ? stepOutputs(variants, outputs, webDirs, { output, only }) : undefined;

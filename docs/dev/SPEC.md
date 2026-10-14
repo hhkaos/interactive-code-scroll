@@ -123,6 +123,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - Forms defined in MDX (left panel); filling them updates code variables in real time.
 - **Default value**: the literal in the code is the single source of truth (default and field placeholder).
 - **Typed values**: a var is a string, number or boolean, from its literal (`@var name:type` overrides). Number and boolean vars replace the unquoted literal (no `Number(...)` in the tutorial code), get a number input or a switch, cannot be `secret`, and fall back to the default for a value that is not of their type. Booleans keep each file's spelling (`true`, `True`, `TRUE`, `$true`).
+- **JSON values**: `.json` files have no comments, so `<VarField json="<file>#<pointer>">` (or a static array, one per file) targets a string, number or boolean value by JSON Pointer (RFC 6901); `code/` JSON stays valid and runnable. Type and default come from the JSON; arrays, objects and `null` are build errors. The MDX validation passes the targets to the page in the tutorial's frontmatter (the page parses `code/` before it renders the MDX).
 - **Custom placeholder**: `<VarField placeholder="...">` can override the input placeholder without changing the code default used for clearing, downloads or Preview.
 - **localStorage persistence**: configurable per field by the author (persist or not). Persisted values are shared by every tutorial on the same site (key `ics:var:<name>`), so a credential is entered once per site; `persist="tutorial"` scopes a value to one tutorial (key `ics:var:<tutorial>:<name>`; on a single-tutorial site it is the site key). Any other `persist` value is a build error.
 - **Secret fields**: the author can mark a field as sensitive → masked in the form and in the code, with a **visibility toggle** to reveal it when needed.
@@ -267,7 +268,7 @@ Goal: a first visit makes people want to try it now or save it for later, and le
 | Code region | id | Marked with `#region <id>` / `#endregion`; referenced from MDX |
 | Action | type: highlight / switch file / show image(s) | Links a Step to a Region, File or Image |
 | Form | fields | Defined in MDX |
-| Field ↔ Variable | variable name, type (string, number, boolean; from the literal), persist (off, site-wide or `"tutorial"`), secret (bool, strings only) | Variable marked with `// @var <name>`; default = code literal |
+| Field ↔ Variable | variable name, JSON target (optional `<file>#<pointer>`), type (string, number, boolean; from the literal), persist (off, site-wide or `"tutorial"`), secret (bool, strings only) | Variable marked with `// @var <name>`; default = code literal |
 | Image / Carousel | image files | In tutorial folders; shown instead of code; manual navigation |
 | Variant | id, label, dir, entry, files (optional) | A programming-language version of the tutorial's code under `code/<dir>/`; shares region ids and vars with the other variants |
 | Output | file in `output/` (optional per-variant override) | Captured result shown in the Result pane |

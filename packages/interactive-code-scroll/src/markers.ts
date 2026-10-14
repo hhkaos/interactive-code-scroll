@@ -1,4 +1,5 @@
 import { extensionOf } from "./file-types.ts";
+import { locateJsonValue, type JsonVar } from "./json-vars.ts";
 
 export interface Region {
   id: string;
@@ -113,8 +114,11 @@ function escapeFor(ext: string, quote: '"' | "'", comment: string, prefix: strin
   return "backslash";
 }
 
-/** Strips `#region` / `@var` markers and records where they pointed. */
-export function parseSource(source: string, file?: string): ParsedSource {
+/**
+ * Strips `#region` / `@var` markers and records where they pointed. `jsonVars` are the values of a
+ * `.json` file that `<VarField json>` targets by pointer (JSON has no comments for `@var`).
+ */
+export function parseSource(source: string, file?: string, jsonVars: readonly JsonVar[] = []): ParsedSource {
   const out: string[] = [];
   const regions: Region[] = [];
   const vars: VarRef[] = [];
@@ -214,7 +218,26 @@ export function parseSource(source: string, file?: string): ParsedSource {
   });
 
   if (open.length > 0) fail(`unclosed #region "${open.at(-1)!.id}"`, open.at(-1)!.sourceLine);
-  return { code: out.join("\n"), regions, vars };
+  const code = out.join("\n");
+  for (const { name, pointer } of jsonVars) {
+    const span = locateJsonValue(code, pointer);
+    if (typeof span === "string") fail(`<VarField json> ${name}: ${span}`, 1);
+    const { kind, start, end } = span as Exclude<typeof span, string>;
+    const before = code.slice(0, start).split("\n");
+    const line = before.length;
+    if (kind !== "string" && kind !== "number" && kind !== "boolean") {
+      fail(`<VarField json> ${name}: "${pointer}" is ${kind === "null" ? "null" : `an ${kind}`}; only strings, numbers and booleans can be vars`, line);
+    }
+    if (vars.some((v) => v.name === name)) fail(`duplicate @var "${name}"`, line);
+    const fromColumn = before.at(-1)!.length;
+    const defaultValue = code.slice(start, end);
+    vars.push(
+      kind === "string"
+        ? { name, line, fromColumn, toColumn: fromColumn + defaultValue.length, defaultValue, quote: '"', escape: "backslash" }
+        : { name, line, fromColumn, toColumn: fromColumn + defaultValue.length, defaultValue, quote: "", escape: kind as "number" | "boolean" },
+    );
+  }
+  return { code, regions, vars };
 }
 
 /** Replaces each `@var` literal with its runtime value (default when missing), escaped for its file type and quote. */

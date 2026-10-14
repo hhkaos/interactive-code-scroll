@@ -37,6 +37,7 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
     `${folder}/main.js`,
     `${folder}/oauth-callback.html`,
     `${folder}/report.py`,
+    `${folder}/settings.json`,
     `${folder}/style.css`,
   ]);
   const png = execFileSync("unzip", ["-p", zip, `${folder}/assets/pixel.png`]);
@@ -44,6 +45,8 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
   const report = execFileSync("unzip", ["-p", zip, `${folder}/report.py`], { encoding: "utf8" });
   expect(report).toContain('CLIENT_ID = "secret-id"');
   expect(report).toContain("MAX_RESULTS = 10\nVERBOSE = False");
+  const settings = JSON.parse(execFileSync("unzip", ["-p", zip, `${folder}/settings.json`], { encoding: "utf8" }));
+  expect(settings.report).toEqual({ maxResults: 10, verbose: false });
   expect(report).not.toMatch(/# region|@var/);
   const main = execFileSync("unzip", ["-p", zip, `${folder}/main.js`], { encoding: "utf8" });
   expect(main).toContain('const clientId = "secret-id";');

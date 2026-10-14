@@ -351,6 +351,7 @@ A form field linked to an [`@var` marker](#variables) in code. What the reader t
 | Prop | Values | Default | Description |
 |---|---|---|---|
 | [`name`](#variables) | variable name | required | An `@var` name in a code file, or a file variable in a [`.http` file](#http-file-variables). |
+| [`json`](#json-variables) | `"<file>#<pointer>"`, or an array of them | none | Makes a value of a JSON file under `code/` this var. |
 | `label` | string | required | Visible field label. |
 | `placeholder` | string | none | Input hint. Does not change the code default. Not for boolean vars. |
 | `secret` | flag | off | String vars only. Masks the input, the value in the code and the [request line](#request-runner) until the reader reveals it. |
@@ -488,6 +489,29 @@ VERBOSE = False  # @var verbose
 
 - Numbers: integers, decimals and exponents (`30`, `-1.5`, `2e3`). Suffixed or hex literals (`30L`, `0x1F`) are not numbers here. A value that is not a number writes the default instead, so the code stays valid.
 - Booleans: `true`/`false`, `True`/`False`, `TRUE`/`FALSE` and PowerShell `$true`/`$false`. The value keeps the spelling of each file's literal: one switch writes `true` in `main.js` and `True` in `report.py`.
+
+#### JSON variables
+
+JSON has no comments, so a `.json` file cannot hold `@var`. Instead, the `<VarField>` names the value with a [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) after the file path, and the file under `code/` stays valid JSON that runs without the framework:
+
+```json title="tutorial/code/key-config.json"
+{
+  "title": "My API key",
+  "expiration": { "days": 30 },
+  "generateToken1": true
+}
+```
+
+```mdx title="tutorial/tutorial.mdx"
+<VarField name="keyTitle" label="Key name" json="key-config.json#/title" />
+<VarField name="days" label="Expiration (days)" json="key-config.json#/expiration/days" />
+<VarField name="token1" label="Generate token 1" json="key-config.json#/generateToken1" />
+```
+
+- The path is relative to `code/`. The pointer walks objects by key and arrays by index (`/referrers/0`); a key with `/` or `~` is written `~1` / `~0`.
+- The value must be a string, number or boolean; its type and default come from the JSON. Arrays, objects and `null` are build errors.
+- Values keep the JSON valid: strings are escaped, and a number or boolean that does not fit writes the default.
+- A JSON var follows the [rules](#variables) of any var: the file must be shown in tabs, and a name also marked with `@var` elsewhere needs the same type and default. For [variants](#code-variants) with one JSON file each, pass an array: `json={["js/config.json#/days", "py/config.json#/days"]}`.
 
 ### `.http` file variables
 
@@ -914,6 +938,8 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `@var "x" must have the same default in every file: …` | Use the same literal in every file that marks `x`. |
 | `code/x: @var "y" is in a file not shown in tabs; …` | Show the file in tabs or remove the marker. |
 | `@var x has no string, number or boolean literal on its line` | Put the marker on the line of a plain string, number or boolean literal. |
+| `<VarField> json …: pointer "/a" not found` | Fix the pointer; it starts with `/` and walks keys and array indexes. |
+| `invalid JSON: comments are not allowed …` | Remove the `@var` comment from the JSON file and use `<VarField json="file.json#/pointer">`. |
 | `@var "x" must have the same type in every file: …` | Use the same kind of literal (string, number or boolean) in every file that marks `x`. |
 | `#region "x" is empty` · `unclosed #region "x"` · `#endregion "a" closes #region "b"` | Fix the [region markers](#regions) in that file. |
 | `frontmatter include "x" matches no path starting with "." in code/ …` | Fix the glob (relative to `code/`). Paths without a segment starting with `.` are published anyway, and generated folders such as `node_modules/` cannot be included. See [Files left out of the tutorial](#files-left-out-of-the-tutorial). |

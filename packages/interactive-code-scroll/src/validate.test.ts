@@ -153,6 +153,49 @@ describe("validateTutorial shared vars", () => {
   });
 });
 
+describe("validateTutorial JSON vars", () => {
+  const withJson = [
+    ...files,
+    { path: "key.json", source: '{\n  "days": 30,\n  "on": true,\n  "ids": ["a"],\n  "clientId": "ID"\n}' },
+  ];
+  const check = (...uses: ComponentUse[]) =>
+    validateTutorial({ mdxFile: "tutorial.mdx", uses, files: withJson, images, frontmatter: { files: ["main.js", "index.html", "key.json"] } });
+
+  it("accepts values found by pointer, also for a var marked in other files", () => {
+    expect(
+      check(
+        use("VarField", { name: "days", label: "Days", json: "key.json#/days" }),
+        use("VarField", { name: "on", label: "On", json: { expression: '["key.json#/on"]' } }),
+        use("VarField", { name: "clientId", label: "Client ID", json: "key.json#/clientId" }),
+      ),
+    ).toEqual([]);
+  });
+
+  it.each([
+    ["key.json", 'json "key.json" must be <file>#<pointer>, e.g. config.json#/expiration'],
+    ["key.yaml#/days", 'json "key.yaml" is not a .json file'],
+    ["nope.json#/days", 'json file "nope.json" not found in code/'],
+    ["key.json#/weeks", 'json code/key.json: pointer "/weeks" not found'],
+    ["key.json#/ids", 'json "key.json#/ids" is an array; only strings, numbers and booleans can be vars'],
+  ])("reports json=%j", (json, message) => {
+    expect(check(use("VarField", { name: "days", label: "Days", json }))).toEqual([`tutorial.mdx:3:1 <VarField> ${message}`]);
+  });
+
+  it("applies the shared-var rules to JSON values", () => {
+    expect(check(use("VarField", { name: "clientId", label: "Client ID", json: "key.json#/days" }))).toEqual([
+      '@var "clientId" must have the same type in every file: code/main.js string, code/key.json number',
+    ]);
+    const hidden = validateTutorial({
+      mdxFile: "tutorial.mdx",
+      uses: [use("VarField", { name: "days", label: "Days", json: "key.json#/days" })],
+      files: withJson,
+      images,
+      frontmatter: { files: ["main.js", "index.html"] },
+    });
+    expect(hidden).toEqual(['code/key.json: @var "days" is in a file not shown in tabs; add the file to frontmatter "files" or remove the marker']);
+  });
+});
+
 describe("validateTutorial visible files", () => {
   const extra = [
     { path: "README.md", source: "# Notes" },

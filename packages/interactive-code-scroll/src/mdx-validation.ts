@@ -7,7 +7,8 @@ import { parseSource } from "./markers.ts";
 import { credentialWarnings, isTextOutput } from "./output.ts";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
 import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
-import { validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
+import { JSON_VARS_KEY } from "./json-vars.ts";
+import { jsonVarTargets, validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 import { parsedFiles } from "./variants.ts";
 
 const COMPONENTS = new Set(["Hint", "Intro", "Step", "VarField"]);
@@ -131,7 +132,10 @@ export function tutorialValidation(
           frontmatterLines,
         });
         if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
-        const sources = [...parsedFiles(tutorial.files).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
+        // The page parses code/ before it renders the MDX, so <VarField json> targets travel in the frontmatter.
+        const { jsonVars } = jsonVarTargets(mdxFile, uses, tutorial.files);
+        frontmatter[JSON_VARS_KEY] = jsonVars;
+        const sources = [...parsedFiles(tutorial.files, jsonVars).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
         const defaults = new Set(sources.flatMap((p) => p.vars.map((v) => v.defaultValue)));
         const texts = tutorial.outputs
           .filter(isTextOutput)

@@ -1,0 +1,7 @@
+{
+  "portal": "https://fixture.example.test",
+  "report": {
+    "maxResults": 10,
+    "verbose": false
+  }
+}

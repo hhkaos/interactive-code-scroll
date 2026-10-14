@@ -4,7 +4,7 @@ preview: both
 theme: auto
 codeWrap: true
 logo: fixture-logo.svg
-files: ["index.html", "*.js", "oauth-callback.html", "*.py", "style.css"]
+files: ["index.html", "*.js", "oauth-callback.html", "*.py", "settings.json", "style.css"]
 ---
 
 <Intro>
@@ -55,8 +55,8 @@ These fields exercise persisted values, secret masking, and runtime code replace
 
 <VarField name="clientId" label="Client ID" secret persist />
 <VarField name="portalUrl" label="Portal URL" placeholder="https://portal.example.com" persist />
-<VarField name="maxResults" label="Max results" />
-<VarField name="verbose" label="Verbose report" persist />
+<VarField name="maxResults" label="Max results" json="settings.json#/report/maxResults" />
+<VarField name="verbose" label="Verbose report" json="settings.json#/report/verbose" persist />
 
 </Step>
 

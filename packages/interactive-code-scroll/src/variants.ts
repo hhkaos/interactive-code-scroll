@@ -1,4 +1,5 @@
 import type { Variant } from "./frontmatter.ts";
+import type { JsonVars } from "./json-vars.ts";
 import { parseSource, type ParsedSource } from "./markers.ts";
 import { resolveOutput } from "./output.ts";
 import type { SourceFile } from "./tutorial-files.ts";
@@ -7,10 +8,10 @@ import { selectVisible } from "./visible-files.ts";
 const parsedCache = new WeakMap<readonly SourceFile[], Map<string, ParsedSource>>();
 
 /** Every text file parsed once per build (components render once per step). Validation already reported marker errors. */
-export function parsedFiles(files: readonly SourceFile[]): Map<string, ParsedSource> {
+export function parsedFiles(files: readonly SourceFile[], jsonVars: JsonVars = {}): Map<string, ParsedSource> {
   let parsed = parsedCache.get(files);
   if (!parsed) {
-    parsed = new Map(files.map((f) => [f.path, parseSource(f.source, `code/${f.path}`)]));
+    parsed = new Map(files.map((f) => [f.path, parseSource(f.source, `code/${f.path}`, jsonVars[f.path])]));
     parsedCache.set(files, parsed);
   }
   return parsed;

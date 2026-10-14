@@ -1,6 +1,7 @@
 import { resolveEmbed } from "./embed.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
+import { locateJsonValue, parseJsonTarget, type JsonVar } from "./json-vars.ts";
 import { formValue, parseSource, varKind, type ParsedSource, type VarKind } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
@@ -54,6 +55,49 @@ const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|
 export function parseStringArray(expression: string): string[] | undefined {
   if (!STRING_ARRAY.test(expression)) return undefined;
   return [...expression.matchAll(/"([^"\\]*)"|'([^'\\]*)'/g)].map((m) => m[1] ?? m[2]!);
+}
+
+/**
+ * `<VarField json="file#/pointer">` targets (a string, or a static array for several files) by
+ * `code/` path. Targets with problems are left out, so parsing never fails on them.
+ */
+export function jsonVarTargets(
+  mdxFile: string,
+  uses: readonly ComponentUse[],
+  files: readonly SourceFile[],
+): { jsonVars: Record<string, JsonVar[]>; errors: string[] } {
+  const jsonVars: Record<string, JsonVar[]> = {};
+  const errors: string[] = [];
+  for (const use of uses) {
+    const value = use.attributes.json;
+    const name = use.attributes.name;
+    if (use.name !== "VarField" || value === undefined || typeof name !== "string") continue;
+    const report = (message: string) => errors.push(`${mdxFile}:${use.line}:${use.column} <VarField> ${message}`);
+    const targets = typeof value === "string" ? [value] : value === true ? undefined : parseStringArray(value.expression);
+    if (!targets) {
+      report('"json" must be "<file>#<pointer>" or a static array of them');
+      continue;
+    }
+    for (const target of targets) {
+      const parsed = parseJsonTarget(target);
+      if (typeof parsed === "string") {
+        report(`json ${parsed}`);
+        continue;
+      }
+      const file = files.find((f) => f.path === parsed.file);
+      if (!file) {
+        report(`json file "${parsed.file}" not found in code/`);
+        continue;
+      }
+      const span = locateJsonValue(file.source, parsed.pointer);
+      if (typeof span === "string") report(`json code/${parsed.file}: ${span}`);
+      else if (span.kind !== "string" && span.kind !== "number" && span.kind !== "boolean") {
+        report(`json "${target}" is ${span.kind === "null" ? "null" : `an ${span.kind}`}; only strings, numbers and booleans can be vars`);
+      } else if (jsonVars[parsed.file]?.some((v) => v.name === name)) report(`json "${parsed.file}" is listed twice for "${name}"`);
+      else (jsonVars[parsed.file] ??= []).push({ name, pointer: parsed.pointer });
+    }
+  }
+  return { jsonVars, errors };
 }
 
 /**
@@ -177,10 +221,12 @@ export function validateTutorial({
     reportFrontmatter("preview", `preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
   }
 
+  const { jsonVars, errors: jsonErrors } = jsonVarTargets(mdxFile, uses, files);
+  errors.push(...jsonErrors);
   const parsed = new Map<string, ParsedSource>();
   for (const file of files) {
     try {
-      parsed.set(file.path, parseSource(file.source, `code/${file.path}`));
+      parsed.set(file.path, parseSource(file.source, `code/${file.path}`, jsonVars[file.path]));
     } catch (error) {
       errors.push((error as Error).message);
     }
@@ -340,7 +386,7 @@ export function validateTutorial({
     if (use.name === "VarField") {
       const name = text("name");
       if (!name) report('requires a "name"');
-      else if (!varKinds.has(name)) report(`no "@var ${name}" found in code/`);
+      else if (!varKinds.has(name) && use.attributes.json === undefined) report(`no "@var ${name}" found in code/`);
       if (!text("label")) report('requires a "label"');
       text("placeholder");
       const kind = name === undefined ? undefined : varKinds.get(name);

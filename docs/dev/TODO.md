@@ -14,7 +14,7 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 ## VarField input types (#3)
 
-- [ ] JSON vars: `<VarField json="config.json#/a/b">` targets a value by JSON Pointer (JSON has no comments for `@var`); string, number and boolean values.
+- [ ] JSON arrays: `json=` pointing at an array of strings, edited by a multi-input or multi-select field (`JSON.stringify` keeps it valid).
 - [ ] Empty `@var` defaults (`""`) never update in the code panel (`highlight()` drops zero-width vars); optional fields must also accept an empty value.
 - [ ] More widgets that fill a string: `select`, `radio`, `textarea`, `combobox` (single, with search), `date` with a `format`; `options` inline or from a JSON file in `field-options/`.
 
