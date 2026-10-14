@@ -153,6 +153,44 @@ describe("validateTutorial shared vars", () => {
   });
 });
 
+describe("validateTutorial VarField types and options", () => {
+  const typed = [
+    ...files,
+    { path: "config.js", source: 'const portal = "https://www.arcgis.com"; // @var portal\nconst slot = 1; // @var slot\nconst on = true; // @var on\nconst note = ""; // @var note' },
+  ];
+  const fieldOptions = [{ path: "portals.json", source: '[{ "value": "https://www.arcgis.com", "label": "ArcGIS Online" }, "https://example.com"]' }];
+  const check = (attributes: ComponentUse["attributes"]) =>
+    validateTutorial({ mdxFile: "tutorial.mdx", uses: [use("VarField", { label: "X", ...attributes })], files: typed, images, fieldOptions });
+
+  it.each([
+    { name: "portal", type: "select", options: "portals.json" },
+    { name: "portal", type: "radio", options: { expression: '[{ value: "https://www.arcgis.com", label: "Online" }, "b"]' } },
+    { name: "portal", type: "combobox", options: "portals.json", placeholder: "Search portals" },
+    { name: "note", type: "combobox", options: { expression: '["a", "b"]' } },
+    { name: "slot", type: "radio", options: { expression: "[1, 2]" } },
+    { name: "note", type: "textarea" },
+    { name: "portal", type: "text", secret: true },
+  ] as ComponentUse["attributes"][])("accepts %j", (attributes) => {
+    expect(check(attributes)).toEqual([]);
+  });
+
+  it.each([
+    [{ name: "portal", type: "dropdown" }, '"type" must be one of text, textarea, select, radio, combobox'],
+    [{ name: "portal", options: "portals.json" }, '"options" needs type="select", "radio" or "combobox"'],
+    [{ name: "portal", type: "select" }, 'type="select" requires "options"'],
+    [{ name: "portal", type: "select", options: "nope.json" }, 'options file "nope.json" not found in field-options/'],
+    [{ name: "portal", type: "select", options: { expression: "portals" } }, '"options" must be a static array of strings, numbers or { value, label } objects'],
+    [{ name: "portal", type: "select", options: { expression: '["a", "b"]' } }, 'the code default "https://www.arcgis.com" is not one of the options'],
+    [{ name: "slot", type: "radio", options: { expression: '["1", "two"]' } }, 'option "two" is not a number, but the var is'],
+    [{ name: "slot", type: "textarea" }, 'type="textarea" cannot edit a number var'],
+    [{ name: "on", type: "select", options: { expression: '["true"]' } }, 'type="select" cannot edit a boolean var'],
+    [{ name: "portal", type: "select", options: "portals.json", secret: true }, '"secret" needs a text field, not type="select"'],
+    [{ name: "portal", type: "radio", options: "portals.json", placeholder: "x" }, '"placeholder" has no effect on type="radio"'],
+  ] as [ComponentUse["attributes"], string][])("reports %j", (attributes, message) => {
+    expect(check(attributes)).toEqual([`tutorial.mdx:3:1 <VarField> ${message}`]);
+  });
+});
+
 describe("validateTutorial JSON vars", () => {
   const withJson = [
     ...files,

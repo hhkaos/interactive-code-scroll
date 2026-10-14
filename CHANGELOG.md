@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `<VarField type>`: `textarea`, `select`, `radio` and `combobox` (single choice with search) besides the default text input; the value still fills the marked literal. Choice fields take `options`, inline (strings, numbers or `{ value, label }`) or from a JSON file in the tutorial's new `field-options/` folder (not published, watched in dev). Number vars accept choices with number values. Build errors for an unknown type, missing or misplaced options, a code default that is not an option, and props that do not fit the field. Line breaks typed in a `textarea` show as `\n` in the code panel. Part of #3. Unit tests in `field-options.test.ts` and `validate.test.ts`; E2E in `e2e/vars.spec.ts` (the main fixture's `report.py` gains a select, a radio, a combobox and a textarea, with `field-options/portals.json`).
+
 ### Fixed
 
 - A `@var` whose default is an empty string (`const referrers = ""; // @var referrers`) never updated in the code panel: `highlight()` dropped zero-width vars, so the token had no `data-var` (downloads were fine). Empty literals now get an empty `data-var` token with the colors of the string. Part of #3. Unit test in `highlight.test.ts`; E2E in `e2e/vars.spec.ts` (`report.py` in the main fixture gains an optional `referrer`).

@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";
+import { OPTIONS_DIR } from "./field-options.ts";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
 import { inGeneratedDir, listFiles, readTutorialFiles } from "./tutorial-files.ts";
 
@@ -21,7 +22,7 @@ export const TUTORIAL_MODULE_ID = "virtual:interactive-code-scroll/tutorial";
 const RESOLVED_ID = `\0${TUTORIAL_MODULE_ID}`;
 
 /** Folders the MDX validation reads besides `tutorial.mdx`. */
-export const WATCHED_FOLDERS = ["code", "images", "embeds", "requests", "output"];
+export const WATCHED_FOLDERS = ["code", "images", "embeds", "requests", "output", OPTIONS_DIR];
 
 /** Folder of a tutorial and its URL segment (`""` for a single-tutorial site at `/`). */
 export interface TutorialSource {
@@ -67,6 +68,7 @@ export function tutorialModule(sources: readonly TutorialSource[], seriesDir?: s
           `embeds: ${JSON.stringify(tutorial.embeds)},`,
           `embedsDir: ${JSON.stringify(tutorial.embedsDir)},`,
           `requests: ${JSON.stringify(tutorial.requests)},`,
+          `fieldOptions: ${JSON.stringify(tutorial.fieldOptions)},`,
           `images: {${tutorial.images.map((image, i) => `${JSON.stringify(image)}: image${t}_${i}`).join(", ")}},`,
           "}",
         ].join("\n");

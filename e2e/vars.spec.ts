@@ -68,6 +68,32 @@ test("an empty literal fills in and clears again", async ({ page }) => {
   await expect(token).toHaveText("");
 });
 
+test("choice and textarea fields write the picked value", async ({ page }) => {
+  await page.goto("/#config");
+  const report = page.locator('.code[data-file="report.py"]');
+
+  const portal = page.locator('calcite-select[data-var="portal"]');
+  await expect(portal.locator("calcite-option")).toHaveText([/ArcGIS Online/, /ArcGIS Location Platform/, /ArcGIS Enterprise/]);
+  await portal.locator("select").selectOption({ label: "ArcGIS Enterprise" });
+  await expect(report.locator('[data-var="portal"]')).toHaveText("https://enterprise.example.test/portal");
+
+  await page.locator('calcite-radio-button-group[data-var="slot"] calcite-label', { hasText: "Slot 2" }).click();
+  await expect(report.locator('[data-var="slot"]')).toHaveText("2");
+
+  const privilege = page.locator('calcite-combobox[data-var="privilege"]');
+  await privilege.click();
+  await page.keyboard.type("places");
+  await privilege.locator('calcite-combobox-item[value="premium:user:places"]').click();
+  await expect(report.locator('[data-var="privilege"]')).toHaveText("premium:user:places");
+
+  await page.locator('calcite-text-area[data-var="description"] textarea').fill('Say "hi"\nBye');
+  await expect(report.locator('[data-var="description"]')).toHaveText('Say "hi"\\nBye');
+
+  await page.reload();
+  await expect(page.locator('.code[data-file="report.py"] [data-var="portal"]')).toHaveText("https://enterprise.example.test/portal");
+  await expect(page.locator('.code[data-file="report.py"] [data-var="slot"]')).toHaveText("1");
+});
+
 test("clearing a field restores the default from the code", async ({ page }) => {
   await page.goto("/#config");
   await clientIdInput(page).fill("abc");

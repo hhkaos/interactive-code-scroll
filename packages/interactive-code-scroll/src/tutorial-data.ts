@@ -24,6 +24,8 @@ export interface TutorialData {
   embedsDir: string;
   /** Text files under `requests/`, relative to it (binaries there are validation errors). */
   requests: SourceFile[];
+  /** JSON option lists under `field-options/`, relative to it. */
+  fieldOptions: SourceFile[];
   /** Image path (relative to `images/`) → public URL. */
   images: Record<string, string>;
 }

@@ -58,6 +58,10 @@ These fields exercise persisted values, secret masking, and runtime code replace
 <VarField name="maxResults" label="Max results" json="settings.json#/report/maxResults" />
 <VarField name="verbose" label="Verbose report" json="settings.json#/report/verbose" persist />
 <VarField name="referrer" label="Referrer (optional)" placeholder="https://example.com" />
+<VarField name="portal" label="Portal" type="select" options="portals.json" persist />
+<VarField name="slot" label="Key slot" type="radio" options={[{ value: 1, label: "Slot 1" }, { value: 2, label: "Slot 2" }]} />
+<VarField name="privilege" label="Privilege" type="combobox" options={["premium:user:basemaps", "premium:user:geocode", "premium:user:places"]} />
+<VarField name="description" label="Description" type="textarea" />
 
 </Step>
 

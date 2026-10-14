@@ -44,7 +44,7 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
   expect(png.equals(readFileSync("fixtures/framework-fixture/tutorial/code/assets/pixel.png"))).toBe(true);
   const report = execFileSync("unzip", ["-p", zip, `${folder}/report.py`], { encoding: "utf8" });
   expect(report).toContain('CLIENT_ID = "secret-id"');
-  expect(report).toContain('MAX_RESULTS = 10\nVERBOSE = False\nREFERRER = ""');
+  expect(report).toContain('MAX_RESULTS = 10\nVERBOSE = False\nREFERRER = ""\nPORTAL = "https://www.arcgis.com"');
   const settings = JSON.parse(execFileSync("unzip", ["-p", zip, `${folder}/settings.json`], { encoding: "utf8" }));
   expect(settings.report).toEqual({ maxResults: 10, verbose: false });
   expect(report).not.toMatch(/# region|@var/);

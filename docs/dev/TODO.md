@@ -16,7 +16,8 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 - [ ] JSON arrays (after the widgets): `json=` pointing at an array of strings, edited by a multi-input (add/remove values, e.g. HTTP referrers) or a multi-select `combobox` with `options` (e.g. privileges). `JSON.stringify` keeps the data valid; the code panel shows the array on one line (`["a", "b"]`) in place of the original tokens, so the original formatting and per-item colors are lost (re-rendering lines instead is more work). Est. 2–3 days. Pattern for code in other languages: import the JSON (`import config from "./key-config.json" with { type: "json" }`). Arrays in each language's syntax, objects and `null` stay out.
 - [ ] Optional: a prop to let a field with a non-empty default be cleared to an empty value (today an empty field restores the default; an `""` default already works).
-- [ ] More widgets that fill a string: `select`, `radio`, `textarea`, `combobox` (single, with search), `date` with a `format`; `options` inline or from a JSON file in `field-options/`.
+- [ ] `<VarField type="date" format="…">`: tokens `YYYY MM DD HH mm` (a `datetime-local` input when the format has a time) and `x` (epoch milliseconds, for number vars); the code default must match the format.
+- [ ] A checkbox variant for boolean vars (`type="checkbox"`) if authors ask for it; the switch is the default.
 
 ## Project website and repository presentation
 

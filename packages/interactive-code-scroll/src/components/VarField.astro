@@ -1,4 +1,5 @@
 ---
+import { resolveOptions, type FieldOption, type FieldType } from "../field-options.ts";
 import { formValue, parseSource, varKind } from "../markers.ts";
 import { currentTutorial } from "../tutorial-data.ts";
 import { parsedFiles } from "../variants.ts";
@@ -7,6 +8,10 @@ import { jsonVarsOf } from "../json-vars.ts";
 interface Props {
   name: string;
   label: string;
+  /** Text field by default; a number var gets a number field and a boolean var a switch. */
+  type?: FieldType;
+  /** Choices of `select`, `radio` and `combobox`: an array, or a JSON file in `field-options/`. */
+  options?: (string | number | { value: string | number; label?: string })[] | string;
   /** `config.json#/a/b`: a value of a JSON file (no comments for `@var` there); a list for several files. */
   json?: string | string[];
   placeholder?: string;
@@ -15,8 +20,8 @@ interface Props {
   persist?: boolean | "tutorial";
 }
 
-const { name, label, placeholder, secret = false, persist = false } = Astro.props;
-const { files, frontmatter, requests } = currentTutorial(Astro.locals);
+const { name, label, type = "text", options: rawOptions, placeholder, secret = false, persist = false } = Astro.props;
+const { files, fieldOptions, frontmatter, requests } = currentTutorial(Astro.locals);
 // Validation guarantees every file that marks the var (code/ or requests/) has the same type and default.
 const ref = [
   ...parsedFiles(files, jsonVarsOf(frontmatter)).values(),
@@ -26,30 +31,63 @@ const ref = [
   .find((v) => v.name === name);
 const kind = ref ? varKind(ref) : "string";
 const defaultValue = ref && formValue(ref);
-const persistScope = persist === "tutorial" ? "tutorial" : persist ? "site" : undefined;
+// Validated at MDX compile time; an invalid list renders no choices.
+const resolved = rawOptions === undefined ? [] : resolveOptions(rawOptions, fieldOptions);
+const options: FieldOption[] = typeof resolved === "string" ? [] : resolved;
+const data = {
+  "data-var": name,
+  "data-kind": kind,
+  "data-field": type,
+  "data-default-value": defaultValue,
+  "data-persist": persist === "tutorial" ? "tutorial" : persist ? "site" : undefined,
+};
+// Astro writes `checked="false"` (or `selected="false"`) on custom elements, and any such attribute means on.
+const on = (value: boolean) => value || undefined;
 ---
 
 {
   kind === "boolean" ? (
     <calcite-label class="var-field" layout="inline">
-      <calcite-switch
-        data-var={name}
-        data-kind={kind}
-        data-default-value={defaultValue}
-        data-persist={persistScope}
-        // Astro writes `checked="false"` on custom elements, and any `checked` attribute means on.
-        checked={defaultValue === "true" || undefined}
-      />
+      <calcite-switch {...data} checked={on(defaultValue === "true")} />
       {label}
     </calcite-label>
+  ) : type === "textarea" ? (
+    <calcite-text-area class="var-field" label-text={label} placeholder={placeholder ?? defaultValue} resize="vertical" {...data} />
+  ) : type === "select" ? (
+    <calcite-select class="var-field" label-text={label} {...data}>
+      {options.map((o) => (
+        <calcite-option value={o.value} selected={on(o.value === defaultValue)}>
+          {o.label}
+        </calcite-option>
+      ))}
+    </calcite-select>
+  ) : type === "radio" ? (
+    <calcite-radio-button-group class="var-field" label-text={label} name={`var-${name}`} layout="vertical" {...data}>
+      {options.map((o) => (
+        <calcite-label layout="inline">
+          <calcite-radio-button value={o.value} checked={on(o.value === defaultValue)} />
+          {o.label}
+        </calcite-label>
+      ))}
+    </calcite-radio-button-group>
+  ) : type === "combobox" ? (
+    <calcite-combobox
+      class="var-field"
+      label-text={label}
+      selection-mode="single"
+      placeholder={placeholder ?? "Search"}
+      clear-disabled={on(defaultValue !== "")}
+      {...data}
+    >
+      {options.map((o) => (
+        <calcite-combobox-item value={o.value} heading={o.label} selected={on(o.value === defaultValue)} />
+      ))}
+    </calcite-combobox>
   ) : (
     <calcite-input
       class="var-field"
       label-text={label}
-      data-var={name}
-      data-kind={kind}
-      data-default-value={defaultValue}
-      data-persist={persistScope}
+      {...data}
       data-secret={secret ? "" : undefined}
       placeholder={placeholder ?? defaultValue}
       type={secret ? "password" : kind === "number" ? "number" : "text"}

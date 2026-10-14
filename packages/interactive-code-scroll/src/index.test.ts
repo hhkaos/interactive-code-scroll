@@ -149,7 +149,7 @@ describe("tutorialModule", () => {
     ]);
     const add = vi.fn();
     plugin.configureServer({ watcher: { add } });
-    const folders = ["code", "images", "embeds", "requests", "output"];
+    const folders = ["code", "images", "embeds", "requests", "output", "field-options"];
     expect(add).toHaveBeenCalledWith([...folders.map((folder) => join(alpha, folder)), ...folders.map((folder) => join(beta, folder))]);
 
     const alphaMdx = { id: "alpha" };

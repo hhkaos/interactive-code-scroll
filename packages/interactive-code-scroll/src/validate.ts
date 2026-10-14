@@ -1,6 +1,7 @@
 import { resolveEmbed } from "./embed.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
+import { CHOICE_TYPES, FIELD_TYPES, parseStaticLiteral, resolveOptions } from "./field-options.ts";
 import { locateJsonValue, parseJsonTarget, type JsonVar } from "./json-vars.ts";
 import { formValue, parseSource, varKind, type ParsedSource, type VarKind } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
@@ -37,6 +38,8 @@ export interface ValidationInput {
   requests?: SourceFile[];
   /** Binary files under `requests/`. */
   requestBinaries?: string[];
+  /** JSON option lists under `field-options/`. */
+  fieldOptions?: SourceFile[];
   /** Parsed frontmatter of the MDX file (empty when it has none). */
   frontmatter?: Record<string, unknown>;
   /** 1-based line of each frontmatter key, to position frontmatter errors. */
@@ -193,6 +196,7 @@ export function validateTutorial({
   embeds = [],
   outputs = [],
   requests = [],
+  fieldOptions = [],
   requestBinaries = [],
   frontmatter = {},
   frontmatterLines = {},
@@ -289,7 +293,7 @@ export function validateTutorial({
     }
   }
 
-  const varKinds = new Map([...parsed.values(), ...requestSources.values()].flatMap((p) => p.vars.map((v) => [v.name, varKind(v)] as const)));
+  const varRefs = new Map([...parsed.values(), ...requestSources.values()].flatMap((p) => p.vars.map((v) => [v.name, v] as const)));
   // The page embeds only tabbed files (plus the Preview entry); others reach the ZIP unchanged, so they cannot hold vars.
   for (const [path, source] of parsed) {
     if (skipFileChecks || visibleSet.has(path) || embedded.has(path)) continue;
@@ -386,14 +390,16 @@ export function validateTutorial({
     if (use.name === "VarField") {
       const name = text("name");
       if (!name) report('requires a "name"');
-      else if (!varKinds.has(name) && use.attributes.json === undefined) report(`no "@var ${name}" found in code/`);
+      else if (!varRefs.has(name) && use.attributes.json === undefined) report(`no "@var ${name}" found in code/`);
       if (!text("label")) report('requires a "label"');
       text("placeholder");
-      const kind = name === undefined ? undefined : varKinds.get(name);
+      const ref = name === undefined ? undefined : varRefs.get(name);
+      const kind = ref && varKind(ref);
       if (kind !== undefined && kind !== "string") {
         if (use.attributes.secret !== undefined) report(`"secret" needs a string var; "${name}" is a ${kind}`);
         if (kind === "boolean" && use.attributes.placeholder !== undefined) report(`"placeholder" has no effect on a boolean var ("${name}")`);
       }
+      checkFieldType(use, text("type"), ref && { kind: kind!, value: formValue(ref) }, report);
       const persist = use.attributes.persist;
       const validPersist =
         persist === undefined || persist === true || persist === "tutorial" || (typeof persist === "object" && /^\s*(?:true|false)\s*$/.test(persist.expression));
@@ -401,6 +407,42 @@ export function validateTutorial({
     }
   }
   return errors;
+
+  /** `<VarField type>` and `options` against the var they edit (`undefined` when the var is missing). */
+  function checkFieldType(
+    use: ComponentUse,
+    type: string | undefined, target: { kind: VarKind; value: string } | undefined, report: (message: string) => void): void {
+    if (type !== undefined && !(FIELD_TYPES as readonly string[]).includes(type)) {
+      report(`"type" must be one of ${FIELD_TYPES.join(", ")}`);
+      return;
+    }
+    const choice = type !== undefined && CHOICE_TYPES.has(type);
+    const raw = use.attributes.options;
+    if (raw !== undefined && !choice) report(`"options" needs type="select", "radio" or "combobox"`);
+    if (choice && raw === undefined) report(`type="${type}" requires "options"`);
+    if (type !== undefined && type !== "text" && use.attributes.secret !== undefined) report(`"secret" needs a text field, not type="${type}"`);
+    if ((type === "select" || type === "radio") && use.attributes.placeholder !== undefined) report(`"placeholder" has no effect on type="${type}"`);
+    if (!target || type === undefined) return;
+    const allowed = choice ? ["string", "number"] : ["string"];
+    if (!allowed.includes(target.kind)) {
+      report(`type="${type}" cannot edit a ${target.kind} var`);
+      return;
+    }
+    if (!choice || raw === undefined || raw === true) return;
+    const options = resolveOptions(typeof raw === "string" ? raw : parseStaticLiteral(raw.expression), fieldOptions);
+    if (typeof options === "string") {
+      report(typeof raw === "string" ? options : `"options" must be a static array of strings, numbers or { value, label } objects`);
+      return;
+    }
+    if (target.kind === "number") {
+      const bad = options.find((o) => !/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(o.value));
+      if (bad) report(`option "${bad.value}" is not a number, but the var is`);
+    }
+    const optional = type === "combobox" && target.value === "";
+    if (!optional && !options.some((o) => o.value === target.value)) {
+      report(`the code default ${JSON.stringify(target.value)} is not one of the options`);
+    }
+  }
 
   /** `preview=` and `maximize=`, shared by <Step> and <Intro>. */
   function checkPaneState(text: (attr: string) => string | undefined, report: (message: string) => void): void {

@@ -1,0 +1,5 @@
+[
+  { "value": "https://www.arcgis.com", "label": "ArcGIS Online" },
+  { "value": "https://location.arcgis.com", "label": "ArcGIS Location Platform" },
+  { "value": "https://enterprise.example.test/portal", "label": "ArcGIS Enterprise" }
+]

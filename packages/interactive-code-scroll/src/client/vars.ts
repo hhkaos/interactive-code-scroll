@@ -2,14 +2,57 @@ import { setAction } from "./actions.ts";
 import { typedValue, type VarKind } from "../markers.ts";
 import { displayValue, readStored, storageKey, valueFromInput, writeStored, type PersistScope } from "./var-values.ts";
 
-type CalciteInput = HTMLElement & { value: string; type: string };
-type CalciteSwitch = HTMLElement & { checked: boolean };
+type Valued = HTMLElement & { value: string };
+type Checkable = HTMLElement & { checked: boolean };
+type Selectable = HTMLElement & { selected: boolean };
 
 export interface VarsHandle {
   /** Real values (form or default) for vars that have a field. */
   values(): Record<string, string>;
   /** Names of the vars whose field is `secret`. */
   secrets(): ReadonlySet<string>;
+}
+
+/** How each Calcite field reads and shows its value, and the event it fires on change. */
+interface FieldAdapter {
+  event: string;
+  read(): string;
+  write(value: string): void;
+}
+
+function adapterFor(field: HTMLElement): FieldAdapter {
+  /** Choice fields mark their option for `value` (`selected` or `checked`). */
+  const items = (selector: string) => [...field.querySelectorAll<Selectable & Checkable>(selector)];
+  const pick = (selector: string, flag: "selected" | "checked") => (value: string) => {
+    for (const item of items(selector)) item[flag] = item.getAttribute("value") === value;
+  };
+  const picked = (selector: string, flag: "selected" | "checked") => () => items(selector).find((item) => item[flag])?.getAttribute("value") ?? "";
+  switch (field.tagName) {
+    case "CALCITE-SWITCH":
+      return {
+        event: "calciteSwitchChange",
+        read: () => String((field as Checkable).checked),
+        write: (value) => ((field as Checkable).checked = value === "true"),
+      };
+    case "CALCITE-TEXT-AREA":
+      return { event: "calciteTextAreaInput", read: () => (field as Valued).value, write: (value) => ((field as Valued).value = value) };
+    case "CALCITE-SELECT":
+      return { event: "calciteSelectChange", read: () => (field as Valued).value, write: pick("calcite-option", "selected") };
+    case "CALCITE-RADIO-BUTTON-GROUP":
+      return {
+        event: "calciteRadioButtonGroupChange",
+        read: picked("calcite-radio-button", "checked"),
+        write: pick("calcite-radio-button", "checked"),
+      };
+    case "CALCITE-COMBOBOX":
+      return {
+        event: "calciteComboboxChange",
+        read: picked("calcite-combobox-item", "selected"),
+        write: pick("calcite-combobox-item", "selected"),
+      };
+    default:
+      return { event: "calciteInputInput", read: () => (field as Valued).value, write: (value) => ((field as Valued).value = value) };
+  }
 }
 
 /**
@@ -29,47 +72,36 @@ export function startVars(onChange: () => void = () => {}, tutorial = ""): VarsH
     const scope = field.dataset.persist as PersistScope | undefined;
     const key = scope && storageKey(name, scope, tutorial);
     const secret = field.hasAttribute("data-secret");
-    const toggle = field.tagName === "CALCITE-SWITCH" ? (field as CalciteSwitch) : undefined;
-    const input = toggle ? undefined : (field as CalciteInput);
+    const adapter = adapterFor(field);
     let revealed = false;
     if (secret) secrets.add(name);
 
     const render = () => {
       for (const token of document.querySelectorAll(`.code [data-var="${CSS.escape(name)}"]`)) {
         if (!literals.has(token)) literals.set(token, token.textContent ?? "");
-        const value = kind === "string" ? values[name]! : typedValue(values[name]!, kind, literals.get(token)!);
+        // A line break would add a line without a number to the panel; downloads escape it.
+        const value = kind === "string" ? values[name]!.replace(/\r?\n/g, "\\n") : typedValue(values[name]!, kind, literals.get(token)!);
         token.textContent = displayValue(value, defaultValue, secret, revealed);
       }
-    };
-    const update = (value: string, stored: string | undefined) => {
-      values[name] = value;
-      if (key) writeStored(localStorage, key, stored);
-      render();
-      onChange();
     };
 
     const stored = key ? readStored(localStorage, key) : undefined;
     values[name] = stored ?? defaultValue;
-    if (stored !== undefined) {
-      if (toggle) toggle.checked = stored === "true";
-      else input!.value = stored;
-    }
+    if (stored !== undefined) adapter.write(stored);
     render();
 
-    if (toggle) {
-      toggle.addEventListener("calciteSwitchChange", () => {
-        const value = String(toggle.checked);
-        update(value, value === defaultValue ? undefined : value);
-      });
-      continue;
-    }
-    input!.addEventListener("calciteInputInput", () => {
-      update(valueFromInput(input!.value, defaultValue), input!.value === "" ? undefined : input!.value);
+    field.addEventListener(adapter.event, () => {
+      const raw = adapter.read();
+      values[name] = valueFromInput(raw, defaultValue);
+      // A switch is never empty: off is stored unless it is the default.
+      if (key) writeStored(localStorage, key, raw === "" || (kind === "boolean" && raw === defaultValue) ? undefined : raw);
+      render();
+      onChange();
     });
 
-    input!.querySelector("[data-reveal]")?.addEventListener("click", (event) => {
+    field.querySelector("[data-reveal]")?.addEventListener("click", (event) => {
       revealed = !revealed;
-      input!.type = revealed ? "text" : "password";
+      (field as HTMLElement & { type: string }).type = revealed ? "text" : "password";
       setAction(event.currentTarget as Element, revealed ? "view-hide" : "view-visible", revealed ? "Hide value" : "Show value");
       render();
     });

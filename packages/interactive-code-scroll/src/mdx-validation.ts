@@ -128,6 +128,7 @@ export function tutorialValidation(
           outputs: tutorial.outputs,
           requests: tutorial.requests,
           requestBinaries: tutorial.requestBinaries,
+          fieldOptions: tutorial.fieldOptions,
           frontmatter,
           frontmatterLines,
         });

@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { parseFrontmatter } from "astro/markdown";
 import { globToRegExp, isBinary } from "./visible-files.ts";
+import { OPTIONS_DIR } from "./field-options.ts";
 
 export interface SourceFile {
   /** Path relative to its folder (`code/` or `requests/`), with forward slashes. */
@@ -34,6 +35,8 @@ export interface TutorialFiles {
   requests: SourceFile[];
   /** Binary files under `requests/` (paths relative to it): not allowed, reported by validation. */
   requestBinaries: string[];
+  /** Files under `field-options/` (paths relative to it): JSON option lists for `<VarField options>`, never published. */
+  fieldOptions: SourceFile[];
 }
 
 /**
@@ -130,6 +133,7 @@ export function readTutorialFiles(tutorialDir: string): TutorialFiles {
   const codeListing = listCode(codeDir, includeOf(mdxPath));
   const code = readFolder(codeDir, codeListing.paths);
   const requests = readFolder(requestsDir);
+  const fieldOptions = readFolder(join(tutorialDir, OPTIONS_DIR));
   return {
     mdxPath,
     codeDir,
@@ -146,5 +150,6 @@ export function readTutorialFiles(tutorialDir: string): TutorialFiles {
     requestsDir,
     requests: requests.files,
     requestBinaries: requests.binaries,
+    fieldOptions: fieldOptions.files,
   };
 }

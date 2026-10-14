@@ -97,6 +97,8 @@ tutorial/
     geocode.json
   requests/          # optional: .http requests, zipped with the project
     geocode.http
+  field-options/     # optional: option lists for <VarField options>
+    portals.json
 ```
 
 - `tutorial.mdx` contains [frontmatter](#frontmatter), prose and [MDX components](#components).
@@ -105,6 +107,7 @@ tutorial/
 - `embeds/` (optional) contains pages a step shows in an iframe instead of code with `embed=`, published as they are: a small app, or the static build of a slide deck. See [Show an embedded page](#show-an-embedded-page-instead-of-code).
 - `output/` (optional) contains captured results of code that cannot run in the browser, shown by steps with `output=` in the [Result pane](#result-pane).
 - `requests/` (optional) contains [HTTP requests](#http-requests) (`.http` files) bound by steps with `request=`, plus supporting files; it is added to every ZIP.
+- `field-options/` (optional) contains JSON option lists for [`<VarField options>`](#field-types); it is not published.
 
 Files and folders whose name starts with `.` (`.env`, `.venv/`, `.github/`) are not part of the tutorial in any of these folders, and generated folders (`node_modules/`, `__pycache__/`, Python virtual envs, tool caches) are never read. You can run `npm install` or `python -m venv .venv` inside `code/`. See [Files left out of the tutorial](#files-left-out-of-the-tutorial).
 
@@ -341,7 +344,7 @@ See [Steps across variants](#steps-across-variants).
   <img alt="The Client ID field is highlighted; the value typed there appears, masked, in the code on the right." src="../site/public/screenshots/area-varfield-light.png" width="900">
 </picture>
 
-A form field linked to an [`@var` marker](#variables) in code. What the reader types replaces the marked literal in the code panel, the Preview, the ZIP and the [requests](#request-runner); an empty field restores the literal, which is the default value. The field follows the var's type: a text input for a string, a number input for a [number var](#number-and-boolean-variables) and a switch for a boolean one.
+A form field linked to an [`@var` marker](#variables) in code. What the reader types replaces the marked literal in the code panel, the Preview, the ZIP and the [requests](#request-runner); an empty field restores the literal, which is the default value. The field follows the var's type: a text input for a string, a number input for a [number var](#number-and-boolean-variables) and a switch for a boolean one; `type` picks [another field](#field-types).
 
 ```mdx title="tutorial/tutorial.mdx"
 <VarField name="clientId" label="Client ID" secret persist />
@@ -353,9 +356,42 @@ A form field linked to an [`@var` marker](#variables) in code. What the reader t
 | [`name`](#variables) | variable name | required | An `@var` name in a code file, or a file variable in a [`.http` file](#http-file-variables). |
 | [`json`](#json-variables) | `"<file>#<pointer>"`, or an array of them | none | Makes a value of a JSON file under `code/` this var. |
 | `label` | string | required | Visible field label. |
-| `placeholder` | string | none | Input hint. Does not change the code default. Not for boolean vars. |
-| `secret` | flag | off | String vars only. Masks the input, the value in the code and the [request line](#request-runner) until the reader reveals it. |
+| [`type`](#field-types) | `text`, `textarea`, `select`, `radio`, `combobox` | from the var | The kind of field. |
+| [`options`](#field-types) | array, or a file in `field-options/` | none | Choices of `select`, `radio` and `combobox`. |
+| `placeholder` | string | none | Input hint. Does not change the code default. Not for boolean vars, `select` or `radio`. |
+| `secret` | flag | off | Text fields of string vars only. Masks the input, the value in the code and the [request line](#request-runner) until the reader reveals it. |
 | `persist` | flag, or `"tutorial"` | off | Stores the value in `localStorage`. `persist` shares it with every tutorial of a [series site](#series-sites) (a key is entered once per site); `persist="tutorial"` keeps it to this tutorial. On a single-tutorial site both behave the same. |
+
+#### Field types
+
+`type` changes the field; the value still replaces the literal in the code:
+
+| `type` | Field | Vars |
+|---|---|---|
+| `text` | One-line input (default for strings) | string |
+| `textarea` | Multi-line input; line breaks are written as `\n` in the code | string |
+| `select` | Dropdown | string, number |
+| `radio` | Radio buttons | string, number |
+| `combobox` | Dropdown with search, for long lists; can be cleared when the default is `""` | string, number |
+
+```mdx title="tutorial/tutorial.mdx"
+<VarField name="portal" label="Portal" type="select" options="portals.json" />
+<VarField name="slot" label="Key slot" type="radio" options={[{ value: 1, label: "Slot 1" }, { value: 2, label: "Slot 2" }]} />
+<VarField name="privilege" label="Privilege" type="combobox" options={["premium:user:basemaps", "premium:user:geocode"]} />
+<VarField name="description" label="Description" type="textarea" />
+```
+
+- `options` is a static array of strings, numbers or `{ value, label }` objects, or the name of a JSON file with such an array in `field-options/` (for long lists, or lists shared by several fields):
+
+  ```json title="tutorial/field-options/portals.json"
+  [
+    { "value": "https://www.arcgis.com", "label": "ArcGIS Online" },
+    { "value": "https://location.arcgis.com", "label": "ArcGIS Location Platform" }
+  ]
+  ```
+
+- The code default must be one of the option values (a number var needs number values); a `combobox` may also start empty when the default is `""`.
+- Number vars get a number input and boolean vars a switch without `type`.
 
 ### `<Hint>`
 
@@ -941,6 +977,8 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `@var x has no string, number or boolean literal on its line` | Put the marker on the line of a plain string, number or boolean literal. |
 | `<VarField> json …: pointer "/a" not found` | Fix the pointer; it starts with `/` and walks keys and array indexes. |
 | `invalid JSON: comments are not allowed …` | Remove the `@var` comment from the JSON file and use `<VarField json="file.json#/pointer">`. |
+| `<VarField> the code default "x" is not one of the options` | Add the default to `options`, or change the literal in the code. |
+| `<VarField> options file "x.json" not found in field-options/` | Create the file in `tutorial/field-options/` or fix the name. |
 | `@var "x" must have the same type in every file: …` | Use the same kind of literal (string, number or boolean) in every file that marks `x`. |
 | `#region "x" is empty` · `unclosed #region "x"` · `#endregion "a" closes #region "b"` | Fix the [region markers](#regions) in that file. |
 | `frontmatter include "x" matches no path starting with "." in code/ …` | Fix the glob (relative to `code/`). Paths without a segment starting with `.` are published anyway, and generated folders such as `node_modules/` cannot be included. See [Files left out of the tutorial](#files-left-out-of-the-tutorial). |
