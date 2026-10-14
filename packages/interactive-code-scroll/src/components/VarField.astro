@@ -1,5 +1,5 @@
 ---
-import { parseSource } from "../markers.ts";
+import { formValue, parseSource, varKind } from "../markers.ts";
 import { currentTutorial } from "../tutorial-data.ts";
 
 interface Props {
@@ -13,25 +13,45 @@ interface Props {
 
 const { name, label, placeholder, secret = false, persist = false } = Astro.props;
 const { files, requests } = currentTutorial(Astro.locals);
-// Validation guarantees every file that marks the var (code/ or requests/) has the same default.
-const defaultValue = [
+// Validation guarantees every file that marks the var (code/ or requests/) has the same type and default.
+const ref = [
   ...files.map((f) => parseSource(f.source, `code/${f.path}`)),
   ...requests.map((f) => parseSource(f.source, `requests/${f.path}`)),
 ]
   .flatMap((parsed) => parsed.vars)
-  .find((v) => v.name === name)?.defaultValue;
+  .find((v) => v.name === name);
+const kind = ref ? varKind(ref) : "string";
+const defaultValue = ref && formValue(ref);
+const persistScope = persist === "tutorial" ? "tutorial" : persist ? "site" : undefined;
 ---
 
-<calcite-input
-  class="var-field"
-  label-text={label}
-  data-var={name}
-  data-default-value={defaultValue}
-  data-persist={persist === "tutorial" ? "tutorial" : persist ? "site" : undefined}
-  data-secret={secret ? "" : undefined}
-  placeholder={placeholder ?? defaultValue}
-  type={secret ? "password" : "text"}
->
-  {/* Calcite's `action` slot joins the reveal toggle to the input. */}
-  {secret && <calcite-action slot="action" icon="view-visible" text="Show value" data-reveal={name} />}
-</calcite-input>
+{
+  kind === "boolean" ? (
+    <calcite-label class="var-field" layout="inline">
+      <calcite-switch
+        data-var={name}
+        data-kind={kind}
+        data-default-value={defaultValue}
+        data-persist={persistScope}
+        // Astro writes `checked="false"` on custom elements, and any `checked` attribute means on.
+        checked={defaultValue === "true" || undefined}
+      />
+      {label}
+    </calcite-label>
+  ) : (
+    <calcite-input
+      class="var-field"
+      label-text={label}
+      data-var={name}
+      data-kind={kind}
+      data-default-value={defaultValue}
+      data-persist={persistScope}
+      data-secret={secret ? "" : undefined}
+      placeholder={placeholder ?? defaultValue}
+      type={secret ? "password" : kind === "number" ? "number" : "text"}
+    >
+      {/* Calcite's `action` slot joins the reveal toggle to the input. */}
+      {secret && <calcite-action slot="action" icon="view-visible" text="Show value" data-reveal={name} />}
+    </calcite-input>
+  )
+}

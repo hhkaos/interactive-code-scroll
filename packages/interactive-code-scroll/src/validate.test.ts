@@ -113,6 +113,39 @@ describe("validateTutorial shared vars", () => {
     expect(run([["geocode.py", 'TOKEN = "ID"  # @var clientId'], ["Main.kt", 'val t = "ID" // @var clientId']])).toEqual([]);
   });
 
+  it("accepts a boolean spelled per language", () => {
+    expect(
+      run([
+        ["main.js", "const on = true; // @var on"],
+        ["geocode.py", "ON = True  # @var on"],
+      ]),
+    ).toEqual([]);
+  });
+
+  it("reports a var whose type differs between files", () => {
+    expect(run([["main.js", "const days = 30; // @var days"], ["geocode.py", 'DAYS = "30"  # @var days']])).toEqual([
+      '@var "days" must have the same type in every file: code/main.js number, code/geocode.py string',
+    ]);
+  });
+
+  it("reports typed defaults that differ between files", () => {
+    expect(run([["main.js", "const on = true; // @var on"], ["geocode.py", "ON = False  # @var on"]])).toEqual([
+      '@var "on" must have the same default in every file: code/main.js true, code/geocode.py False',
+    ]);
+  });
+
+  it("reports VarField props that need a string var", () => {
+    const typed = [...files, { path: "config.js", source: "const days = 30; // @var days\nconst on = true; // @var on" }];
+    const check = (...uses: ComponentUse[]) => validateTutorial({ mdxFile: "tutorial.mdx", uses, files: typed, images });
+    expect(check(use("VarField", { name: "days", label: "Days", persist: true }), use("VarField", { name: "on", label: "On" }))).toEqual([]);
+    expect(check(use("VarField", { name: "days", label: "Days", secret: true }))).toEqual([
+      'tutorial.mdx:3:1 <VarField> "secret" needs a string var; "days" is a number',
+    ]);
+    expect(check(use("VarField", { name: "on", label: "On", placeholder: "x" }))).toEqual([
+      'tutorial.mdx:3:1 <VarField> "placeholder" has no effect on a boolean var ("on")',
+    ]);
+  });
+
   it("reports a var whose defaults differ between files", () => {
     expect(run([["geocode.py", 'TOKEN = "OTHER"  # @var clientId']])).toEqual([
       '@var "clientId" must have the same default in every file: code/main.js "ID", code/geocode.py "OTHER"',

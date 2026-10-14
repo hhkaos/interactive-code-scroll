@@ -12,6 +12,12 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] Embedded pages, phase 2: step keys page through a same-origin slide deck before moving steps (as in the carousel). Rules: `SPEC.md` (Embedded page).
 - [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.
 
+## VarField input types (#3)
+
+- [ ] JSON vars: `<VarField json="config.json#/a/b">` targets a value by JSON Pointer (JSON has no comments for `@var`); string, number and boolean values.
+- [ ] Empty `@var` defaults (`""`) never update in the code panel (`highlight()` drops zero-width vars); optional fields must also accept an empty value.
+- [ ] More widgets that fill a string: `select`, `radio`, `textarea`, `combobox` (single, with search), `date` with a `format`; `options` inline or from a JSON file in `field-options/`.
+
 ## Project website and repository presentation
 
 _Rules: `SPEC.md` (Project website and repository presentation)._

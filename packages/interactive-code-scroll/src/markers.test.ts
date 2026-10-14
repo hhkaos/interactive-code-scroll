@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyVars, MarkerError, parseSource } from "./markers.ts";
+import { applyVars, formValue, MarkerError, parseSource, typedValue } from "./markers.ts";
 
 const js = `// #region config
 const clientId = "YOUR_CLIENT_ID"; // @var clientId
@@ -107,7 +107,10 @@ title: "My Tutorial"
     ["// #region a\nx();\n// #endregion b", /main\.js:3: #endregion "b" closes #region "a"/],
     ["// #region a\n// #endregion", /main\.js:2: #region "a" is empty/],
     ["// #region a\nx();\n// #endregion\n// #region a\ny();\n// #endregion", /main\.js:4: duplicate #region "a"/],
-    ["const a = 1; // @var a", /main\.js:1: @var a has no string literal/],
+    ["const a = b; // @var a", /main\.js:1: @var a has no string, number or boolean literal/],
+    ['const a = "1"; // @var a:number', /main\.js:1: @var a has no number literal/],
+    ["const a = 1; // @var a:string", /main\.js:1: @var a has no string literal/],
+    ['const a = "1"; // @var a:text', /main\.js:1: @var a: unknown type "text"/],
     ['const a = "1"; // @var a\nconst b = "2"; // @var a', /main\.js:2: duplicate @var "a"/],
   ])("reports %j with file and line", (source, message) => {
     expect(() => parseSource(source, "main.js")).toThrow(message);
@@ -173,6 +176,46 @@ describe("applyVars", () => {
   it("escapes values for HTML attributes", () => {
     const parsed = parseSource('<a href="x"></a> <!-- @var url -->');
     expect(applyVars(parsed, { url: 'a"b&<c' })).toBe('<a href="a&quot;b&amp;&lt;c"></a>');
+  });
+});
+
+describe("number and boolean vars", () => {
+  it.each([
+    ["main.js", "const days = 30; // @var days", { escape: "number", defaultValue: "30", fromColumn: 13 }],
+    ["main.js", "const ratio = -1.5e3; // @var days", { escape: "number", defaultValue: "-1.5e3", fromColumn: 14 }],
+    ["main.js", "const on = true; // @var on", { escape: "boolean", defaultValue: "true", fromColumn: 11 }],
+    ["geocode.py", "ON = False  # @var on", { escape: "boolean", defaultValue: "False", fromColumn: 5 }],
+    ["setup.ps1", "$on = $true # @var on", { escape: "boolean", defaultValue: "true", fromColumn: 7 }],
+    ["main.js", 'f("x", 30); // @var days:number', { escape: "number", defaultValue: "30", fromColumn: 7 }],
+    ["main.js", 'f("token1", 30); // @var days', { escape: "backslash", defaultValue: "token1", fromColumn: 3, quote: '"' }],
+    ["main.js", 'f(token1, "2", 30); // @var days:number', { escape: "number", defaultValue: "30", fromColumn: 15 }],
+    ["main.js", "f(v2, x.y3, 4); // @var n", { escape: "number", defaultValue: "4", fromColumn: 12 }],
+  ])("%s: %s", (file, source, expected) => {
+    expect(parseSource(source, `code/${file}`).vars[0]).toMatchObject({ quote: "", ...expected });
+  });
+
+  it("targets the value, not a quoted key, in YAML", () => {
+    expect(parseSource('"days": 30 # @var days', "code/config.yaml").vars[0]).toMatchObject({ escape: "number", defaultValue: "30" });
+    expect(parseSource('"name": "x" # @var name', "code/config.yaml").vars[0]).toMatchObject({ defaultValue: "x", fromColumn: 9 });
+  });
+
+  it("writes numbers as typed and falls back to the default for anything else", () => {
+    const parsed = parseSource("const days = 30; // @var days", "code/main.js");
+    expect(applyVars(parsed, { days: " 45 " })).toBe("const days = 45;");
+    expect(applyVars(parsed, { days: "4e" })).toBe("const days = 30;");
+    expect(applyVars(parsed, { days: '1; alert("x")' })).toBe("const days = 30;");
+  });
+
+  it("writes booleans in the spelling of the code's literal", () => {
+    expect(typedValue("false", "boolean", "true")).toBe("false");
+    expect(typedValue("false", "boolean", "True")).toBe("False");
+    expect(typedValue("true", "boolean", "FALSE")).toBe("TRUE");
+    expect(typedValue("yes", "boolean", "True")).toBe("True");
+    expect(applyVars(parseSource("$on = $true # @var on", "code/setup.ps1"), { on: "false" })).toBe("$on = $false");
+  });
+
+  it("holds boolean defaults in lower case in the form", () => {
+    expect(formValue(parseSource("ON = False  # @var on", "code/geocode.py").vars[0]!)).toBe("false");
   });
 });
 

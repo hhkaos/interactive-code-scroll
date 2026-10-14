@@ -27,6 +27,25 @@ test("one field updates every file that marks the same var", async ({ page }) =>
   await expect(page.locator('.code[data-file="report.py"] [data-var="clientId"]')).toHaveText("shared-id");
 });
 
+test("number and boolean fields write unquoted literals in the file's spelling", async ({ page }) => {
+  await page.goto("/#config");
+  const report = page.locator('.code[data-file="report.py"]');
+  const maxResults = page.locator('calcite-input[data-var="maxResults"]');
+  await expect(maxResults).toHaveAttribute("type", "number");
+  await maxResults.locator("input").fill("25");
+  await expect(report.locator('[data-var="maxResults"]')).toHaveText("25");
+  await maxResults.locator("input").fill("");
+  await expect(report.locator('[data-var="maxResults"]')).toHaveText("10");
+
+  const verbose = page.locator('calcite-switch[data-var="verbose"]');
+  await expect(verbose).not.toHaveAttribute("checked");
+  await verbose.click();
+  await expect(report.locator('[data-var="verbose"]')).toHaveText("True");
+  await page.reload();
+  await expect(page.locator('.code[data-file="report.py"] [data-var="verbose"]')).toHaveText("True");
+  await expect(page.locator('calcite-switch[data-var="verbose"]')).toHaveAttribute("checked");
+});
+
 test("clearing a field restores the default from the code", async ({ page }) => {
   await page.goto("/#config");
   await clientIdInput(page).fill("abc");

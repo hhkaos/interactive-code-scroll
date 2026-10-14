@@ -1,7 +1,7 @@
 import { resolveEmbed } from "./embed.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
-import { parseSource, type ParsedSource } from "./markers.ts";
+import { formValue, parseSource, varKind, type ParsedSource, type VarKind } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
 import { parseHttpFile, requestIndex, type HttpFile } from "./requests.ts";
@@ -61,19 +61,23 @@ export function parseStringArray(expression: string): string[] | undefined {
  * `parsed` is keyed by the path shown in errors (`code/…`, `requests/…`).
  */
 function inconsistentDefaults(parsed: ReadonlyMap<string, ParsedSource>): string[] {
-  const byName = new Map<string, { path: string; value: string }[]>();
+  const byName = new Map<string, { path: string; kind: VarKind; value: string; literal: string }[]>();
   for (const [path, source] of parsed) {
     for (const v of source.vars) {
       const uses = byName.get(v.name) ?? [];
-      uses.push({ path, value: v.defaultValue });
+      uses.push({ path, kind: varKind(v), value: formValue(v), literal: v.defaultValue });
       byName.set(v.name, uses);
     }
   }
   const errors: string[] = [];
   for (const [name, uses] of byName) {
-    if (new Set(uses.map((u) => u.value)).size < 2) continue;
-    const listed = uses.map((u) => `${u.path} ${JSON.stringify(u.value)}`).join(", ");
-    errors.push(`@var "${name}" must have the same default in every file: ${listed}`);
+    if (new Set(uses.map((u) => u.kind)).size > 1) {
+      const listed = uses.map((u) => `${u.path} ${u.kind}`).join(", ");
+      errors.push(`@var "${name}" must have the same type in every file: ${listed}`);
+    } else if (new Set(uses.map((u) => u.value)).size > 1) {
+      const listed = uses.map((u) => `${u.path} ${u.kind === "string" ? JSON.stringify(u.literal) : u.literal}`).join(", ");
+      errors.push(`@var "${name}" must have the same default in every file: ${listed}`);
+    }
   }
   return errors;
 }
@@ -239,7 +243,7 @@ export function validateTutorial({
     }
   }
 
-  const varNames = new Set([...parsed.values(), ...requestSources.values()].flatMap((p) => p.vars.map((v) => v.name)));
+  const varKinds = new Map([...parsed.values(), ...requestSources.values()].flatMap((p) => p.vars.map((v) => [v.name, varKind(v)] as const)));
   // The page embeds only tabbed files (plus the Preview entry); others reach the ZIP unchanged, so they cannot hold vars.
   for (const [path, source] of parsed) {
     if (skipFileChecks || visibleSet.has(path) || embedded.has(path)) continue;
@@ -336,9 +340,14 @@ export function validateTutorial({
     if (use.name === "VarField") {
       const name = text("name");
       if (!name) report('requires a "name"');
-      else if (!varNames.has(name)) report(`no "@var ${name}" found in code/`);
+      else if (!varKinds.has(name)) report(`no "@var ${name}" found in code/`);
       if (!text("label")) report('requires a "label"');
       text("placeholder");
+      const kind = name === undefined ? undefined : varKinds.get(name);
+      if (kind !== undefined && kind !== "string") {
+        if (use.attributes.secret !== undefined) report(`"secret" needs a string var; "${name}" is a ${kind}`);
+        if (kind === "boolean" && use.attributes.placeholder !== undefined) report(`"placeholder" has no effect on a boolean var ("${name}")`);
+      }
       const persist = use.attributes.persist;
       const validPersist =
         persist === undefined || persist === true || persist === "tutorial" || (typeof persist === "object" && /^\s*(?:true|false)\s*$/.test(persist.expression));

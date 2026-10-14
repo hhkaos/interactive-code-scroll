@@ -37,7 +37,7 @@ function reveal(
 }
 
 /** Interactive content inside a step keeps its clicks (they do not activate the step). */
-const OWN_CLICKS = "a, button, input, textarea, select, [contenteditable], calcite-input, calcite-action, calcite-button";
+const OWN_CLICKS = "a, button, input, textarea, select, [contenteditable], calcite-input, calcite-switch, calcite-label, calcite-action, calcite-button";
 
 /** User input that ends the deep-link restore (programmatic scrolling fires none of these). */
 const TAKE_OVER_EVENTS = ["wheel", "touchstart", "pointerdown", "keydown"] as const;

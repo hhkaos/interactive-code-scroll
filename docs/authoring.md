@@ -49,7 +49,7 @@ That is all. When the reader reaches the step:
 
 From there, a tutorial grows with more steps and files, and with:
 
-- **Editable values**: mark a string with `@var` and add a [`<VarField>`](#varfield); what the reader types replaces it in the code, the Preview and the downloads ([Variables](#variables)).
+- **Editable values**: mark a string, number or boolean with `@var` and add a [`<VarField>`](#varfield); what the reader types replaces it in the code, the Preview and the downloads ([Variables](#variables)).
 - **Images** instead of code for a step, such as setup screenshots ([Step examples](#step-examples)).
 - **Results and requests** for code that runs outside the browser ([Result Pane](#result-pane), [HTTP Requests](#http-requests)).
 - **Several languages** for the same steps ([Code Variants](#code-variants)).
@@ -341,7 +341,7 @@ See [Steps across variants](#steps-across-variants).
   <img alt="The Client ID field is highlighted; the value typed there appears, masked, in the code on the right." src="../site/public/screenshots/area-varfield-light.png" width="900">
 </picture>
 
-A form field linked to an [`@var` marker](#variables) in code. What the reader types replaces the marked literal in the code panel, the Preview, the ZIP and the [requests](#request-runner); an empty field restores the literal, which is the default value.
+A form field linked to an [`@var` marker](#variables) in code. What the reader types replaces the marked literal in the code panel, the Preview, the ZIP and the [requests](#request-runner); an empty field restores the literal, which is the default value. The field follows the var's type: a text input for a string, a number input for a [number var](#number-and-boolean-variables) and a switch for a boolean one.
 
 ```mdx title="tutorial/tutorial.mdx"
 <VarField name="clientId" label="Client ID" secret persist />
@@ -352,8 +352,8 @@ A form field linked to an [`@var` marker](#variables) in code. What the reader t
 |---|---|---|---|
 | [`name`](#variables) | variable name | required | An `@var` name in a code file, or a file variable in a [`.http` file](#http-file-variables). |
 | `label` | string | required | Visible field label. |
-| `placeholder` | string | none | Input hint. Does not change the code default. |
-| `secret` | flag | off | Masks the input, the value in the code and the [request line](#request-runner) until the reader reveals it. |
+| `placeholder` | string | none | Input hint. Does not change the code default. Not for boolean vars. |
+| `secret` | flag | off | String vars only. Masks the input, the value in the code and the [request line](#request-runner) until the reader reveals it. |
 | `persist` | flag, or `"tutorial"` | off | Stores the value in `localStorage`. `persist` shares it with every tutorial of a [series site](#series-sites) (a key is entered once per site); `persist="tutorial"` keeps it to this tutorial. On a single-tutorial site both behave the same. |
 
 ### `<Hint>`
@@ -448,7 +448,7 @@ Rules:
 
 ### Variables
 
-Put `@var <name>` in a comment on the same line as a string literal. The literal is the default value; a [`<VarField>`](#varfield) with the same `name` lets readers change it.
+Put `@var <name>` in a comment on the same line as a string, number or boolean literal. The literal is the default value; a [`<VarField>`](#varfield) with the same `name` lets readers change it.
 
 ```js title="tutorial/code/main.js"
 const tutorialTitle = "InteractiveCodeScroll"; // @var tutorialTitle
@@ -456,10 +456,12 @@ const tutorialTitle = "InteractiveCodeScroll"; // @var tutorialTitle
 
 Rules:
 
-- `@var` targets the first string literal on its line.
+- `@var` targets the first string literal on its line; on a line without one, the first [number or boolean](#number-and-boolean-variables).
+- `@var <name>:string`, `:number` or `:boolean` picks the first literal of that type instead (for example a number on a line that also has a string).
+- In YAML, a quoted key (`"name": "value"`) is never the target.
 - Use one `@var` per line.
 - Variable names are unique per file.
-- The same variable may appear in several files (for example a token in `main.py` and `MainActivity.kt`); one form field then fills all of them. Every occurrence must use the same default literal, or the build fails and lists each file.
+- The same variable may appear in several files (for example a token in `main.py` and `MainActivity.kt`); one form field then fills all of them. Every occurrence must have the same type and default literal, or the build fails and lists each file. Booleans compare without case, so `true` in JavaScript and `True` in Python are the same default.
 - SQL and Lua files also accept `-- @var name` comments.
 
 Values are escaped for the file type and quote style, so whatever the reader types keeps the code valid:
@@ -474,6 +476,18 @@ Values are escaped for the file type and quote style, so whatever the reader typ
 | HTML/XML/XAML (`<!-- @var -->`) | Attribute entities (`&quot;`, `&amp;`, `&lt;`) |
 
 Literals that cannot hold an arbitrary value are build errors: Python f-strings, raw strings and triple-quoted strings, and TOML literal strings (`'...'`). Use a plain string instead.
+
+#### Number and boolean variables
+
+A number or boolean literal is replaced as a literal, so the code needs no conversion such as `Number(...)`:
+
+```python title="tutorial/code/report.py"
+MAX_RESULTS = 10  # @var maxResults
+VERBOSE = False  # @var verbose
+```
+
+- Numbers: integers, decimals and exponents (`30`, `-1.5`, `2e3`). Suffixed or hex literals (`30L`, `0x1F`) are not numbers here. A value that is not a number writes the default instead, so the code stays valid.
+- Booleans: `true`/`false`, `True`/`False`, `TRUE`/`FALSE` and PowerShell `$true`/`$false`. The value keeps the spelling of each file's literal: one switch writes `true` in `main.js` and `True` in `report.py`.
 
 ### `.http` file variables
 
@@ -899,7 +913,8 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<VarField> no "@var x" found in code/` | Add `// @var x` next to the literal in the code, or fix the name. |
 | `@var "x" must have the same default in every file: …` | Use the same literal in every file that marks `x`. |
 | `code/x: @var "y" is in a file not shown in tabs; …` | Show the file in tabs or remove the marker. |
-| `@var x has no string literal on its line` | Put the marker on the line of a plain string literal. |
+| `@var x has no string, number or boolean literal on its line` | Put the marker on the line of a plain string, number or boolean literal. |
+| `@var "x" must have the same type in every file: …` | Use the same kind of literal (string, number or boolean) in every file that marks `x`. |
 | `#region "x" is empty` · `unclosed #region "x"` · `#endregion "a" closes #region "b"` | Fix the [region markers](#regions) in that file. |
 | `frontmatter include "x" matches no path starting with "." in code/ …` | Fix the glob (relative to `code/`). Paths without a segment starting with `.` are published anyway, and generated folders such as `node_modules/` cannot be included. See [Files left out of the tutorial](#files-left-out-of-the-tutorial). |
 | `frontmatter logo "x" not found in images/ (or use an https:// URL)` | Put the logo in `images/` or use an `https://` URL. |

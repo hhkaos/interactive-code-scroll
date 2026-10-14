@@ -11,7 +11,7 @@ export interface VarRef {
   name: string;
   /** 1-based line in the cleaned code. */
   line: number;
-  /** 0-based column range of the literal content (quotes excluded). */
+  /** 0-based column range of the literal content (quotes excluded; a boolean's `$` prefix excluded). */
   fromColumn: number;
   toColumn: number;
   defaultValue: string;
@@ -29,6 +29,7 @@ export interface VarRef {
  * - `doubling`: the quote is doubled (SQL, YAML and PowerShell single quotes)
  * - `markup`: HTML/XML attribute entities (marker in an `<!-- -->` comment)
  * - `raw`: inserted as is, line breaks removed (`.http` file variables)
+ * - `number` / `boolean`: an unquoted number or boolean literal, see {@link typedValue}
  */
 export type EscapeKind =
   | "backslash"
@@ -38,7 +39,16 @@ export type EscapeKind =
   | "powershell-double"
   | "doubling"
   | "markup"
-  | "raw";
+  | "raw"
+  | "number"
+  | "boolean";
+
+/** What a var holds; `number` and `boolean` vars replace unquoted literals. */
+export type VarKind = "string" | "number" | "boolean";
+
+export function varKind({ escape }: Pick<VarRef, "escape">): VarKind {
+  return escape === "number" || escape === "boolean" ? escape : "string";
+}
 
 export interface ParsedSource {
   code: string;
@@ -71,10 +81,16 @@ const NATIVE_REGION: Record<string, readonly [RegExp, RegExp]> = {
   sql: DASH_REGION,
   lua: DASH_REGION,
 };
-const VAR_COMMENT = /\s*(#|\/\/|\/\*|<!--)\s*@var\s+([\w-]+)\s*(?:\*\/|-->)?\s*$/;
+const VAR_COMMENT = /\s*(#|\/\/|\/\*|<!--)\s*@var\s+([\w-]+)(?::(\w+))?\s*(?:\*\/|-->)?\s*$/;
 /** SQL and Lua comments; only in those files, where `--` cannot be an operator before `@var`. */
-const DASH_VAR_COMMENT = /\s*(--)\s*@var\s+([\w-]+)\s*$/;
-const STRING_LITERAL = /(["'])((?:\\.|(?!\1).)*)\1/;
+const DASH_VAR_COMMENT = /\s*(--)\s*@var\s+([\w-]+)(?::(\w+))?\s*$/;
+const STRING_LITERALS = /(["'])((?:\\.|(?!\1).)*)\1/g;
+const NUMBER_LITERAL = /(?<![\w.$])-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(?![\w.])/;
+/** `$true` is PowerShell; the `$` stays outside the var. */
+const BOOLEAN_LITERAL = /(?<![\w$])\$?(true|false|True|False|TRUE|FALSE)(?!\w)/;
+const VAR_TYPES: readonly string[] = ["string", "number", "boolean"] satisfies VarKind[];
+/** Files where a quoted key (`"name": "value"`) is never the var. */
+const QUOTED_KEYS = new Set(["yaml", "yml"]);
 /** `.http` file variable: `@name = value`. */
 export const HTTP_VARIABLE = /^(\s*@([\w-]+)\s*=\s*)(.*?)\s*$/;
 
@@ -164,8 +180,23 @@ export function parseSource(source: string, file?: string): ParsedSource {
     const varComment = VAR_COMMENT.exec(line) ?? (ext === "sql" || ext === "lua" ? DASH_VAR_COMMENT.exec(line) : null);
     if (varComment) {
       const name = varComment[2]!;
+      const type = varComment[3];
+      if (type !== undefined && !VAR_TYPES.includes(type)) fail(`@var ${name}: unknown type "${type}"; use string, number or boolean`, sourceLine);
       line = line.slice(0, varComment.index);
-      const literal = STRING_LITERAL.exec(line) ?? fail(`@var ${name} has no string literal on its line`, sourceLine);
+      const literals = [...line.matchAll(STRING_LITERALS)].filter(
+        (m) => !QUOTED_KEYS.has(ext) || !/^\s*:(?:\s|$)/.test(line.slice(m.index + m[0].length)),
+      );
+      if (type !== "string" && (type !== undefined || literals.length === 0)) {
+        // Strings are masked so a number or boolean inside one is never the var.
+        const masked = [...line.matchAll(STRING_LITERALS)].reduce((text, m) => text.slice(0, m.index) + " ".repeat(m[0].length) + text.slice(m.index + m[0].length), line);
+        const typed = typedLiteral(masked, type as VarKind | undefined);
+        if (!typed) fail(`@var ${name} has no ${type === undefined ? "string, number or boolean" : type} literal on its line`, sourceLine);
+        const { kind, fromColumn, text } = typed!;
+        addVar(name, { fromColumn, toColumn: fromColumn + text.length, defaultValue: text, quote: "", escape: kind });
+        out.push(line);
+        return;
+      }
+      const literal = literals[0] ?? fail(`@var ${name} has no string literal on its line`, sourceLine);
       const quote = literal[1] as '"' | "'";
       const prefix = /[A-Za-z]*$/.exec(line.slice(0, literal.index))![0];
       const escape = escapeFor(ext, quote, varComment[1]!, prefix, line.slice(literal.index));
@@ -208,14 +239,52 @@ const ESCAPE_KINDS: readonly string[] = [
   "doubling",
   "markup",
   "raw",
+  "number",
+  "boolean",
 ] satisfies EscapeKind[];
+
+/** First number or boolean literal of `kind` (either, when `undefined`) in a line whose strings are masked. */
+function typedLiteral(line: string, kind: VarKind | undefined): { kind: "number" | "boolean"; fromColumn: number; text: string } | undefined {
+  const number = kind === "boolean" ? null : NUMBER_LITERAL.exec(line);
+  const boolean = kind === "number" ? null : BOOLEAN_LITERAL.exec(line);
+  if (number && (!boolean || number.index < boolean.index)) return { kind: "number", fromColumn: number.index, text: number[0] };
+  if (boolean) return { kind: "boolean", fromColumn: boolean.index + boolean[0].length - boolean[1]!.length, text: boolean[1]! };
+  return undefined;
+}
+
+const NUMBER_VALUE = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+
+/**
+ * The literal a typed var shows for a form value: a number as typed, a boolean in the spelling of
+ * the code's literal (`true`, `True`, `TRUE`). Anything else falls back to `literal`, so the code
+ * never breaks. String values are returned as is.
+ */
+export function typedValue(value: string, kind: VarKind, literal: string): string {
+  const trimmed = value.trim();
+  if (kind === "number") return NUMBER_VALUE.test(trimmed) ? trimmed : literal;
+  if (kind === "boolean") {
+    const lower = trimmed.toLowerCase();
+    if (lower !== "true" && lower !== "false") return literal;
+    if (literal === literal.toUpperCase()) return lower.toUpperCase();
+    return literal[0] === "T" || literal[0] === "F" ? lower[0]!.toUpperCase() + lower.slice(1) : lower;
+  }
+  return value;
+}
+
+/** A var's default as the form holds it: booleans in lower case, so `True` and `true` are the same default. */
+export function formValue(v: Pick<VarRef, "escape" | "defaultValue">): string {
+  return v.escape === "boolean" ? v.defaultValue.toLowerCase() : v.defaultValue;
+}
 
 function isEscapeKind(value: string): value is EscapeKind {
   return ESCAPE_KINDS.includes(value);
 }
 
-export function escapeLiteral(value: string, { quote, escape }: Pick<VarRef, "quote" | "escape">): string {
+export function escapeLiteral(value: string, { quote, escape, defaultValue }: Pick<VarRef, "quote" | "escape" | "defaultValue">): string {
   switch (escape) {
+    case "number":
+    case "boolean":
+      return typedValue(value, escape, defaultValue);
     case "markup":
       return value
         .replace(/&/g, "&amp;")

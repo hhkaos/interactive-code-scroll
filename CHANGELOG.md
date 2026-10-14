@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Number and boolean `@var`s: a line without a string literal marks its first number or boolean literal, and `@var name:number` (or `:boolean`, `:string`) picks a type on mixed lines. The value replaces the unquoted literal, so tutorial code no longer needs `Number(...)` workarounds; booleans keep each file's spelling (`true`, `True`, `TRUE`, `$true`), and a value that is not of the var's type writes the default. `<VarField>` renders a number input or a switch for them; `secret` on a non-string var and `placeholder` on a boolean one are build errors, and a var must have the same type in every file. In YAML, a quoted key is never the target. First part of #3. Unit tests in `markers.test.ts` and `validate.test.ts`; E2E in `e2e/vars.spec.ts` and `e2e/downloads.spec.ts` (`report.py` in the main fixture gains a number and a boolean var).
+
 ## [0.2.0-beta.2] - 2026-10-14
 
 ### Added
