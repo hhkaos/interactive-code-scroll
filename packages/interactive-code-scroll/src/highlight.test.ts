@@ -17,6 +17,14 @@ describe("highlight", () => {
     expect(html).toContain("--shiki-dark:");
   });
 
+  it("lists overlapping marker and JSON pointer regions on the same line", async () => {
+    const parsed = parseSource('{\n  // #region compiler\n  "compilerOptions": {\n    "strict": true\n  }\n  // #endregion\n}', "code/tsconfig.json", [], ["/compilerOptions/strict"]);
+    const lines = (await highlight(parsed, "tsconfig.json")).split('<span class="line"');
+    expect(lines[2]).toContain('data-regions="compiler"');
+    expect(lines[3]).toContain('data-regions="compiler /compilerOptions/strict"');
+    expect(lines[5]).not.toContain("data-regions");
+  });
+
   it.each([
     ["main.js", 'const referrers = ""; // @var referrers'],
     ["geocode.py", "REFERRERS = ''  # @var referrers"],

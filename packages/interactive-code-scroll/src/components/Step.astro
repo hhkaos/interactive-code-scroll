@@ -2,7 +2,7 @@
 import { base } from "virtual:interactive-code-scroll/tutorial";
 import { embedUrl, resolveEmbed } from "../embed.ts";
 import { readTutorialConfig } from "../frontmatter.ts";
-import { jsonVarsOf } from "../json-vars.ts";
+import { isJsonRegion, jsonRegionId, jsonVarsOf } from "../json-vars.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { currentTutorial, tutorialBase } from "../tutorial-data.ts";
 import { parsedFiles, resultVariants, stepFiles, stepOutputs } from "../variants.ts";
@@ -11,6 +11,7 @@ import { parsedFiles, resultVariants, stepFiles, stepOutputs } from "../variants
 interface Props {
   id: string;
   file?: string;
+  /** A `#region` id, or a JSON Pointer (`/dependencies`) into a `.json` `file`. */
   region?: string;
   images?: string[];
   /** Page shown instead of code: an `https://` URL or a path under `embeds/` (e.g. `slides/#/3`). */
@@ -46,7 +47,7 @@ const requestVariants = variants && requests && resultVariants(variants, webDirs
   data-file={variants ? undefined : file}
   data-files={variantFiles && Object.keys(variantFiles).length > 0 ? JSON.stringify(variantFiles) : undefined}
   data-only={variants ? only : undefined}
-  data-region={region}
+  data-region={region !== undefined && isJsonRegion(region) ? jsonRegionId(region) : region}
   data-preview={preview}
   data-maximize={maximize}
   data-output={variants ? undefined : output}

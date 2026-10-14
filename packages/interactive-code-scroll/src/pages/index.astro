@@ -8,7 +8,7 @@ import VarField from "../components/VarField.astro";
 import { logoUrl, readTutorialConfig } from "../frontmatter.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
-import { jsonVarsOf } from "../json-vars.ts";
+import { jsonRegionsOf, jsonVarsOf } from "../json-vars.ts";
 import { zipBadge, zipLabel } from "../downloads.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { MAX_SEGMENTED } from "../client/variant-values.ts";
@@ -54,7 +54,10 @@ const resultFirst = variants ? !firstIsWeb : true;
 // The page embeds tabbed files plus the Preview entries; the ZIP fetches everything else from preview/.
 const embedded = new Set([...visible, ...previewEntries]);
 const jsonVars = jsonVarsOf(frontmatter);
-const parsed = files.filter((f) => embedded.has(f.path)).map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`, jsonVars[f.path]) }));
+const jsonRegions = jsonRegionsOf(frontmatter);
+const parsed = files
+  .filter((f) => embedded.has(f.path))
+  .map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`, jsonVars[f.path], jsonRegions[f.path]) }));
 const highlighted = new Map(
   await Promise.all(
     visible.map(async (path) => [path, await highlight(parsed.find((f) => f.path === path)!.parsed, path, config.languages)] as const),

@@ -72,7 +72,7 @@ Working notes:
 - Try features by hand in `examples/multi-sdk-playground` (`pnpm playground`); regressions go in `fixtures/framework-fixture` + `e2e/`.
 - UI changes: show screenshots before committing. Save them under `screenshots/` (git-ignored) so the user can open them from the IDE; the scratchpad is not reachable for them, and Playwright empties `test-results/` on every E2E run. Never delete screenshots the user has been asked to review. Phase 1 UI follows the approved mockup (https://claude.ai/artifact/MQMZJaG3RrP5aukBk8k1HF).
 - Dev-server behavior (HMR, revalidation, overlay) is covered by `packages/interactive-code-scroll/test/dev.test.ts`; running `astro dev()` under Vitest needs the env overrides in the Known issues table.
-- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, `series.spec.ts` → `fixtures/framework-fixture-series` on :4404, `site.spec.ts` → `site/` on :4405 (waits for `/interactive-code-scroll/`, the site has no root page), the rest → :4400).
+- Variant fixtures: `pnpm variants` / `pnpm variants:hide` (dev). E2E projects bind specs to fixtures by file name in `playwright.config.ts` (`variants.spec.ts` + `result.spec.ts` → :4401, `variants-hide.spec.ts` → :4402, `rest-example.spec.ts` → `examples/rest-geocode` on :4403, `series.spec.ts` → `fixtures/framework-fixture-series` on :4404, `site.spec.ts` → `site/` on :4405 (waits for `/interactive-code-scroll/`, the site has no root page), `json-regions.spec.ts` → `fixtures/framework-fixture-json-regions` on :4406, the rest → :4400).
 - E2E blocks every non-local host (`e2e/fixtures.ts`); mock services with `mockService()` (page routes win over the context route).
 - Full E2E was green (121/121) after task 2.1 commit 2; `e2e/step-engine.spec.ts:73` was seen flaky once under parallel load. On macOS (2026-10-09) it fails every time locally, also on a clean checkout of `b78617b` (clicking a `<VarField>` in a later step scrolls it to the center line, which activates that step); CI on Linux passes.
 - Browser checks with the Playwright MCP: the browser caches the page; add a throwaway query (`?v=2`) after a rebuild.
@@ -141,7 +141,7 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/error-rule.ts                # requests/errors.json: validation (build) + matchError() (runner), shared by build and browser
   src/tutorial-module.ts           # virtual:interactive-code-scroll/tutorial (Content, frontmatter, files, images) + dev revalidation hook
   src/markers.ts                   # #region / @var parser (string, number, boolean vars) + applyVars, typedValue()
-  src/json-vars.ts                 # <VarField json> targets: JSON Pointer locator (own JSON tokenizer) + JSON_VARS_KEY
+  src/json-vars.ts                 # <VarField json> targets and <Step region="/…"> JSON regions: JSON Pointer locator (own JSON tokenizer) + JSON_VARS_KEY / JSON_REGIONS_KEY
   src/field-options.ts             # <VarField type/options>: field types, static option literals, field-options/ files
   src/validate.ts                  # reference validation (pure)
   src/mdx-validation.ts            # Sätteri mdast plugin that runs validate.ts with MDX positions

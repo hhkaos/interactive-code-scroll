@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { locateJsonValue, parseJsonTarget } from "./json-vars.ts";
+import { jsonRegionId, locateJsonMember, locateJsonValue, parseJsonTarget } from "./json-vars.ts";
 import { applyVars, parseSource } from "./markers.ts";
 
 const config = `{
@@ -75,5 +75,70 @@ describe("JSON vars in parseSource", () => {
   it("rejects values that cannot be vars", () => {
     expect(() => parseSource(config, "code/key.json", [{ name: "r", pointer: "/key/referrers" }])).toThrow(/is an array; only strings, numbers and booleans/);
     expect(() => parseSource(config, "code/key.json", [{ name: "r", pointer: "/nope" }])).toThrow(/code\/key\.json:1: <VarField json> r: pointer "\/nope" not found/);
+  });
+});
+
+const pkg = `{
+  "name": "demo",
+  "scripts": { "dev": "vite" },
+  "dependencies": {
+    "@arcgis/core": "^4.33.0",
+    "vite": "^7.0.0"
+  },
+  "keywords": [
+    "maps",
+    "demo"
+  ]
+}`;
+
+describe("locateJsonMember", () => {
+  const member = (source: string, pointer: string) => {
+    const span = locateJsonMember(source, pointer);
+    return typeof span === "string" ? span : source.slice(span.start, span.end);
+  };
+
+  it("spans a member from its key to the end of its value, an array item from its value", () => {
+    expect(member(pkg, "/dependencies")).toBe('"dependencies": {\n    "@arcgis/core": "^4.33.0",\n    "vite": "^7.0.0"\n  }');
+    expect(member(pkg, "/scripts/dev")).toBe('"dev": "vite"');
+    expect(member(pkg, "/keywords/1")).toBe('"demo"');
+    expect(member('{"a":\n  {"b": 1}}', "/a")).toBe('"a":\n  {"b": 1}');
+  });
+
+  it("explains missing pointers and invalid JSON", () => {
+    expect(member(pkg, "/devDependencies")).toBe('pointer "/devDependencies" not found');
+    expect(member('{"a": 1,}', "/a")).toMatch(/^invalid JSON: /);
+  });
+});
+
+describe("JSON pointer regions in parseSource", () => {
+  it("adds a region per pointer over the member's lines, keeping the code unchanged", () => {
+    const parsed = parseSource(pkg, "code/package.json", [], ["/dependencies", "/scripts/dev", "/keywords/1", "/dependencies"]);
+    expect(parsed.code).toBe(pkg);
+    expect(parsed.regions).toEqual([
+      { id: "/dependencies", fromLine: 4, toLine: 7 },
+      { id: "/scripts/dev", fromLine: 3, toLine: 3 },
+      { id: "/keywords/1", fromLine: 10, toLine: 10 },
+    ]);
+  });
+
+  it("works next to #region markers, in cleaned line numbers", () => {
+    const jsonc = '{\n  // #region compiler\n  "compilerOptions": {\n    "strict": true\n  },\n  // #endregion\n  "include": ["src"]\n}';
+    const parsed = parseSource(jsonc, "code/tsconfig.json", [], ["/compilerOptions/strict", "/include"]);
+    expect(parsed.regions).toEqual([
+      { id: "compiler", fromLine: 2, toLine: 4 },
+      { id: "/compilerOptions/strict", fromLine: 3, toLine: 3 },
+      { id: "/include", fromLine: 5, toLine: 5 },
+    ]);
+  });
+
+  it("rejects pointers that are not found", () => {
+    expect(() => parseSource(pkg, "code/package.json", [], ["/nope"])).toThrow('code/package.json:1: region "/nope": pointer "/nope" not found');
+  });
+
+  it("encodes whitespace and % in the region id", () => {
+    expect(jsonRegionId("/dependencies")).toBe("/dependencies");
+    expect(jsonRegionId("/my key/50%")).toBe("/my%20key/50%25");
+    const parsed = parseSource('{\n  "my key": 1\n}', "code/a.json", [], ["/my key"]);
+    expect(parsed.regions).toEqual([{ id: "/my%20key", fromLine: 2, toLine: 2 }]);
   });
 });

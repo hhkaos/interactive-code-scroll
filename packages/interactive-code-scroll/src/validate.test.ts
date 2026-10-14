@@ -234,6 +234,56 @@ describe("validateTutorial JSON vars", () => {
   });
 });
 
+describe("validateTutorial JSON pointer regions", () => {
+  const withPackage = [
+    ...files,
+    { path: "package.json", source: '{\n  "name": "demo",\n  "dependencies": {\n    "vite": "^7.0.0"\n  }\n}' },
+    { path: "broken.json", source: '{\n  "a": 1,\n}' },
+  ];
+  const check = (...uses: ComponentUse[]) =>
+    validateTutorial({ mdxFile: "tutorial.mdx", uses, files: withPackage, images, frontmatter: { files: ["*"] } });
+
+  it("accepts pointers found in the step's .json file", () => {
+    expect(
+      check(
+        use("Step", { id: "install", file: "package.json", region: "/dependencies" }),
+        use("Step", { id: "vite", file: "package.json", region: "/dependencies/vite" }),
+        use("Step", { id: "config", file: "main.js", region: "config" }),
+      ),
+    ).toEqual([]);
+  });
+
+  it.each([
+    [{ file: "package.json", region: "/devDependencies" }, 'region "/devDependencies" not found in code/package.json'],
+    [{ file: "main.js", region: "/config" }, 'region "/config" is a JSON Pointer, but code/main.js is not a .json file; mark the region with #region comments'],
+    [{ file: "broken.json", region: "/a" }, 'region "/a": code/broken.json: invalid JSON: expected """ at line 3'],
+    [{ region: "/dependencies" }, 'region "/dependencies" requires a "file"'],
+    [{ file: "package.json", region: "dependencies" }, 'region "dependencies" not found in code/package.json'],
+  ])("reports %j", (attributes, message) => {
+    expect(check(use("Step", { id: "a", ...attributes }))).toEqual([`tutorial.mdx:3:1 <Step> ${message}`]);
+  });
+
+  it("checks the pointer in every variant the step covers", () => {
+    const variantFiles = [
+      { path: "node/index.js", source: "run();" },
+      { path: "node/package.json", source: '{\n  "dependencies": { "vite": "^7.0.0" }\n}' },
+      { path: "bun/index.js", source: "run();" },
+      { path: "bun/package.json", source: '{\n  "devDependencies": {}\n}' },
+    ];
+    const variants = [
+      { id: "node", label: "Node", dir: "node", entry: "index.js" },
+      { id: "bun", label: "Bun", dir: "bun", entry: "index.js" },
+    ];
+    const run = (...uses: ComponentUse[]) =>
+      validateTutorial({ mdxFile: "tutorial.mdx", uses, files: variantFiles, images, frontmatter: { variants, preview: "off" } });
+    expect(run(use("Step", { id: "a", file: "package.json", region: "/dependencies", only: "node" }))).toEqual([]);
+    expect(run(use("Step", { id: "a", file: "package.json", region: "/dependencies" }))).toEqual([
+      'tutorial.mdx:3:1 <Step> region "/dependencies" not found in code/bun/package.json',
+    ]);
+    expect(run(use("Step", { id: "a", region: "/dependencies" }))).toEqual(['tutorial.mdx:3:1 <Step> region "/dependencies" requires a "file"']);
+  });
+});
+
 describe("validateTutorial visible files", () => {
   const extra = [
     { path: "README.md", source: "# Notes" },

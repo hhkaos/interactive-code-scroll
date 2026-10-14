@@ -254,7 +254,7 @@ Explain the change here.
 |---|---|---|---|
 | `id` | lowercase letters, digits, `-` | required | Unique per tutorial. The step's URL is `#id` ([deep links](presenting.md#before-the-talk)). |
 | [`file`](#folder-structure) | path | current file | File to show, relative to `code/` (to the variant folder with `variants`). |
-| [`region`](#regions) | region id | none: no highlight | Region to highlight in `file`. With `variants`, `region` alone is enough: it names one file per variant. |
+| [`region`](#regions) | region id, or a [JSON Pointer](#json-regions) | none: no highlight | Region to highlight in `file`. With `variants`, a region id alone is enough: it names one file per variant. A value starting with `/` highlights a member of a `.json` `file`. |
 | [`images`](#show-images-instead-of-code) | `{["a.png", "b.png"]}` | none | Images in `images/` shown as a carousel instead of code. Must be a static array. |
 | [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown in an iframe instead of code, e.g. `embed="oauth-slides/#/3"`. Cannot be combined with `images`. |
 | [`output`](#result-pane) | file name in `output/` | none | Captured result shown in the Result pane, e.g. `output="geocode.json"`. |
@@ -482,6 +482,31 @@ Rules:
 - Regions may nest.
 - Empty regions are errors.
 - A closing id, when present, must match the opened region.
+
+#### JSON regions
+
+JSON has no comments, so a `.json` file cannot hold `#region`. Tools such as npm read files like `package.json` from `code/`, so they must stay valid JSON. Instead, the step's `region` is a [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) to the member to highlight:
+
+```json title="tutorial/code/package.json"
+{
+  "name": "my-app",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^5.1.0",
+    "dotenv": "^17.2.0"
+  }
+}
+```
+
+```mdx title="tutorial/tutorial.mdx"
+<Step id="install" file="package.json" region="/dependencies">
+```
+
+- The highlight runs from the member's key line (`"dependencies": {`) to the line that closes its value. An array item (`/keywords/0`) highlights its value.
+- The pointer walks objects by key and arrays by index; a key with `/` or `~` is written `~1` / `~0`, as in [JSON variables](#json-variables).
+- `file` is required and must be a `.json` file. With [variants](#code-variants), the pointer must exist in the file of every variant the step covers (or set `only`).
+- The highlight follows the key when the file changes. A renamed or removed key fails the build at the `<Step>`, with the MDX file and line.
+- YAML, TOML, INI and `.env` files accept `#` comments, so they use [`# #region`](#regions) markers.
 
 ### Variables
 

@@ -20,6 +20,29 @@ export function jsonVarsOf(frontmatter: Readonly<Record<string, unknown>>): Json
   return (frontmatter[JSON_VARS_KEY] as JsonVars | undefined) ?? {};
 }
 
+/**
+ * `<Step file="package.json" region="/dependencies">`: a `region` starting with `/` is a JSON Pointer
+ * into the step's `.json` file (marker region ids never start with `/`).
+ */
+export function isJsonRegion(region: string): boolean {
+  return region.startsWith("/");
+}
+
+/** The id a pointer region gets in `data-regions` (a space-separated list): whitespace and `%` are percent-encoded. */
+export function jsonRegionId(pointer: string): string {
+  return pointer.replace(/[%\s]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}`);
+}
+
+/** `code/` path → pointers that steps highlight, as the MDX validation stores them in the tutorial's frontmatter. */
+export type JsonRegions = Readonly<Record<string, readonly string[]>>;
+
+/** Frontmatter key the MDX validation fills with the tutorial's {@link JsonRegions}. */
+export const JSON_REGIONS_KEY = "interactiveCodeScrollJsonRegions";
+
+export function jsonRegionsOf(frontmatter: Readonly<Record<string, unknown>>): JsonRegions {
+  return (frontmatter[JSON_REGIONS_KEY] as JsonRegions | undefined) ?? {};
+}
+
 /** Splits `config.json#/a/b` into the file (relative to `code/`) and the pointer. */
 export function parseJsonTarget(target: string): { file: string; pointer: string } | string {
   const hash = target.indexOf("#");
@@ -38,15 +61,29 @@ export interface JsonValueSpan {
   end: number;
 }
 
-type Node =
-  | { kind: "object"; start: number; end: number; entries: Map<string, Node> }
-  | { kind: "array"; start: number; end: number; items: Node[] }
-  | { kind: "string" | "number" | "boolean" | "null"; start: number; end: number };
+/** `keyStart`: offset of the member's key when the value is in an object. */
+type Node = { start: number; end: number; keyStart?: number } & (
+  | { kind: "object"; entries: Map<string, Node> }
+  | { kind: "array"; items: Node[] }
+  | { kind: "string" | "number" | "boolean" | "null" }
+);
 
 class JsonSyntaxError extends Error {}
 
 /** Finds the value at `pointer`, or why it cannot. */
 export function locateJsonValue(source: string, pointer: string): JsonValueSpan | string {
+  const node = findNode(source, pointer);
+  if (typeof node === "string") return node;
+  return node.kind === "string" ? { kind: "string", start: node.start + 1, end: node.end - 1 } : { kind: node.kind, start: node.start, end: node.end };
+}
+
+/** Where the member at `pointer` is: from its key (the value, for an array item) to the end of its value. */
+export function locateJsonMember(source: string, pointer: string): { start: number; end: number } | string {
+  const node = findNode(source, pointer);
+  return typeof node === "string" ? node : { start: node.keyStart ?? node.start, end: node.end };
+}
+
+function findNode(source: string, pointer: string): Node | string {
   let root: Node;
   try {
     root = parseJson(source);
@@ -62,7 +99,7 @@ export function locateJsonValue(source: string, pointer: string): JsonValueSpan 
     if (!next) return `pointer "${pointer}" not found`;
     node = next;
   }
-  return node.kind === "string" ? { kind: "string", start: node.start + 1, end: node.end - 1 } : { kind: node.kind, start: node.start, end: node.end };
+  return node;
 }
 
 /** Minimal JSON parser that keeps the offsets of every value. */
@@ -106,7 +143,7 @@ function parseJson(source: string): Node {
         const name = JSON.parse(source.slice(key.start, key.end)) as string;
         space();
         expect(":");
-        entries.set(name, value());
+        entries.set(name, { ...value(), keyStart: key.start });
         space();
         if (source[i] === ",") i++;
         else break;

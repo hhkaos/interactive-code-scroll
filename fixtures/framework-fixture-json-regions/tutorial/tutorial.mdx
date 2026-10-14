@@ -1,0 +1,37 @@
+---
+title: JSON Regions Fixture
+preview: off
+---
+
+<Intro>
+
+## Before you start
+
+This fixture is not product documentation. It is a stable contract for E2E tests of
+`region` values that are JSON Pointers into `.json` files, which cannot hold `#region` comments.
+
+</Intro>
+
+<Step id="install" file="package.json" region="/dependencies">
+
+## Install the packages
+
+This step highlights only the `dependencies` block of `package.json`.
+
+</Step>
+
+<Step id="start" file="package.json" region="/scripts/start">
+
+## Add a start script
+
+This step highlights a single member of a nested object.
+
+</Step>
+
+<Step id="listen" file="server.js" region="listen">
+
+## Start the server
+
+This step highlights a `#region` in another file.
+
+</Step>

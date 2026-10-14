@@ -1,5 +1,5 @@
 import { extensionOf } from "./file-types.ts";
-import { locateJsonValue, type JsonVar } from "./json-vars.ts";
+import { jsonRegionId, locateJsonMember, locateJsonValue, type JsonVar } from "./json-vars.ts";
 
 export interface Region {
   id: string;
@@ -116,9 +116,15 @@ function escapeFor(ext: string, quote: '"' | "'", comment: string, prefix: strin
 
 /**
  * Strips `#region` / `@var` markers and records where they pointed. `jsonVars` are the values of a
- * `.json` file that `<VarField json>` targets by pointer (JSON has no comments for `@var`).
+ * `.json` file that `<VarField json>` targets by pointer (JSON has no comments for `@var`);
+ * `jsonRegions` are the pointers that `<Step region="/…">` highlights (no comments for `#region`).
  */
-export function parseSource(source: string, file?: string, jsonVars: readonly JsonVar[] = []): ParsedSource {
+export function parseSource(
+  source: string,
+  file?: string,
+  jsonVars: readonly JsonVar[] = [],
+  jsonRegions: readonly string[] = [],
+): ParsedSource {
   const out: string[] = [];
   const regions: Region[] = [];
   const vars: VarRef[] = [];
@@ -236,6 +242,13 @@ export function parseSource(source: string, file?: string, jsonVars: readonly Js
         ? { name, line, fromColumn, toColumn: fromColumn + defaultValue.length, defaultValue, quote: '"', escape: "backslash" }
         : { name, line, fromColumn, toColumn: fromColumn + defaultValue.length, defaultValue, quote: "", escape: kind as "number" | "boolean" },
     );
+  }
+  const lineAt = (offset: number) => code.slice(0, offset).split("\n").length;
+  for (const pointer of new Set(jsonRegions)) {
+    const span = locateJsonMember(code, pointer);
+    if (typeof span === "string") fail(`region "${pointer}": ${span}`, 1);
+    const { start, end } = span as Exclude<typeof span, string>;
+    regions.push({ id: jsonRegionId(pointer), fromLine: lineAt(start), toLine: lineAt(end) });
   }
   return { code, regions, vars };
 }

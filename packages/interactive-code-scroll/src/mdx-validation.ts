@@ -2,13 +2,13 @@ import { readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type MdxJsxTextElement } from "satteri";
-import { frontmatterKeyLines } from "./frontmatter.ts";
+import { frontmatterKeyLines, readTutorialConfig } from "./frontmatter.ts";
 import { parseSource } from "./markers.ts";
 import { credentialWarnings, isTextOutput } from "./output.ts";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
 import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
-import { JSON_VARS_KEY } from "./json-vars.ts";
-import { jsonVarTargets, validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
+import { JSON_REGIONS_KEY, JSON_VARS_KEY } from "./json-vars.ts";
+import { jsonRegionTargets, jsonVarTargets, validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 import { parsedFiles } from "./variants.ts";
 
 const COMPONENTS = new Set(["Hint", "Intro", "Step", "VarField"]);
@@ -133,9 +133,10 @@ export function tutorialValidation(
           frontmatterLines,
         });
         if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
-        // The page parses code/ before it renders the MDX, so <VarField json> targets travel in the frontmatter.
+        // The page parses code/ before it renders the MDX, so <VarField json> and <Step region="/…"> targets travel in the frontmatter.
         const { jsonVars } = jsonVarTargets(mdxFile, uses, tutorial.files);
         frontmatter[JSON_VARS_KEY] = jsonVars;
+        frontmatter[JSON_REGIONS_KEY] = jsonRegionTargets(mdxFile, uses, tutorial.files, readTutorialConfig(frontmatter).variants).jsonRegions;
         const sources = [...parsedFiles(tutorial.files, jsonVars).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
         const defaults = new Set(sources.flatMap((p) => p.vars.map((v) => v.defaultValue)));
         const texts = tutorial.outputs

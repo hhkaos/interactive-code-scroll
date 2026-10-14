@@ -2,7 +2,8 @@ import { resolveEmbed } from "./embed.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
 import { CHOICE_TYPES, FIELD_TYPES, parseStaticLiteral, resolveOptions } from "./field-options.ts";
-import { locateJsonValue, parseJsonTarget, type JsonVar } from "./json-vars.ts";
+import { extensionOf } from "./file-types.ts";
+import { isJsonRegion, locateJsonMember, locateJsonValue, parseJsonTarget, type JsonVar } from "./json-vars.ts";
 import { formValue, parseSource, varKind, type ParsedSource, type VarKind } from "./markers.ts";
 import { OUTPUT_EXTENSIONS, outputKind, resolveOutput } from "./output.ts";
 import { PREVIEW_ENTRY } from "./preview/build-html.ts";
@@ -101,6 +102,47 @@ export function jsonVarTargets(
     }
   }
   return { jsonVars, errors };
+}
+
+/**
+ * `<Step file="x.json" region="/pointer">` targets by `code/` path (`file` is relative to each covered
+ * variant folder with `variants`). Missing files and `only` problems are left to the step checks.
+ */
+export function jsonRegionTargets(
+  mdxFile: string,
+  uses: readonly ComponentUse[],
+  files: readonly SourceFile[],
+  variants?: readonly Pick<Variant, "id" | "dir">[],
+): { jsonRegions: Record<string, string[]>; errors: string[] } {
+  const jsonRegions: Record<string, string[]> = {};
+  const errors: string[] = [];
+  for (const use of uses) {
+    const { file, region, only } = use.attributes;
+    if (use.name !== "Step" || typeof region !== "string" || !isJsonRegion(region) || typeof file !== "string") continue;
+    const report = (message: string) => errors.push(`${mdxFile}:${use.line}:${use.column} <Step> ${message}`);
+    const ids = typeof only === "string" ? only.split(/\s+/).filter(Boolean) : undefined;
+    const paths = variants ? variants.filter((v) => !ids || ids.includes(v.id)).map((v) => `${v.dir}/${file}`) : [file];
+    for (const path of paths) {
+      const source = files.find((f) => f.path === path);
+      if (!source) continue;
+      if (extensionOf(path) !== "json") {
+        report(`region "${region}" is a JSON Pointer, but code/${path} is not a .json file; mark the region with #region comments`);
+        continue;
+      }
+      let code: string;
+      try {
+        code = parseSource(source.source, `code/${path}`).code;
+      } catch {
+        continue; // Marker errors are reported with the file.
+      }
+      const span = locateJsonMember(code, region);
+      if (typeof span !== "string") {
+        if (!jsonRegions[path]?.includes(region)) (jsonRegions[path] ??= []).push(region);
+      } else if (span.startsWith("invalid JSON")) report(`region "${region}": code/${path}: ${span}`);
+      else report(`region "${region}" not found in code/${path}`);
+    }
+  }
+  return { jsonRegions, errors };
 }
 
 /**
@@ -239,6 +281,7 @@ export function validateTutorial({
   // Invalid variants config: skip file and region checks rather than judge them as a single project.
   const skipFileChecks = config === undefined && frontmatter.variants !== undefined;
   const variants = config?.variants && checkVariants(config.variants, files, binaries, parsed, reportFrontmatter, errors);
+  if (!skipFileChecks) errors.push(...jsonRegionTargets(mdxFile, uses, files, config?.variants).errors);
   const visibleSet = new Set<string>();
   const embedded = new Set<string>();
   if (variants) {
@@ -349,7 +392,7 @@ export function validateTutorial({
         }
         if (region !== undefined) {
           if (file === undefined) report(`region "${region}" requires a "file"`);
-          else if (source && !source.regions.some((r) => r.id === region)) {
+          else if (source && !isJsonRegion(region) && !source.regions.some((r) => r.id === region)) {
             report(`region "${region}" not found in code/${file}`);
           }
         }
@@ -521,6 +564,10 @@ export function validateTutorial({
       }
       covered = all.filter((v) => ids.includes(v.id));
     }
+    if (file === undefined && region !== undefined && isJsonRegion(region)) {
+      report(`region "${region}" requires a "file"`);
+      return;
+    }
     for (const variant of covered) {
       const label = `variant "${variant.id}"`;
       if (file !== undefined) {
@@ -530,7 +577,7 @@ export function validateTutorial({
         else if (!variant.visible.has(path)) report(`file "${file}" is not shown in tabs in ${label}; add it to its "files"`);
         else if (region !== undefined) {
           const source = parsed.get(path);
-          if (source && !source.regions.some((r) => r.id === region)) report(`region "${region}" not found in code/${path}`);
+          if (source && !isJsonRegion(region) && !source.regions.some((r) => r.id === region)) report(`region "${region}" not found in code/${path}`);
         }
       } else if (region !== undefined) {
         const owner = variant.regions.get(region);
