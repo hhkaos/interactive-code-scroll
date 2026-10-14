@@ -14,8 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `<Intro preview="…" maximize="…">`: the Preview / Result pane state while the intro is shown, applied on load without a `#step` and each time the reader scrolls or steps back to the intro (without them the pane keeps its state, as before). Same validation as on `<Step>`; other props on `<Intro>` are build errors. Documented in the authoring reference. Unit tests in `validate.test.ts`, E2E in `e2e/series.spec.ts` (the `delta` tutorial of `fixtures/framework-fixture-series` gains an intro state and a captured output). Closes #2.
 
+- Frontmatter `include`: globs relative to `code/` that publish paths starting with `.` (e.g. `.github/**`, `.vscode/launch.json`, `.gitignore`). A pattern that matches nothing is a build error. Documented under "Files left out of the tutorial" in the authoring reference.
+
 ### Fixed
 
+- Files nested in folders starting with `.` (`code/.venv/…`, `code/.hidden/…`) and in generated folders (`node_modules/`, `__pycache__/`, Python virtual envs, tool caches) were published under `preview/`, added to the ZIP and given tabs. Any path with a segment starting with `.` is now left out (in `code/`, `images/`, `embeds/`, `output/` and `requests/`) unless `include` lists it, generated folders are pruned without being read (faster builds after `npm install` in `code/`, no dev reloads from them), and the build warns about each skipped `code/` folder starting with `.`. Unit tests in `tutorial-files.test.ts`, `frontmatter.test.ts` and `validate.test.ts`; build test in `test/build.test.ts`. Closes #1.
 - A step's `preview=` now also sets the Result pane on load: the pane starts after the step engine and missed the first state (a deep link to a `preview="collapsed"` step showed it expanded). Covered by the same E2E.
 - Landing page: it no longer jumps to the live demo on load (or when the theme changes). The demo iframe loads without its `#step` (native fragment scrolling in a same-origin iframe also scrolls the parent page) and applies the step after load through the tutorial's `hashchange` handler. E2E in `e2e/site.spec.ts`.
 

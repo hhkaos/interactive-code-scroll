@@ -121,6 +121,7 @@ export function tutorialValidation(
           uses,
           files: tutorial.files,
           binaries: tutorial.binaries,
+          hiddenCode: tutorial.hiddenCode,
           images: tutorial.images,
           embeds: tutorial.embeds,
           outputs: tutorial.outputs,
@@ -136,6 +137,11 @@ export function tutorialValidation(
           .filter(isTextOutput)
           .map((path) => ({ path, text: readFileSync(join(tutorial.outputDir, path), "utf8") }));
         for (const warning of credentialWarnings(texts, defaults)) warn(warning);
+        for (const folder of tutorial.skippedCodeDirs) {
+          warn(
+            `${mdxFile}:${frontmatterLines.include ?? 1}:1 code/${folder}/ is not published (paths starting with "." are skipped); add "${folder}/**" to frontmatter "include" to publish it`,
+          );
+        }
         if (seriesDir === undefined && frontmatter.family !== undefined) {
           warn(`${mdxFile}:${frontmatterLines.family ?? 1}:1 frontmatter "family" has no effect outside a series site`);
         }

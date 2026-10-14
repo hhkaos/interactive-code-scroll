@@ -34,6 +34,8 @@ export interface TutorialConfig {
   languages: Record<string, string>;
   /** Ordered globs (relative to `code/`) choosing the files that get tabs; all text files when absent. */
   files?: string[];
+  /** Globs (relative to `code/`) opting in paths that start with `.` (e.g. `.github/**`), which are not published otherwise. */
+  include?: string[];
   /** Code variants; absent for a single-project tutorial. */
   variants?: Variant[];
   otherVariantSteps: OtherVariantSteps;
@@ -175,6 +177,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     logo,
     languages,
     files,
+    include,
     variants,
     otherVariantSteps = "notice",
     description,
@@ -201,6 +204,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     languages: readLanguages(languages),
     ...(logo === undefined ? {} : { logo }),
     ...(files === undefined ? {} : { files: readFiles(files) }),
+    ...(include === undefined ? {} : { include: readFiles(include, "include", '"include"') }),
     ...(variantList === undefined ? {} : { variants: variantList }),
     otherVariantSteps: oneOf("otherVariantSteps", otherVariantSteps, OTHER_VARIANT_STEPS),
     ...optionalEntry("description", optionalText("description", description)),

@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
-import { join, sep } from "node:path";
+import { join, relative, sep } from "node:path";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
-import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
+import { inGeneratedDir, listFiles, readTutorialFiles } from "./tutorial-files.ts";
 
 interface ModuleGraph {
   getModulesByFile(file: string): Set<unknown> | undefined;
@@ -94,6 +94,8 @@ export function tutorialModule(sources: readonly TutorialSource[], seriesDir?: s
     },
     hotUpdate({ file, modules }) {
       const source = owner(file);
+      // `npm install` or a virtual env in code/ would otherwise recompile the tutorial for every file.
+      if (source && inGeneratedDir(source.dir, relative(source.dir, file).split(sep).join("/"))) return undefined;
       const indexImage = seriesDir !== undefined && file.startsWith(join(seriesDir, SERIES_IMAGES) + sep);
       if (!source && !indexImage) return undefined;
       const mdx = source ? join(source.dir, "tutorial.mdx") : join(seriesDir!, SERIES_INDEX);

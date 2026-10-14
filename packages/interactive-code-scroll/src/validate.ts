@@ -25,6 +25,8 @@ export interface ValidationInput {
   files: SourceFile[];
   /** Binary files under `code/`. */
   binaries?: string[];
+  /** Paths under `code/` with a segment starting with `.` (what frontmatter `include` can match). */
+  hiddenCode?: string[];
   images: string[];
   /** Files under `embeds/`. */
   embeds?: string[];
@@ -138,6 +140,7 @@ export function validateTutorial({
   uses,
   files,
   binaries = [],
+  hiddenCode = [],
   images,
   embeds = [],
   outputs = [],
@@ -155,6 +158,12 @@ export function validateTutorial({
   } catch (error) {
     if (!(error instanceof FrontmatterError)) throw error;
     reportFrontmatter(error.key, error.detail);
+  }
+  for (const pattern of config?.include ?? []) {
+    const regex = globToRegExp(pattern);
+    if (!hiddenCode.some((path) => regex.test(path))) {
+      reportFrontmatter("include", `include "${pattern}" matches no path starting with "." in code/ (generated folders such as node_modules are never published)`);
+    }
   }
   if (config?.logo !== undefined && !isRemoteLogo(config.logo) && !images.includes(config.logo)) {
     reportFrontmatter("logo", `logo "${config.logo}" not found in images/ (or use an https:// URL)`);

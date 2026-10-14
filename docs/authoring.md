@@ -106,6 +106,8 @@ tutorial/
 - `output/` (optional) contains captured results of code that cannot run in the browser, shown by steps with `output=` in the [Result pane](#result-pane).
 - `requests/` (optional) contains [HTTP requests](#http-requests) (`.http` files) bound by steps with `request=`, plus supporting files; it is added to every ZIP.
 
+Files and folders whose name starts with `.` (`.env`, `.venv/`, `.github/`) are not part of the tutorial in any of these folders, and generated folders (`node_modules/`, `__pycache__/`, Python virtual envs, tool caches) are never read. You can run `npm install` or `python -m venv .venv` inside `code/`. See [Files left out of the tutorial](#files-left-out-of-the-tutorial).
+
 The source code should be valid without InteractiveCodeScroll: every marker is a comment ([Code Markers](#code-markers)). Several tutorials in one repository use a `tutorials/` folder instead ([Series Sites](#series-sites)).
 
 ## Frontmatter
@@ -148,6 +150,7 @@ order: 1
 | Field | Values | Default | Description |
 |---|---|---|---|
 | [`files`](#files-not-shown-in-tabs) | list of paths/globs | all text files | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
+| [`include`](#files-left-out-of-the-tutorial) | list of paths/globs | none | Paths in `code/` starting with `.` to publish anyway, e.g. `include: [".github/**", ".vscode/launch.json", ".gitignore"]`. Relative to `code/` (with `variants` too, e.g. `web/.github/**`). A pattern that matches nothing is a build error. |
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | [`languages`](#syntax-highlighting) | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
 | [`preview`](#preview) | `off`, `iframe`, `tab`, `both` | `both` | Controls the Preview panel and the open-in-tab button. |
@@ -636,6 +639,23 @@ Some APIs report errors inside a successful response: ArcGIS REST, for example, 
 - With [`files`](#frontmatter) set, text files that match no pattern are also left out of the code panel and the page, and still go into the ZIP.
 - Files not shown in tabs cannot contain [`@var`](#variables) markers, and a [`<Step file>`](#step) must point at a file shown in a tab.
 - `index.html` is always available to the Preview, whether or not it is shown in a tab.
+
+### Files left out of the tutorial
+
+Some files in `code/` are never published: they get no tab, are not under `preview/` and are not in the ZIP.
+
+- **Paths starting with `.`**: any file or folder whose name starts with `.`, at any depth (`.env`, `.venv/`, `src/.cache/`). They often hold secrets or local settings. The build warns about each such folder that is left out, e.g. `code/.github/ is not published`.
+- **Generated folders**: `node_modules/`, `__pycache__/`, `.git/`, tool caches (`.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.gradle/`, `.idea/`, `.next/`, `.nuxt/`, `.svelte-kit/`, `.astro/`, `.cache/`, `.parcel-cache/`, `.turbo/`) and any folder with a `pyvenv.cfg` (a Python virtual env, whatever its name). The build does not even read them, so running the tutorial's own setup in `code/` keeps builds fast.
+
+To publish project files that start with `.`, such as a GitHub Actions workflow the tutorial explains, list them in [`include`](#code-and-preview):
+
+```yaml title="tutorial/tutorial.mdx"
+---
+include: [".github/workflows/*.yml", ".gitignore"]
+---
+```
+
+Included text files get tabs like any other file (unless [`files`](#frontmatter) leaves them out) and steps can point at them. Generated folders cannot be included. In `images/`, `embeds/`, `output/` and `requests/` the same rules apply, without `include`.
 
 ## Code Variants
 

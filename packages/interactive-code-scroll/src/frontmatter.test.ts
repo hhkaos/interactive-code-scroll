@@ -50,6 +50,14 @@ describe("readTutorialConfig", () => {
     expect(() => readTutorialConfig({ languages: { py: "snake" } })).toThrow(/"languages\.py" must be a Shiki language id/);
   });
 
+  it("accepts an include list (also with variants) and rejects other shapes", () => {
+    expect(readTutorialConfig({ include: [".github/**"] })).toMatchObject({ include: [".github/**"] });
+    expect(readTutorialConfig({})).not.toHaveProperty("include");
+    for (const include of [".github/**", [], [""], [3]]) {
+      expect(() => readTutorialConfig({ include })).toThrow(/"include" must be a non-empty list of paths or globs relative to code\//);
+    }
+  });
+
   it("accepts a files list and rejects other shapes", () => {
     expect(readTutorialConfig({ files: ["index.html", "src/*.js"] })).toMatchObject({ files: ["index.html", "src/*.js"] });
     expect(readTutorialConfig({})).not.toHaveProperty("files");

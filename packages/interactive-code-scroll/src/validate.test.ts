@@ -194,6 +194,16 @@ describe("validateTutorial frontmatter", () => {
     expect(withFrontmatter({ preview: "off" }, noEntry)).toEqual([]);
   });
 
+  it("reports an include pattern that matches no path starting with \".\"", () => {
+    const check = (include: string[]) =>
+      validateTutorial({ mdxFile: "tutorial.mdx", uses: [], files, images, hiddenCode: [".github/workflows/deploy.yml", ".env"], frontmatter: { preview: "off", include }, frontmatterLines: { include: 4 } });
+    expect(check([".github/**", ".env"])).toEqual([]);
+    expect(check([".vscode/**", "main.js"])).toEqual([
+      'tutorial.mdx:4:1 frontmatter include ".vscode/**" matches no path starting with "." in code/ (generated folders such as node_modules are never published)',
+      'tutorial.mdx:4:1 frontmatter include "main.js" matches no path starting with "." in code/ (generated folders such as node_modules are never published)',
+    ]);
+  });
+
   it('reports maximize="preview" when there is no pane to maximize', () => {
     const step = use("Step", { id: "big", maximize: "preview" });
     const check = (preview: string, uses: ComponentUse[] = [step]) =>

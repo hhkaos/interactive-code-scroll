@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -53,6 +53,57 @@ it("publishes captured outputs as is and warns about outputs that look like they
     expect(credential.join("")).toContain("output/run.json:1");
     expect(credential.join("")).not.toContain("REAL123");
     expect(warnings.join("")).toContain('tutorial.mdx:4:1 frontmatter "family" has no effect outside a series site');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
+
+it("leaves out of the site and the ZIP data paths starting with \".\" (unless included) and generated folders", async () => {
+  const root = mkdtempSync(fileURLToPath(new URL("./fixtures/hidden-", import.meta.url)));
+  const outDir = join(root, "dist");
+  try {
+    const code = join(root, "tutorial", "code");
+    const write = (path: string, text: string) => {
+      mkdirSync(join(code, path, ".."), { recursive: true });
+      writeFileSync(join(code, path), text);
+    };
+    mkdirSync(code, { recursive: true });
+    writeFileSync(
+      join(root, "tutorial", "tutorial.mdx"),
+      '---\ntitle: Hidden\npreview: iframe\ninclude: [".github/**"]\n---\n\n<Step id="page" file="index.html">\nText.\n</Step>\n',
+    );
+    write("index.html", "<p>hi</p>\n");
+    write(".github/workflows/deploy.yml", "name: deploy-workflow\n");
+    write(".hidden/nested/leak.mjs", 'console.log("hidden-leak")\n');
+    write(".vscode/settings.json", '{ "vscode-leak": true }\n');
+    write(".env", "SECRET=env-leak\n");
+    write("node_modules/pkg/index.js", 'console.log("modules-leak")\n');
+    write("__pycache__/main.cpython-312.pyc", "pycache-leak\n");
+    write("venv/pyvenv.cfg", "home = /usr/bin\n");
+    write("venv/lib/site.py", 'print("venv-leak")\n');
+
+    const warnings: string[] = [];
+    const out = process.stdout.write.bind(process.stdout);
+    const capture = vi.spyOn(process.stdout, "write").mockImplementation((chunk, ...rest) => {
+      warnings.push(String(chunk));
+      return out(chunk, ...(rest as []));
+    });
+    try {
+      await build({ root, outDir, integrations: [interactiveCodeScroll()], logLevel: "warn" });
+    } finally {
+      capture.mockRestore();
+    }
+    // The page embeds every published file (tabs, Preview and ZIP).
+    const page = readFileSync(join(outDir, "index.html"), "utf8");
+    expect(page).toContain("deploy-workflow");
+    expect(readFileSync(join(outDir, "preview", ".github", "workflows", "deploy.yml"), "utf8")).toContain("deploy-workflow");
+    for (const leak of ["hidden-leak", "vscode-leak", "env-leak", "modules-leak", "pycache-leak", "venv-leak"]) expect(page).not.toContain(leak);
+    for (const path of [".hidden", ".vscode", ".env", "node_modules", "__pycache__", "venv"]) expect(existsSync(join(outDir, "preview", path))).toBe(false);
+    const log = warnings.join("");
+    expect(log).toContain('code/.hidden/ is not published (paths starting with "." are skipped); add ".hidden/**" to frontmatter "include" to publish it');
+    expect(log).toContain("code/.vscode/ is not published");
+    expect(log).not.toContain("code/.github/ is not published");
+    expect(log).not.toContain("node_modules/ is not published");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
