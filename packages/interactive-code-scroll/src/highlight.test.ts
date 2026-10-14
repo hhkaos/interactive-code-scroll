@@ -17,6 +17,16 @@ describe("highlight", () => {
     expect(html).toContain("--shiki-dark:");
   });
 
+  it.each([
+    ["main.js", 'const referrers = ""; // @var referrers'],
+    ["geocode.py", "REFERRERS = ''  # @var referrers"],
+  ])("gives an empty literal in %s an empty data-var token with the string's colors", async (path, source) => {
+    const html = await highlight(parseSource(source, `code/${path}`), path);
+    const quote = /<span style="([^"]*)">\s?["']<\/span>/.exec(html);
+    expect(quote).not.toBeNull();
+    expect(html).toContain(`<span data-var="referrers" style="${quote![1]}"></span>`);
+  });
+
   it("maps extensions to Shiki languages", () => {
     expect(langFor("a/b.MJS")).toBe("javascript");
     expect(langFor("index.html")).toBe("html");

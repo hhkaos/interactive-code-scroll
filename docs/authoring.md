@@ -460,6 +460,7 @@ Rules:
 - `@var` targets the first string literal on its line; on a line without one, the first [number or boolean](#number-and-boolean-variables).
 - `@var <name>:string`, `:number` or `:boolean` picks the first literal of that type instead (for example a number on a line that also has a string).
 - In YAML, a quoted key (`"name": "value"`) is never the target.
+- An empty string (`""`) is a valid default for an optional value: the field starts empty and the code shows what the reader types.
 - Use one `@var` per line.
 - Variable names are unique per file.
 - The same variable may appear in several files (for example a token in `main.py` and `MainActivity.kt`); one form field then fills all of them. Every occurrence must have the same type and default literal, or the build fails and lists each file. Booleans compare without case, so `true` in JavaScript and `True` in Python are the same default.

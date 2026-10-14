@@ -56,6 +56,18 @@ test("a JSON value targeted by pointer follows the shared field", async ({ page 
   await expect(page.locator('.code[data-file="report.py"] [data-var="verbose"]')).toHaveText("True");
 });
 
+test("an empty literal fills in and clears again", async ({ page }) => {
+  await page.goto("/#config");
+  const token = page.locator('.code[data-file="report.py"] [data-var="referrer"]');
+  await expect(token).toHaveText("");
+  const input = page.locator('calcite-input[data-var="referrer"] input');
+  await input.fill("https://a.example");
+  await expect(token).toHaveText("https://a.example");
+  await expect(page.locator('.code[data-file="report.py"]')).toContainText('REFERRER = "https://a.example"');
+  await input.fill("");
+  await expect(token).toHaveText("");
+});
+
 test("clearing a field restores the default from the code", async ({ page }) => {
   await page.goto("/#config");
   await clientIdInput(page).fill("abc");

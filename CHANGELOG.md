@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- A `@var` whose default is an empty string (`const referrers = ""; // @var referrers`) never updated in the code panel: `highlight()` dropped zero-width vars, so the token had no `data-var` (downloads were fine). Empty literals now get an empty `data-var` token with the colors of the string. Part of #3. Unit test in `highlight.test.ts`; E2E in `e2e/vars.spec.ts` (`report.py` in the main fixture gains an optional `referrer`).
+
 ### Added
 
 - JSON vars: `<VarField json="config.json#/a/b">` makes a value of a JSON file under `code/` a var by JSON Pointer (RFC 6901), since JSON has no comments for `@var`. The file stays valid JSON; strings, numbers and booleans are supported (type and default from the JSON), and a static array targets one file per variant. Build errors at the `<VarField>` for a malformed target, a missing file or pointer, or an array, object or `null` value; a JSON file with a `// @var` comment gets "comments are not allowed". The MDX validation hands the targets to the page through the tutorial's frontmatter. Second part of #3. Unit tests in `json-vars.test.ts` and `validate.test.ts`; E2E in `e2e/vars.spec.ts`, `e2e/downloads.spec.ts` and `e2e/tutorial-page.spec.ts` (the main fixture gains `settings.json`, sharing `maxResults` and `verbose` with `report.py`).
