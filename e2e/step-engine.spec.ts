@@ -77,7 +77,8 @@ test("clicking a step activates it", async ({ page }) => {
   await expect(page).toHaveURL(/#load-sdk$/);
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "index.html");
   // Clicks on a step's own controls (here a field of another step) keep their meaning only.
-  await page.locator('calcite-input[data-var="clientId"] input').click();
+  // Dispatched: the field is off screen, and scrolling it into view would activate steps by scroll.
+  await page.locator('calcite-input[data-var="clientId"] input').dispatchEvent("click");
   await expect(page).toHaveURL(/#load-sdk$/);
   // Anywhere else in the step counts.
   await page.locator("section.step#config").click({ position: { x: 5, y: 5 } });
