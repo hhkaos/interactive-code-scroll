@@ -284,7 +284,8 @@ test("shows the file tab focus ring for keyboard focus only", async ({ page }) =
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Tab");
   await expect(page.locator('calcite-tab-title[data-file="main.js"]')).toBeFocused();
-  expect(await ring("main.js")).not.toBe("rgba(0, 0, 0, 0)");
+  // Calcite fades the ring in (outline-color transition, 0.15s): right after Tab it may still be transparent.
+  await expect.poll(() => ring("main.js")).not.toBe("rgba(0, 0, 0, 0)");
 });
 
 test("highlights Python and strips its native region markers", async ({ page }) => {
