@@ -212,6 +212,18 @@ test("shows only the files listed in frontmatter as tabs; the ZIP action counts 
   expect(embedded.fetched).toEqual([".env.example", "README.md", "assets/pixel.png"]);
 });
 
+test("shows the file tab focus ring for keyboard focus only", async ({ page }) => {
+  const ring = (file: string) =>
+    page.locator(`calcite-tab-title[data-file="${file}"]`).evaluate((el) => getComputedStyle(el.shadowRoot!.querySelector(".container")!).outlineColor);
+  await page.locator('calcite-tab-title[data-file="main.js"]').click();
+  await expect(page.locator('calcite-tab-title[data-file="main.js"]')).toBeFocused();
+  expect(await ring("main.js")).toBe("rgba(0, 0, 0, 0)");
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(page.locator('calcite-tab-title[data-file="main.js"]')).toBeFocused();
+  expect(await ring("main.js")).not.toBe("rgba(0, 0, 0, 0)");
+});
+
 test("highlights Python and strips its native region markers", async ({ page }) => {
   await page.locator('calcite-tab-title[data-file="report.py"]').click();
   const pane = page.locator('.code[data-file="report.py"]');

@@ -458,6 +458,10 @@ body[data-docs-hidden] {
   & > :is(calcite-segmented-control, calcite-dropdown)[hidden] { display: none; }
 }
 
+/* Calcite draws the tab focus ring on :focus, so a mouse click leaves it on the
+   selected tab. Keep it for keyboard focus only. */
+calcite-tab-title:focus:not(:focus-visible) { --calcite-color-focus: transparent; }
+
 /* Separates the language switcher from the file tabs. */
 .header-divider {
   flex: none;
