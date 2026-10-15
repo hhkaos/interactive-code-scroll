@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Series index: variant links. A tutorial with two or more variants has an "Available in" band at the card foot with a link to each variant (`?variant=<id>`; at most four, else three and "+N"); selecting a variant's tag in the filter marks its link and makes the title open that variant. The card's title link is stretched over the card (no nested links).
 - Series index: tag logos. A `tagGroups` entry can be `{ name, logo }` (a file in `tutorials/images/` or an `https://` URL; a missing file is a build error). A card tag with a logo (from `tagGroups`, else from the variant with that label) shows it instead of the family dot, and variant links use it.
 - Build warning for a `<summary>` that MDX renders inside a paragraph (no blank line before the `<details>` content), with its MDX `file:line`.
+- Series index: card levels `Beginner`, `Intermediate` and `Advanced` (any case) show difficulty bars, one to three filled, instead of the same gauge icon for every level; other level values keep the gauge.
 
 ### Changed
 

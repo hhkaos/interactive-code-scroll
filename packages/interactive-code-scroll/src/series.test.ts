@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { allTags, cardParts, cardTags, discoverTutorials, familyOf, familyProblems, parseTagList, selectCards, sortCards, tagFor, tagLogos, unusedGroupTags } from "./series.ts";
+import { allTags, cardParts, cardTags, discoverTutorials, familyOf, familyProblems, levelRank, parseTagList, selectCards, sortCards, tagFor, tagLogos, unusedGroupTags } from "./series.ts";
 
 function seriesWith(folders: Record<string, boolean>): string {
   const dir = mkdtempSync(join(tmpdir(), "ics-series-"));
@@ -65,6 +65,13 @@ describe("index cards", () => {
   it("finds tagGroups tags that no tutorial has", () => {
     expect(unusedGroupTags([{ tags: ["Python", "Rust"] }, { tags: ["Web", "Go"] }], cards)).toEqual(["Rust", "Go"]);
     expect(unusedGroupTags([{ tags: ["Python", "JavaScript"] }], cards)).toEqual([]);
+  });
+});
+
+describe("levelRank", () => {
+  it("ranks the usual levels case-insensitively and leaves other values unranked", () => {
+    expect(["Beginner", "intermediate", " ADVANCED "].map(levelRank)).toEqual([1, 2, 3]);
+    expect(levelRank("Expert")).toBeUndefined();
   });
 });
 

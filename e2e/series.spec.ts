@@ -16,6 +16,9 @@ test("index.mdx gives the index its title, prose and TutorialList sections in or
   await expect(alpha.locator(".series-card-description")).toHaveText("A web app with a persisted token field and a Preview.");
   await expect(alpha.locator(".series-card-meta")).toContainText("Beginner");
   await expect(alpha.locator(".series-card-meta")).toContainText("10 min");
+  // Usual levels get difficulty bars (Beginner: one filled) instead of the generic gauge icon.
+  await expect(alpha.locator(".series-card-meta .series-level-bars")).toHaveAttribute("data-rank", "1");
+  await expect(lists.nth(0).locator(".series-card").nth(1).locator(".series-level-bars")).toHaveAttribute("data-rank", "2");
   // JavaScript has a logo in tagGroups: it replaces the family dot. No variants, so no "Available in" band.
   await expect(alpha.locator(".series-card-tags li")).toHaveText(["Web", "JavaScript"]);
   await expect(alpha.locator(".series-card-tags li.has-logo img")).toHaveAttribute("src", logoSrc("javascript", "f7df1e"));

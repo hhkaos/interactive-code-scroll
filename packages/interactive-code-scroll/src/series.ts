@@ -120,6 +120,13 @@ export function sortCards<T extends Pick<SeriesCard, "title" | "order">>(cards: 
   return [...cards].sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title));
 }
 
+const LEVEL_RANKS: Readonly<Record<string, 1 | 2 | 3>> = { beginner: 1, intermediate: 2, advanced: 3 };
+
+/** Bars filled by the card's level icon: the usual levels, case-insensitive; other values get none (a generic icon). */
+export function levelRank(level: string): 1 | 2 | 3 | undefined {
+  return LEVEL_RANKS[level.trim().toLowerCase()];
+}
+
 /** `<TutorialList tags="a, b">`: comma-separated tags. */
 export function parseTagList(value: string | undefined): string[] {
   return value === undefined ? [] : [...new Set(value.split(",").map((tag) => tag.trim()).filter(Boolean))];

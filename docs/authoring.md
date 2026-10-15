@@ -167,7 +167,7 @@ Ignored in a single-tutorial site, except `description`, which is also the page'
 | Field | Values | Default | Description |
 |---|---|---|---|
 | [`tags`](#index-page) | list of strings | none | Series index card tags and filter values, e.g. `[REST, Python]`. No commas inside a tag. |
-| [`level`](#index-page) | string | none | Series index card, e.g. `Beginner`; `<TutorialList level>` matches it exactly. |
+| [`level`](#index-page) | string | none | Series index card, e.g. `Beginner`; `<TutorialList level>` matches it exactly. `Beginner`, `Intermediate` and `Advanced` (any case) show one to three difficulty bars; other values a generic gauge icon. |
 | [`duration`](#index-page) | string | none | Series index card, e.g. `20 min`. |
 | [`order`](#index-page) | number | none | Series index position: lower first; tutorials without it come after, by title. Also orders the [sibling](#sibling-tutorials) switcher. |
 | [`family`](#sibling-tutorials) | string | none | Links sibling tutorials of a series site. Needs `familyLabel`. |

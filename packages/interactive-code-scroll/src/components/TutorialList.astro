@@ -1,7 +1,7 @@
 ---
 import { base, seriesImages, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { readIndexConfig } from "../frontmatter.ts";
-import { cardParts, parseTagList, selectCards, tagFor } from "../series.ts";
+import { cardParts, levelRank, parseTagList, selectCards, tagFor } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
 import "@esri/calcite-components/main.css";
 import "../styles/series-list.css";
@@ -49,7 +49,15 @@ const rows = shown.map((card) => ({ card, ...cardParts(card) }));
               <p class="series-card-meta">
                 {card.level && (
                   <span>
-                    <calcite-icon icon="gauge" scale="s" aria-hidden="true" />
+                    {levelRank(card.level) ? (
+                      <svg class="series-level-bars" data-rank={levelRank(card.level)} viewBox="0 0 16 16" aria-hidden="true">
+                        <rect x="2" y="9" width="3" height="5" rx="1" />
+                        <rect x="6.5" y="5.5" width="3" height="8.5" rx="1" />
+                        <rect x="11" y="2" width="3" height="12" rx="1" />
+                      </svg>
+                    ) : (
+                      <calcite-icon icon="gauge" scale="s" aria-hidden="true" />
+                    )}
                     <span class="visually-hidden">Level:</span> {card.level}
                   </span>
                 )}
