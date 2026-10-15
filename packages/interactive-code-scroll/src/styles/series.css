@@ -12,6 +12,9 @@ body.series-page {
  */
 .series-page .header-actions { padding-inline-end: 0.5rem; }
 
+/* Header content shares the .series-main column; the bar background stays full width. */
+.series-page .app-header { --calcite-navigation-width: 72rem; }
+
 .app-header calcite-navigation-logo {
   max-width: calc(100vw - 3.5rem);
   overflow: hidden;

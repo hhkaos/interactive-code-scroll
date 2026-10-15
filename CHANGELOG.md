@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Series index: the header content (logo, theme action) lines up with the centered `.series-main` column (`--calcite-navigation-width: 72rem`); the bar background stays full width.
+
 ## [0.2.0-beta.4] - 2026-10-15
 
 ### Added
