@@ -180,6 +180,7 @@ describe("validateTutorial VarField types and options", () => {
     { name: "portal", type: "combobox", options: "portals.json", placeholder: "Search portals" },
     { name: "note", type: "combobox", options: { expression: '["a", "b"]' } },
     { name: "slot", type: "radio", options: { expression: "[1, 2]" } },
+    { name: "slot", type: "radio", options: { expression: "[1, 2]" }, layout: "horizontal" },
     { name: "note", type: "textarea" },
     { name: "portal", type: "text", secret: true },
   ] as ComponentUse["attributes"][])("accepts %j", (attributes) => {
@@ -198,6 +199,9 @@ describe("validateTutorial VarField types and options", () => {
     [{ name: "on", type: "select", options: { expression: '["true"]' } }, 'type="select" cannot edit a boolean var'],
     [{ name: "portal", type: "select", options: "portals.json", secret: true }, '"secret" needs a text field, not type="select"'],
     [{ name: "portal", type: "radio", options: "portals.json", placeholder: "x" }, '"placeholder" has no effect on type="radio"'],
+    [{ name: "portal", type: "select", options: "portals.json", layout: "horizontal" }, '"layout" needs type="radio"'],
+    [{ name: "portal", layout: "horizontal" }, '"layout" needs type="radio"'],
+    [{ name: "slot", type: "radio", options: { expression: "[1, 2]" }, layout: "row" }, '"layout" must be "vertical" or "horizontal"'],
   ] as [ComponentUse["attributes"], string][])("reports %j", (attributes, message) => {
     expect(check(attributes)).toEqual([`tutorial.mdx:3:1 <VarField> ${message}`]);
   });

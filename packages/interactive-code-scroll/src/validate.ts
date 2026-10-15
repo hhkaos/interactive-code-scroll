@@ -453,6 +453,8 @@ export function validateTutorial({
       else if (!varRefs.has(name) && use.attributes.json === undefined) report(`no "@var ${name}" found in code/`);
       if (!text("label")) report('requires a "label"');
       text("placeholder");
+      const layout = text("layout");
+      if (layout !== undefined && layout !== "vertical" && layout !== "horizontal") report('"layout" must be "vertical" or "horizontal"');
       const ref = name === undefined ? undefined : varRefs.get(name);
       const kind = ref && varKind(ref);
       if (kind !== undefined && kind !== "string") {
@@ -482,6 +484,7 @@ export function validateTutorial({
     if (choice && raw === undefined) report(`type="${type}" requires "options"`);
     if (type !== undefined && type !== "text" && use.attributes.secret !== undefined) report(`"secret" needs a text field, not type="${type}"`);
     if ((type === "select" || type === "radio") && use.attributes.placeholder !== undefined) report(`"placeholder" has no effect on type="${type}"`);
+    if (type !== "radio" && use.attributes.layout !== undefined) report('"layout" needs type="radio"');
     if (!target || type === undefined) return;
     const allowed = choice ? ["string", "number"] : ["string"];
     if (!allowed.includes(target.kind)) {

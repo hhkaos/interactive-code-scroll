@@ -380,6 +380,7 @@ A form field linked to an [`@var` marker](#variables) in code. What the reader t
 | `label` | string | required | Visible field label. |
 | [`type`](#field-types) | `text`, `textarea`, `select`, `radio`, `combobox` | from the var | The kind of field. |
 | [`options`](#field-types) | array, or a file in `field-options/` | none | Choices of `select`, `radio` and `combobox`. |
+| `layout` | `vertical`, `horizontal` | `vertical` | How `radio` buttons are laid out: stacked, or in a row. `radio` only. |
 | `placeholder` | string | none | Input hint. Does not change the code default. Not for boolean vars, `select` or `radio`. |
 | `secret` | flag | off | Text fields of string vars only. Masks the input, the value in the code and the [request line](#request-runner) until the reader reveals it. |
 | `persist` | flag, or `"tutorial"` | off | Stores the value in `localStorage`. `persist` shares it with every tutorial of a [series site](#series-sites) (a key is entered once per site); `persist="tutorial"` keeps it to this tutorial. On a single-tutorial site both behave the same. |
@@ -398,7 +399,7 @@ A form field linked to an [`@var` marker](#variables) in code. What the reader t
 
 ```mdx title="tutorial/tutorial.mdx"
 <VarField name="portal" label="Portal" type="select" options="portals.json" />
-<VarField name="slot" label="Key slot" type="radio" options={[{ value: 1, label: "Slot 1" }, { value: 2, label: "Slot 2" }]} />
+<VarField name="slot" label="Key slot" type="radio" layout="horizontal" options={[{ value: 1, label: "Slot 1" }, { value: 2, label: "Slot 2" }]} />
 <VarField name="privilege" label="Privilege" type="combobox" options={["premium:user:basemaps", "premium:user:geocode"]} />
 <VarField name="description" label="Description" type="textarea" />
 ```

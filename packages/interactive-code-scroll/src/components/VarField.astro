@@ -18,9 +18,11 @@ interface Props {
   secret?: boolean;
   /** `persist` shares the value with every tutorial of the site; `persist="tutorial"` keeps it to this one. */
   persist?: boolean | "tutorial";
+  /** Radio buttons stack by default; `horizontal` puts them in a row. */
+  layout?: "vertical" | "horizontal";
 }
 
-const { name, label, type = "text", options: rawOptions, placeholder, secret = false, persist = false } = Astro.props;
+const { name, label, type = "text", options: rawOptions, placeholder, secret = false, persist = false, layout = "vertical" } = Astro.props;
 const { files, fieldOptions, frontmatter, requests } = currentTutorial(Astro.locals);
 // Validation guarantees every file that marks the var (code/ or requests/) has the same type and default.
 const ref = [
@@ -62,7 +64,7 @@ const on = (value: boolean) => value || undefined;
       ))}
     </calcite-select>
   ) : type === "radio" ? (
-    <calcite-radio-button-group class="var-field" label-text={label} name={`var-${name}`} layout="vertical" {...data}>
+    <calcite-radio-button-group class="var-field" label-text={label} name={`var-${name}`} layout={layout} {...data}>
       {options.map((o) => (
         <calcite-label layout="inline">
           <calcite-radio-button value={o.value} checked={on(o.value === defaultValue)} />

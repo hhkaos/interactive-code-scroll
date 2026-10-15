@@ -102,6 +102,12 @@ test("choice and textarea fields write the picked value", async ({ page }) => {
   await portal.locator("select").selectOption({ label: "ArcGIS Enterprise" });
   await expect(report.locator('[data-var="portal"]')).toHaveText("https://enterprise.example.test/portal");
 
+  // layout="horizontal": the buttons share a row.
+  const slots = page.locator('calcite-radio-button-group[data-var="slot"] calcite-label');
+  await expect(slots).toHaveCount(2);
+  const [first, second] = [await slots.nth(0).boundingBox(), await slots.nth(1).boundingBox()];
+  expect(Math.abs(second!.y - first!.y)).toBeLessThan(1);
+  expect(second!.x).toBeGreaterThan(first!.x);
   await page.locator('calcite-radio-button-group[data-var="slot"] calcite-label', { hasText: "Slot 2" }).click();
   await expect(report.locator('[data-var="slot"]')).toHaveText("2");
 
