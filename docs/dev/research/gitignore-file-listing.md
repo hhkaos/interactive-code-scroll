@@ -1,6 +1,6 @@
 # Design note: `.gitignore` in the `code/` listing
 
-Date: 2026-10-15. Status: implemented (Unreleased, after 0.2.0-beta.2).
+Date: 2026-10-15. Status: implemented (0.2.0-beta.3).
 
 ## Problem
 

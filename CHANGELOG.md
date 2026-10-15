@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.3] - 2026-10-15
+
 ### Added
 
 - `code/` listing honors `.gitignore`: files a tutorial's scripts write locally (`state.json`, `output.csv`, a `build/` folder) are no longer published in the Preview, the tabs or the ZIP. Rules come from `.gitignore` files in `code/` and its subfolders and in the folders above it up to the git repository root (only the tutorial folder outside a repository), with git semantics (negation, `dir/`, anchored, `**`), case-sensitive, through the `ignore` package (new runtime dependency). Generated folders stay excluded and the dot-path rule is unchanged; frontmatter `include` now also opts in gitignored paths, with a build warning per pattern. A `<Step file>` or `files` pattern that points only at gitignored files is a build error naming the `.gitignore`; the `include` "matches nothing" error now reads `matches no path in code/ starting with "." or gitignored`. Design note in `docs/dev/research/gitignore-file-listing.md`. Unit tests in `tutorial-files.test.ts` and `validate.test.ts`, build test in `test/build.test.ts`; the main fixture gains a gitignored `state.json` and a `.env.example` shipped through `include` (E2E ZIP listing and count updated).
