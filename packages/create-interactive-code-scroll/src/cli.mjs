@@ -115,7 +115,7 @@ async function ask(given, fallback) {
         await p.select({
           message: "Index page",
           options: [
-            { value: /** @type {const} */ ("default"), label: "Default list", hint: "cards with a tag filter" },
+            { value: /** @type {const} */ ("default"), label: "Default list", hint: "cards with a search bar" },
             { value: /** @type {const} */ ("mdx"), label: "index.mdx", hint: "your title, text and sections around the cards" },
             { value: /** @type {const} */ ("custom"), label: "Custom design", hint: "an Astro page you write (site/index.astro)" },
           ],

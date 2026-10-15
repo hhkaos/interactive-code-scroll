@@ -51,7 +51,7 @@ Built for people who teach developer technologies: developer advocates, trainers
 | 📡 **Request runner** | `.http` requests run from the page; captured output shows when there is no token. JSON viewer included. |
 | ✏️ **Fields → code variables** | Readers type their own API key or title; code, Preview and downloads update. |
 | 📦 **Copy & ZIP downloads** | Readers leave with a runnable project, markers stripped. |
-| 📚 **Series sites** | Many tutorials in one site, with an index, tag filters and sibling tutorials across SDKs. |
+| 📚 **Series sites** | Many tutorials in one site, with a searchable index, favorites and sibling tutorials across SDKs. |
 | 🚀 **Static output** | Deploy anywhere. A GitHub Pages workflow is one wizard answer away. |
 | 🌗 **Light and dark** | Follows the reader's system preference, with a toggle. |
 

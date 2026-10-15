@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Scaffolder: the series index choice and the generated `index.mdx` call `<TutorialFilter />` a search bar (was "tag filter"), and the `index.mdx` text suggests `<TutorialFavorites />` for growing series.
+
 ## [0.2.0-beta.5] - 2026-10-15
 
 ### Added

@@ -324,7 +324,7 @@ function indexMdx(title) {
     "description: Tutorials built with InteractiveCodeScroll.",
     "---",
     "",
-    "Introduce your tutorials here. `<TutorialFilter />` places the tag filter, and each `<TutorialList />` renders cards (filter a list with `tags=\"…\"` or `level=\"…\"` to build sections).",
+    "Introduce your tutorials here. `<TutorialFilter />` places the search bar, and each `<TutorialList />` renders cards (filter a list with `tags=\"…\"` or `level=\"…\"` to build sections). When the series grows, add `<TutorialFavorites />` so readers can keep their favorite tutorials at hand.",
     "",
     "<TutorialFilter />",
     "",

@@ -70,6 +70,9 @@ Before adding a second instance of a component the page already uses (Calcite ta
 ### Wait for debounces in browser checks
 Before a screenshot or a DOM read with the Playwright MCP, wait past any input debounce (the series search applies text 150 ms after the last keystroke). (A screenshot taken right after Escape once showed an empty search box with the old filter still applied, which looked like a bug.)
 
+### E2E under heavy machine load
+`playwright.config.ts` starts every fixture server at once, each with a 60 s timeout. When the machine is loaded (other sessions), they time out before any test runs. Run only the affected spec with a temporary config in the scratchpad that starts that one fixture server (`webServer` with a longer `timeout`), and say so in the report. (A favorites E2E run once failed twice this way with load average ~22.)
+
 ### Ask before destructive actions
 Confirm before: deleting files, force-pushing, resetting git state, dropping packages.
 

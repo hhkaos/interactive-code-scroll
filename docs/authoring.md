@@ -853,7 +853,7 @@ variants:
 | `label` | string | required | Shown in the language switcher. |
 | `dir` | folder | required | Relative to `code/`. Folders must not overlap. |
 | `entry` | file | required | File shown first, relative to `dir`. |
-| `files` | list of paths/globs | all text files | Like the top-level [`files`](#frontmatter), relative to `dir`. The top-level `files` cannot be combined with `variants`. |
+| `files` | list of paths/globs | all text files: those steps show first, in step order, then the rest by path | Like the top-level [`files`](#frontmatter), relative to `dir`. The top-level `files` cannot be combined with `variants`. |
 | `logo` | image path or `https://` URL | none | Icon next to `label` in the language switcher, with the same rules as the tutorial [`logo`](#frontmatter) (a file in `images/` or an `https://` URL). While the variant is active, the page header shows it instead of the tutorial logo. In a series, it is also the logo of its tag and link on the [index card](#index-page) when that tag has no logo in `tagGroups`. |
 
 ### Steps across variants

@@ -35,6 +35,22 @@ Before v1, breaking changes may happen in alpha and beta releases. Each breaking
 - an actionable validation error when possible,
 - a fixture/E2E case when the behavior is observable through a tutorial.
 
+### 0.2.0-beta.5: file tab order without `files`
+
+A tutorial (or variant) without frontmatter `files` now orders its file tabs by the steps: each file in the order a `<Step>` first shows it, then the rest by path. Before, every tab was in path order. Check your tabs after upgrading; to keep another order, list it in `files`. See [Files Not Shown In Tabs](authoring.md#files-not-shown-in-tabs).
+
+### 0.2.0-beta.5: series cards and custom index pages
+
+- Cards no longer show the tutorial logo or variant logos next to the title (the tutorial `logo` stays for its page header and favicon). Tag and variant logos come from `tagGroups` entries (`{ name, logo }`) and variant `logo`s. See [Tag families](authoring.md#tag-families).
+- Variant labels are now tags of their tutorial: `<TutorialList tags="Python">` also lists a tutorial with a Python variant, and the search bar counts and filters them.
+- Custom index pages: `SeriesCard.variantLogos` is gone. Use `variants` (`{ id, label, href, logo }`, with two or more variants) and `tagLogos` (tag → logo URL).
+- `<TutorialFilter>` is now a search bar (text, tags, level), with no change to `index.mdx`. On a custom page it accepts an optional `tagGroups` prop.
+- New, opt-in: `<TutorialFavorites />`. See [Index page](authoring.md#index-page).
+
+### 0.2.0-beta.5: `<details>` spacing
+
+Open disclosure blocks now leave a gap below `<summary>`: remove any inline `margin-top` you added to the first element. A `<summary>` that MDX puts inside a paragraph (no blank line before the content) now prints a build warning with its `file:line`; add the blank lines.
+
 ### 0.2.0-beta.0: `latest` dist-tag
 
 Releases are no longer published only under `@alpha`: `npm install -D interactive-code-scroll` and `npm create interactive-code-scroll@latest` get this version. Projects pinned to `interactive-code-scroll@alpha` keep the last alpha until they change the specifier:
