@@ -61,6 +61,9 @@ When a change touches how `site/` or a tutorial is served (routes, `public/`, ba
 ### Markdown transforms and the content cache
 After changing a Markdown transform (e.g. `docsMarkdown()` in `site/docs-config.mjs`), stop the dev server and delete `site/.astro/data-store.json` before reviewing in dev. The content layer reuses rendered HTML until a file's content changes, so dev keeps serving the old output while build/E2E are correct. (This once served raw `<picture>` tags and 404 screenshots in `pnpm site`.)
 
+### Test tutorials inside the repo see its .gitignore
+The `code/` listing applies every `.gitignore` up to the git repo root, so a tutorial a test creates under this repo (e.g. `test/fixtures/<name>-*`) inherits the root `.gitignore` (`.vscode/`, `dist/`…). Give such a temp project its own `.git` folder (`mkdirSync(join(root, ".git"))`) unless the test is about parent rules. (The root `.vscode/` rule once silenced an expected `code/.vscode/ is not published` warning in `test/build.test.ts`.)
+
 ### Shared components in the page
 Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).
 

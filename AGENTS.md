@@ -64,6 +64,9 @@ Never read `import.meta.env.BASE_URL` in framework code: a `BASE_URL` environmen
 ### Check dev mode, not only preview
 When a change touches how `site/` or a tutorial is served (routes, `public/`, base path, middleware), open it with the dev server too (`pnpm site`, `pnpm dev`), not only `astro preview`/E2E. E2E runs against built previews. (`astro dev` once 404'd the embedded showcase demo that preview and Pages served fine.) Under an AI agent, `astro dev` starts in the background (agent environment variables) and outlives the command: stop it when done (`astro dev stop`, or `kill` its PID) and check `pgrep -fl "astro.mjs dev"`, or the user's next `pnpm site` fails with "Another astro dev server is already running".
 
+### Test tutorials inside the repo see its .gitignore
+The `code/` listing applies every `.gitignore` up to the git repo root, so a tutorial a test creates under this repo (e.g. `test/fixtures/<name>-*`) inherits the root `.gitignore` (`.vscode/`, `dist/`…). Give such a temp project its own `.git` folder (`mkdirSync(join(root, ".git"))`) unless the test is about parent rules. (The root `.vscode/` rule once silenced an expected `code/.vscode/ is not published` warning in `test/build.test.ts`.)
+
 ### Shared components in the page
 Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).
 
