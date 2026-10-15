@@ -223,6 +223,24 @@ test("renders custom <VarField> placeholder without changing the code default", 
   await expect(input).toHaveAttribute("data-default-value", "https://fixture.example.test");
 });
 
+test("lays out consecutive <VarField>s in as many columns as the explanations panel fits", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  const fields = page.locator("section.step#config > .var-fields");
+  await expect(fields.locator(".var-field")).toHaveCount(9);
+  const columns = () => fields.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+  const split = (value: string) => page.locator(".layout").evaluate((el: HTMLElement, v) => el.style.setProperty("--split", v), value);
+
+  await split("25%");
+  await expect.poll(columns).toBe(1);
+  await split("60%");
+  await expect.poll(columns).toBeGreaterThan(1);
+  // Same column width for every field type (`ch` once shrank the combobox, whose host font is smaller).
+  const width = (selector: string) => page.locator(selector).evaluate((el) => el.getBoundingClientRect().width);
+  expect(await width('calcite-combobox[data-var="privilege"]')).toBeCloseTo(await width('calcite-select[data-var="portal"]'), 0);
+  // A textarea takes the whole row.
+  expect(await width('calcite-text-area[data-var="description"]')).toBeCloseTo(await fields.evaluate((el) => el.clientWidth), 0);
+});
+
 test("renders build-time highlighted code with markers stripped", async ({ page }) => {
   await page.goto("/#config");
   const visibleCode = page.locator(".code:not([hidden])");

@@ -8,6 +8,7 @@ import { proseShikiConfig } from "./highlight.ts";
 import { tutorialValidation } from "./mdx-validation.ts";
 import { discoverTutorials, SERIES_INDEX } from "./series.ts";
 import { tutorialModule, type TutorialSource } from "./tutorial-module.ts";
+import { varFieldGroups } from "./var-field-groups.ts";
 
 export { TutorialValidationError } from "./mdx-validation.ts";
 
@@ -42,7 +43,8 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
           ? discoverTutorials(seriesDir, (message) => logger.warn(message))
           : [{ slug: "", dir: singleTutorial(config.root, options.tutorial ?? "tutorial") }];
 
-        // MDX gets its own Sätteri processor (inheriting the project's options) plus reference validation.
+        // MDX gets its own Sätteri processor (inheriting the project's options) plus reference validation
+        // and field grouping (after validation, which reads every <VarField> where the author wrote it).
         const markdown = config.markdown.processor;
         const base = markdown && isSatteriProcessor(markdown) ? markdown.options : undefined;
         const validation = tutorialValidation(
@@ -50,7 +52,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
           (message) => logger.warn(message),
           seriesDir,
         );
-        const processor = satteri({ ...base, mdastPlugins: [...(base?.mdastPlugins ?? []), validation] });
+        const processor = satteri({ ...base, mdastPlugins: [...(base?.mdastPlugins ?? []), validation, varFieldGroups(sources.map((s) => s.dir))] });
 
         updateConfig({
           integrations: [mdx({ processor, shikiConfig: proseShikiConfig(config.markdown.shikiConfig) })],

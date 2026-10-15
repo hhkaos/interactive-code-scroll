@@ -148,8 +148,7 @@ body[data-docs-hidden] {
   line-height: 1.6;
   color: var(--calcite-color-text-2);
 
-  /* Readable line length when the panel is wide. */
-  & > :not(.step), .intro > *, .step > * { max-width: 70ch; }
+  /* No line-length cap: whoever widens the panel wants the room (wide tables, side-by-side fields). */
   & > :not(.step) { margin-inline: var(--gutter); }
 
   h1, h2, h3 { color: var(--calcite-color-text-1); font-weight: var(--calcite-font-weight-semibold); line-height: 1.3; }
@@ -450,6 +449,18 @@ body[data-docs-hidden] {
       color: var(--calcite-color-text-inverse);
     }
   }
+}
+
+/* Consecutive <VarField>s (grouped at MDX compile time): as many columns as the panel fits. */
+.var-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  gap: 1rem 1.5rem;
+  align-items: start;
+  margin-block: 1rem;
+
+  & > .var-field { margin-block: 0; }
+  & > calcite-text-area { grid-column: 1 / -1; }
 }
 
 .var-field {
