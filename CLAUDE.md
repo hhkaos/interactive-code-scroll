@@ -67,6 +67,9 @@ The `code/` listing applies every `.gitignore` up to the git repo root, so a tut
 ### Shared components in the page
 Before adding a second instance of a component the page already uses (Calcite tabs, notices, dialogs…), grep the client code for unscoped selectors of it (`$$("calcite-…")`) and scope them first. Existing handlers otherwise grab the new instance (this once made the Result pane tabs hide the code panel).
 
+### Wait for debounces in browser checks
+Before a screenshot or a DOM read with the Playwright MCP, wait past any input debounce (the series search applies text 150 ms after the last keystroke). (A screenshot taken right after Escape once showed an empty search box with the old filter still applied, which looked like a bug.)
+
 ### Ask before destructive actions
 Confirm before: deleting files, force-pushing, resetting git state, dropping packages.
 
