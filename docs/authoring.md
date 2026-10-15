@@ -152,7 +152,7 @@ order: 1
 
 | Field | Values | Default | Description |
 |---|---|---|---|
-| [`files`](#files-not-shown-in-tabs) | list of paths/globs | all text files: those steps show first, in step order, then the rest by path | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
+| [`files`](#files-not-shown-in-tabs) | list of paths/globs | all text files: those the intro and steps show first, in step order, then the rest by path | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
 | [`include`](#files-left-out-of-the-tutorial) | list of paths/globs | none | Paths in `code/` starting with `.` or gitignored to publish anyway, e.g. `include: [".github/**", ".vscode/launch.json", ".gitignore"]`. Relative to `code/` (with `variants` too, e.g. `web/.github/**`). A pattern that matches nothing is a build error. |
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | [`languages`](#syntax-highlighting) | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
@@ -196,7 +196,7 @@ Components render the explanations panel on the left: the tags you write in MDX.
 
 | Component | Where | What it does |
 |---|---|---|
-| [`<Intro>`](#intro) | `tutorial.mdx` | Content before the first step: not numbered, no code focus. Can show images or a page and set the Preview / Result pane state. |
+| [`<Intro>`](#intro) | `tutorial.mdx` | Content before the first step: not numbered, no code focus. Can open on a file, show images or a page, and set the Preview / Result pane state. |
 | [`<Step>`](#step) | `tutorial.mdx` | One step: its explanation and what the code panel shows. |
 | [`<VarField>`](#varfield) | `tutorial.mdx`, inside a step | A form field that edits a value in the code. |
 | [`<Hint>`](#hint) | `tutorial.mdx`, inline | A short popover for a side note. |
@@ -769,7 +769,7 @@ Some APIs report errors inside a successful response: ArcGIS REST, for example, 
 
 - Binary files (images, fonts, jars, archives, anything with a NUL byte) never get a tab. They are published under `preview/` and added to the ZIP byte for byte.
 - With [`files`](#frontmatter) set, text files that match no pattern are also left out of the code panel and the page, and still go into the ZIP.
-- Files not shown in tabs cannot contain [`@var`](#variables) markers, and a [`<Step file>`](#step) must point at a file shown in a tab.
+- Files not shown in tabs cannot contain [`@var`](#variables) markers, and a [`<Step file>`](#step) or [`<Intro file>`](#intro) must point at a file shown in a tab.
 - `index.html` is always available to the Preview, whether or not it is shown in a tab.
 
 ### Files left out of the tutorial
@@ -854,7 +854,7 @@ variants:
 | `label` | string | required | Shown in the language switcher. |
 | `dir` | folder | required | Relative to `code/`. Folders must not overlap. |
 | `entry` | file | required | File shown first, relative to `dir`. |
-| `files` | list of paths/globs | all text files: those steps show first, in step order, then the rest by path | Like the top-level [`files`](#frontmatter), relative to `dir`. The top-level `files` cannot be combined with `variants`. |
+| `files` | list of paths/globs | all text files: those the intro and steps show first, in step order, then the rest by path | Like the top-level [`files`](#frontmatter), relative to `dir`. The top-level `files` cannot be combined with `variants`. |
 | `logo` | image path or `https://` URL | none | Icon next to `label` in the language switcher, with the same rules as the tutorial [`logo`](#frontmatter) (a file in `images/` or an `https://` URL). While the variant is active, the page header shows it instead of the tutorial logo. In a series, it is also the logo of its tag and link on the [index card](#index-page) when that tag has no logo in `tagGroups`. |
 
 ### Steps across variants
