@@ -1,6 +1,6 @@
 import type { MDXContent } from "astro";
-import { cardLogos, readTutorialConfig } from "./frontmatter.ts";
-import { familyOf, familyProblems, sortCards, type FamilyMember, type SeriesCard } from "./series.ts";
+import { logoUrl, readTutorialConfig, type TagGroup } from "./frontmatter.ts";
+import { cardTags, familyOf, familyProblems, sortCards, tagFor, tagLogos, type FamilyMember, type SeriesCard } from "./series.ts";
 import type { SourceFile } from "./tutorial-files.ts";
 
 /** One tutorial as the virtual module exposes it to the injected pages. */
@@ -59,22 +59,59 @@ export function tutorialBase(base: string, slug: string): string {
   return slug === "" ? root : `${root}${slug}/`;
 }
 
-/** Index cards of a series, in index order (frontmatter was validated at MDX compile time). */
-export function seriesCards(tutorials: readonly TutorialData[], base: string): SeriesCard[] {
+/**
+ * Index cards of a series, in index order (frontmatter was validated at MDX compile time). `groups`
+ * (`tagGroups`) set the tags' spelling and their logos, resolved in the series folder's `images/`.
+ */
+export function seriesCards(
+  tutorials: readonly TutorialData[],
+  base: string,
+  groups: readonly TagGroup[] = [],
+  groupImages: Readonly<Record<string, string>> = {},
+): SeriesCard[] {
+  const groupTags = groups.flatMap((group) => group.tags);
+  const groupLogos = new Map(
+    groups.flatMap((group) =>
+      Object.entries(group.logos ?? {}).flatMap(([tag, logo]) => {
+        const src = logoUrl(logo, groupImages);
+        return src === undefined ? [] : [[tag, src] as const];
+      }),
+    ),
+  );
   return sortCards(
     tutorials.map(({ slug, frontmatter, images }) => {
       const config = readTutorialConfig(frontmatter);
-      const { title, description, tags, level, duration, order } = config;
+      const { title, description, level, duration, order } = config;
+      const variants = config.variants ?? [];
+      const tags = cardTags(config.tags, variants.map((v) => v.label), groupTags);
+      const variantLogos = variants.flatMap((v) => {
+        const src = logoUrl(v.logo, images);
+        return src === undefined ? [] : [{ label: v.label, src }];
+      });
+      const logos = tagLogos(tags, groupLogos, variantLogos);
+      const href = tutorialBase(base, slug);
+      // One variant is no choice: its label stays a tag.
+      const links =
+        variants.length < 2
+          ? []
+          : variants.map(({ id, label }) => {
+              // Every label is a card tag, so its logo is the tag's (tagGroups first, else the variant's own).
+              const src = logos[tagFor(label, tags) ?? label];
+              return { id, label, href: `${href}?variant=${encodeURIComponent(id)}`, ...(src === undefined ? {} : { logo: src }) };
+            });
+      const logo = logoUrl(config.logo, images);
       return {
         slug,
-        href: tutorialBase(base, slug),
+        href,
         title,
         tags,
         ...(description === undefined ? {} : { description }),
         ...(level === undefined ? {} : { level }),
         ...(duration === undefined ? {} : { duration }),
         ...(order === undefined ? {} : { order }),
-        ...cardLogos(config, images),
+        ...(logo === undefined ? {} : { logo }),
+        ...(Object.keys(logos).length === 0 ? {} : { tagLogos: logos }),
+        ...(links.length === 0 ? {} : { variants: links }),
       };
     }),
   );

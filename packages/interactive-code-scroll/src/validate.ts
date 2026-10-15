@@ -641,6 +641,11 @@ export function validateSeriesIndex({ mdxFile, uses, images, frontmatter = {}, f
     if (config.logo !== undefined && !isRemoteLogo(config.logo) && !images.includes(config.logo)) {
       errors.push(`${mdxFile}:${frontmatterLines.logo ?? 1}:1 frontmatter logo "${config.logo}" not found in images/ (or use an https:// URL)`);
     }
+    for (const [tag, logo] of (config.tagGroups ?? []).flatMap((group) => Object.entries(group.logos ?? {}))) {
+      if (!isRemoteLogo(logo) && !images.includes(logo)) {
+        errors.push(`${mdxFile}:${frontmatterLines.tagGroups ?? 1}:1 frontmatter tagGroups tag "${tag}": logo "${logo}" not found in images/ (or use an https:// URL)`);
+      }
+    }
   } catch (error) {
     if (!(error instanceof FrontmatterError)) throw error;
     errors.push(`${mdxFile}:${frontmatterLines[error.key] ?? 1}:1 frontmatter ${error.detail}`);

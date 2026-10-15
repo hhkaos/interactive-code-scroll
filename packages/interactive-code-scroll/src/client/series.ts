@@ -35,6 +35,7 @@ interface Card {
   titleNode: HTMLElement | null;
   descriptionNode: HTMLElement | null;
   tagNodes: HTMLElement[];
+  variantLinks: HTMLAnchorElement[];
 }
 
 /**
@@ -62,10 +63,12 @@ export function startSeriesFilter(): void {
   const cards: Card[] = [...document.querySelectorAll<HTMLElement>(".series-card-item")].map((item) => {
     const titleNode = item.querySelector<HTMLElement>(".series-card-title");
     const descriptionNode = item.querySelector<HTMLElement>(".series-card-description");
-    const tagNodes = [...item.querySelectorAll<HTMLElement>(".series-card-tags > li")];
+    // Plain tags and variant links; `data-tag` holds the tag (a link's text also names the tutorial).
+    const variantLinks = [...item.querySelectorAll<HTMLAnchorElement>("a.series-card-variant")];
+    const tagNodes = [...item.querySelectorAll<HTMLElement>(".series-card-tags > li"), ...variantLinks];
     // Family colors for custom pages, whose <TutorialList> does not know <TutorialFilter tagGroups>.
-    for (const node of tagNodes) {
-      const index = data.families?.[node.textContent ?? ""];
+    for (const node of item.querySelectorAll<HTMLElement>(".series-card-tags > li")) {
+      const index = data.families?.[node.dataset.tag ?? ""];
       if (index !== undefined) node.dataset.family = String(index);
     }
     return {
@@ -78,6 +81,7 @@ export function startSeriesFilter(): void {
       titleNode,
       descriptionNode,
       tagNodes,
+      variantLinks,
     };
   });
   // Sections may list a tutorial twice: counts are of tutorials, not cards.
@@ -160,10 +164,13 @@ export function startSeriesFilter(): void {
       highlight(card.titleNode, card.title, words);
       if (card.descriptionNode) highlight(card.descriptionNode, card.description ?? "", words);
       for (const node of card.tagNodes) {
-        const tag = node.textContent ?? "";
+        const tag = node.dataset.tag ?? "";
         const hit = state.tags.includes(tag) || (words.length > 0 && words.some((word) => normalize(tag).includes(word)));
         node.classList.toggle("is-match", hit);
       }
+      // A selected tag that is one of the card's variants opens the tutorial in that variant.
+      const chosen = card.variantLinks.find((link) => state.tags.includes(link.dataset.tag ?? ""));
+      if (card.titleNode instanceof HTMLAnchorElement) card.titleNode.href = chosen?.href ?? card.titleNode.dataset.href ?? card.titleNode.href;
     }
     for (const list of document.querySelectorAll<HTMLElement>(".series-list")) {
       const empty = list.querySelector<HTMLElement>(".series-empty");

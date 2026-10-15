@@ -52,10 +52,66 @@ export interface SeriesCard {
   level?: string;
   duration?: string;
   order?: number;
-  /** URL of the tutorial `logo`. */
+  /** URL of the tutorial `logo` (the page header's; the default cards do not show it). */
   logo?: string;
-  /** Variant logos (distinct URLs), shown when the tutorial has no `logo`. */
-  variantLogos?: { label: string; src: string }[];
+  /** Tag → logo URL, for the tags that have one (shown instead of the family dot). */
+  tagLogos?: Record<string, string>;
+  /** Links to each variant, when the tutorial has two or more (one is no choice). */
+  variants?: VariantLink[];
+}
+
+/** A card link that opens a tutorial in one of its variants. */
+export interface VariantLink {
+  id: string;
+  label: string;
+  /** The tutorial URL with `?variant=<id>`. */
+  href: string;
+  /** Logo URL: its tag's, else the variant's own. */
+  logo?: string;
+}
+
+const tagKey = (tag: string) => tag.toLowerCase();
+
+/** The card tag a variant label stands for (same tag, ignoring case). */
+export const tagFor = (label: string, tags: readonly string[]) => tags.find((tag) => tagKey(tag) === tagKey(label));
+
+/**
+ * A card's tags: its `tags`, then its variant labels (a series lists a tutorial under each of its
+ * technologies). Case-insensitive duplicates collapse to the `tagGroups` spelling, else the first one met.
+ */
+export function cardTags(tags: readonly string[], variantLabels: readonly string[], groupTags: readonly string[]): string[] {
+  const spelling = new Map(groupTags.map((tag) => [tagKey(tag), tag]));
+  const result = new Map<string, string>();
+  for (const tag of [...tags, ...variantLabels]) {
+    const key = tagKey(tag);
+    if (!result.has(key)) result.set(key, spelling.get(key) ?? tag);
+  }
+  return [...result.values()];
+}
+
+/** Logo of each card tag that has one: its `tagGroups` logo, else the logo of the variant with that label. */
+export function tagLogos(
+  tags: readonly string[],
+  groupLogos: ReadonlyMap<string, string>,
+  variantLogos: readonly { label: string; src: string }[],
+): Record<string, string> {
+  const logos: Record<string, string> = {};
+  for (const tag of tags) {
+    const src = groupLogos.get(tag) ?? variantLogos.find((v) => tagKey(v.label) === tagKey(tag))?.src;
+    if (src !== undefined) logos[tag] = src;
+  }
+  return logos;
+}
+
+/** Most variant links a card shows: past that, one fewer and "+N". */
+export const MAX_VARIANT_LINKS = 4;
+
+/** What a card renders of its variants and tags: the links it shows, the rest behind "+N", and the tags left once variant labels are links. */
+export function cardParts(card: Pick<SeriesCard, "tags" | "variants">): { links: VariantLink[]; more: VariantLink[]; plainTags: string[] } {
+  const variants = card.variants ?? [];
+  const links = variants.length > MAX_VARIANT_LINKS ? variants.slice(0, MAX_VARIANT_LINKS - 1) : variants;
+  const linked = new Set(variants.map((v) => tagKey(v.label)));
+  return { links, more: variants.slice(links.length), plainTags: card.tags.filter((tag) => !linked.has(tagKey(tag))) };
 }
 
 /** Index order: `order` first (lower first), then tutorials without it; ties by title. */

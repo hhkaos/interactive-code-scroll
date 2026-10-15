@@ -9,34 +9,37 @@ test("index.mdx gives the index its title, prose and TutorialList sections in or
   await expect(page.locator("calcite-navigation-logo")).toHaveAttribute("heading", "Series Fixture");
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", /logo.*\.png$/);
   const lists = page.locator(".series-list");
-  // `order` first (alpha 1, beta 2), then by title; the Python section only lists beta.
+  // `order` first (alpha 1, beta 2), then by title; delta has no tags, but its Python variant makes it a Python tutorial.
   await expect(lists.nth(0).locator(".series-card-title")).toHaveText(["Alpha Series Tutorial", "Beta Series Tutorial", "Gamma Series Tutorial"]);
-  await expect(lists.nth(1).locator(".series-card-title")).toHaveText(["Beta Series Tutorial"]);
+  await expect(lists.nth(1).locator(".series-card-title")).toHaveText(["Beta Series Tutorial", "Delta Series Tutorial"]);
   const alpha = lists.nth(0).locator(".series-card").first();
   await expect(alpha.locator(".series-card-description")).toHaveText("A web app with a persisted token field and a Preview.");
   await expect(alpha.locator(".series-card-meta")).toContainText("Beginner");
   await expect(alpha.locator(".series-card-meta")).toContainText("10 min");
+  // JavaScript has a logo in tagGroups: it replaces the family dot. No variants, so no "Available in" band.
   await expect(alpha.locator(".series-card-tags li")).toHaveText(["Web", "JavaScript"]);
+  await expect(alpha.locator(".series-card-tags li.has-logo img")).toHaveAttribute("src", logoSrc("javascript", "f7df1e"));
+  await expect(alpha.locator(".series-card-variants")).toHaveCount(0);
 });
 
 test("the tag filter hides cards without a selected tag and counts tutorials", async ({ page }) => {
   await page.goto("/");
   const tag = (name: string) => page.locator(`#series-tags-top .series-tag[data-tag="${name}"]`);
-  await expect(page.locator("#series-count")).toHaveText("3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("4 tutorials");
   // Most used first, with the number of tutorials on the page.
   await expect(page.locator("#series-tags-top .series-tag").first()).toHaveAttribute("data-tag", "Web");
   await expect(tag("Web").locator(".series-tag-count")).toHaveText(", 3 tutorials");
   await tag("Python").click();
   await expect(tag("Python")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".series-list").nth(0).locator(".series-card-title:visible")).toHaveText(["Beta Series Tutorial"]);
-  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("2 of 4 tutorials");
   await expect(page).toHaveURL(/\?tags=Python$/);
   // Same family (Language): either tag.
   await tag("JavaScript").click();
-  await expect(page.locator("#series-count")).toHaveText("2 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("3 of 4 tutorials");
   await tag("Python").click();
   await tag("JavaScript").click();
-  await expect(page.locator("#series-count")).toHaveText("3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("4 tutorials");
   await expect(page).toHaveURL(/\/$/);
 });
 
@@ -64,9 +67,9 @@ test("the popular tags fit one line and +N more groups every tag by family", asy
   await expect(all.locator(".series-tag[data-family]")).toHaveCount(0);
   await all.locator('.series-tag[data-tag="Node.js"]').click();
   await all.locator('.series-tag[data-tag="JavaScript"]').click();
-  await expect(page.locator("#series-count")).toHaveText("2 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("2 of 4 tutorials");
   await all.locator('.series-tag[data-tag="OAuth"]').click();
-  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("1 of 4 tutorials");
   await expect(page.locator(".series-card-title:visible")).toHaveText(["Gamma Series Tutorial"]);
   // The Scripts section has no match left.
   await expect(page.locator(".series-list").nth(1).locator(".series-empty")).toBeVisible();
@@ -80,16 +83,17 @@ test("the popular tags fit one line and +N more groups every tag by family", asy
 
 test("tag counts follow the search: no tag leads to zero results", async ({ page }) => {
   await page.goto("/");
+  // Beta by its title, delta by its description.
   await page.locator("#series-search input").pressSequentially("beta");
-  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("2 of 4 tutorials");
   // The row keeps only tags with results, by live count; JavaScript (0) is gone.
-  await expect(page.locator("#series-tags-top .series-tag:visible")).toHaveText([/^Web.*1/, /^Python.*1/]);
+  await expect(page.locator("#series-tags-top .series-tag:visible")).toHaveText([/^Python.*2/, /^Web.*1/]);
   // Every other tag has no result: the panel is still reachable, without promising more matches.
   await expect(page.locator("#series-more")).toHaveText("All tags");
   await page.locator("#series-more").click();
   await expect(page.locator('#series-tags-all .series-tag[data-tag="JavaScript"]')).toBeDisabled();
   await expect(page.locator('#series-tags-all .series-tag[data-tag="Python"]')).toBeEnabled();
-  await expect(page.locator('#series-tags-all .series-tag[data-tag="Python"] .series-tag-count')).toHaveText(", 1 tutorial");
+  await expect(page.locator('#series-tags-all .series-tag[data-tag="Python"] .series-tag-count')).toHaveText(", 2 tutorials");
 });
 
 test("every tag shows on one line when it fits, without +N more", async ({ page }) => {
@@ -102,7 +106,7 @@ test("every tag shows on one line when it fits, without +N more", async ({ page 
 test("the search filters by text and level, highlights matches and keeps the state in the URL", async ({ page }) => {
   await page.goto("/");
   await page.locator("#series-search input").pressSequentially("TOKEN");
-  await expect(page.locator("#series-count")).toHaveText("2 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("2 of 4 tutorials");
   await expect(page.locator(".series-card-description:visible mark").first()).toHaveText("token");
   await expect(page).toHaveURL(/\?q=TOKEN$/);
   await page.locator("#series-level").evaluate((select: HTMLElement & { value: string }) => {
@@ -114,16 +118,16 @@ test("the search filters by text and level, highlights matches and keeps the sta
 
   await page.reload();
   await expect(page.locator("#series-search")).toHaveJSProperty("inputValue", "TOKEN");
-  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("1 of 4 tutorials");
   await page.locator("#series-clear").click();
-  await expect(page.locator("#series-count")).toHaveText("3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("4 tutorials");
   await expect(page.locator("mark")).toHaveCount(0);
   await expect(page.locator("#series-clear")).toBeHidden();
   await expect(page).toHaveURL(/\/$/);
 
   // An unknown tag or level in the URL is ignored.
   await page.goto("/?tags=Nope,Python&level=Expert");
-  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await expect(page.locator("#series-count")).toHaveText("2 of 4 tutorials");
 });
 
 test("typing suggests tags, and picking one selects it", async ({ page }) => {
@@ -314,22 +318,43 @@ test("a narrow header keeps the current label and drops the prefix", async ({ pa
 // Small SVGs are inlined as data URLs: match the file name or the logo's fill color.
 const logoSrc = (name: string, fill: string) => new RegExp(`${name}.*\\.svg$|%23${fill}`);
 
-test("cards show the tutorial logo, else the variant logos, at fixed sizes", async ({ page }) => {
+test("cards link to each variant when a tutorial has two or more", async ({ page }) => {
   await page.goto("/");
-  const cards = page.locator(".series-list").nth(0).locator(".series-card");
-  // Alpha: tutorial logo next to the title (decorative).
-  const alphaLogo = cards.nth(0).locator(".series-card-logo");
-  await expect(alphaLogo).toHaveAttribute("src", logoSrc("alpha-logo", "2b7bd6"));
-  await expect(alphaLogo).toHaveAttribute("alt", "");
-  await expect(alphaLogo).toHaveCSS("width", "32px");
-  // Beta: no tutorial logo, so one logo per variant, labelled.
-  await expect(cards.nth(1).locator(".series-card-logo")).toHaveCount(0);
-  expect(await cards.nth(1).locator(".series-card-variant-logo").evaluateAll((imgs) => imgs.map((i) => i.getAttribute("alt")))).toEqual([
-    "Browser",
-    "Python",
-  ]);
-  // Gamma: no logo at all.
-  await expect(cards.nth(2).locator("img")).toHaveCount(0);
+  const card = (title: string) => page.locator(".series-list").nth(0).locator(".series-card", { hasText: title });
+  // No logo next to the title: alpha's tutorial logo is for its page header.
+  await expect(page.locator(".series-card-heading img")).toHaveCount(0);
+  // Card links keep the card's text color (the index.mdx prose link color is for prose).
+  const colors = await card("Beta Series Tutorial").evaluate((el) =>
+    [el, el.querySelector(".series-card-title")!, el.querySelector(".series-card-variant")!].map((node) => getComputedStyle(node).color),
+  );
+  expect(new Set(colors).size).toBe(1);
+  // Beta: one link per variant, the tagGroups logo first (Python), else the variant's (Web); labels leave the tag line.
+  const beta = card("Beta Series Tutorial");
+  const links = beta.locator("a.series-card-variant");
+  await expect(beta.locator(".series-card-variants-label")).toHaveText("Available in");
+  await expect(links).toHaveText(["Web: Beta Series Tutorial", "Python: Beta Series Tutorial"]);
+  await expect(links.nth(0)).toHaveAttribute("href", /\/beta\/\?variant=web$/);
+  await expect(links.nth(0).locator("img")).toHaveAttribute("src", logoSrc("browser", "e8a317"));
+  await expect(links.nth(1).locator("img")).toHaveAttribute("src", logoSrc("python", "3776ab"));
+  await expect(links.nth(1).locator("img")).toHaveAttribute("alt", "");
+  expect((await links.nth(1).boundingBox())!.height).toBeGreaterThanOrEqual(28);
+  await expect(beta.locator(".series-card-tags")).toHaveCount(0);
+  // Delta has one variant, no choice: its label stays a tag, with its tagGroups logo.
+  const delta = page.locator(".series-list").nth(1).locator(".series-card", { hasText: "Delta Series Tutorial" });
+  await expect(delta.locator(".series-card-variants")).toHaveCount(0);
+  await expect(delta.locator(".series-card-tags li.has-logo")).toHaveText(["Python"]);
+
+  // Selecting a variant's tag marks its link, and the title opens the tutorial in that variant.
+  await page.locator('#series-tags-top .series-tag[data-tag="Python"]').click();
+  await expect(beta.locator("a.series-card-variant.is-match")).toHaveText(["Python: Beta Series Tutorial"]);
+  await expect(beta.locator(".series-card-title")).toHaveAttribute("href", /\/beta\/\?variant=python$/);
+  await page.locator('#series-tags-top .series-tag[data-tag="Python"]').click();
+  await expect(beta.locator(".series-card-title")).toHaveAttribute("href", /\/beta\/$/);
+
+  // A variant link opens that variant.
+  await links.nth(1).click();
+  await expect(page).toHaveURL(/\/beta\/\?variant=python$/);
+  await expect(page.locator('#variant-switcher calcite-segmented-control-item[value="python"]')).toHaveJSProperty("checked", true);
 });
 
 test("the variant switcher shows variant logos and the header follows the active one", async ({ page }) => {

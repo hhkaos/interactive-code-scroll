@@ -1,5 +1,5 @@
 ---
-import { base, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { base, seriesImages, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { groupTags, OTHER_GROUP, tagCounts, topTags } from "../client/series-values.ts";
 import { FrontmatterError, readIndexConfig, readTagGroups } from "../frontmatter.ts";
 import { allTags, unusedGroupTags } from "../series.ts";
@@ -8,23 +8,23 @@ import "@esri/calcite-components/main.css";
 import "../styles/series-list.css";
 
 interface Props {
-  /** Tag families (custom index pages; `index.mdx` sets them in its frontmatter): family name → tags. */
+  /** Tag families (custom index pages; `index.mdx` sets them in its frontmatter): family name → tags (no logos). */
   tagGroups?: Record<string, string[]>;
 }
 
-// Search bar that filters every <TutorialList> on the page (client/series.ts).
-const cards = seriesCards(tutorials, base);
-const tags = allTags(cards);
 // index.mdx groups are shape-checked at MDX compile time; tag names are checked here, where the tutorials are known.
 const groups = (() => {
   if (Astro.props.tagGroups === undefined) return readIndexConfig(seriesIndex?.frontmatter ?? {}).tagGroups ?? [];
   try {
-    return readTagGroups(Astro.props.tagGroups);
+    return readTagGroups(Astro.props.tagGroups, { withLogos: false });
   } catch (error) {
     if (error instanceof FrontmatterError) throw new Error(`<TutorialFilter tagGroups>: ${error.detail}`);
     throw error;
   }
 })();
+// Search bar that filters every <TutorialList> on the page (client/series.ts).
+const cards = seriesCards(tutorials, base, groups, seriesImages);
+const tags = allTags(cards);
 const unused = unusedGroupTags(groups, cards);
 if (unused.length > 0) {
   const source = Astro.props.tagGroups === undefined ? "index.mdx frontmatter tagGroups" : "<TutorialFilter tagGroups>";

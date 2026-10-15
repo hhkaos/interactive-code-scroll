@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardLogos, FrontmatterError, frontmatterKeyLines, isRemoteLogo, logoUrl, readIndexConfig, readTutorialConfig } from "./frontmatter.ts";
+import { FrontmatterError, frontmatterKeyLines, isRemoteLogo, logoUrl, readIndexConfig, readTagGroups, readTutorialConfig } from "./frontmatter.ts";
 
 describe("readTutorialConfig", () => {
   it("applies defaults", () => {
@@ -212,7 +212,7 @@ describe("readIndexConfig", () => {
       { name: "Auth", tags: ["OAuth"] },
     ]);
     expect(() => readIndexConfig({ tagGroups: ["Python"] })).toThrow(/"tagGroups" must map each family name to a list of tags/);
-    expect(() => readIndexConfig({ tagGroups: { Language: "Python" } })).toThrow(/family "Language" must be a list of non-empty tags without commas/);
+    expect(() => readIndexConfig({ tagGroups: { Language: "Python" } })).toThrow(/family "Language" must be a list of non-empty tags \(or \{ name, logo \}\) without commas/);
     expect(() => readIndexConfig({ tagGroups: { Language: ["a, b"] } })).toThrow(/without commas/);
     expect(() => readIndexConfig({ tagGroups: { Language: [] } })).toThrow(/family "Language" has no tags/);
     expect(() => readIndexConfig({ tagGroups: { " ": ["Python"] } })).toThrow(/family names must be non-empty/);
@@ -226,6 +226,21 @@ describe("readIndexConfig", () => {
       expect((error as FrontmatterError).key).toBe("tagGroups");
     }
   });
+
+  it("reads tagGroups entries with a logo and rejects bad ones", () => {
+    const tagGroups = { Language: [{ name: " Python", logo: "python.svg" }, "Go", { name: "cURL" }] };
+    expect(readIndexConfig({ tagGroups }).tagGroups).toEqual([{ name: "Language", tags: ["Python", "Go", "cURL"], logos: { Python: "python.svg" } }]);
+    expect(() => readIndexConfig({ tagGroups: { Language: [{ logo: "x.svg" }] } })).toThrow(/family "Language": a tag object needs a "name"/);
+    expect(() => readIndexConfig({ tagGroups: { Language: [{ name: "Go", icon: "x" }] } })).toThrow(/unknown tag field "icon" \(use name, logo\)/);
+    expect(() => readIndexConfig({ tagGroups: { Language: [{ name: "Go", logo: 3 }] } })).toThrow(/tag "Go": "logo" must be a non-empty string/);
+  });
+
+  it("refuses tagGroups logos when told to (custom index pages)", () => {
+    expect(readTagGroups({ Language: ["Go"] }, { withLogos: false })).toEqual([{ name: "Language", tags: ["Go"] }]);
+    expect(() => readTagGroups({ Language: [{ name: "Go", logo: "go.svg" }] }, { withLogos: false })).toThrow(
+      /family "Language": tag logos are set in index.mdx only/,
+    );
+  });
 });
 
 describe("logo", () => {
@@ -236,29 +251,5 @@ describe("logo", () => {
     expect(logoUrl("https://example.com/logo.png", {})).toBe("https://example.com/logo.png");
     expect(logoUrl("logo.png", { "logo.png": "/_astro/logo.123.png" })).toBe("/_astro/logo.123.png");
     expect(logoUrl(undefined, {})).toBeUndefined();
-  });
-
-  describe("cardLogos", () => {
-    const images = { "t.svg": "/_astro/t.svg", "py.svg": "/_astro/py.svg" };
-    const variant = (id: string, logo?: string) => ({ id, label: id.toUpperCase(), dir: id, entry: "x", ...(logo && { logo }) });
-
-    it("prefers the tutorial logo", () => {
-      expect(cardLogos({ logo: "t.svg", variants: [variant("py", "py.svg")] }, images)).toEqual({ logo: "/_astro/t.svg" });
-    });
-
-    it("falls back to distinct variant logos, with labels, skipping variants without one", () => {
-      const variants = [variant("py", "py.svg"), variant("sh"), variant("web", "https://example.com/w.png"), variant("py2", "py.svg")];
-      expect(cardLogos({ variants }, images)).toEqual({
-        variantLogos: [
-          { label: "PY", src: "/_astro/py.svg" },
-          { label: "WEB", src: "https://example.com/w.png" },
-        ],
-      });
-    });
-
-    it("is empty without any logo", () => {
-      expect(cardLogos({}, images)).toEqual({});
-      expect(cardLogos({ variants: [variant("sh")] }, images)).toEqual({});
-    });
   });
 });

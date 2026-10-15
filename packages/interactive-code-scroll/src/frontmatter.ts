@@ -67,6 +67,8 @@ export interface IndexConfig {
 export interface TagGroup {
   name: string;
   tags: string[];
+  /** Tag → logo (an image in the series folder's `images/` or an `https://` URL): shown with the tag and its variant link on cards. */
+  logos?: Record<string, string>;
 }
 
 /** An invalid frontmatter field; `key` lets validation point at its line. */
@@ -160,21 +162,6 @@ export function logoUrl(logo: string | undefined, images: Readonly<Record<string
   return isRemoteLogo(logo) ? logo : images[logo];
 }
 
-/** A card's logos: the tutorial `logo`, else each distinct variant logo (with its label for the alt text). */
-export function cardLogos(
-  config: Pick<TutorialConfig, "logo" | "variants">,
-  images: Readonly<Record<string, string>>,
-): { logo?: string; variantLogos?: { label: string; src: string }[] } {
-  const logo = logoUrl(config.logo, images);
-  if (logo !== undefined) return { logo };
-  const variantLogos: { label: string; src: string }[] = [];
-  for (const variant of config.variants ?? []) {
-    const src = logoUrl(variant.logo, images);
-    if (src !== undefined && !variantLogos.some((v) => v.src === src)) variantLogos.push({ label: variant.label, src });
-  }
-  return variantLogos.length > 0 ? { variantLogos } : {};
-}
-
 function optionalText(name: string, value: unknown): string | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "string" || value.trim() === "") throw new FrontmatterError(name, `"${name}" must be a non-empty string`);
@@ -260,24 +247,52 @@ const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups"
 
 const TAG_GROUPS_SHAPE = '"tagGroups" must map each family name to a list of tags, e.g. { Language: [Python, JavaScript] }';
 
-/** `tagGroups`: family name → non-empty tag list, in display order; a tag belongs to one family at most. */
-export function readTagGroups(value: unknown): TagGroup[] {
+const isTagName = (tag: unknown): tag is string => typeof tag === "string" && tag.trim() !== "" && !tag.includes(",");
+
+/** A `tagGroups` entry: a tag name, or `{ name, logo }` when `withLogos`. */
+function readGroupEntry(entry: unknown, family: string, withLogos: boolean): { tag: string; logo?: string } {
+  if (isTagName(entry)) return { tag: entry.trim() };
+  if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
+    if (!withLogos) {
+      throw new FrontmatterError("tagGroups", `"tagGroups" family "${family}": tag logos are set in index.mdx only (custom index pages show variant logos)`);
+    }
+    const { name, logo, ...rest } = entry as Record<string, unknown>;
+    const extra = Object.keys(rest)[0];
+    if (extra !== undefined) throw new FrontmatterError("tagGroups", `"tagGroups" family "${family}": unknown tag field "${extra}" (use name, logo)`);
+    if (!isTagName(name)) throw new FrontmatterError("tagGroups", `"tagGroups" family "${family}": a tag object needs a "name" without commas`);
+    if (logo !== undefined && (typeof logo !== "string" || logo.trim() === "")) {
+      throw new FrontmatterError("tagGroups", `"tagGroups" tag "${name}": "logo" must be a non-empty string`);
+    }
+    return { tag: name.trim(), ...(logo === undefined ? {} : { logo: logo as string }) };
+  }
+  throw listShapeError(family, withLogos);
+}
+
+const listShapeError = (family: string, withLogos: boolean) =>
+  new FrontmatterError("tagGroups", `"tagGroups" family "${family}" must be a list of non-empty tags${withLogos ? " (or { name, logo })" : ""} without commas`);
+
+/**
+ * `tagGroups`: family name → non-empty tag list, in display order; a tag belongs to one family at most.
+ * Entries may be `{ name, logo }` (tag logos on cards); `withLogos: false` refuses them (custom index pages).
+ */
+export function readTagGroups(value: unknown, { withLogos = true }: { withLogos?: boolean } = {}): TagGroup[] {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new FrontmatterError("tagGroups", TAG_GROUPS_SHAPE);
   const groups: TagGroup[] = [];
   const familyOf = new Map<string, string>();
-  for (const [name, tags] of Object.entries(value)) {
+  for (const [name, entries] of Object.entries(value)) {
     if (name.trim() === "") throw new FrontmatterError("tagGroups", '"tagGroups" family names must be non-empty');
-    if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string" && tag.trim() !== "" && !tag.includes(","))) {
-      throw new FrontmatterError("tagGroups", `"tagGroups" family "${name}" must be a list of non-empty tags without commas`);
-    }
-    if (tags.length === 0) throw new FrontmatterError("tagGroups", `"tagGroups" family "${name}" has no tags`);
-    const unique = [...new Set(tags.map((tag: string) => tag.trim()))];
-    for (const tag of unique) {
+    if (!Array.isArray(entries)) throw listShapeError(name, withLogos);
+    if (entries.length === 0) throw new FrontmatterError("tagGroups", `"tagGroups" family "${name}" has no tags`);
+    const group: TagGroup = { name, tags: [] };
+    for (const entry of entries) {
+      const { tag, logo } = readGroupEntry(entry, name, withLogos);
       const other = familyOf.get(tag);
-      if (other !== undefined) throw new FrontmatterError("tagGroups", `"tagGroups" tag "${tag}" is in two families ("${other}" and "${name}")`);
+      if (other !== undefined && other !== name) throw new FrontmatterError("tagGroups", `"tagGroups" tag "${tag}" is in two families ("${other}" and "${name}")`);
+      if (other === undefined) group.tags.push(tag);
       familyOf.set(tag, name);
+      if (logo !== undefined) group.logos = { ...group.logos, [tag]: logo };
     }
-    groups.push({ name, tags: unique });
+    groups.push(group);
   }
   return groups;
 }

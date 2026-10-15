@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { allTags, discoverTutorials, familyOf, familyProblems, parseTagList, selectCards, sortCards, unusedGroupTags } from "./series.ts";
+import { allTags, cardParts, cardTags, discoverTutorials, familyOf, familyProblems, parseTagList, selectCards, sortCards, tagFor, tagLogos, unusedGroupTags } from "./series.ts";
 
 function seriesWith(folders: Record<string, boolean>): string {
   const dir = mkdtempSync(join(tmpdir(), "ics-series-"));
@@ -65,6 +65,42 @@ describe("index cards", () => {
   it("finds tagGroups tags that no tutorial has", () => {
     expect(unusedGroupTags([{ tags: ["Python", "Rust"] }, { tags: ["Web", "Go"] }], cards)).toEqual(["Rust", "Go"]);
     expect(unusedGroupTags([{ tags: ["Python", "JavaScript"] }], cards)).toEqual([]);
+  });
+});
+
+describe("card tags and variants", () => {
+  it("adds variant labels to the tags, once, in the tagGroups spelling", () => {
+    expect(cardTags(["Web", "python"], ["Python", "cURL", "Web"], ["Python", "JavaScript"])).toEqual(["Web", "Python", "cURL"]);
+    expect(cardTags(["REST"], ["curl", "cURL"], [])).toEqual(["REST", "curl"]);
+    expect(cardTags([], [], ["Python"])).toEqual([]);
+  });
+
+  it("gives tags the tagGroups logo first, else the logo of the variant with that label", () => {
+    const groupLogos = new Map([["JavaScript", "/js.svg"], ["Python", "/py.svg"]]);
+    const variantLogos = [
+      { label: "python", src: "/variant-py.svg" },
+      { label: "cURL", src: "/curl.svg" },
+    ];
+    expect(tagLogos(["cURL", "OAuth", "JavaScript", "Python"], groupLogos, variantLogos)).toEqual({
+      cURL: "/curl.svg",
+      JavaScript: "/js.svg",
+      Python: "/py.svg",
+    });
+    expect(tagLogos(["Web"], new Map(), [])).toEqual({});
+  });
+
+  it("finds the tag of a variant label, ignoring case", () => {
+    expect(tagFor("python", ["Web", "Python"])).toBe("Python");
+    expect(tagFor("Go", ["Web"])).toBeUndefined();
+  });
+
+  it("links up to four variants, else three and +N, and keeps linked labels off the plain tag line", () => {
+    const link = (label: string) => ({ id: label.toLowerCase(), label, href: `/t/?variant=${label.toLowerCase()}` });
+    const two = ["Python", "cURL"].map(link);
+    expect(cardParts({ tags: ["Web", "python", "cURL"], variants: two })).toEqual({ links: two, more: [], plainTags: ["Web"] });
+    const five = ["A", "B", "C", "D", "E"].map(link);
+    expect(cardParts({ tags: ["Web", "A", "B", "C", "D", "E"], variants: five })).toEqual({ links: five.slice(0, 3), more: five.slice(3), plainTags: ["Web"] });
+    expect(cardParts({ tags: ["Web", "Python"] })).toEqual({ links: [], more: [], plainTags: ["Web", "Python"] });
   });
 });
 

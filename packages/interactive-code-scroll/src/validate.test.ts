@@ -693,7 +693,7 @@ describe("validateTutorial requests", () => {
 
 describe("validateSeriesIndex", () => {
   const index = (uses: ComponentUse[], frontmatter: Record<string, unknown> = {}) =>
-    validateSeriesIndex({ mdxFile: "tutorials/index.mdx", uses, images: ["logo.svg"], frontmatter, frontmatterLines: { logo: 3, preview: 4 } });
+    validateSeriesIndex({ mdxFile: "tutorials/index.mdx", uses, images: ["logo.svg"], frontmatter, frontmatterLines: { logo: 3, preview: 4, tagGroups: 5 } });
 
   it("accepts an https logo without checking images/", () => {
     expect(index([], { logo: "https://example.com/logo.png" })).toEqual([]);
@@ -707,6 +707,11 @@ describe("validateSeriesIndex", () => {
     expect(
       index([use("TutorialFilter", {}), use("TutorialList", {}), use("TutorialList", { tags: "REST, Python", level: "Beginner" }, 9)], { logo: "logo.svg" }),
     ).toEqual([]);
+  });
+
+  it("checks tagGroups logos in images/, accepting https URLs", () => {
+    const tagGroups = { Language: [{ name: "Python", logo: "logo.svg" }, { name: "Go", logo: "https://example.com/go.svg" }, { name: "Rust", logo: "rust.svg" }] };
+    expect(index([], { tagGroups })).toEqual(['tutorials/index.mdx:5:1 frontmatter tagGroups tag "Rust": logo "rust.svg" not found in images/ (or use an https:// URL)']);
   });
 
   it("reports frontmatter, other components and bad attributes by position", () => {

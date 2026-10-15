@@ -146,7 +146,7 @@ order: 1
 | `title` | string | required | Rendered in the app header. Do not repeat it as an MDX `#` heading. |
 | [`description`](#index-page) | string | none | One sentence: the page's meta description (search results, link previews) and, in a [series site](#series-sites), the index card text. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
-| [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. In a [series](#series-sites) it is also the index card's logo. Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |
+| [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. It identifies the tutorial, so [series](#series-sites) index cards do not show it: they show [tag logos and variant links](#index-page). Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |
 
 ### Code and Preview
 
@@ -842,7 +842,7 @@ variants:
 | `dir` | folder | required | Relative to `code/`. Folders must not overlap. |
 | `entry` | file | required | File shown first, relative to `dir`. |
 | `files` | list of paths/globs | all text files | Like the top-level [`files`](#frontmatter), relative to `dir`. The top-level `files` cannot be combined with `variants`. |
-| `logo` | image path or `https://` URL | none | Icon next to `label` in the language switcher, with the same rules as the tutorial [`logo`](#frontmatter) (a file in `images/` or an `https://` URL). While the variant is active, the page header shows it instead of the tutorial logo. |
+| `logo` | image path or `https://` URL | none | Icon next to `label` in the language switcher, with the same rules as the tutorial [`logo`](#frontmatter) (a file in `images/` or an `https://` URL). While the variant is active, the page header shows it instead of the tutorial logo. In a series, it is also the logo of its tag and link on the [index card](#index-page) when that tag has no logo in `tagGroups`. |
 
 ### Steps across variants
 
@@ -877,6 +877,7 @@ variants:
 
 - The language switcher sits at the start of the code header: a segmented control for up to four variants whose file tabs fit next to it, a dropdown otherwise. This is automatic.
 - Variant `logo`s appear next to their labels in the switcher (decorative: the label names the variant). The page header shows the active variant's logo, or the tutorial `logo` for a variant without one; the favicon stays the tutorial `logo` (the first variant logo when the tutorial has none).
+- In a [series](#series-sites), each variant `label` is also a tag of its tutorial: a tutorial with Python and cURL variants shows up when readers filter by Python or cURL, without repeating them in `tags`.
 - Switching keeps the current step and focuses the same region in the new variant's file. A text-only step keeps the file with the same path when the new variant has it, else shows the new variant's `entry`.
 - The choice is remembered for the whole site and can be linked: `?variant=curl#request`. An unknown id is ignored.
 - Form fields are shared: one [`@var`](#variables) name fills every variant, and all its occurrences need the same default literal.
@@ -916,7 +917,7 @@ interactiveCodeScroll({ tutorials: "tutorials" })
 
 ### Index page
 
-`/` lists every tutorial as a card: logo, title, `description`, `level`, `duration` and `tags` from each tutorial's [frontmatter](#frontmatter), ordered by `order` (lower first; tutorials without it follow, by title). Card tags are plain labels: the whole card is one link.
+`/` lists every tutorial as a card: title, `description`, `level`, `duration`, technologies and `tags` from each tutorial's [frontmatter](#frontmatter) (plus its [variant](#code-variants) labels as tags), ordered by `order` (lower first; tutorials without it follow, by title). Card tags are plain labels: the whole card is one link.
 
 Above the cards, a search bar filters every list on the page as the reader types:
 
@@ -927,7 +928,7 @@ Above the cards, a search bar filters every list on the page as the reader types
 
 The count says how many tutorials match ("2 of 9 tutorials"), "Clear filters" resets everything, `/` focuses the search, and the URL keeps the state (`?q=token&tags=Python&level=Beginner`), so a filtered view can be shared. Without JavaScript the bar is hidden and every card shows.
 
-A card shows the tutorial's `logo` next to its title. A tutorial without `logo` whose [variants](#code-variants) have logos shows each distinct variant logo instead, labeled with the variant's name for screen readers. Cards without any logo keep the title at the start.
+A tutorial with two or more [variants](#code-variants) has an **Available in** band at the bottom of its card, with a link to each variant (`?variant=<id>`), so readers jump straight to their language; when they filter by a variant's tag (Python), the card's title opens that variant too. At most four links show (past that, three and "+N"). A tag with a logo shows it, with its name, instead of the family dot. The logo comes from [`tagGroups`](#tag-families), else from the [variant](#code-variants) with that label. Give logos to what readers write code with (languages, SDKs, libraries, CLIs), not to platforms or products a tutorial applies to (ArcGIS Online, ArcGIS Enterprise…): those stay plain tags. Card titles have no logo; the tutorial `logo` is for its page header and favicon.
 
 To customize the index, add `tutorials/index.mdx`:
 
@@ -938,7 +939,9 @@ description: Build apps with ArcGIS, from REST to native SDKs.
 logo: logo.svg
 theme: auto
 tagGroups:
-  Language: [JavaScript, Python]
+  Language:
+    - { name: JavaScript, logo: javascript.svg }
+    - { name: Python, logo: python.svg }
   Auth: [OAuth, API keys]
 ---
 
@@ -961,7 +964,7 @@ Start with the REST tutorials if you are new to location services.
 | `description` | string | none | Shown under the title in the header and as the page's meta description (clipped on narrow screens). |
 | `logo` | image path or `https://` URL | none | Relative to `tutorials/images/` (that folder is never a tutorial), or an absolute `https://` URL. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered site-wide. |
-| `tagGroups` | family name → list of tags | none | [Tag families](#tag-families), in display order. |
+| `tagGroups` | family name → list of tags (or `{ name, logo }`) | none | [Tag families](#tag-families), in display order, and tag logos. |
 
 The body is free MDX prose with two components; anything else is a build error.
 
@@ -978,7 +981,8 @@ With many tags, group them with `tagGroups`: a family name for each list of tags
 
 - Each family gets a color: a dot next to its tags on the chips and cards. Tags without a family have no dot.
 - Tags in the same family match **any** of them; different families must **all** match. With `Language: [JavaScript, Python]` and `Auth: [OAuth]`, selecting JavaScript, Python and OAuth shows OAuth tutorials in JavaScript or Python. Without `tagGroups`, any selected tag is enough.
-- Build errors: a tag in two families, an empty family, and a tag no tutorial has.
+- A tag can be `{ name, logo }` instead of a name: its logo on every [card](#index-page) (tags and variant links), defined once for the whole site. `logo` follows the index `logo` rules (a file in `tutorials/images/` or an `https://` URL). It wins over a variant logo, which still shows in that tutorial's language switcher.
+- Build errors: a tag in two families, an empty family, a tag no tutorial has (variant labels count), and a tag logo missing from `tutorials/images/`.
 
 ### Custom index page
 
@@ -1015,8 +1019,8 @@ import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll
 </html>
 ```
 
-- `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set; `logo` (URL of the tutorial logo) or else `variantLogos` (`{ label, src }` per distinct variant logo) when any.
-- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. `<TutorialFilter tagGroups={…}>` takes the [tag families](#tag-families) that `index.mdx` sets in its frontmatter. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
+- `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set; `logo` (URL of the tutorial logo), `tagLogos` (tag → logo URL) and `variants` (`{ id, label, href, logo }`, links that open each variant, with two or more) when any. `tags` include the variant labels.
+- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. `<TutorialFilter tagGroups={…}>` takes the [tag families](#tag-families) that `index.mdx` sets in its frontmatter, without logos: tag logos on a custom page come from variant logos. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
 - `index` must be an `.astro` file, needs `tutorials`, and cannot be combined with `tutorials/index.mdx` (build error: the file would be ignored).
 
 ### Sibling tutorials
@@ -1086,6 +1090,7 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> file "x" is gitignored (by code/.gitignore) and not published …` · `frontmatter files "x" matches only gitignored files …` | Point the step at a published file, or add the file to frontmatter `include` if readers should get it. See [`.gitignore` rules](#gitignore-rules). |
 | `frontmatter logo "x" not found in images/ (or use an https:// URL)` | Put the logo in `images/` or use an `https://` URL. |
 | `frontmatter variants[n].logo "x" not found in images/ (or use an https:// URL)` | Same for a [variant](#code-variants) logo. |
+| `frontmatter tagGroups tag "x": logo "y" not found in images/ (or use an https:// URL)` | Put the [tag logo](#tag-families) in `tutorials/images/` or use an `https://` URL. |
 | `code/x: file is outside every variant folder; move it into one of …` | With variants, every code file belongs to a variant folder. |
 
 The build also warns, without failing, about each `code/` folder starting with `.` that is not published (unless `.gitignore` excludes all of it): `code/.github/ is not published (paths starting with "." are skipped); add ".github/**" to frontmatter "include" to publish it`; and about each `include` pattern that publishes gitignored files: `frontmatter include "sample/**" publishes code/sample/data.json, which code/.gitignore excludes; make sure it holds no secrets or local state`.
