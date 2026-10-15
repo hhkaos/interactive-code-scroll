@@ -164,7 +164,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
   - **Search and filter** (`<TutorialFilter />`, client-side; filters every list on the page; without JS the bar is hidden and every card shows; decision 2026-10-15):
     - **Text search**: an input filters as the reader types over title, description, tags and level; case- and accent-insensitive; every word must match. Matches are highlighted in card titles and descriptions; a card tag that matches is marked. No search in tutorial content.
     - **Tag suggestions**: typing suggests matching tags (never tutorials, with their tutorial count); picking one selects that tag and clears the typed text.
-    - **Tags**: the most used tags (about 8, one row) show as selectable chips; "+N more" opens every tag grouped by family in `tagGroups` order (tags without a family under "Other", alphabetical within a group). Selected tags always stay visible.
+    - **Tags**: the most used tags (about 8, one row) show as selectable chips; "+N more" opens every tag grouped by family in `tagGroups` order (author order within a family; tags without a family under "Other", alphabetical). Selected tags always stay visible.
     - **Level**: a dropdown of the distinct `level` values in tutorial order, shown when any tutorial has a level.
     - **Matching**: tags OR within a family and AND across families (all tags OR when there are no `tagGroups`); text and level AND with the tags.
     - **Family colors**: each family gets a color from an automatic palette that meets contrast in light and dark mode; color is never the only cue (the family name labels its group).
