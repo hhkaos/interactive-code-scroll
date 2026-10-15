@@ -13,7 +13,8 @@ function runSetup(root: string, options?: Parameters<typeof interactiveCodeScrol
   const updateConfig = vi.fn();
   const injectRoute = vi.fn();
   const setup = interactiveCodeScroll(options).hooks["astro:config:setup"] as SetupHook;
-  const config = { root: pathToFileURL(`${root}/`), markdown: {} } as AstroConfig;
+  // Astro's default Shiki options.
+  const config = { root: pathToFileURL(`${root}/`), markdown: { shikiConfig: { theme: "github-dark", themes: {} } } } as AstroConfig;
   void setup({ config, updateConfig, injectRoute } as unknown as Parameters<SetupHook>[0]);
   return { updateConfig, injectRoute };
 }
