@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.5] - 2026-10-15
+
 ### Added
 
 - Series index: favorites. `<TutorialFavorites />` (in `index.mdx` or a custom index page, from `interactive-code-scroll/series`) adds a star toggle to every card and a "Favorites" section with the reader's favorite tutorials in series order. Stored per browser and site (`localStorage`, namespaced by `base`); the search, tag and level filters apply to the section, which hides when no favorite is shown. Without JavaScript there is no toggle and no section. Opt-in, since a series with a few tutorials does not need it.
