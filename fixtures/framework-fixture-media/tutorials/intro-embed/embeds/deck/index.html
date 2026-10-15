@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture deck</title>
+  </head>
+  <body>
+    <!-- One "slide" per #fragment; E2E reads location.hash and marks the window to detect reloads. -->
+    <h1 id="slide"></h1>
+    <script>
+      const show = () => (document.getElementById("slide").textContent = `Slide ${location.hash.slice(1) || "start"}`);
+      addEventListener("hashchange", show);
+      show();
+    </script>
+  </body>
+</html>

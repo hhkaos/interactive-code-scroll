@@ -1,15 +1,22 @@
 ---
+import StepMedia from "./StepMedia.astro";
+
 // Props are validated at MDX compile time (mdx-validation.ts).
 interface Props {
   /** Preview / Result pane state while the intro is shown (on load and when the reader returns to it). */
   preview?: "expanded" | "collapsed" | "keep";
   /** Maximizes the code area or the pane under it while the intro is shown; `none` restores. */
   maximize?: "code" | "preview" | "none";
+  /** Images shown instead of code while the intro is shown (same as on <Step>). */
+  images?: string[];
+  /** Page shown instead of code while the intro is shown: an `https://` URL or a path under `embeds/`. */
+  embed?: string;
 }
 
-const { preview, maximize } = Astro.props;
+const { preview, maximize, images, embed } = Astro.props;
 ---
 
 <section class="intro" data-preview={preview} data-maximize={maximize}>
   <slot />
+  <StepMedia images={images} embed={embed} />
 </section>

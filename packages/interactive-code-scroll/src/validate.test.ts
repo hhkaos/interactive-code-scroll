@@ -32,6 +32,9 @@ describe("validateTutorial", () => {
         use("VarField", { name: "clientId", label: "Client ID", secret: true }),
         use("Intro", {}),
         use("Intro", { preview: "collapsed", maximize: "code" }),
+        use("Intro", { images: { expression: '["a.png", "shots/b.png"]' } }),
+        use("Intro", { embed: "slides/#/1", maximize: "code" }),
+        use("Intro", { embed: "https://example.com/app" }),
       ),
     ).toEqual([]);
   });
@@ -60,9 +63,14 @@ describe("validateTutorial", () => {
     [use("Intro", { preview: "closed" }), '<Intro> "preview" must be one of expanded, collapsed, keep'],
     [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, preview, none'],
     [use("Intro", { maximize: "preview", preview: "collapsed" }), '<Intro> maximize="preview" conflicts with preview="collapsed"'],
-    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize)'],
+    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize, images, embed)'],
     [use("Intro", { file: "main.js" }), '<Intro> "file" is not available on <Intro>'],
-    [use("Intro", { images: { expression: '["a.png"]' } }), '<Intro> "images" is not available on <Intro>'],
+    [use("Intro", { id: "intro" }), '<Intro> "id" is not available on <Intro>'],
+    [use("Intro", { images: { expression: '["c.png"]' } }), '<Intro> image "c.png" not found in images/'],
+    [use("Intro", { images: "a.png" }), '<Intro> "images" must be a static array of strings'],
+    [use("Intro", { embed: "deck/" }), '<Intro> embed "deck/" not found in embeds/'],
+    [use("Intro", { embed: "http://example.com" }), '<Intro> embed "http://example.com" must be an https:// URL or a path in embeds/'],
+    [use("Intro", { embed: "slides/", images: { expression: '["a.png"]' } }), '<Intro> "embed" and "images" cannot be combined; use one of them'],
     [use("Hint", { label: "Redirect URI" }), '<Hint> requires an "id"'],
     [use("Hint", { id: "Redirect URI", label: "Redirect URI" }), 'id "Redirect URI" must be lowercase letters, digits and dashes'],
     [use("Hint", { id: "redirect-uri" }), '<Hint> requires a "label"'],
@@ -391,6 +399,10 @@ describe("validateTutorial frontmatter", () => {
     expect(check("iframe")).toEqual([]);
     expect(check("both")).toEqual([]);
     expect(check("tab", [use("Intro", { maximize: "preview" })])).toEqual([
+      'tutorial.mdx:3:1 <Intro> maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
+    ]);
+    // Intro media shows in the code area: maximize="code" is the one that fits it.
+    expect(check("off", [use("Intro", { images: { expression: '["a.png"]' }, maximize: "preview" })])).toEqual([
       'tutorial.mdx:3:1 <Intro> maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
     ]);
   });

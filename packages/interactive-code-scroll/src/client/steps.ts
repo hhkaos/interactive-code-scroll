@@ -71,6 +71,13 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
   const progress = document.querySelector<HTMLElement>("#step-count");
   const progressBar = document.querySelector<HTMLElement & { value: number }>("#progress-bar");
+  /** The intro's own `images=` / `embed=`. */
+  const introMedia = intro?.querySelector<HTMLTemplateElement>(":scope > template.step-media") ?? null;
+  // Nothing else to show next to the intro (no code tabs, Preview or Result pane): it borrows the first step media.
+  const usesResult = allSteps.some((s) => s.dataset.output !== undefined || s.dataset.outputs !== undefined || s.dataset.requests !== undefined);
+  const emptyPane = !document.querySelector(".code") && !document.querySelector("section.preview") && !usesResult;
+  const mediaOf = (block: HTMLElement | undefined) => block?.querySelector<HTMLTemplateElement>(":scope > template.step-media") ?? null;
+  const introPanel = () => introMedia ?? (emptyPane ? (steps.map(mediaOf).find((media) => media) ?? null) : null);
 
   /**
    * Applies to the Preview and to the Result pane, whichever the active variant shows. Both start
@@ -146,10 +153,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     allSteps.forEach((s) => s.removeAttribute("data-active"));
     clearFocus();
     showNotice(undefined);
-    mediaPanel.hidden = true;
-    codePanel.hidden = false;
-    mediaPanel.replaceChildren();
-    announceMedia();
+    // Once per visit, like the pane state: re-rendering the same media would reload an embed.
+    if (!atIntro) showPanel(introPanel());
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: null }));
     if (progress) progress.textContent = "";
     if (progressBar) progressBar.value = 0;
@@ -204,7 +209,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     const src = new URL(embed.getAttribute("src")!, location.href).href;
     const shown = mediaPanel.querySelector<HTMLIFrameElement>("iframe.step-embed");
     if (shown && samePage(shown.src, src)) {
-      shown.src = src;
+      // The very same URL without a fragment would reload.
+      if (shown.src !== src) shown.src = src;
       shown.title = embed.title;
     } else {
       forwardStepKeys(embed);
@@ -215,6 +221,25 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   function mediaCount(): number {
     return mediaPanel.querySelectorAll("calcite-carousel-item").length;
+  }
+
+  /** Template whose media the panel shows (`null`: the code). */
+  let shownMedia: HTMLTemplateElement | null = null;
+
+  /** Shows a step's (or the intro's) media instead of code, at image `index`; `null` shows the code. */
+  function showPanel(media: HTMLTemplateElement | null, index = 0): void {
+    mediaPanel.hidden = !media;
+    codePanel.hidden = !!media;
+    // Already shown (the intro's fallback is the first step's media): no re-render, no embed reload.
+    const count = mediaCount();
+    if (media && media === shownMedia && (count === 0 || clampIndex(index, count) === mediaIndex)) return;
+    shownMedia = media;
+    if (media) {
+      showMedia(media, index);
+      return;
+    }
+    mediaPanel.replaceChildren();
+    announceMedia();
   }
 
   /** `fromEnd`: entering backwards starts a carousel at its last image. */
@@ -230,15 +255,9 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     applyPaneState(step);
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: step }));
 
-    const media = step.querySelector<HTMLTemplateElement>("template.step-media");
-    mediaPanel.hidden = !media;
-    codePanel.hidden = !!media;
-    if (media) {
-      showMedia(media, fromEnd ? Number.MAX_SAFE_INTEGER : 0);
-      return;
-    }
-    mediaPanel.replaceChildren();
-    announceMedia();
+    const media = mediaOf(step);
+    showPanel(media, fromEnd ? Number.MAX_SAFE_INTEGER : 0);
+    if (media) return;
 
     clearFocus();
     // A step for other variants keeps the current file, with no focus.
@@ -291,9 +310,9 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   );
   allSteps.forEach((step) => observer.observe(step));
 
-  /** Step keys first page through the active step's carousel; true when they did. */
+  /** Step keys first page through the active step's (or the intro's own) carousel; true when they did. */
   function moveCarousel(delta: -1 | 1): boolean {
-    const template = steps[current]?.querySelector<HTMLTemplateElement>("template.step-media");
+    const template = current < 0 ? (atIntro ? introMedia : null) : mediaOf(steps[current]);
     if (!template) return false;
     const target = carouselTarget(mediaIndex, mediaCount(), delta);
     if (target === undefined) return false;

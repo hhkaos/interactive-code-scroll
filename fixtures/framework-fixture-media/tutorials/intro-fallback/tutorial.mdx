@@ -1,0 +1,29 @@
+---
+title: Intro Fallback
+description: A tutorial with no code and no Preview whose intro declares no media.
+preview: off
+---
+
+<Intro>
+
+## Before you start
+
+This fixture is not product documentation. It is a stable contract for the E2E tests of the intro fallback: with nothing else to show, the intro shows the media of the first step that has some.
+
+</Intro>
+
+<Step id="text-only">
+
+## Text only
+
+No media: the fallback skips this step.
+
+</Step>
+
+<Step id="first-media" images={["first.svg", "second.svg"]}>
+
+## First media
+
+The intro shows these images until the reader gets here.
+
+</Step>

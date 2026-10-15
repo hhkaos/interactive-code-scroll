@@ -1,11 +1,10 @@
 ---
-import { base } from "virtual:interactive-code-scroll/tutorial";
-import { embedUrl, resolveEmbed } from "../embed.ts";
 import { readTutorialConfig } from "../frontmatter.ts";
 import { isJsonRegion, jsonRegionId, jsonVarsOf } from "../json-vars.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
-import { currentTutorial, tutorialBase } from "../tutorial-data.ts";
+import { currentTutorial } from "../tutorial-data.ts";
 import { parsedFiles, resultVariants, stepFiles, stepOutputs } from "../variants.ts";
+import StepMedia from "./StepMedia.astro";
 
 // References are validated at MDX compile time (mdx-validation.ts).
 interface Props {
@@ -28,9 +27,7 @@ interface Props {
 }
 
 const { id, file, region, images, embed, preview, maximize, only, output, request } = Astro.props;
-const { slug, files, frontmatter, images: imageUrls, embeds, outputs } = currentTutorial(Astro.locals);
-const resolvedEmbed = embed === undefined ? undefined : resolveEmbed(embed, embeds);
-const embedSrc = resolvedEmbed && !("error" in resolvedEmbed) ? embedUrl(resolvedEmbed, tutorialBase(base, slug)) : undefined;
+const { files, frontmatter, outputs } = currentTutorial(Astro.locals);
 const { variants } = readTutorialConfig(frontmatter);
 // With variants, `file` is relative to each variant folder and a lone `region` names a file per variant.
 const variantFiles = variants && stepFiles(variants, parsedFiles(files, jsonVarsOf(frontmatter)), { file, region, only });
@@ -56,25 +53,5 @@ const requestVariants = variants && requests && resultVariants(variants, webDirs
   data-request-variants={requestVariants ? JSON.stringify(requestVariants) : undefined}
 >
   <slot />
-  {
-    images?.length ? (
-      <template class="step-media">
-        <calcite-carousel label="Step images" arrow-type="edge">
-          {images.map((name) => (
-            <calcite-carousel-item label={name}>
-              <img src={imageUrls[name]} alt={name} class="step-image" />
-            </calcite-carousel-item>
-          ))}
-        </calcite-carousel>
-      </template>
-    ) : null
-  }
-  {
-    embedSrc ? (
-      <template class="step-media">
-        {/* Cross-origin pages keep their own origin; same-origin embeds are author-trusted like the Preview. */}
-        <iframe class="step-embed" src={embedSrc} title={`Embedded page: ${embed}`} sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" allow="fullscreen" />
-      </template>
-    ) : null
-  }
+  <StepMedia images={images} embed={embed} />
 </section>

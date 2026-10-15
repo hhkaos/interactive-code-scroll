@@ -53,8 +53,8 @@ const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
 const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
 const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
 const MAXIMIZE_STATES = new Set(["code", "preview", "none"]);
-/** The intro comes before any step: only the pane state, no code, media or result. */
-const INTRO_PROPS = new Set(["preview", "maximize"]);
+/** The intro comes before any step: the pane state and media, no code focus or result. */
+const INTRO_PROPS = ["preview", "maximize", "images", "embed"];
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -424,26 +424,14 @@ export function validateTutorial({
         }
       }
 
-      const imagesAttr = use.attributes.images;
-      if (imagesAttr !== undefined) {
-        const list = typeof imagesAttr === "object" ? parseStringArray(imagesAttr.expression) : undefined;
-        if (!list) report('"images" must be a static array of strings, e.g. images={["a.png"]}');
-        for (const image of list ?? []) {
-          if (!images.includes(image)) report(`image "${image}" not found in images/`);
-        }
-      }
-      const embed = text("embed");
-      if (embed !== undefined) {
-        const resolved = resolveEmbed(embed, embeds);
-        if ("error" in resolved) report(resolved.error);
-        if (imagesAttr !== undefined) report('"embed" and "images" cannot be combined; use one step for each');
-      }
+      checkMedia(use, text, report);
     }
 
     if (use.name === "Intro") {
       checkPaneState(text, report);
+      checkMedia(use, text, report);
       for (const attr of Object.keys(use.attributes)) {
-        if (!INTRO_PROPS.has(attr)) report(`"${attr}" is not available on <Intro> (only preview, maximize)`);
+        if (!INTRO_PROPS.includes(attr)) report(`"${attr}" is not available on <Intro> (only ${INTRO_PROPS.join(", ")})`);
       }
     }
 
@@ -510,6 +498,24 @@ export function validateTutorial({
     const optional = type === "combobox" && target.value === "";
     if (!optional && !options.some((o) => o.value === target.value)) {
       report(`the code default ${JSON.stringify(target.value)} is not one of the options`);
+    }
+  }
+
+  /** `images=` and `embed=` (shown instead of code), shared by <Step> and <Intro>. */
+  function checkMedia(use: ComponentUse, text: (attr: string) => string | undefined, report: (message: string) => void): void {
+    const imagesAttr = use.attributes.images;
+    if (imagesAttr !== undefined) {
+      const list = typeof imagesAttr === "object" ? parseStringArray(imagesAttr.expression) : undefined;
+      if (!list) report('"images" must be a static array of strings, e.g. images={["a.png"]}');
+      for (const image of list ?? []) {
+        if (!images.includes(image)) report(`image "${image}" not found in images/`);
+      }
+    }
+    const embed = text("embed");
+    if (embed !== undefined) {
+      const resolved = resolveEmbed(embed, embeds);
+      if ("error" in resolved) report(resolved.error);
+      if (imagesAttr !== undefined) report(`"embed" and "images" cannot be combined; use ${use.name === "Intro" ? "one of them" : "one step for each"}`);
     }
   }
 

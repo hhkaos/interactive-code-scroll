@@ -9,6 +9,7 @@ const fixtures: { name: string; filter: string; port: number; specs?: RegExp; re
   { name: "series", filter: "example-framework-fixture-series", port: 4404, specs: /\/series\.spec\.ts$/ },
   { name: "site", filter: "site", port: 4405, specs: /\/site\.spec\.ts$/, ready: "/interactive-code-scroll/" },
   { name: "json-regions", filter: "example-framework-fixture-json-regions", port: 4406, specs: /\/json-regions\.spec\.ts$/ },
+  { name: "media", filter: "example-framework-fixture-media", port: 4407, specs: /\/intro-media\.spec\.ts$/ },
 ];
 /** Specs bound to a dedicated fixture; every other spec runs against the main fixture. */
 const dedicated = fixtures.flatMap((f) => (f.specs ? [f.specs] : []));

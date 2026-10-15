@@ -1,0 +1,39 @@
+---
+import { base } from "virtual:interactive-code-scroll/tutorial";
+import { embedUrl, resolveEmbed } from "../embed.ts";
+import { currentTutorial, tutorialBase } from "../tutorial-data.ts";
+
+// What `images=` / `embed=` show instead of code, for <Step> and <Intro> (validated at MDX compile time).
+interface Props {
+  images?: string[];
+  /** Page shown instead of code: an `https://` URL or a path under `embeds/` (e.g. `slides/#/3`). */
+  embed?: string;
+}
+
+const { images, embed } = Astro.props;
+const { slug, images: imageUrls, embeds } = currentTutorial(Astro.locals);
+const resolvedEmbed = embed === undefined ? undefined : resolveEmbed(embed, embeds);
+const embedSrc = resolvedEmbed && !("error" in resolvedEmbed) ? embedUrl(resolvedEmbed, tutorialBase(base, slug)) : undefined;
+---
+
+{
+  images?.length ? (
+    <template class="step-media">
+      <calcite-carousel label="Step images" arrow-type="edge">
+        {images.map((name) => (
+          <calcite-carousel-item label={name}>
+            <img src={imageUrls[name]} alt={name} class="step-image" />
+          </calcite-carousel-item>
+        ))}
+      </calcite-carousel>
+    </template>
+  ) : null
+}
+{
+  embedSrc ? (
+    <template class="step-media">
+      {/* Cross-origin pages keep their own origin; same-origin embeds are author-trusted like the Preview. */}
+      <iframe class="step-embed" src={embedSrc} title={`Embedded page: ${embed}`} sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" allow="fullscreen" />
+    </template>
+  ) : null
+}

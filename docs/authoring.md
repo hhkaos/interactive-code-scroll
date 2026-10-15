@@ -196,7 +196,7 @@ Components render the explanations panel on the left: the tags you write in MDX.
 
 | Component | Where | What it does |
 |---|---|---|
-| [`<Intro>`](#intro) | `tutorial.mdx` | Content before the first step: not numbered, no code focus. Can set the Preview / Result pane state. |
+| [`<Intro>`](#intro) | `tutorial.mdx` | Content before the first step: not numbered, no code focus. Can show images or a page and set the Preview / Result pane state. |
 | [`<Step>`](#step) | `tutorial.mdx` | One step: its explanation and what the code panel shows. |
 | [`<VarField>`](#varfield) | `tutorial.mdx`, inside a step | A form field that edits a value in the code. |
 | [`<Hint>`](#hint) | `tutorial.mdx`, inline | A short popover for a side note. |
@@ -228,8 +228,26 @@ Install the prerequisites and keep this page open.
 |---|---|---|---|
 | [`preview`](#preview) | `expanded`, `collapsed`, `keep` | `keep` | Expands or collapses the Preview (or the Result pane) while the intro is shown: on load without a step in the URL, and each time the reader scrolls or steps back to it. |
 | [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Same as on `<Step>`, applied when the intro is shown. |
+| [`images`](#show-images-instead-of-code) | array of paths in `images/` | none | Images shown instead of code while the intro is shown, as on `<Step>`. |
+| [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown instead of code while the intro is shown, as on `<Step>`. Cannot be combined with `images`. |
 
-For a calm first screen, `<Intro preview="collapsed">` starts with the pane collapsed; the first step that sets `preview="expanded"` opens it. Other `<Step>` props (`file`, `region`, `images`, `embed`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
+For a calm first screen, `<Intro preview="collapsed">` starts with the pane collapsed; the first step that sets `preview="expanded"` opens it. Other `<Step>` props (`file`, `region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
+
+A tutorial without code (no `code/`, `preview: off`, every step with `images` or `embed`) can open on a picture or a title slide instead of an empty pane:
+
+```mdx title="tutorial/tutorial.mdx"
+<Intro images={["overview.png"]}>
+
+## What you will learn
+
+</Intro>
+
+<Step id="why-pkce" embed="oauth-slides/#/2">
+```
+
+Moving from the intro to a step swaps the media as between steps: the same embedded page with another fragment (`oauth-slides/#/1` on the intro, `oauth-slides/#/2` on the first step) moves in place, without reloading.
+
+When the intro shows nothing and there is nothing else to show next to it (no code tabs, no Preview and no step with `output` or `request`), it shows the media of the first step that has `images` or `embed`, so the page never opens on an empty pane. Entering that step keeps the media as it is. Tutorials with code, a Preview or a Result pane keep showing them next to the intro.
 
 ### `<Step>`
 
@@ -294,7 +312,7 @@ Some concepts are easier to explain with a small app or a few slides than with c
 - A path in `embeds/`: a file, or a folder with an `index.html`. Files there are published as they are and work offline. A `?query` or `#fragment` is kept, so a hash-routed slide deck opens at a given slide.
 - An `https://` URL. Some sites refuse to be shown in an iframe (`X-Frame-Options` or CSP `frame-ancestors`); the build cannot detect it, so check the step in the browser. The **Open in new tab** action over the page is the fallback.
 
-Consecutive steps that embed the same page with a different fragment (`oauth-slides/#/3`, then `oauth-slides/#/4`) move it in place, without reloading it. Inside a page from `embeds/`, PageDown/PageUp (what clickers send) still move steps and Esc restores a maximized pane; arrows stay with the page. Inside an external page the browser gives the keys to that page: click the explanations to take them back.
+Consecutive steps (or the [intro](#intro) and the first step) that embed the same page with a different fragment (`oauth-slides/#/3`, then `oauth-slides/#/4`) move it in place, without reloading it. Inside a page from `embeds/`, PageDown/PageUp (what clickers send) still move steps and Esc restores a maximized pane; arrows stay with the page. Inside an external page the browser gives the keys to that page: click the explanations to take them back.
 
 For a [Slidev](https://sli.dev) deck, set `routerMode: hash` in its headmatter, build it with relative paths and copy the result into `embeds/`:
 
@@ -1026,12 +1044,13 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> embed "x" not found in embeds/ (a folder needs an index.html)` | Paths are relative to `embeds/`; a folder needs an `index.html`. |
 | `<Step> embed "x" must be an https:// URL or a path in embeds/` | Use `https://` (not `http://`), or a relative path without `..` or a leading `/`. |
 | `<Step> "embed" and "images" cannot be combined; use one step for each` | Split the step in two. |
+| `<Intro> "embed" and "images" cannot be combined; use one of them` | Keep one; move the other to the first step. |
 | `<Step> output "x" not found in output/` | Add the file to `output/` (or `output/<variant id>/`). |
 | `<Step> output "x" has no effect: code/index.html makes the tutorial web code, which shows the Preview` | Web code has no Result pane: remove `output` or `index.html`. |
 | `<Step> request "x" not found in requests/ (# @name x)` | Name the request with `# @name x` in a `.http` file under `requests/`. |
 | `<Step> maximize="preview" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
 | `<Step> duplicate id "x"` | Step ids are unique per tutorial. |
-| `<Intro> "x" is not available on <Intro> (only preview, maximize)` | Move `file`, `region`, `images`, `embed`, `output` or `request` to the first step. |
+| `<Intro> "x" is not available on <Intro> (only preview, maximize, images, embed)` | Move `file`, `region`, `output` or `request` to the first step. |
 | `<VarField> no "@var x" found in code/` | Add `// @var x` next to the literal in the code, or fix the name. |
 | `@var "x" must have the same default in every file: …` | Use the same literal in every file that marks `x`. |
 | `code/x: @var "y" is in a file not shown in tabs; …` | Show the file in tabs or remove the marker. |

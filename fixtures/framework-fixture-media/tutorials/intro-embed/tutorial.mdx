@@ -1,0 +1,29 @@
+---
+title: Intro Embed
+description: A tutorial with no code and no Preview whose intro shows a page of embeds/.
+preview: off
+---
+
+<Intro embed="deck/#intro">
+
+## Before you start
+
+This fixture is not product documentation. It is a stable contract for the E2E tests of intro media: the intro and the first step show the same deck at different fragments, so moving between them changes the hash without reloading.
+
+</Intro>
+
+<Step id="first-slide" embed="deck/#first">
+
+## First slide
+
+Same page as the intro, another fragment.
+
+</Step>
+
+<Step id="same-slide" embed="deck/#first">
+
+## Same slide
+
+Same URL as the previous step, fragment included.
+
+</Step>
