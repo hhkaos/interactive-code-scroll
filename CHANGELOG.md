@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - File and Result tabs no longer keep Calcite's focus ring after a mouse click (Calcite 5.1.2 draws it on `:focus`); keyboard focus still shows it. E2E in `e2e/tutorial-page.spec.ts`.
+- The reveal toggle of a `secret` `<VarField>` shows its bottom border: its inner button (32px min height) no longer paints over it. E2E in `e2e/vars.spec.ts`.
+- A boolean `<VarField>` (switch) in a row of fields lines up with its neighbor's input instead of its label. E2E in `e2e/vars.spec.ts`.
 
 ## [0.2.0-beta.5] - 2026-10-15
 

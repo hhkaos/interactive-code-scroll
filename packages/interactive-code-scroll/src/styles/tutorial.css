@@ -502,6 +502,8 @@ body[data-docs-hidden] {
   margin-block: 1rem;
 
   & > .var-field { margin-block: 0; }
+  /* A switch has no label row: center it on a neighbor's input (22px label + half of 32px input − half of 16px switch). */
+  & > calcite-label.var-field { padding-block-start: 1.875rem; }
   & > calcite-text-area { grid-column: 1 / -1; }
 }
 
@@ -514,6 +516,8 @@ body[data-docs-hidden] {
     box-sizing: border-box;
     border: 1px solid var(--calcite-color-border-input);
     border-inline-start: 0;
+    /* The inner button keeps its 32px min height inside the 30px content box: clip it off the bottom border. */
+    overflow: hidden;
   }
 }
 

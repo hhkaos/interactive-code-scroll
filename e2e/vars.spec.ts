@@ -19,6 +19,31 @@ test("secret values are masked until revealed", async ({ page }) => {
   await expect(code(page)).toContainText('const clientId = "my-client-id";');
 });
 
+test("the reveal toggle keeps its bottom border visible", async ({ page }) => {
+  await page.goto("/#config");
+  const toggle = page.locator('calcite-input[data-var="clientId"] [data-reveal]');
+  await expect(toggle).toBeVisible();
+  // The inner button must not paint past the host's padding box, over its bottom border.
+  const clipped = await toggle.evaluate((host) => {
+    const button = host.shadowRoot!.querySelector("button")!;
+    const hostBox = host.getBoundingClientRect();
+    const border = parseFloat(getComputedStyle(host).borderBottomWidth);
+    return getComputedStyle(host).overflow === "hidden" || button.getBoundingClientRect().bottom <= hostBox.bottom - border;
+  });
+  expect(clipped).toBe(true);
+});
+
+test("a switch in a VarField row lines up with its neighbor's input", async ({ page }) => {
+  await page.goto("/#config");
+  // Two columns put the switch next to Max results, whatever the panel width.
+  await page.addStyleTag({ content: ".var-fields { grid-template-columns: 1fr 1fr; }" });
+  const toggle = page.locator('calcite-switch[data-var="verbose"]');
+  await expect(toggle).toBeVisible();
+  const center = (box: { y: number; height: number } | null) => box!.y + box!.height / 2;
+  const input = page.locator('calcite-input[data-var="maxResults"] input');
+  expect(Math.abs(center(await toggle.boundingBox()) - center(await input.boundingBox()))).toBeLessThan(2);
+});
+
 test("one field updates every file that marks the same var", async ({ page }) => {
   await page.goto("/#config");
   await page.locator('calcite-input[data-var="clientId"] [data-reveal]').click();
