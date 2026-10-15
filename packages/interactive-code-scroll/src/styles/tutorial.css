@@ -1013,12 +1013,32 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
 }
 
 /* Sibling tutorials: a menu of links next to the title (navigation, unlike the variant switcher). */
+/* Even rhythm: logo, title, divider and button sit 16px apart (the title already ends with 16px of padding). */
 .family-switcher {
   display: flex;
   align-items: center;
+  gap: 1rem;
   height: 100%;
-  padding-inline: 0.5rem;
+  padding-inline-end: 1rem;
+
+  &::before {
+    content: "";
+    width: 1px;
+    height: 1.5rem;
+    background: var(--calcite-color-border-2);
+  }
+
+  /* Sibling logo before its label in the menu; an empty slot keeps labels aligned. */
+  & .family-logo {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-inline-end: 0.5rem;
+    object-fit: contain;
+    vertical-align: -0.3125rem;
+  }
+
+  /* No Calcite focus ring after a mouse click, only for keyboard focus. The host never matches
+     :focus-visible (it delegates to its inner button), so client/family.ts marks pointer focus. */
+  & calcite-button[data-pointer-focus] { --calcite-color-focus: transparent; }
 }
-.family-prefix { color: var(--calcite-color-text-3); }
-/* Narrow headers keep the current label; the button's accessible name still says "Tutorial for". */
-@media (max-width: 720px) { .family-prefix { display: none; } }

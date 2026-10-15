@@ -124,13 +124,22 @@ export interface Sibling {
   href: string;
   /** Variant ids of the sibling: the active variant carries over only when it has it. */
   variants: string[];
+  /** Its tutorial `logo`, else its first variant logo (as its favicon). */
+  logo?: string;
   current: boolean;
 }
 
-function familyMembers(tutorials: readonly TutorialData[]): (FamilyMember & { variants: string[] })[] {
-  return tutorials.map(({ slug, frontmatter }) => {
-    const { family, order, variants } = readTutorialConfig(frontmatter);
-    return { slug, variants: variants?.map((v) => v.id) ?? [], ...(family && { family }), ...(order === undefined ? {} : { order }) };
+function familyMembers(tutorials: readonly TutorialData[]): (FamilyMember & { variants: string[]; logo?: string })[] {
+  return tutorials.map(({ slug, frontmatter, images }) => {
+    const { family, logo, order, variants } = readTutorialConfig(frontmatter);
+    const src = logoUrl(logo, images) ?? variants?.map((v) => logoUrl(v.logo, images)).find((url) => url !== undefined);
+    return {
+      slug,
+      variants: variants?.map((v) => v.id) ?? [],
+      ...(src && { logo: src }),
+      ...(family && { family }),
+      ...(order === undefined ? {} : { order }),
+    };
   });
 }
 
@@ -154,6 +163,7 @@ export function siblingsOf(tutorials: readonly TutorialData[], slug: string, bas
     label: m.family!.label,
     href: tutorialBase(base, m.slug),
     variants: m.variants,
+    ...(m.logo && { logo: m.logo }),
     current: m.slug === slug,
   }));
 }

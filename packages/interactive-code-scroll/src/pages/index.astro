@@ -97,6 +97,8 @@ const withTab = preview === "tab" || preview === "both";
 // Sibling tutorials (same `family`) for the header's language switcher; empty without one.
 const siblings = series ? siblingsOf(tutorials, slug, base) : [];
 const currentSibling = siblings.find((s) => s.current);
+// When any sibling has a logo, the others keep an empty slot so every label lines up.
+const siblingLogos = siblings.some((s) => s.logo);
 const clientVariants = variants?.map(({ id, label, dir, entry }, i) => ({ id, label, dir, entry, ...(variantLogos![i] && { logo: variantLogos![i] }) }));
 // Escape "<" so embedded code containing </script> cannot close the data block.
 const clientData = JSON.stringify({
@@ -154,20 +156,21 @@ const clientData = JSON.stringify({
         currentSibling && (
           <div slot="content-start" class="family-switcher">
             {/* Navigation, not a setting: a menu of links (client/family.ts adds the current step and variant). */}
-            <calcite-dropdown id="family-dropdown" scale="s" width="m">
+            <calcite-dropdown id="family-dropdown" scale="m" width="m">
               <calcite-button
                 slot="trigger"
                 kind="neutral"
-                appearance="transparent"
-                scale="s"
+                appearance="outline"
+                scale="m"
                 icon-end="chevron-down"
                 label={`Tutorial for: ${currentSibling.label}`}
               >
-                <span class="family-prefix">Tutorial for:</span> {currentSibling.label}
+                {currentSibling.label}
               </calcite-button>
-              <calcite-dropdown-group selection-mode="single" group-title="This tutorial is available for">
+              <calcite-dropdown-group selection-mode="single" group-title="Same tutorial for">
                 {siblings.map((s) => (
                   <calcite-dropdown-item href={s.href} data-tutorial={s.slug} selected={s.current || undefined}>
+                    {siblingLogos && (s.logo ? <img class="family-logo" src={s.logo} alt="" /> : <span class="family-logo" />)}
                     {s.label}
                   </calcite-dropdown-item>
                 ))}

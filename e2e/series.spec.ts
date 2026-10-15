@@ -304,7 +304,7 @@ test("the family menu lists sibling tutorials by order, then label, as links", a
   await page.goto("/alpha/");
   const trigger = page.locator("#family-dropdown calcite-button");
   await expect(trigger).toHaveAttribute("label", "Tutorial for: JavaScript");
-  await expect(trigger).toContainText("Tutorial for: JavaScript");
+  await expect(trigger).toHaveText("JavaScript");
   const items = page.locator("#family-dropdown calcite-dropdown-item");
   await expect(items).toHaveText(["JavaScript", "REST API", "Python"]);
   await expect(familyItem(page, "alpha")).toHaveAttribute("selected", "");
@@ -372,10 +372,61 @@ test("switching to a sibling carries the variant only when the sibling has it", 
   await expect(familyItem(page, "delta")).toHaveAttribute("href", /\/delta\/#config$/);
 });
 
-test("a narrow header keeps the current label and drops the prefix", async ({ page }) => {
+test("the family menu shows each sibling's logo and keeps labels aligned without one", async ({ page }) => {
+  await page.goto("/alpha/");
+  await openFamilyMenu(page);
+  // Alpha: its tutorial logo. Beta: no tutorial logo, so its first variant's. Delta: none, an empty slot.
+  await expect(familyItem(page, "alpha").locator("img.family-logo")).toHaveAttribute("src", logoSrc("alpha-logo", "2b7bd6"));
+  await expect(familyItem(page, "beta").locator("img.family-logo")).toHaveAttribute("src", logoSrc("browser", "e8a317"));
+  await expect(familyItem(page, "delta").locator("img")).toHaveCount(0);
+  await expect(familyItem(page, "delta").locator("span.family-logo")).toHaveCount(1);
+  const labelLeft = (slug: string) =>
+    familyItem(page, slug).evaluate((el) => {
+      const text = [...el.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim())!;
+      const range = document.createRange();
+      range.selectNodeContents(text);
+      return Math.round(range.getBoundingClientRect().left);
+    });
+  expect(await labelLeft("delta")).toBe(await labelLeft("alpha"));
+});
+
+test("the family menu sits after the title with even 16px gaps around its divider", async ({ page }) => {
+  await page.goto("/alpha/");
+  const trigger = page.locator("#family-dropdown calcite-button");
+  await expect(trigger).toBeVisible();
+  const gaps = await page.evaluate(() => {
+    const logo = document.querySelector("calcite-navigation-logo")!.shadowRoot!;
+    const text = document.createRange();
+    text.selectNodeContents(logo.querySelector("h1")!);
+    const divider = document.querySelector(".family-switcher")!;
+    const before = getComputedStyle(divider, "::before");
+    const dividerLeft = divider.getBoundingClientRect().left;
+    const button = document.querySelector("#family-dropdown calcite-button")!.getBoundingClientRect();
+    return {
+      titleToDivider: Math.round(dividerLeft - text.getBoundingClientRect().right),
+      dividerToButton: Math.round(button.left - dividerLeft - parseFloat(before.width)),
+    };
+  });
+  expect(gaps).toEqual({ titleToDivider: 16, dividerToButton: 16 });
+});
+
+test("the family menu button shows its focus ring for keyboard focus only", async ({ page }) => {
+  await page.goto("/alpha/");
+  const trigger = page.locator("#family-dropdown calcite-button");
+  const ring = () => trigger.evaluate((el) => getComputedStyle(el).getPropertyValue("--calcite-color-focus").trim());
+  await trigger.click();
+  await expect(trigger).toBeFocused();
+  expect(await ring()).toBe("transparent");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(trigger).toBeFocused();
+  expect(await ring()).not.toBe("transparent");
+});
+
+test("a narrow header keeps the menu usable", async ({ page }) => {
   await page.setViewportSize({ width: 480, height: 800 });
   await page.goto("/alpha/");
-  await expect(page.locator(".family-prefix")).toBeHidden();
   await expect(page.locator("#family-dropdown calcite-button")).toHaveAttribute("label", "Tutorial for: JavaScript");
   await openFamilyMenu(page);
   await familyItem(page, "beta").click();

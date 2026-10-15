@@ -22,4 +22,10 @@ export function startFamily(siblings: readonly SiblingInfo[], variants: Variants
   dropdown?.addEventListener("calciteDropdownBeforeOpen", () => {
     for (const item of dropdown.querySelectorAll<HTMLElement & { href: string }>("calcite-dropdown-item[data-tutorial]")) refresh(item);
   });
+
+  // Calcite rings the trigger on any focus: hide the ring after a click until a key is pressed.
+  const trigger = dropdown?.querySelector<HTMLElement>("calcite-button");
+  if (!trigger) return;
+  trigger.addEventListener("pointerdown", () => trigger.toggleAttribute("data-pointer-focus", true));
+  for (const type of ["keydown", "focusout"]) dropdown!.addEventListener(type, () => trigger.removeAttribute("data-pointer-focus"));
 }

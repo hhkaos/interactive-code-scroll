@@ -1063,7 +1063,7 @@ family: display-map
 familyLabel: Python
 ```
 
-- The header shows a "Tutorial for: <familyLabel> ▾" menu after the title, with links to the family's tutorials by `order`, then `familyLabel`.
+- The header shows a "<familyLabel> ▾" menu after the title (named "Tutorial for: <familyLabel>" for screen readers; each entry shows the sibling's `logo`, else its first variant logo), with links to the family's tutorials by `order`, then `familyLabel`.
 - Choosing a sibling opens it on the step with the same id when it exists (give matching steps the same `id`), else at its top. The reader's code variant carries over when the sibling has a variant with that id.
 - Keep siblings and variants apart: a sibling's `familyLabel` should not repeat a language that is already a code variant of another sibling (for example a "REST API" tutorial with a Python variant next to a "Python" sibling), or readers see two "Python" choices that do different things.
 - `family` and `familyLabel` go together, and each label must be unique within its family (build errors). A family with one tutorial, or `family` outside a series site, only warns.
