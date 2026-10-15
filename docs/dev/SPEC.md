@@ -72,7 +72,7 @@ prop on `<Intro>` is a build error.
 
 When a step comes into focus, its text block can:
 - highlight parts of the code (focus + gray out the rest + auto-scroll so the whole region is visible when it fits, else its start; no scroll when it is already in view),
-- switch from one file to another (`server.js`, `checkout.html`, etc.),
+- switch from one file to another (`server.js`, `checkout.html`, etc.). The switch stands out (decision 2026-10-16): a step that shows a file other than the one shown before it in reading order carries a chip with the file name (its tab label) on its heading row (text-only, media and other-variant steps keep the file and get none; chips follow the active variant); when a step switches files, the new tab flashes the brand color (~1 s), the code pane fades/slides in (180 ms) before scrolling to the region, and a polite live region announces "Showing <file>". Not on deep-link restore or tab clicks; with `prefers-reduced-motion` the pane neither slides nor delays the scroll.
 - switch the right panel from code to an image or image carousel.
 - switch the right panel from code to an embedded page (`embed=`), e.g. a small app or a sli.dev slide deck that explains a concept.
 - A step with a `file` and no `region` shows that file with no focused lines; a text-only step (no `file`) keeps the current file visible but also clears any previous focus.

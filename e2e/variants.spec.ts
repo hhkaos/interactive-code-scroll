@@ -129,3 +129,10 @@ test("only web variants show the Preview, which runs from the variant's own page
   await pick(page, "node");
   await expect(page.locator("section.preview")).toBeHidden();
 });
+
+test("file switch chips follow the active variant", async ({ page }) => {
+  await page.goto("/?variant=python#config");
+  await expect(page.locator("section.step#deps .step-file")).toHaveText("requirements.txt");
+  await pick(page, "curl");
+  await expect(page.locator("section.step#deps .step-file")).toHaveCount(0);
+});

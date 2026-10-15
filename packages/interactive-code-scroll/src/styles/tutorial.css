@@ -451,6 +451,48 @@ body[data-docs-hidden] {
   }
 }
 
+/* A step that switches the code panel to another file names it (steps.ts), on its heading row. */
+.step-file {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: fit-content;
+  max-width: 50%;
+  margin-inline-start: auto;
+  padding: 0.125rem 0.625rem;
+  align-self: center;
+  border: 1px solid var(--calcite-color-border-2);
+  border-radius: var(--calcite-corner-radius-pill);
+  background: var(--calcite-color-foreground-1);
+  color: var(--calcite-color-text-2);
+  font-family: var(--calcite-font-family-code);
+  font-size: var(--calcite-font-size-sm);
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* A step without a heading: the chip opens it. */
+  .step > & { display: flex; margin: 0 0 0.75rem; max-width: 100%; }
+
+  .step[data-active] & {
+    border-color: color-mix(in srgb, var(--calcite-color-brand) 45%, transparent);
+    background: color-mix(in srgb, var(--calcite-color-brand) 12%, var(--calcite-color-foreground-1));
+    color: var(--calcite-color-text-1);
+  }
+}
+
+/* The live region that announces a step's switch to another file. */
+.file-announcer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Consecutive <VarField>s (grouped at MDX compile time): as many columns as the panel fits. */
 .var-fields {
   display: grid;
@@ -503,6 +545,13 @@ body[data-docs-hidden] {
   & > calcite-action, & > .zip-action, & > calcite-segmented-control, & > calcite-dropdown { flex: none; }
   & > calcite-segmented-control, & > calcite-dropdown { margin-inline: 0.5rem 0; }
   & > :is(calcite-segmented-control, calcite-dropdown)[hidden] { display: none; }
+}
+
+/* A step switched files: the new tab flashes the brand color (steps.ts sets data-entering). */
+calcite-tab-title[data-entering] { animation: ics-tab-flash 1s ease-out; }
+@keyframes ics-tab-flash {
+  from { background: color-mix(in srgb, var(--calcite-color-brand) 28%, transparent); }
+  to { background: transparent; }
 }
 
 /* Calcite draws the tab focus ring on :focus, so a mouse click leaves it on the
@@ -578,6 +627,8 @@ calcite-tab-title:focus:not(:focus-visible) { --calcite-color-focus: transparent
   line-height: 1.7;
 
   &[hidden] { display: none; }
+  /* A step switched to this file: it slides in before the region scroll (FILE_ENTER_MS in steps.ts). */
+  &[data-entering] { animation: ics-file-enter 180ms ease-out; }
   .shiki {
     margin: 0;
     min-width: max-content;
@@ -1052,4 +1103,12 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
   /* No Calcite focus ring after a mouse click, only for keyboard focus. The host never matches
      :focus-visible (it delegates to its inner button), so client/family.ts marks pointer focus. */
   & calcite-button[data-pointer-focus] { --calcite-color-focus: transparent; }
+}
+
+@keyframes ics-file-enter {
+  from { opacity: 0; transform: translateX(0.75rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code[data-entering] { animation: none; }
 }

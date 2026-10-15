@@ -5,6 +5,7 @@ import { MAXIMIZE_EVENT } from "./maximize-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
 import { setAction } from "./actions.ts";
+import { fileChanges } from "./file-change-values.ts";
 import { counterpartFile, coversVariant, listLabels, nearestVisible } from "./variant-values.ts";
 import { VARIANT_EVENT, type VariantChange, type VariantsHandle } from "./variants.ts";
 
@@ -35,6 +36,9 @@ function reveal(
   const target = revealScroll(top, bottom, container.scrollTop, container.clientHeight, options);
   if (target !== undefined) container.scrollTo({ top: target, behavior: options.behavior ?? "auto" });
 }
+
+/** Duration of the code pane's entering transition (`ics-file-enter` in tutorial.css). */
+const FILE_ENTER_MS = 180;
 
 /** Interactive content inside a step keeps its clicks (they do not activate the step). */
 const OWN_CLICKS = "a, button, input, textarea, select, [contenteditable], calcite-input, calcite-text-area, calcite-select, calcite-combobox, calcite-radio-button-group, calcite-switch, calcite-label, calcite-action, calcite-button";
@@ -129,14 +133,82 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (id) variants!.set(id);
   });
 
-  function showFile(path: string): void {
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  // Screen readers hear a step's switch to another file (the step chip is decorative).
+  const announcer = document.createElement("div");
+  announcer.className = "file-announcer";
+  announcer.setAttribute("aria-live", "polite");
+  document.body.append(announcer);
+
+  const tabTitle = (path: string) => document.querySelector<TabTitle>(`calcite-tab-title[data-file="${CSS.escape(path)}"]`);
+  /** The file's tab label (relative to its variant folder). */
+  const fileLabel = (path: string) => tabTitle(path)?.textContent?.trim() || path.split("/").at(-1)!;
+
+  /** Replays a one-shot CSS transition (`data-entering`) on `element`. */
+  function enter(element: HTMLElement): void {
+    element.removeAttribute("data-entering");
+    void element.offsetWidth;
+    element.setAttribute("data-entering", "");
+  }
+  for (const element of [...$$(".code"), ...$$("calcite-tab-title[data-file]")]) {
+    element.addEventListener("animationend", (event) => {
+      if (event.target === element) element.removeAttribute("data-entering");
+    });
+  }
+
+  /**
+   * Shows file `path`. `announce`: a step switches to it, so the change stands out (pane and tab
+   * transitions, live region). Returns whether another file was shown before.
+   */
+  function showFile(path: string, announce = false): boolean {
+    const changed = document.querySelector<HTMLElement>(".code:not([hidden])")?.dataset.file !== path;
     for (const pane of $$(".code")) pane.hidden = pane.dataset.file !== path;
     for (const title of $$<TabTitle>("calcite-tab-title[data-file]")) title.selected = title.dataset.file === path;
+    if (announce && changed) {
+      const pane = document.querySelector<HTMLElement>(`.code[data-file="${CSS.escape(path)}"]`);
+      const title = tabTitle(path);
+      if (pane) enter(pane);
+      if (title) enter(title);
+      announcer.textContent = `Showing ${fileLabel(path)}`;
+    }
+    return changed;
   }
 
   // File tabs only: the Result pane has its own tab titles.
   for (const title of $$("calcite-tab-title[data-file]")) {
     title.addEventListener("calciteTabsActivate", () => showFile(title.dataset.file!));
+  }
+
+  /** File shown before the first step: the intro's, else the first tab of the active variant. */
+  const firstFile = document.querySelector<HTMLElement>(".code:not([hidden])")?.dataset.file;
+  function startFile(): string | undefined {
+    const introFile = intro ? fileOf(intro) : undefined;
+    if (introFile) return introFile;
+    if (!variants) return firstFile;
+    const { dir, entry } = variants.active();
+    return `${dir}/${entry}`;
+  }
+
+  /** Marks, in reading order, the steps that switch to another file with a chip naming it. */
+  function markFileChanges(): void {
+    for (const chip of $$(".step-file", docs)) chip.remove();
+    const files = steps.map((step) => (covers(step) && !mediaOf(step) ? fileOf(step) : undefined));
+    fileChanges(files, startFile()).forEach((file, i) => {
+      if (!file) return;
+      const label = fileLabel(file);
+      const chip = document.createElement("span");
+      chip.className = "step-file";
+      chip.title = `This step switches to ${label}`;
+      chip.setAttribute("aria-hidden", "true");
+      const icon = document.createElement("calcite-icon");
+      icon.setAttribute("icon", "file-code");
+      icon.setAttribute("scale", "s");
+      chip.append(icon, label);
+      const step = steps[i]!;
+      const heading = step.querySelector(":scope > :is(h2, h3):first-child");
+      if (heading) heading.append(chip);
+      else step.prepend(chip);
+    });
   }
 
   let current = -1;
@@ -271,14 +343,19 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     const file = fileOf(step);
     const { region } = step.dataset;
     if (!file) return; // Text-only step: keep the current file.
-    showFile(file);
+    // Not while restoring a deep link: the reader did not move from another file.
+    const switched = showFile(file, !restoring);
     const pane = document.querySelector<HTMLElement>(`.code[data-file="${CSS.escape(file)}"]`)!;
     pane.toggleAttribute("data-has-focus", !!region);
     if (!region) return;
     const lines = $$(`.line[data-regions~="${CSS.escape(region)}"]`, pane);
     lines.forEach((line) => line.setAttribute("data-focus", ""));
     // The whole region when it fits (else its start); no move when it is already in view.
-    if (lines.length) reveal(pane, lines[0]!, lines.at(-1)!, { behavior: "smooth" });
+    if (!lines.length) return;
+    const scroll = () => reveal(pane, lines[0]!, lines.at(-1)!, { behavior: "smooth" });
+    // One movement at a time: the new file fades in, then scrolls to the region.
+    if (!switched || restoring || reduceMotion.matches) scroll();
+    else setTimeout(() => current === index && scroll(), FILE_ENTER_MS);
   }
 
   // The active step is the one crossing the center line of the docs panel (its own scroller).
@@ -442,6 +519,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     const shown = document.querySelector<HTMLElement>(".code:not([hidden])")?.dataset.file;
     applyHidden();
     showFile(counterpartFile(shown, from, to, tabs));
+    markFileChanges();
     if (!active || steps.length === 0) return;
     current = -1;
     activate(nearestVisible(allSteps, steps, active));
@@ -461,6 +539,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     showFile(`${dir}/${entry}`);
     revealHashStep();
   }
+  markFileChanges();
 
   // Deep link: activate now and keep the step centered while the layout settles (Calcite
   // components render late, after fetching their translations), until the user takes over.

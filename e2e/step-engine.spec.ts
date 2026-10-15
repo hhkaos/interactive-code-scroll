@@ -212,3 +212,25 @@ test("file tabs switch the visible file", async ({ page }) => {
   await page.locator('calcite-tab-title[data-file="index.html"]').click();
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "index.html");
 });
+
+test("steps that switch to another file name it in a chip on their heading", async ({ page }) => {
+  await page.goto("/");
+  const chips = page.locator("section.step .step-file");
+  await expect(chips).toHaveText(["main.js", "oauth-callback.html", "main.js", "style.css"]);
+  await expect(page.locator("section.step#config > h2 > .step-file")).toHaveAttribute("aria-hidden", "true");
+  // Same file as the step before it, or images: no chip.
+  await expect(page.locator("section.step#oauth .step-file, section.step#register-app .step-file")).toHaveCount(0);
+});
+
+test("a step's switch to another file is announced and animated; a deep link is not", async ({ page }) => {
+  await page.goto("/#ui");
+  await expect(page.locator(".file-announcer")).toHaveText("");
+  await expect(page.locator("calcite-tab-title[data-entering]")).toHaveCount(0);
+  await page.locator("section.step#config h2").click();
+  await expect(page.locator(".file-announcer")).toHaveText("Showing main.js");
+  await expect(page.locator(".file-announcer")).toHaveAttribute("aria-live", "polite");
+  await expect(page.locator('calcite-tab-title[data-file="main.js"]')).toHaveAttribute("data-entering", "");
+  // The one-shot transitions clean up after themselves.
+  await expect(page.locator("[data-entering]")).toHaveCount(0);
+  expect(await regionShown(page)).toBe(true);
+});
