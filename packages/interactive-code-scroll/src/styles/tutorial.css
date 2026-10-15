@@ -23,6 +23,31 @@ body {
   color: var(--calcite-color-text-1);
 }
 
+/*
+ * ——— Before Calcite hydrates ———
+ * Calcite's main.css hides unhydrated components (visibility) but keeps their light-DOM size: the
+ * header collapses and the image dialog takes space. Give them their hydrated size so the page does
+ * not shift when the components script runs.
+ */
+/* :where() keeps these at zero specificity: page rules (e.g. `.media-restore { display: none }`) still win. */
+:where(calcite-navigation:not([calcite-hydrated])) {
+  display: block;
+  block-size: 4rem;
+  /* The empty bar shows early; its children stay hidden by their own unhydrated rule. */
+  visibility: visible;
+  background: var(--calcite-color-foreground-1);
+  border-block-end: 1px solid var(--calcite-color-border-3);
+}
+:where(:is(calcite-dialog, calcite-tooltip, calcite-popover):not([calcite-hydrated])) { display: none; }
+:where(calcite-action:not([calcite-hydrated])) { display: inline-block; min-inline-size: 2rem; block-size: 2rem; }
+:where(calcite-action[scale="s"]:not([calcite-hydrated])) { min-inline-size: 1.5rem; block-size: 1.5rem; }
+:where(calcite-icon:not([calcite-hydrated])) { display: inline-block; inline-size: 1.5rem; block-size: 1.5rem; }
+:where(calcite-icon[scale="s"]:not([calcite-hydrated])) { inline-size: 1rem; block-size: 1rem; }
+:where(calcite-chip:not([calcite-hydrated])) { display: inline-block; block-size: 1.5rem; }
+/* Form fields: the input row, plus the label row when `label-text` is set. */
+:where(:is(calcite-input, calcite-combobox):not([calcite-hydrated])) { display: block; block-size: 2rem; }
+:where(:is(calcite-input, calcite-combobox)[label-text]:not([calcite-hydrated])) { block-size: 3.375rem; }
+
 /* ——— Header ——— */
 
 .header-actions {

@@ -1,4 +1,3 @@
-import "@esri/calcite-components/main.css";
 import "@esri/calcite-components/components/calcite-action";
 import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-carousel";

@@ -3,6 +3,9 @@ import { seriesImages, seriesIndex } from "virtual:interactive-code-scroll/tutor
 import TutorialFilter from "../components/TutorialFilter.astro";
 import TutorialList from "../components/TutorialList.astro";
 import { logoUrl, readIndexConfig } from "../frontmatter.ts";
+// In the head as a render-blocking stylesheet (a <script> import arrives late in dev): Calcite tokens and
+// its unhydrated rule must apply from the first paint.
+import "@esri/calcite-components/main.css";
 import "../styles/tutorial.css";
 import "../styles/series.css";
 
@@ -60,7 +63,6 @@ const Content = seriesIndex?.Content;
       </div>
     </main>
     <script>
-      import "@esri/calcite-components/main.css";
       import "@esri/calcite-components/components/calcite-action";
       import "@esri/calcite-components/components/calcite-navigation";
       import "@esri/calcite-components/components/calcite-navigation-logo";

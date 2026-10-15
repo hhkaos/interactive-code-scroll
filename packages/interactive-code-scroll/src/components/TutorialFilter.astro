@@ -2,6 +2,7 @@
 import { base, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { allTags } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
+import "@esri/calcite-components/main.css";
 import "../styles/series-list.css";
 
 // Tag chips that filter every <TutorialList> on the page (client/series.ts); nothing when no tutorial has tags.
@@ -25,7 +26,6 @@ const tags = allTags(seriesCards(tutorials, base));
 }
 
 <script>
-  import "@esri/calcite-components/main.css";
   import "@esri/calcite-components/components/calcite-chip";
   import "@esri/calcite-components/components/calcite-chip-group";
   import { startSeriesFilter } from "../client/series.ts";

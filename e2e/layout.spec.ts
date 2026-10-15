@@ -141,3 +141,24 @@ test.describe("high zoom", () => {
     await expect(page.locator("#progress-bar")).toBeInViewport();
   });
 });
+
+test("the layout keeps its hydrated geometry before Calcite loads", async ({ page, browser, baseURL }) => {
+  const boxes = (p: Page) =>
+    p.evaluate(() =>
+      ["calcite-navigation", ".layout", "#copy-file"].map((s) => {
+        const r = document.querySelector(s)!.getBoundingClientRect();
+        return [s, Math.round(r.top), Math.round(r.height)];
+      }),
+    );
+  await page.goto("/");
+  await expect(page.locator("calcite-navigation")).toHaveAttribute("calcite-hydrated", "");
+  await expect(page.locator("#copy-file")).toHaveAttribute("calcite-hydrated", "");
+  const hydrated = await boxes(page);
+
+  // Without scripts the components never hydrate: the page as it looks before they load.
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: page.viewportSize() });
+  const unhydrated = await context.newPage();
+  await unhydrated.goto("/");
+  expect(await boxes(unhydrated)).toEqual(hydrated);
+  await context.close();
+});

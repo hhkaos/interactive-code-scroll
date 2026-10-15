@@ -218,3 +218,17 @@ test("the variant switcher shows variant logos and the header follows the active
   // The favicon stays on the first variant's logo (beta has no tutorial logo).
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", logoSrc("browser", "e8a317"));
 });
+
+test("the header keeps its hydrated height before Calcite loads", async ({ page, browser, baseURL }) => {
+  const mainTop = (p: Page) => p.locator(".series-main").evaluate((el) => Math.round(el.getBoundingClientRect().top));
+  await page.goto("/");
+  await expect(page.locator("calcite-navigation")).toHaveAttribute("calcite-hydrated", "");
+  const hydrated = await mainTop(page);
+
+  // Without scripts the components never hydrate: the page as it looks before they load.
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: page.viewportSize() });
+  const unhydrated = await context.newPage();
+  await unhydrated.goto("/");
+  expect(await mainTop(unhydrated)).toBe(hydrated);
+  await context.close();
+});

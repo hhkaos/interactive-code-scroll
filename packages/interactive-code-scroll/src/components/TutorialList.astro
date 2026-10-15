@@ -2,6 +2,7 @@
 import { base, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { parseTagList, selectCards } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
+import "@esri/calcite-components/main.css";
 import "../styles/series-list.css";
 
 // Attributes are validated at MDX compile time in index.mdx (a custom index page gets its types);
@@ -77,6 +78,5 @@ const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : 
 </div>
 
 <script>
-  import "@esri/calcite-components/main.css";
   import "@esri/calcite-components/components/calcite-icon";
 </script>
