@@ -61,6 +61,27 @@ it("publishes captured outputs as is and warns about outputs that look like they
   }
 }, 60_000);
 
+it("orders file tabs by the steps when the frontmatter has no files", async () => {
+  const root = mkdtempSync(fileURLToPath(new URL("./fixtures/order-", import.meta.url)));
+  const outDir = join(root, "dist");
+  try {
+    const code = join(root, "tutorial", "code");
+    mkdirSync(code, { recursive: true });
+    mkdirSync(join(root, ".git"));
+    writeFileSync(
+      join(root, "tutorial", "tutorial.mdx"),
+      '---\ntitle: Order\npreview: off\n---\n\n<Step id="one" file="zeta.js">\nText.\n</Step>\n\n<Step id="two" file="beta.js">\nText.\n</Step>\n\n<Step id="three" file="zeta.js">\nText.\n</Step>\n',
+    );
+    for (const name of ["alpha.js", "beta.js", "zeta.js", "gamma.js"]) writeFileSync(join(code, name), `// ${name}\n`);
+    await build({ root, outDir, integrations: [interactiveCodeScroll()], logLevel: "silent" });
+    const html = readFileSync(join(outDir, "index.html"), "utf8");
+    const tabs = [...html.matchAll(/<calcite-tab-title data-file="([^"]+)"/g)].map((match) => match[1]);
+    expect(tabs).toEqual(["zeta.js", "beta.js", "alpha.js", "gamma.js"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
+
 it("leaves out of the site and the ZIP data paths starting with \".\" (unless included) and generated folders", async () => {
   const root = mkdtempSync(fileURLToPath(new URL("./fixtures/hidden-", import.meta.url)));
   const outDir = join(root, "dist");

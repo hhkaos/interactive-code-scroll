@@ -18,10 +18,14 @@ export function parsedFiles(files: readonly SourceFile[], jsonVars: JsonVars = {
 }
 
 /** Text files of `variant` that get a tab, as paths relative to `code/`, plus its unmatched `files` patterns. */
-export function variantVisible(variant: Variant, textPaths: readonly string[]): { visible: string[]; unmatched: string[] } {
+export function variantVisible(
+  variant: Variant,
+  textPaths: readonly string[],
+  stepOrder: readonly string[] = [],
+): { visible: string[]; unmatched: string[] } {
   const prefix = `${variant.dir}/`;
-  const own = textPaths.filter((path) => path.startsWith(prefix)).map((path) => path.slice(prefix.length));
-  const { visible, unmatched } = selectVisible(own, variant.files);
+  const ownOf = (paths: readonly string[]) => paths.filter((path) => path.startsWith(prefix)).map((path) => path.slice(prefix.length));
+  const { visible, unmatched } = selectVisible(ownOf(textPaths), variant.files, ownOf(stepOrder));
   return { visible: visible.map((path) => prefix + path), unmatched };
 }
 
@@ -48,6 +52,16 @@ export function stepFiles(
     }
   }
   return out;
+}
+
+/** `code/` paths the steps show, in first-reference order (each variant's file for a variant step). */
+export function stepFileOrder(
+  steps: readonly { file?: string; region?: string; only?: string }[],
+  variants: readonly Variant[] | undefined,
+  parsed: ReadonlyMap<string, ParsedSource>,
+): string[] {
+  const paths = steps.flatMap((step) => (variants ? Object.values(stepFiles(variants, parsed, step)) : step.file === undefined ? [] : [step.file]));
+  return [...new Set(paths)];
 }
 
 /** Variants whose Result pane a step feeds: the ones it covers (`only`) that are not web code (`webDirs` show the Preview). */

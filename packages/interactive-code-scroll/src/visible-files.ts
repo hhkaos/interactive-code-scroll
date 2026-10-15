@@ -16,6 +16,13 @@ export function globToRegExp(pattern: string): RegExp {
   return new RegExp(`^${source}$`);
 }
 
+/** Frontmatter key the MDX validation fills with the `code/` paths steps show, in first-reference order. */
+export const STEP_FILES_KEY = "interactiveCodeScrollStepFiles";
+
+export function stepFilesOf(frontmatter: Readonly<Record<string, unknown>>): string[] {
+  return (frontmatter[STEP_FILES_KEY] as string[] | undefined) ?? [];
+}
+
 export interface VisibleFiles {
   /** Text files that get a tab, in pattern order (then path order within a pattern). */
   visible: string[];
@@ -23,10 +30,13 @@ export interface VisibleFiles {
   unmatched: string[];
 }
 
-/** Without patterns every text file is visible, in path order. */
-export function selectVisible(textPaths: readonly string[], patterns: readonly string[] | undefined): VisibleFiles {
+/** Without patterns every text file is visible: the ones steps show in `stepOrder`, then the rest in path order. */
+export function selectVisible(textPaths: readonly string[], patterns: readonly string[] | undefined, stepOrder: readonly string[] = []): VisibleFiles {
   const sorted = [...textPaths].sort();
-  if (patterns === undefined) return { visible: sorted, unmatched: [] };
+  if (patterns === undefined) {
+    const first = [...new Set(stepOrder)].filter((path) => textPaths.includes(path));
+    return { visible: [...first, ...sorted.filter((path) => !first.includes(path))], unmatched: [] };
+  }
   const visible: string[] = [];
   const unmatched: string[] = [];
   for (const pattern of patterns) {

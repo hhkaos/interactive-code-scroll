@@ -13,7 +13,7 @@ import { zipBadge, zipLabel } from "../downloads.ts";
 import { PREVIEW_ENTRY } from "../preview/build-html.ts";
 import { MAX_SEGMENTED } from "../client/variant-values.ts";
 import { variantVisible } from "../variants.ts";
-import { selectVisible } from "../visible-files.ts";
+import { selectVisible, stepFilesOf } from "../visible-files.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "../error-rule.ts";
 import { parseHttpFile, runnerRequests } from "../requests.ts";
 import { checkFamilies, setCurrentTutorial, siblingsOf, tutorialBase, tutorialFor } from "../tutorial-data.ts";
@@ -45,9 +45,10 @@ const variantLogos = variants?.map((v) => logoUrl(v.logo, images));
 const headerLogo = variantLogos?.[0] ?? logo;
 const favicon = logo ?? variantLogos?.find((url) => url !== undefined);
 // Each variant's tabs, in order; a tutorial without variants is one unnamed group.
+const stepOrder = stepFilesOf(frontmatter);
 const groups = variants
-  ? variants.map((v) => ({ variant: v, prefix: `${v.dir}/`, entry: `${v.dir}/${v.entry}`, paths: variantVisible(v, textPaths).visible }))
-  : [{ variant: undefined, prefix: "", entry: undefined, paths: selectVisible(textPaths, config.files).visible }];
+  ? variants.map((v) => ({ variant: v, prefix: `${v.dir}/`, entry: `${v.dir}/${v.entry}`, paths: variantVisible(v, textPaths, stepOrder).visible }))
+  : [{ variant: undefined, prefix: "", entry: undefined, paths: selectVisible(textPaths, config.files, stepOrder).visible }];
 const visible = groups.flatMap((g) => g.paths);
 // A variant is web code when its folder has index.html: only those get the Preview.
 const previewEntries = variants ? variants.map((v) => `${v.dir}/${PREVIEW_ENTRY}`).filter((path) => textPaths.includes(path)) : [PREVIEW_ENTRY];

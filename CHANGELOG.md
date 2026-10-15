@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Series index: cards no longer show the tutorial logo or variant logos next to the title (the tutorial `logo` stays for the page header and favicon). The public `SeriesCard` drops `variantLogos` and gains `tagLogos` and `variants` (`{ id, label, href, logo }[]`); cards are an `<article>` whose title is the link (`.series-card-title` is now the `<a>`); `<TutorialFilter tagGroups>` entries on a custom index page take no logo.
 - Series index: card tags are plain labels with a family color dot instead of chip-styled pills (they were never clickable: the whole card is a link).
 - Series index: the header content (logo, theme action) lines up with the centered `.series-main` column (`--calcite-navigation-width: 72rem`); the bar background stays full width.
+- Tutorials without frontmatter `files` (or a variant without `files`) order their file tabs by the steps: first each file in the order a `<Step>` first shows it, then the rest by path (was path order for every file). Check your tabs after upgrading; set `files` to keep a different order.
 
 ### Fixed
 

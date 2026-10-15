@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseSource } from "./markers.ts";
-import { resultVariants, stepFiles, variantVisible } from "./variants.ts";
+import { resultVariants, stepFileOrder, stepFiles, variantVisible } from "./variants.ts";
 
 const variants = [
   { id: "python", label: "Python", dir: "python", entry: "main.py", files: ["main.py", "*.txt"] },
@@ -21,6 +21,24 @@ describe("variantVisible", () => {
       unmatched: [],
     });
     expect(variantVisible(variants[1]!, ["node/index.mjs", "node/api.mjs"]).visible).toEqual(["node/api.mjs", "node/index.mjs"]);
+  });
+
+  it("orders the variant's tabs by the steps when it has no files patterns", () => {
+    expect(variantVisible(variants[1]!, ["node/index.mjs", "node/api.mjs"], ["python/main.py", "node/index.mjs"]).visible).toEqual(["node/index.mjs", "node/api.mjs"]);
+  });
+});
+
+describe("stepFileOrder", () => {
+  it("lists step files in first-reference order", () => {
+    expect(stepFileOrder([{ file: "b.js" }, {}, { file: "a.js" }, { file: "b.js" }], undefined, parsed)).toEqual(["b.js", "a.js"]);
+  });
+
+  it("resolves each variant's file, including lone regions", () => {
+    expect(stepFileOrder([{ region: "auth" }, { file: "index.mjs", only: "node" }], variants, parsed)).toEqual([
+      "python/main.py",
+      "node/api.mjs",
+      "node/index.mjs",
+    ]);
   });
 });
 

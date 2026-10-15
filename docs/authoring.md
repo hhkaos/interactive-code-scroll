@@ -152,7 +152,7 @@ order: 1
 
 | Field | Values | Default | Description |
 |---|---|---|---|
-| [`files`](#files-not-shown-in-tabs) | list of paths/globs | all text files | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
+| [`files`](#files-not-shown-in-tabs) | list of paths/globs | all text files: those steps show first, in step order, then the rest by path | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
 | [`include`](#files-left-out-of-the-tutorial) | list of paths/globs | none | Paths in `code/` starting with `.` or gitignored to publish anyway, e.g. `include: [".github/**", ".vscode/launch.json", ".gitignore"]`. Relative to `code/` (with `variants` too, e.g. `web/.github/**`). A pattern that matches nothing is a build error. |
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | [`languages`](#syntax-highlighting) | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |

@@ -3,14 +3,14 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type MdxJsxTextElement } from "satteri";
 import { frontmatterKeyLines, readTutorialConfig } from "./frontmatter.ts";
-import { globToRegExp } from "./visible-files.ts";
+import { globToRegExp, STEP_FILES_KEY } from "./visible-files.ts";
 import { parseSource } from "./markers.ts";
 import { credentialWarnings, isTextOutput } from "./output.ts";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
 import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
 import { JSON_REGIONS_KEY, JSON_VARS_KEY } from "./json-vars.ts";
 import { jsonRegionTargets, jsonVarTargets, validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
-import { parsedFiles } from "./variants.ts";
+import { parsedFiles, stepFileOrder } from "./variants.ts";
 
 const COMPONENTS = new Set(["Hint", "Intro", "Step", "VarField"]);
 
@@ -145,6 +145,12 @@ export function tutorialValidation(
         const { jsonVars } = jsonVarTargets(mdxFile, uses, tutorial.files);
         frontmatter[JSON_VARS_KEY] = jsonVars;
         frontmatter[JSON_REGIONS_KEY] = jsonRegionTargets(mdxFile, uses, tutorial.files, readTutorialConfig(frontmatter).variants).jsonRegions;
+        // Without `files`, tabs follow the order in which steps first show each file.
+        const text = (value: AttributeValue | undefined) => (typeof value === "string" ? value : undefined);
+        const steps = uses
+          .filter((use) => use.name === "Step")
+          .map(({ attributes }) => ({ file: text(attributes.file), region: text(attributes.region), only: text(attributes.only) }));
+        frontmatter[STEP_FILES_KEY] = stepFileOrder(steps, readTutorialConfig(frontmatter).variants, parsedFiles(tutorial.files, jsonVars));
         const sources = [...parsedFiles(tutorial.files, jsonVars).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
         const defaults = new Set(sources.flatMap((p) => p.vars.map((v) => v.defaultValue)));
         const texts = tutorial.outputs

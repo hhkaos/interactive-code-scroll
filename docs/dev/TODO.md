@@ -21,7 +21,6 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] Idea raised 2026-10-15, not needed yet: if series cards get 6+ variants, a compact "Available in 6 languages" band with logo-only links, each keeping its name as accessible name and never hiding it behind a hover tooltip (touch has no hover; shared logos such as ArcGIS API for Python / ArcGIS REST JS would be ambiguous). Today: at most four logo + label links, else three and "+N". Rules: `SPEC.md` (Variant links and tag logos).
 - [ ] Optional `logoDark` (tutorial, variant, `tagGroups` entries and `index.mdx`): same rules as `logo`. Card tag logos, variant links and the variant switcher render both images and CSS on `.calcite-mode-dark` picks one; the page header thumbnail (and favicon) follow the theme toggle from the client. Today logos must read on both backgrounds.
 
-- [ ] Default file order: without `files` in the frontmatter, file tabs follow the first reference of each file in the steps (unreferenced files last, by path) instead of path order. Downloads and validation keep path order. Update `SPEC.md` first and check tests that assume path order.
 - [ ] Series index favorites: mark/unmark tutorials (stored per browser in `localStorage`, guarded) and show them first. Decide in `SPEC.md` first: tutorial vs variant, own section vs sorted first, interaction with search/filters and the existing reorder in `client/series.ts`.
 
 ## VarField input types (#3)
