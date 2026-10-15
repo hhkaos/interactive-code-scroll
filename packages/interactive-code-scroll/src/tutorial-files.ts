@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { parseFrontmatter } from "astro/markdown";
+import ignore, { type Ignore } from "ignore";
 import { globToRegExp, isBinary } from "./visible-files.ts";
 import { OPTIONS_DIR } from "./field-options.ts";
 
@@ -20,7 +21,9 @@ export interface TutorialFiles {
   binaries: string[];
   /** Paths under `code/` with a segment starting with `.`, included or not (frontmatter `include` opts them in). */
   hiddenCode: string[];
-  /** Folders under `code/` starting with `.` none of whose files is included: a build warning names them. */
+  /** Paths under `code/` that a `.gitignore` excludes, included or not (frontmatter `include` opts them in). */
+  ignoredCode: IgnoredPath[];
+  /** Folders under `code/` starting with `.` none of whose files is included (unless all are gitignored): a build warning names them. */
   skippedCodeDirs: string[];
   /** Image paths relative to `images/`, with forward slashes. */
   images: string[];
@@ -37,6 +40,13 @@ export interface TutorialFiles {
   requestBinaries: string[];
   /** Files under `field-options/` (paths relative to it): JSON option lists for `<VarField options>`, never published. */
   fieldOptions: SourceFile[];
+}
+
+export interface IgnoredPath {
+  /** Path relative to `code/`. */
+  path: string;
+  /** The `.gitignore` that decided it, relative to the tutorial folder (`code/.gitignore`, `.gitignore`, `../.gitignore`). */
+  by: string;
 }
 
 /**
@@ -56,47 +66,125 @@ export function inGeneratedDir(root: string, path: string): boolean {
 
 const isHidden = (path: string) => path.split("/").some((segment) => segment.startsWith("."));
 
-/** Every file under `dir` (relative, forward slashes, sorted), without descending into generated folders. */
-function walk(dir: string): string[] {
-  const out: string[] = [];
-  const visit = (rel: string) => {
+/** The `.gitignore` rules of one folder; `rel` maps a `code/` path to a path relative to that folder (`undefined` outside it). */
+interface GitignoreRules {
+  ignore: Ignore;
+  by: string;
+  rel: (path: string) => string | undefined;
+}
+
+function readGitignore(folder: string, codeDir: string, rel: GitignoreRules["rel"]): GitignoreRules | undefined {
+  const file = join(folder, ".gitignore");
+  if (!existsSync(file)) return undefined;
+  // Case-sensitive, like git on Linux CI, so a local macOS build publishes the same files.
+  const rules = ignore({ ignorecase: false }).add(readFileSync(file, "utf8"));
+  return { ignore: rules, by: relative(dirname(codeDir), file).split(sep).join("/"), rel };
+}
+
+/**
+ * Folders above a tutorial's `code/` whose `.gitignore` applies to it, outermost first: up to the root of
+ * the git repository that holds the tutorial (what git commits is what CI builds), or only the tutorial
+ * folder outside a repository. `.git/info/exclude` and global excludes are machine-local and never read.
+ */
+export function gitignoreParents(tutorialDir: string): string[] {
+  const chain: string[] = [];
+  for (let dir = resolve(tutorialDir); ; dir = dirname(dir)) {
+    chain.unshift(dir);
+    if (existsSync(join(dir, ".git"))) return chain;
+    if (dirname(dir) === dir) return [resolve(tutorialDir)];
+  }
+}
+
+/**
+ * Every file under `dir` (relative, forward slashes, sorted), without descending into generated folders,
+ * with the `.gitignore` that excludes it, if any. Folder rules come from `parents` (absolute, outermost first)
+ * and from `.gitignore` files inside `dir`; the deepest file with a matching rule decides, and nothing
+ * inside an ignored folder comes back (git semantics). Without `gitignore`, no path is ignored.
+ */
+function walk(dir: string, parents: readonly string[] = [], gitignore = false): Map<string, string | undefined> {
+  const out = new Map<string, string | undefined>();
+  const rules: GitignoreRules[] = [];
+  if (gitignore) {
+    for (const parent of parents) {
+      const prefix = relative(parent, dir).split(sep).join("/");
+      const found = readGitignore(parent, dir, (path) => `${prefix}/${path}`);
+      // A tutorial inside an ignored folder (a generated test project, a scratch copy) is not under version
+      // control: that file's rules say nothing about its code/.
+      if (found && !found.ignore.ignores(`${prefix}/`)) rules.push(found);
+    }
+  }
+  const ignoredBy = (path: string, isDir: boolean, scope: readonly GitignoreRules[]) => {
+    let by: string | undefined;
+    for (const { ignore: rules, by: file, rel } of scope) {
+      const local = rel(path);
+      if (local === undefined) continue;
+      const result = rules.test(isDir ? `${local}/` : local);
+      if (result.ignored) by = file;
+      else if (result.unignored) by = undefined;
+    }
+    return by;
+  };
+  const visit = (rel: string, scope: readonly GitignoreRules[], ignoredDir: string | undefined) => {
+    const own = gitignore && ignoredDir === undefined
+      ? readGitignore(join(dir, rel), dir, (path) => (rel === "" ? path : path.startsWith(`${rel}/`) ? path.slice(rel.length + 1) : undefined))
+      : undefined;
+    const local = own ? [...scope, own] : scope;
     for (const entry of readdirSync(join(dir, rel), { withFileTypes: true })) {
       const path = rel === "" ? entry.name : `${rel}/${entry.name}`;
       if (entry.isDirectory()) {
-        if (!GENERATED_DIRS.has(entry.name) && !existsSync(join(dir, path, "pyvenv.cfg"))) visit(path);
+        if (!GENERATED_DIRS.has(entry.name) && !existsSync(join(dir, path, "pyvenv.cfg"))) visit(path, local, ignoredDir ?? ignoredBy(path, true, local));
       } else if (entry.isFile() || (entry.isSymbolicLink() && statSync(join(dir, path)).isFile())) {
-        out.push(path);
+        out.set(path, ignoredDir ?? ignoredBy(path, false, local));
       }
     }
   };
-  if (existsSync(dir)) visit("");
-  return out.sort();
+  if (existsSync(dir)) visit("", rules, undefined);
+  return new Map([...out].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
 }
 
 /** Files under `dir`, leaving out paths with a segment starting with `.` and generated folders. */
 export function listFiles(dir: string): string[] {
-  return walk(dir).filter((path) => !isHidden(path));
+  return [...walk(dir).keys()].filter((path) => !isHidden(path));
 }
 
-/** `code/`: like `listFiles`, plus the hidden paths that an `include` glob matches. */
-export function listCode(dir: string, include: readonly string[]): { paths: string[]; hidden: string[]; skippedDirs: string[] } {
-  const all = walk(dir);
+export interface CodeListing {
+  /** Published paths. */
+  paths: string[];
+  /** Paths with a segment starting with `.`, included or not. */
+  hidden: string[];
+  /** Gitignored paths, included or not. */
+  ignored: IgnoredPath[];
+  /** Dot folders none of whose files is included, unless .gitignore excludes them all. */
+  skippedDirs: string[];
+}
+
+/**
+ * `code/`: like `listFiles`, also leaving out what its `.gitignore` files exclude (inside `dir` and in
+ * `parents`, see `gitignoreParents()`), plus the hidden or gitignored paths that an `include` glob matches.
+ */
+export function listCode(dir: string, include: readonly string[], parents: readonly string[] = []): CodeListing {
+  const all = walk(dir, parents, true);
   const patterns = include.map(globToRegExp);
-  const hidden = all.filter(isHidden);
-  const included = new Set(hidden.filter((path) => patterns.some((pattern) => pattern.test(path))));
-  // First dot folder of each hidden file → whether any of its files is included (dotfiles are not reported).
-  const folders = new Map<string, boolean>();
+  const ignored = [...all].flatMap(([path, by]) => (by === undefined ? [] : [{ path, by }]));
+  const left = (path: string) => isHidden(path) || all.get(path) !== undefined;
+  const included = new Set([...all.keys()].filter((path) => left(path) && patterns.some((pattern) => pattern.test(path))));
+  const hidden = [...all.keys()].filter(isHidden);
+  // First dot folder of each hidden file → whether it is accounted for: one of its files is included, or
+  // .gitignore excludes them all (dotfiles are not reported).
+  const folders = new Map<string, { included: boolean; ignored: boolean }>();
   for (const path of hidden) {
     const segments = path.split("/");
     const index = segments.findIndex((segment) => segment.startsWith("."));
     if (index === segments.length - 1) continue;
     const folder = segments.slice(0, index + 1).join("/");
-    folders.set(folder, (folders.get(folder) ?? false) || included.has(path));
+    const state = folders.get(folder) ?? { included: false, ignored: true };
+    folders.set(folder, { included: state.included || included.has(path), ignored: state.ignored && all.get(path) !== undefined });
   }
   return {
-    paths: all.filter((path) => !isHidden(path) || included.has(path)),
+    paths: [...all.keys()].filter((path) => !left(path) || included.has(path)),
     hidden,
-    skippedDirs: [...folders].filter(([, anyIncluded]) => !anyIncluded).map(([folder]) => folder),
+    ignored,
+    skippedDirs: [...folders].filter(([, state]) => !state.included && !state.ignored).map(([folder]) => folder),
   };
 }
 
@@ -130,7 +218,7 @@ export function readTutorialFiles(tutorialDir: string): TutorialFiles {
   const outputDir = join(tutorialDir, "output");
   const requestsDir = join(tutorialDir, "requests");
   const mdxPath = join(tutorialDir, "tutorial.mdx");
-  const codeListing = listCode(codeDir, includeOf(mdxPath));
+  const codeListing = listCode(codeDir, includeOf(mdxPath), gitignoreParents(tutorialDir));
   const code = readFolder(codeDir, codeListing.paths);
   const requests = readFolder(requestsDir);
   const fieldOptions = readFolder(join(tutorialDir, OPTIONS_DIR));
@@ -141,6 +229,7 @@ export function readTutorialFiles(tutorialDir: string): TutorialFiles {
     files: code.files,
     binaries: code.binaries,
     hiddenCode: codeListing.hidden,
+    ignoredCode: codeListing.ignored,
     skippedCodeDirs: codeListing.skippedDirs,
     images: listFiles(imagesDir),
     embedsDir,

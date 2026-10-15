@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type MdxJsxTextElement } from "satteri";
 import { frontmatterKeyLines, readTutorialConfig } from "./frontmatter.ts";
+import { globToRegExp } from "./visible-files.ts";
 import { parseSource } from "./markers.ts";
 import { credentialWarnings, isTextOutput } from "./output.ts";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
@@ -123,6 +124,7 @@ export function tutorialValidation(
           files: tutorial.files,
           binaries: tutorial.binaries,
           hiddenCode: tutorial.hiddenCode,
+          ignoredCode: tutorial.ignoredCode,
           images: tutorial.images,
           embeds: tutorial.embeds,
           outputs: tutorial.outputs,
@@ -146,6 +148,18 @@ export function tutorialValidation(
         for (const folder of tutorial.skippedCodeDirs) {
           warn(
             `${mdxFile}:${frontmatterLines.include ?? 1}:1 code/${folder}/ is not published (paths starting with "." are skipped); add "${folder}/**" to frontmatter "include" to publish it`,
+          );
+        }
+        // An explicit include wins over .gitignore, but the author should know a local-only file goes public.
+        const published = new Set([...tutorial.files.map((f) => f.path), ...tutorial.binaries]);
+        for (const pattern of readTutorialConfig(frontmatter).include ?? []) {
+          const regex = globToRegExp(pattern);
+          const matched = tutorial.ignoredCode.filter(({ path }) => published.has(path) && regex.test(path));
+          if (matched.length === 0) continue;
+          const [first] = matched;
+          const more = matched.length > 1 ? ` and ${matched.length - 1} more gitignored path(s)` : "";
+          warn(
+            `${mdxFile}:${frontmatterLines.include ?? 1}:1 frontmatter include "${pattern}" publishes code/${first!.path}${more}, which ${first!.by} excludes; make sure it holds no secrets or local state`,
           );
         }
         if (seriesDir === undefined && frontmatter.family !== undefined) {

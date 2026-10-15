@@ -153,7 +153,7 @@ order: 1
 | Field | Values | Default | Description |
 |---|---|---|---|
 | [`files`](#files-not-shown-in-tabs) | list of paths/globs | all text files | Which `code/` files get tabs, in this order (`*` and `?` stay in one folder, `**` crosses folders). Other files still reach the ZIP and `preview/`; the ZIP button shows how many files the download contains, and its tooltip says how many are not shown in tabs. |
-| [`include`](#files-left-out-of-the-tutorial) | list of paths/globs | none | Paths in `code/` starting with `.` to publish anyway, e.g. `include: [".github/**", ".vscode/launch.json", ".gitignore"]`. Relative to `code/` (with `variants` too, e.g. `web/.github/**`). A pattern that matches nothing is a build error. |
+| [`include`](#files-left-out-of-the-tutorial) | list of paths/globs | none | Paths in `code/` starting with `.` or gitignored to publish anyway, e.g. `include: [".github/**", ".vscode/launch.json", ".gitignore"]`. Relative to `code/` (with `variants` too, e.g. `web/.github/**`). A pattern that matches nothing is a build error. |
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | [`languages`](#syntax-highlighting) | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
 | [`preview`](#preview) | `off`, `iframe`, `tab`, `both` | `both` | Controls the Preview panel and the open-in-tab button. |
@@ -746,6 +746,7 @@ Some APIs report errors inside a successful response: ArcGIS REST, for example, 
 Some files in `code/` are never published: they get no tab, are not under `preview/` and are not in the ZIP.
 
 - **Paths starting with `.`**: any file or folder whose name starts with `.`, at any depth (`.env`, `.venv/`, `src/.cache/`). They often hold secrets or local settings. The build warns about each such folder that is left out, e.g. `code/.github/ is not published`.
+- **Gitignored paths**: anything a `.gitignore` excludes, so files your scripts write when you run the tutorial locally (`state.json`, `output.csv`, `token.json`, `build/`) are never published. See [`.gitignore` rules](#gitignore-rules).
 - **Generated folders**: `node_modules/`, `__pycache__/`, `.git/`, tool caches (`.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.gradle/`, `.idea/`, `.next/`, `.nuxt/`, `.svelte-kit/`, `.astro/`, `.cache/`, `.parcel-cache/`, `.turbo/`) and any folder with a `pyvenv.cfg` (a Python virtual env, whatever its name). The build does not even read them, so running the tutorial's own setup in `code/` keeps builds fast.
 
 To publish project files that start with `.`, such as a GitHub Actions workflow the tutorial explains, list them in [`include`](#code-and-preview):
@@ -756,7 +757,31 @@ include: [".github/workflows/*.yml", ".gitignore"]
 ---
 ```
 
-Included text files get tabs like any other file (unless [`files`](#frontmatter) leaves them out) and steps can point at them. Generated folders cannot be included. In `images/`, `embeds/`, `output/` and `requests/` the same rules apply, without `include`.
+`include` also publishes gitignored paths, e.g. a sample data file that real projects ignore, or `.env.example` next to an ignored `.env`. The build then warns, once per pattern, that it publishes a gitignored file, so check that it holds no secrets or local state.
+
+Included text files get tabs like any other file (unless [`files`](#frontmatter) leaves them out) and steps can point at them. Generated folders cannot be included. In `images/`, `embeds/`, `output/` and `requests/` the same rules apply, without `include` and without `.gitignore`.
+
+#### `.gitignore` rules
+
+A typical tutorial whose scripts read secrets from `.env` and save their state between runs:
+
+```text title="tutorial/code/.gitignore"
+.env
+state.json
+```
+
+```yaml title="tutorial/tutorial.mdx"
+---
+include: [".env.example"]
+---
+```
+
+The ZIP then has `.env.example` (readers copy it to `.env`) and none of `.env`, `state.json` or `.gitignore`.
+
+- **Which files apply**: `code/.gitignore`, a `.gitignore` in any folder inside `code/`, and those in the folders above it up to the root of the git repository that holds the tutorial (outside a repository, only the tutorial folder's). This matches what git commits, so a local build publishes what CI builds. A `.gitignore` above `code/` that excludes the tutorial folder itself is skipped. `.git/info/exclude` and your global excludes file are not read: they are specific to one machine.
+- **Syntax**: as in git: comments, `!` negation, `dir/`, anchored `/file` and `a/b` (relative to that `.gitignore`'s folder), `*` and `**`. The deepest `.gitignore` with a matching rule wins, and a file inside an ignored folder cannot be re-included. Matching is case-sensitive, like git on Linux.
+- **Precedence**: generated folders are never published. Paths starting with `.` and gitignored paths are left out unless `include` matches them.
+- A [`<Step file>`](#step) or a [`files`](#frontmatter) pattern that points only at gitignored files is a build error that names the `.gitignore`.
 
 ## Code Variants
 
@@ -1017,9 +1042,10 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<VarField> options file "x.json" not found in field-options/` | Create the file in `tutorial/field-options/` or fix the name. |
 | `@var "x" must have the same type in every file: …` | Use the same kind of literal (string, number or boolean) in every file that marks `x`. |
 | `#region "x" is empty` · `unclosed #region "x"` · `#endregion "a" closes #region "b"` | Fix the [region markers](#regions) in that file. |
-| `frontmatter include "x" matches no path starting with "." in code/ …` | Fix the glob (relative to `code/`). Paths without a segment starting with `.` are published anyway, and generated folders such as `node_modules/` cannot be included. See [Files left out of the tutorial](#files-left-out-of-the-tutorial). |
+| `frontmatter include "x" matches no path in code/ starting with "." or gitignored …` | Fix the glob (relative to `code/`). Other paths are published anyway, and generated folders such as `node_modules/` cannot be included. See [Files left out of the tutorial](#files-left-out-of-the-tutorial). |
+| `<Step> file "x" is gitignored (by code/.gitignore) and not published …` · `frontmatter files "x" matches only gitignored files …` | Point the step at a published file, or add the file to frontmatter `include` if readers should get it. See [`.gitignore` rules](#gitignore-rules). |
 | `frontmatter logo "x" not found in images/ (or use an https:// URL)` | Put the logo in `images/` or use an `https://` URL. |
 | `frontmatter variants[n].logo "x" not found in images/ (or use an https:// URL)` | Same for a [variant](#code-variants) logo. |
 | `code/x: file is outside every variant folder; move it into one of …` | With variants, every code file belongs to a variant folder. |
 
-The build also warns, without failing, about each `code/` folder starting with `.` that is not published: `code/.github/ is not published (paths starting with "." are skipped); add ".github/**" to frontmatter "include" to publish it`.
+The build also warns, without failing, about each `code/` folder starting with `.` that is not published (unless `.gitignore` excludes all of it): `code/.github/ is not published (paths starting with "." are skipped); add ".github/**" to frontmatter "include" to publish it`; and about each `include` pattern that publishes gitignored files: `frontmatter include "sample/**" publishes code/sample/data.json, which code/.gitignore excludes; make sure it holds no secrets or local state`.

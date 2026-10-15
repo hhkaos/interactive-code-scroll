@@ -361,13 +361,22 @@ describe("validateTutorial frontmatter", () => {
     expect(withFrontmatter({ preview: "off" }, noEntry)).toEqual([]);
   });
 
-  it("reports an include pattern that matches no path starting with \".\"", () => {
+  it("reports an include pattern that matches no path starting with \".\" and no gitignored path", () => {
     const check = (include: string[]) =>
-      validateTutorial({ mdxFile: "tutorial.mdx", uses: [], files, images, hiddenCode: [".github/workflows/deploy.yml", ".env"], frontmatter: { preview: "off", include }, frontmatterLines: { include: 4 } });
-    expect(check([".github/**", ".env"])).toEqual([]);
+      validateTutorial({
+        mdxFile: "tutorial.mdx",
+        uses: [],
+        files,
+        images,
+        hiddenCode: [".github/workflows/deploy.yml", ".env"],
+        ignoredCode: [{ path: "state.json", by: "code/.gitignore" }],
+        frontmatter: { preview: "off", include },
+        frontmatterLines: { include: 4 },
+      });
+    expect(check([".github/**", ".env", "state.json"])).toEqual([]);
     expect(check([".vscode/**", "main.js"])).toEqual([
-      'tutorial.mdx:4:1 frontmatter include ".vscode/**" matches no path starting with "." in code/ (generated folders such as node_modules are never published)',
-      'tutorial.mdx:4:1 frontmatter include "main.js" matches no path starting with "." in code/ (generated folders such as node_modules are never published)',
+      'tutorial.mdx:4:1 frontmatter include ".vscode/**" matches no path in code/ starting with "." or gitignored (generated folders such as node_modules are never published)',
+      'tutorial.mdx:4:1 frontmatter include "main.js" matches no path in code/ starting with "." or gitignored (generated folders such as node_modules are never published)',
     ]);
   });
 
@@ -705,5 +714,47 @@ describe("validateSeriesIndex", () => {
       "tutorials/index.mdx:6:1 <TutorialFilter> can appear only once (it filters every list on the page)",
     ]);
     expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme)']);
+  });
+});
+
+describe("validateTutorial gitignored code", () => {
+  const ignoredCode = [
+    { path: "state.json", by: "code/.gitignore" },
+    { path: "py/state.json", by: ".gitignore" },
+  ];
+
+  it("reports a step file or files pattern that only a .gitignore keeps out", () => {
+    const check = (extra: typeof files = []) =>
+      validateTutorial({
+        mdxFile: "tutorial.mdx",
+        uses: [use("Step", { id: "state", file: "state.json" })],
+        files: [...files, ...extra],
+        images,
+        ignoredCode,
+        frontmatter: { preview: "off", files: ["main.js", "*.json"] },
+        frontmatterLines: { files: 4 },
+      });
+    expect(check()).toEqual([
+      'tutorial.mdx:4:1 frontmatter files "*.json" matches only gitignored files, which are not published (code/state.json by code/.gitignore); add them to frontmatter "include" to publish them',
+      'tutorial.mdx:3:1 <Step> file "state.json" is gitignored (by code/.gitignore) and not published; add it to frontmatter "include" to publish it',
+    ]);
+    // Published through include: an ordinary file.
+    expect(check([{ path: "state.json", source: "{}" }])).toEqual([]);
+  });
+
+  it("reports a variant step file that only a .gitignore keeps out", () => {
+    const variants = [{ id: "py", label: "Python", dir: "py", entry: "main.py" }];
+    expect(
+      validateTutorial({
+        mdxFile: "tutorial.mdx",
+        uses: [use("Step", { id: "state", file: "state.json" })],
+        files: [{ path: "py/main.py", source: "print(1)" }],
+        images,
+        ignoredCode,
+        frontmatter: { variants, preview: "off" },
+      }),
+    ).toEqual([
+      'tutorial.mdx:3:1 <Step> file "state.json" is gitignored in variant "py" (code/py/state.json by .gitignore) and not published; add it to frontmatter "include" to publish it',
+    ]);
   });
 });

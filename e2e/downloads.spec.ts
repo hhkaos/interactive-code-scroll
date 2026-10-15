@@ -30,7 +30,9 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
   expect(download.suggestedFilename()).toBe(`${folder}.zip`);
   const zip = (await download.path())!;
   const listing = execFileSync("unzip", ["-Z1", zip], { encoding: "utf8" }).trim().split("\n").sort();
+  // .env.example ships through frontmatter include; state.json is gitignored in code/.gitignore.
   expect(listing).toEqual([
+    `${folder}/.env.example`,
     `${folder}/README.md`,
     `${folder}/assets/pixel.png`,
     `${folder}/index.html`,

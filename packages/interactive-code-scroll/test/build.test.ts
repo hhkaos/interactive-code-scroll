@@ -68,6 +68,8 @@ it("leaves out of the site and the ZIP data paths starting with \".\" (unless in
       writeFileSync(join(code, path), text);
     };
     mkdirSync(code, { recursive: true });
+    // Its own repository root, so this repo's .gitignore (which lists .vscode/) does not apply.
+    mkdirSync(join(root, ".git"));
     writeFileSync(
       join(root, "tutorial", "tutorial.mdx"),
       '---\ntitle: Hidden\npreview: iframe\ninclude: [".github/**"]\n---\n\n<Step id="page" file="index.html">\nText.\n</Step>\n',
@@ -104,6 +106,59 @@ it("leaves out of the site and the ZIP data paths starting with \".\" (unless in
     expect(log).toContain("code/.vscode/ is not published");
     expect(log).not.toContain("code/.github/ is not published");
     expect(log).not.toContain("node_modules/ is not published");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
+
+it("leaves gitignored code/ paths out of the site and the ZIP data unless included, and fails a step that points at one", async () => {
+  const root = mkdtempSync(fileURLToPath(new URL("./fixtures/gitignore-", import.meta.url)));
+  const outDir = join(root, "dist");
+  try {
+    const tutorial = join(root, "tutorial");
+    const write = (path: string, text: string) => {
+      mkdirSync(join(tutorial, path, ".."), { recursive: true });
+      writeFileSync(join(tutorial, path), text);
+    };
+    const mdx = (include: string, step = "index.html") =>
+      write("tutorial.mdx", `---\ntitle: Gitignore\npreview: iframe\ninclude: ${include}\n---\n\n<Step id="page" file="${step}">\nText.\n</Step>\n`);
+    // Its own repository root: only the tutorial's .gitignore files apply, not this repo's.
+    mkdirSync(join(root, ".git"));
+    mdx('[".env.example", "sample/**"]');
+    write(".gitignore", "code/output.csv\n");
+    write("code/.gitignore", "# written by the scripts\n.env\nstate.json\nbuild/\nsample/\n");
+    write("code/index.html", "<p>hi</p>\n");
+    write("code/.env.example", "API_KEY=example-key\n");
+    write("code/.env", "API_KEY=env-leak\n");
+    write("code/state.json", '{ "item": "state-leak" }\n');
+    write("code/output.csv", "parent-leak\n");
+    write("code/build/app.js", 'console.log("build-leak")\n');
+    write("code/sample/data.json", '{ "sample": "sample-included" }\n');
+
+    const warnings: string[] = [];
+    const out = process.stdout.write.bind(process.stdout);
+    const capture = vi.spyOn(process.stdout, "write").mockImplementation((chunk, ...rest) => {
+      warnings.push(String(chunk));
+      return out(chunk, ...(rest as []));
+    });
+    try {
+      await build({ root, outDir, integrations: [interactiveCodeScroll()], logLevel: "warn" });
+    } finally {
+      capture.mockRestore();
+    }
+    const page = readFileSync(join(outDir, "index.html"), "utf8");
+    expect(page).toContain("example-key");
+    expect(page).toContain("sample-included");
+    for (const leak of ["env-leak", "state-leak", "parent-leak", "build-leak"]) expect(page).not.toContain(leak);
+    for (const path of [".env", "state.json", "output.csv", "build"]) expect(existsSync(join(outDir, "preview", path))).toBe(false);
+    expect(existsSync(join(outDir, "preview", "sample", "data.json"))).toBe(true);
+    const log = warnings.join("");
+    expect(log).toContain('frontmatter include "sample/**" publishes code/sample/data.json, which code/.gitignore excludes');
+    expect(log).not.toContain('include ".env.example" publishes');
+
+    mdx('[".env.example"]', "state.json");
+    const run = build({ root, outDir, integrations: [interactiveCodeScroll()], logLevel: "silent" });
+    await expect(run).rejects.toThrow(/tutorial\.mdx:7:1 <Step> file "state\.json" is gitignored \(by code\/\.gitignore\) and not published/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

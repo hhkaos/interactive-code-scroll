@@ -10,7 +10,7 @@ import { PREVIEW_ENTRY } from "./preview/build-html.ts";
 import { parseHttpFile, requestIndex, type HttpFile } from "./requests.ts";
 import { variantVisible } from "./variants.ts";
 import { globToRegExp, selectVisible } from "./visible-files.ts";
-import type { SourceFile } from "./tutorial-files.ts";
+import type { IgnoredPath, SourceFile } from "./tutorial-files.ts";
 
 export type AttributeValue = string | true | { expression: string };
 
@@ -30,6 +30,8 @@ export interface ValidationInput {
   binaries?: string[];
   /** Paths under `code/` with a segment starting with `.` (what frontmatter `include` can match). */
   hiddenCode?: string[];
+  /** Paths under `code/` that a `.gitignore` excludes (what frontmatter `include` can also match). */
+  ignoredCode?: IgnoredPath[];
   images: string[];
   /** Files under `embeds/`. */
   embeds?: string[];
@@ -191,6 +193,7 @@ function checkVariants(
   parsed: ReadonlyMap<string, ParsedSource>,
   reportFrontmatter: (key: string, detail: string) => void,
   errors: string[],
+  ignoredMatches: (pattern: string) => string[] = () => [],
 ): VariantFiles[] {
   for (const path of [...files.map((f) => f.path), ...binaries].sort()) {
     if (variants.some((v) => inFolder(v.dir, path))) continue;
@@ -208,7 +211,13 @@ function checkVariants(
 
     const { visible, unmatched } = variantVisible(variant, own);
     for (const pattern of unmatched) {
-      reportFrontmatter("variants", `${label} files "${pattern}" matches no text file in code/${variant.dir}/`);
+      const gitignored = ignoredMatches(`${variant.dir}/${pattern}`);
+      reportFrontmatter(
+        "variants",
+        gitignored.length > 0
+          ? `${label} files "${pattern}" matches only gitignored files, which are not published (${gitignored.join(", ")}); add them to frontmatter "include" to publish them`
+          : `${label} files "${pattern}" matches no text file in code/${variant.dir}/`,
+      );
     }
     const visibleSet = new Set(visible);
     if (variant.files !== undefined && own.includes(entry) && !visibleSet.has(entry)) {
@@ -234,6 +243,7 @@ export function validateTutorial({
   files,
   binaries = [],
   hiddenCode = [],
+  ignoredCode = [],
   images,
   embeds = [],
   outputs = [],
@@ -255,8 +265,8 @@ export function validateTutorial({
   }
   for (const pattern of config?.include ?? []) {
     const regex = globToRegExp(pattern);
-    if (!hiddenCode.some((path) => regex.test(path))) {
-      reportFrontmatter("include", `include "${pattern}" matches no path starting with "." in code/ (generated folders such as node_modules are never published)`);
+    if (!hiddenCode.some((path) => regex.test(path)) && !ignoredCode.some(({ path }) => regex.test(path))) {
+      reportFrontmatter("include", `include "${pattern}" matches no path in code/ starting with "." or gitignored (generated folders such as node_modules are never published)`);
     }
   }
   if (config?.logo !== undefined && !isRemoteLogo(config.logo) && !images.includes(config.logo)) {
@@ -272,6 +282,13 @@ export function validateTutorial({
     reportFrontmatter("preview", `preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
   }
 
+  // Gitignored paths that `include` does not publish: references to them get a specific message.
+  const ignored = new Map(ignoredCode.filter(({ path }) => !files.some((f) => f.path === path) && !binaries.includes(path)).map(({ path, by }) => [path, by]));
+  const ignoredMatches = (pattern: string) => {
+    const regex = globToRegExp(pattern);
+    return [...ignored].filter(([path]) => regex.test(path)).map(([path, by]) => `code/${path} by ${by}`);
+  };
+
   const { jsonVars, errors: jsonErrors } = jsonVarTargets(mdxFile, uses, files);
   errors.push(...jsonErrors);
   const parsed = new Map<string, ParsedSource>();
@@ -285,7 +302,7 @@ export function validateTutorial({
 
   // Invalid variants config: skip file and region checks rather than judge them as a single project.
   const skipFileChecks = config === undefined && frontmatter.variants !== undefined;
-  const variants = config?.variants && checkVariants(config.variants, files, binaries, parsed, reportFrontmatter, errors);
+  const variants = config?.variants && checkVariants(config.variants, files, binaries, parsed, reportFrontmatter, errors, ignoredMatches);
   if (!skipFileChecks) errors.push(...jsonRegionTargets(mdxFile, uses, files, config?.variants).errors);
   const visibleSet = new Set<string>();
   const embedded = new Set<string>();
@@ -301,11 +318,14 @@ export function validateTutorial({
     );
     for (const pattern of unmatched) {
       const regex = globToRegExp(pattern);
+      const gitignored = ignoredMatches(pattern);
       reportFrontmatter(
         "files",
         binaries.some((path) => regex.test(path))
           ? `files "${pattern}" matches only binary files, which cannot be shown as tabs`
-          : `files "${pattern}" matches no text file in code/`,
+          : gitignored.length > 0
+            ? `files "${pattern}" matches only gitignored files, which are not published (${gitignored.join(", ")}); add them to frontmatter "include" to publish them`
+            : `files "${pattern}" matches no text file in code/`,
       );
     }
     for (const path of visible) visibleSet.add(path);
@@ -392,6 +412,7 @@ export function validateTutorial({
         const source = file === undefined ? undefined : parsed.get(file);
         if (file !== undefined) {
           if (binaries.includes(file)) report(`file "${file}" is binary and cannot be shown`);
+          else if (ignored.has(file)) report(`file "${file}" is gitignored (by ${ignored.get(file)}) and not published; add it to frontmatter "include" to publish it`);
           else if (!files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
           else if (!visibleSet.has(file)) report(`file "${file}" is not shown in tabs; add it to frontmatter "files"`);
         }
@@ -578,6 +599,7 @@ export function validateTutorial({
       if (file !== undefined) {
         const path = `${variant.dir}/${file}`;
         if (binaries.includes(path)) report(`file "${file}" is binary in ${label} and cannot be shown`);
+        else if (ignored.has(path)) report(`file "${file}" is gitignored in ${label} (code/${path} by ${ignored.get(path)}) and not published; add it to frontmatter "include" to publish it`);
         else if (!files.some((f) => f.path === path)) report(`file "${file}" not found in ${label} (code/${path}); add it or set "only"`);
         else if (!variant.visible.has(path)) report(`file "${file}" is not shown in tabs in ${label}; add it to its "files"`);
         else if (region !== undefined) {
