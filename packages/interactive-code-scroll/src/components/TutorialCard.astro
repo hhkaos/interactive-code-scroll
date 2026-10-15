@@ -1,0 +1,84 @@
+---
+import { cardParts, levelRank, tagFor, type SeriesCard } from "../series.ts";
+
+// One card of <TutorialList> and <TutorialFavorites> (internal: not in index.mdx or the public module).
+interface Props {
+  card: SeriesCard;
+  /** Tag → family index (tagGroups position), for the family dot colors. */
+  familyIndex: ReadonlyMap<string, number>;
+}
+
+const { card, familyIndex } = Astro.props;
+// Variant links past the fourth collapse into "+N"; linked variant labels leave the plain tag line.
+const { links, more, plainTags } = cardParts(card);
+---
+
+<li class="series-card-item" data-slug={card.slug} data-tags={JSON.stringify(card.tags)} data-level={card.level}>
+  {/* The title link covers the card (stretched link); variant links and the favorite toggle sit above it, so links never nest. */}
+  <article class="series-card">
+    <h3 class="series-card-heading">
+      {/* One line: the search highlights the title's text as is. */}
+      <a class="series-card-title" href={card.href} data-href={card.href}>{card.title}</a>
+    </h3>
+    {card.description && <p class="series-card-description">{card.description}</p>}
+    {(card.level || card.duration) && (
+      <p class="series-card-meta">
+        {card.level && (
+          <span>
+            {levelRank(card.level) ? (
+              <svg class="series-level-bars" data-rank={levelRank(card.level)} viewBox="0 0 16 16" aria-hidden="true">
+                <rect x="2" y="9" width="3" height="5" rx="1" />
+                <rect x="6.5" y="5.5" width="3" height="8.5" rx="1" />
+                <rect x="11" y="2" width="3" height="12" rx="1" />
+              </svg>
+            ) : (
+              <calcite-icon icon="gauge" scale="s" aria-hidden="true" />
+            )}
+            <span class="visually-hidden">Level:</span> {card.level}
+          </span>
+        )}
+        {card.duration && (
+          <span>
+            <calcite-icon icon="clock" scale="s" aria-hidden="true" />
+            <span class="visually-hidden">Duration:</span> {card.duration}
+          </span>
+        )}
+      </p>
+    )}
+    {plainTags.length > 0 && (
+      <ul class="series-card-tags" aria-label="Tags">
+        {/* A tag with a logo shows it instead of the family dot; the name always shows (some logos are shared). */}
+        {plainTags.map((tag) => (
+          <li data-tag={tag} data-family={familyIndex.get(tag)} class:list={{ "has-logo": card.tagLogos?.[tag] }}>
+            {card.tagLogos?.[tag] && <img src={card.tagLogos[tag]} alt="" />}
+            {tag}
+          </li>
+        ))}
+      </ul>
+    )}
+    {links.length > 0 && (
+      <div class="series-card-variants">
+        <p class="series-card-variants-label" aria-hidden="true">
+          Available in
+        </p>
+        <ul aria-label="Available in">
+          {links.map((link, i) => (
+            <li>
+              <a class="series-card-variant" href={link.href} data-tag={tagFor(link.label, card.tags) ?? link.label}>
+                {link.logo && <img src={link.logo} alt="" />}
+                {link.label}
+                <span class="visually-hidden">: {card.title}</span>
+              </a>
+              {i === links.length - 1 && more.length > 0 && (
+                <a class="series-card-variant-more" href={card.href} title={more.map((v) => v.label).join(", ")}>
+                  +{more.length}
+                  <span class="visually-hidden"> more: {more.map((v) => v.label).join(", ")}</span>
+                </a>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </article>
+</li>

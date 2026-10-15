@@ -1,5 +1,6 @@
 ---
 import { seriesImages, seriesIndex } from "virtual:interactive-code-scroll/tutorial";
+import TutorialFavorites from "../components/TutorialFavorites.astro";
 import TutorialFilter from "../components/TutorialFilter.astro";
 import TutorialList from "../components/TutorialList.astro";
 import { logoUrl, readIndexConfig } from "../frontmatter.ts";
@@ -10,7 +11,7 @@ import "../styles/tutorial.css";
 import "../styles/series.css";
 
 // Index of a series site: `index.mdx` (optional) gives the title, description, logo and prose with
-// `<TutorialFilter>` and `<TutorialList>` sections; without it, the page shows the filter and every
+// `<TutorialFilter>`, `<TutorialFavorites>` and `<TutorialList>` sections; without it, the page shows the filter and every
 // tutorial. Validated at MDX compile time.
 const config = readIndexConfig(seriesIndex?.frontmatter ?? {});
 const logo = logoUrl(config.logo, seriesImages);
@@ -51,7 +52,7 @@ const Content = seriesIndex?.Content;
       <div class="series-content">
         {
           Content ? (
-            <Content components={{ TutorialFilter, TutorialList }} />
+            <Content components={{ TutorialFavorites, TutorialFilter, TutorialList }} />
           ) : (
             <>
               <TutorialFilter />

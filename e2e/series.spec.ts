@@ -151,9 +151,9 @@ test("typing suggests tags, and picking one selects it", async ({ page }) => {
 
 test("card tags are plain labels with their family", async ({ page }) => {
   await page.goto("/");
-  const gamma = page.locator(".series-card", { hasText: "Gamma Series Tutorial" });
+  const gamma = page.locator(".series-list").nth(0).locator(".series-card", { hasText: "Gamma Series Tutorial" });
   await expect(gamma.locator('.series-card-tags li[data-family="1"]')).toHaveText(["OAuth", "API keys"]);
-  await expect(gamma.locator("button")).toHaveCount(0);
+  await expect(gamma.locator(".series-card-tags button")).toHaveCount(0);
 });
 
 test("without JavaScript the search bar is hidden and every card shows", async ({ browser, baseURL }) => {
@@ -162,19 +162,83 @@ test("without JavaScript the search bar is hidden and every card shows", async (
   await page.goto("/?tags=Python");
   await expect(page.locator(".series-filter")).toBeHidden();
   await expect(page.locator(".series-list").nth(0).locator(".series-card-title")).toHaveCount(3);
+  // Favorites need storage and the client: no section, no toggle.
+  await expect(page.locator(".series-favorites")).toBeHidden();
+  await expect(page.locator(".series-card-favorite")).toHaveCount(0);
   await context.close();
+});
+
+test("a star marks a favorite, and the Favorites section lists them in series order across reloads", async ({ page }) => {
+  await page.goto("/");
+  const section = page.locator(".series-favorites");
+  const star = (list: number, title: string) => page.locator(".series-list").nth(list).locator(".series-card", { hasText: title }).locator(".series-card-favorite");
+  await expect(section).toBeHidden();
+  await expect(star(0, "Gamma Series Tutorial")).toHaveAttribute("aria-pressed", "false");
+  await expect(star(0, "Gamma Series Tutorial")).toHaveAccessibleName("Favorite: Gamma Series Tutorial");
+
+  await star(0, "Gamma Series Tutorial").click();
+  await star(1, "Beta Series Tutorial").click();
+  // The star sits above the stretched title link: the page stays.
+  await expect(page).toHaveURL(/\/$/);
+  await expect(section).toBeVisible();
+  await expect(section.locator(".series-favorites-title")).toHaveText(/Favorites\s*2/);
+  await expect(section.locator(".series-card-title:visible")).toHaveText(["Beta Series Tutorial", "Gamma Series Tutorial"]);
+  // Card titles keep the card's text color, as in the lists (not the index.mdx prose link color).
+  const colors = await section.locator(".series-card:visible").first().evaluate((el) => [el, el.querySelector(".series-card-title")!].map((node) => getComputedStyle(node).color));
+  expect(colors[1]).toBe(colors[0]);
+  // Every card of a favorite shows it pressed, in each section.
+  await expect(star(0, "Beta Series Tutorial")).toHaveAttribute("aria-pressed", "true");
+  await expect(section.locator('.series-card-favorite[aria-pressed="true"]:visible')).toHaveCount(2);
+  expect(await page.evaluate(() => localStorage.getItem("ics:favorites:/"))).toBe('["gamma","beta"]');
+
+  await page.reload();
+  await expect(section.locator(".series-card-title:visible")).toHaveText(["Beta Series Tutorial", "Gamma Series Tutorial"]);
+  // Unmarking from the section removes the card; focus moves to the section heading.
+  await section.locator(".series-card", { hasText: "Beta Series Tutorial" }).locator(".series-card-favorite").click();
+  await expect(section.locator(".series-card-title:visible")).toHaveText(["Gamma Series Tutorial"]);
+  await expect(section.locator(".series-favorites-title")).toBeFocused();
+  await star(0, "Gamma Series Tutorial").click();
+  await expect(section).toBeHidden();
+});
+
+test("the filters apply to favorites; unknown stored slugs are ignored", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ics:favorites:/", JSON.stringify(["delta", "removed", "alpha"])));
+  await page.goto("/");
+  const section = page.locator(".series-favorites");
+  await expect(section.locator(".series-card-title:visible")).toHaveText(["Alpha Series Tutorial", "Delta Series Tutorial"]);
+  await page.locator('#series-tags-top .series-tag[data-tag="Python"]').click();
+  await expect(section.locator(".series-card-title:visible")).toHaveText(["Delta Series Tutorial"]);
+  await expect(section.locator(".series-favorites-title")).toHaveText(/Favorites\s*1/);
+  // No favorite matches: the section hides.
+  await page.goto("/?q=gamma");
+  await expect(page.locator("#series-count")).toHaveText("1 of 4 tutorials");
+  await expect(section).toBeHidden();
+});
+
+test("favorites work for the visit when storage is blocked", async ({ page }) => {
+  await page.addInitScript(() => {
+    Storage.prototype.getItem = () => {
+      throw new DOMException("blocked", "SecurityError");
+    };
+    Storage.prototype.setItem = () => {
+      throw new DOMException("blocked", "SecurityError");
+    };
+  });
+  await page.goto("/");
+  await page.locator(".series-list").nth(0).locator(".series-card", { hasText: "Alpha Series Tutorial" }).locator(".series-card-favorite").click();
+  await expect(page.locator(".series-favorites .series-card-title:visible")).toHaveText(["Alpha Series Tutorial"]);
 });
 
 test("the index fits a phone without horizontal scrolling", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.locator(".series-card").first()).toBeVisible();
+  await expect(page.locator(".series-card:visible").first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
 
 test("cards open their tutorial and the header links back to the index", async ({ page }) => {
   await page.goto("/");
-  await page.locator(".series-card", { hasText: "Alpha Series Tutorial" }).first().click();
+  await page.locator(".series-list .series-card", { hasText: "Alpha Series Tutorial" }).first().click();
   await expect(page).toHaveURL(/\/alpha\/$/);
   await expect(page.locator("calcite-navigation-logo")).toHaveAttribute("heading", "Alpha Series Tutorial");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", "A web app with a persisted token field and a Preview.");

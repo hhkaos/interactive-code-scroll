@@ -1,10 +1,11 @@
 ---
 import { base, seriesImages, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import { readIndexConfig } from "../frontmatter.ts";
-import { cardParts, levelRank, parseTagList, selectCards, tagFor } from "../series.ts";
+import { parseTagList, selectCards } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
 import "@esri/calcite-components/main.css";
 import "../styles/series-list.css";
+import TutorialCard from "./TutorialCard.astro";
 
 // Attributes are validated at MDX compile time in index.mdx (a custom index page gets its types);
 // tag and level values are checked here, where the tutorials' metadata is known.
@@ -29,85 +30,11 @@ if (level !== undefined && !cards.some((card) => card.level === level)) {
 // Family colors of index.mdx tagGroups (a custom page's <TutorialFilter tagGroups> sets them from the client).
 const familyIndex = new Map(groups.flatMap((group, index) => group.tags.map((tag) => [tag, index] as const)));
 const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : { level }) });
-// Variant links past the fourth collapse into "+N"; linked variant labels leave the plain tag line.
-const rows = shown.map((card) => ({ card, ...cardParts(card) }));
 ---
 
 <div class="series-list">
   <ul class="series-cards">
-    {
-      rows.map(({ card, links, more, plainTags }) => (
-        <li class="series-card-item" data-slug={card.slug} data-tags={JSON.stringify(card.tags)} data-level={card.level}>
-          {/* The title link covers the card (stretched link); variant links sit above it, so links never nest. */}
-          <article class="series-card">
-            <h3 class="series-card-heading">
-              {/* One line: the search highlights the title's text as is. */}
-              <a class="series-card-title" href={card.href} data-href={card.href}>{card.title}</a>
-            </h3>
-            {card.description && <p class="series-card-description">{card.description}</p>}
-            {(card.level || card.duration) && (
-              <p class="series-card-meta">
-                {card.level && (
-                  <span>
-                    {levelRank(card.level) ? (
-                      <svg class="series-level-bars" data-rank={levelRank(card.level)} viewBox="0 0 16 16" aria-hidden="true">
-                        <rect x="2" y="9" width="3" height="5" rx="1" />
-                        <rect x="6.5" y="5.5" width="3" height="8.5" rx="1" />
-                        <rect x="11" y="2" width="3" height="12" rx="1" />
-                      </svg>
-                    ) : (
-                      <calcite-icon icon="gauge" scale="s" aria-hidden="true" />
-                    )}
-                    <span class="visually-hidden">Level:</span> {card.level}
-                  </span>
-                )}
-                {card.duration && (
-                  <span>
-                    <calcite-icon icon="clock" scale="s" aria-hidden="true" />
-                    <span class="visually-hidden">Duration:</span> {card.duration}
-                  </span>
-                )}
-              </p>
-            )}
-            {plainTags.length > 0 && (
-              <ul class="series-card-tags" aria-label="Tags">
-                {/* A tag with a logo shows it instead of the family dot; the name always shows (some logos are shared). */}
-                {plainTags.map((tag) => (
-                  <li data-tag={tag} data-family={familyIndex.get(tag)} class:list={{ "has-logo": card.tagLogos?.[tag] }}>
-                    {card.tagLogos?.[tag] && <img src={card.tagLogos[tag]} alt="" />}
-                    {tag}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {links.length > 0 && (
-              <div class="series-card-variants">
-                <p class="series-card-variants-label" aria-hidden="true">
-                  Available in
-                </p>
-                <ul aria-label="Available in">
-                  {links.map((link, i) => (
-                    <li>
-                      <a class="series-card-variant" href={link.href} data-tag={tagFor(link.label, card.tags) ?? link.label}>
-                        {link.logo && <img src={link.logo} alt="" />}
-                        {link.label}
-                        <span class="visually-hidden">: {card.title}</span>
-                      </a>
-                      {i === links.length - 1 && more.length > 0 && (
-                        <a class="series-card-variant-more" href={card.href} title={more.map((v) => v.label).join(", ")}>
-                          +{more.length}
-                          <span class="visually-hidden"> more: {more.map((v) => v.label).join(", ")}</span>
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </article>
-        </li>
-      ))
-    }
+    {shown.map((card) => <TutorialCard card={card} familyIndex={familyIndex} />)}
   </ul>
   <p class="series-empty" hidden>No tutorials match the filters.</p>
 </div>

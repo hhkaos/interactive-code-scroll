@@ -4,6 +4,7 @@ import { tutorials as allTutorials, base } from "virtual:interactive-code-scroll
 import type { SeriesCard } from "./series.ts";
 import { seriesCards } from "./tutorial-data.ts";
 
+export { default as TutorialFavorites } from "./components/TutorialFavorites.astro";
 export { default as TutorialFilter } from "./components/TutorialFilter.astro";
 export { default as TutorialList } from "./components/TutorialList.astro";
 export type { SeriesCard } from "./series.ts";

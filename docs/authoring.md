@@ -201,6 +201,7 @@ Components render the explanations panel on the left: the tags you write in MDX.
 | [`<VarField>`](#varfield) | `tutorial.mdx`, inside a step | A form field that edits a value in the code. |
 | [`<Hint>`](#hint) | `tutorial.mdx`, inline | A short popover for a side note. |
 | [`<TutorialList>`](#index-page) | `tutorials/index.mdx` | A section of tutorial cards on a series index. |
+| [`<TutorialFavorites>`](#index-page) | `tutorials/index.mdx` | The reader's favorite tutorials on a series index, with a star on every card. |
 | [`<TutorialFilter>`](#index-page) | `tutorials/index.mdx` | The search bar of a series index. |
 
 Build errors name the file, line and column: `tutorial/tutorial.mdx:12:1 <Step> region "config" not found in code/main.js`. See [Validation](#validation) for the common ones.
@@ -960,6 +961,8 @@ Start with the REST tutorials if you are new to location services.
 
 <TutorialFilter />
 
+<TutorialFavorites />
+
 ## Web apps
 
 <TutorialList tags="JavaScript, Web" />
@@ -977,12 +980,13 @@ Start with the REST tutorials if you are new to location services.
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered site-wide. |
 | `tagGroups` | family name → list of tags (or `{ name, logo }`) | none | [Tag families](#tag-families), in display order, and tag logos. |
 
-The body is free MDX prose with two components; anything else is a build error.
+The body is free MDX prose with three components; anything else is a build error.
 
 | Component | Props | Description |
 |---|---|---|
 | `<TutorialList>` | `tags="A, B"`, `level="Beginner"` | A section of cards. `tags` (comma-separated, since a tag may contain spaces) keeps tutorials with any of those tags; `level` keeps that exact level; both combine. Without props it lists every tutorial. A tag or level no tutorial uses fails the build. |
 | `<TutorialFilter>` | none | The search bar, where you place it. It filters every list on the page and counts tutorials once even when they appear in several sections. At most one per page; leave it out to show no search. |
+| `<TutorialFavorites>` | none | Lets readers mark tutorials as favorites: a star on every card of the page and, where you place it, a "Favorites" section with the marked tutorials in series order (hidden while there are none). Favorites are stored in the reader's browser, per site; the search bar filters this section too. At most one per page. Worth it with many tutorials; leave it out of small series. Without JavaScript there are no stars and no section. |
 
 Without `index.mdx`, the index is the search bar plus one list of every tutorial.
 
@@ -1011,7 +1015,7 @@ interactiveCodeScroll({ tutorials: "tutorials", index: "src/series-home.astro" }
 
 ```astro title="src/series-home.astro"
 ---
-import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll/series";
+import { tutorials, TutorialFavorites, TutorialFilter, TutorialList } from "interactive-code-scroll/series";
 ---
 <html lang="en">
   <head>
@@ -1025,13 +1029,14 @@ import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll
       {tutorials.map((t) => <li><a href={t.href}>{t.title}</a> {t.level}</li>)}
     </ul>
     <TutorialFilter tagGroups={{ Language: ["JavaScript", "Python"] }} />
+    <TutorialFavorites />
     <TutorialList tags="Python" />
   </body>
 </html>
 ```
 
 - `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set; `logo` (URL of the tutorial logo), `tagLogos` (tag → logo URL) and `variants` (`{ id, label, href, logo }`, links that open each variant, with two or more) when any. `tags` include the variant labels.
-- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. `<TutorialFilter tagGroups={…}>` takes the [tag families](#tag-families) that `index.mdx` sets in its frontmatter, without logos: tag logos on a custom page come from variant logos. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
+- `<TutorialList>`, `<TutorialFilter>` and `<TutorialFavorites>` work as in `index.mdx` and bring their own styles and filter script. `<TutorialFilter tagGroups={…}>` takes the [tag families](#tag-families) that `index.mdx` sets in its frontmatter, without logos: tag logos on a custom page come from variant logos. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
 - `index` must be an `.astro` file, needs `tutorials`, and cannot be combined with `tutorials/index.mdx` (build error: the file would be ignored).
 
 ### Sibling tutorials

@@ -27,6 +27,8 @@ for (const path of [
   "src/components/Intro.astro",
   "src/components/Step.astro",
   "src/components/StepMedia.astro",
+  "src/components/TutorialCard.astro",
+  "src/components/TutorialFavorites.astro",
   "src/components/TutorialFilter.astro",
   "src/components/TutorialList.astro",
   "src/components/VarField.astro",
@@ -47,6 +49,8 @@ rewriteAstroImports(join(dist, "components", "Hint.astro"));
 rewriteAstroImports(join(dist, "components", "Intro.astro"));
 rewriteAstroImports(join(dist, "components", "Step.astro"));
 rewriteAstroImports(join(dist, "components", "StepMedia.astro"));
+rewriteAstroImports(join(dist, "components", "TutorialCard.astro"));
+rewriteAstroImports(join(dist, "components", "TutorialFavorites.astro"));
 rewriteAstroImports(join(dist, "components", "TutorialFilter.astro"));
 rewriteAstroImports(join(dist, "components", "TutorialList.astro"));
 rewriteAstroImports(join(dist, "components", "VarField.astro"));

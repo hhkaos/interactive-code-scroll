@@ -14,6 +14,8 @@
  * Tags without a family stay neutral.
  */
 :root, .calcite-mode-light {
+  /* Favorite stars: amber, 3:1 against cards in light and dark. */
+  --ics-favorite: #d97706;
   --ics-family-0: #2563eb;
   --ics-family-1: #c2410c;
   --ics-family-2: #15803d;
@@ -24,6 +26,7 @@
   --ics-family-7: #4d7c0f;
 }
 .calcite-mode-dark {
+  --ics-favorite: #fbbf24;
   --ics-family-0: #7aa7ff;
   --ics-family-1: #fb923c;
   --ics-family-2: #4ade80;
@@ -458,6 +461,64 @@
     outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand));
     outline-offset: 2px;
   }
+}
+
+/* <TutorialFavorites>: the client shows the favorite cards (and the section when one is visible). */
+.series-favorites[hidden],
+.series-favorites .series-card-item:not(.is-favorite) { display: none; }
+
+.series-favorites .series-cards { margin-block: 1rem 2rem; }
+
+/* Same size as the index.mdx section headings. */
+.series-favorites-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 2rem 0 0.5rem;
+  font-size: var(--calcite-font-size-xl);
+
+  calcite-icon { color: var(--ics-favorite); }
+  &:focus { outline: none; }
+  &:focus-visible { outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand)); outline-offset: 2px; }
+}
+
+.series-favorites-count {
+  font-size: var(--calcite-font-size-sm);
+  font-weight: var(--calcite-font-weight-regular, 400);
+  color: var(--calcite-color-text-3);
+}
+
+/* Favorite toggle (added by the client): top right, above the stretched title link. */
+.series-card:has(.series-card-favorite) .series-card-heading { padding-inline-end: 2rem; }
+
+.series-card-favorite {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--calcite-color-text-3);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--calcite-color-foreground-2);
+    color: var(--calcite-color-brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand));
+    outline-offset: 2px;
+  }
+
+  /* Pressed: a filled star (shape, not color alone). */
+  &[aria-pressed="true"] { color: var(--ics-favorite); }
 }
 
 .series-empty {

@@ -633,7 +633,7 @@ export interface SeriesIndexInput {
 
 const TUTORIAL_LIST_ATTRIBUTES = new Set(["tags", "level"]);
 
-/** Validates a series `index.mdx`: its frontmatter, logo, `<TutorialList>` uses and one `<TutorialFilter>` at most (the only components it may use). */
+/** Validates a series `index.mdx`: its frontmatter, logo, `<TutorialList>` uses and one `<TutorialFilter>` and `<TutorialFavorites>` at most (the only components it may use). */
 export function validateSeriesIndex({ mdxFile, uses, images, frontmatter = {}, frontmatterLines = {} }: SeriesIndexInput): string[] {
   const errors: string[] = [];
   try {
@@ -650,17 +650,22 @@ export function validateSeriesIndex({ mdxFile, uses, images, frontmatter = {}, f
     if (!(error instanceof FrontmatterError)) throw error;
     errors.push(`${mdxFile}:${frontmatterLines[error.key] ?? 1}:1 frontmatter ${error.detail}`);
   }
-  let filters = 0;
+  const singles = new Map([
+    ["TutorialFilter", "it filters every list on the page"],
+    ["TutorialFavorites", "it lists every favorite"],
+  ]);
+  const seen = new Set<string>();
   for (const use of uses) {
     const at = `${mdxFile}:${use.line}:${use.column}`;
-    if (use.name === "TutorialFilter") {
-      filters += 1;
-      if (filters > 1) errors.push(`${at} <TutorialFilter> can appear only once (it filters every list on the page)`);
-      for (const name of Object.keys(use.attributes)) errors.push(`${at} <TutorialFilter> takes no attributes (got "${name}")`);
+    const single = singles.get(use.name);
+    if (single !== undefined) {
+      if (seen.has(use.name)) errors.push(`${at} <${use.name}> can appear only once (${single})`);
+      seen.add(use.name);
+      for (const name of Object.keys(use.attributes)) errors.push(`${at} <${use.name}> takes no attributes (got "${name}")`);
       continue;
     }
     if (use.name !== "TutorialList") {
-      errors.push(`${at} <${use.name}> is not available in index.mdx (use <TutorialList> or <TutorialFilter>)`);
+      errors.push(`${at} <${use.name}> is not available in index.mdx (use <TutorialList>, <TutorialFilter> or <TutorialFavorites>)`);
       continue;
     }
     for (const [name, value] of Object.entries(use.attributes)) {

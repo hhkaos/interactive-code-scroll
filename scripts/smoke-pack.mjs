@@ -73,16 +73,16 @@ try {
     join(seriesDir, "home.astro"),
     [
       "---",
-      'import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll/series";',
+      'import { tutorials, TutorialFavorites, TutorialFilter, TutorialList } from "interactive-code-scroll/series";',
       "---",
-      '<html><body><p id="count">{tutorials.length} tutorials</p><TutorialFilter /><TutorialList /></body></html>',
+      '<html><body><p id="count">{tutorials.length} tutorials</p><TutorialFilter /><TutorialFavorites /><TutorialList /></body></html>',
       "",
     ].join("\n"),
   );
   run("pnpm", ["install", "--prefer-offline"], seriesDir, { CI: "true" });
   run("pnpm", ["build"], seriesDir, { CI: "true" });
   const home = existsSync(join(seriesDir, "dist", "index.html")) ? readFileSync(join(seriesDir, "dist", "index.html"), "utf8") : "";
-  if (!home.includes('<p id="count">4 tutorials</p>') || !home.includes("series-card-title")) {
+  if (!home.includes('<p id="count">4 tutorials</p>') || !home.includes("series-card-title") || !home.includes("series-favorites")) {
     throw new Error("Pack smoke test did not render the custom series index page");
   }
 

@@ -58,7 +58,7 @@ function componentCollector(accept: (name: string) => boolean) {
   return { uses, collect };
 }
 
-/** A series `index.mdx`: frontmatter, logo and `<TutorialList>`; other components (capitalized) are errors. */
+/** A series `index.mdx`: frontmatter, logo and the index components; other components (capitalized) are errors. */
 function seriesIndexValidation(data: Readonly<Record<string, unknown>>, mdxPath: string, seriesDir: string) {
   const frontmatter = frontmatterOf(data);
   const { uses, collect } = componentCollector((name) => /^[A-Z]/.test(name));

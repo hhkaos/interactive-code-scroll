@@ -1,0 +1,34 @@
+---
+import { base, seriesImages, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { readIndexConfig } from "../frontmatter.ts";
+import { seriesCards } from "../tutorial-data.ts";
+import "@esri/calcite-components/main.css";
+import "../styles/series-list.css";
+import TutorialCard from "./TutorialCard.astro";
+
+// The reader's favorite tutorials (client/favorites.ts): every card, in series order, shown by the
+// client when it is a favorite. It also adds the favorite toggle to every card on the page. Without
+// JavaScript the section stays hidden and cards have no toggle.
+const groups = readIndexConfig(seriesIndex?.frontmatter ?? {}).tagGroups ?? [];
+const cards = seriesCards(tutorials, base, groups, seriesImages);
+const familyIndex = new Map(groups.flatMap((group, index) => group.tags.map((tag) => [tag, index] as const)));
+---
+
+<section class="series-favorites" aria-labelledby="series-favorites-title" data-base={base} hidden>
+  <h2 id="series-favorites-title" class="series-favorites-title" tabindex="-1">
+    <calcite-icon icon="star-f" scale="m" aria-hidden="true"></calcite-icon>
+    Favorites
+    <span class="series-favorites-count"></span>
+  </h2>
+  <ul class="series-cards">
+    {cards.map((card) => <TutorialCard card={card} familyIndex={familyIndex} />)}
+  </ul>
+</section>
+
+<script>
+  import "@esri/calcite-components/components/calcite-icon";
+  import "@esri/calcite-components/components/calcite-tooltip";
+  import { startFavorites } from "../client/favorites.ts";
+
+  startFavorites();
+</script>

@@ -703,9 +703,9 @@ describe("validateSeriesIndex", () => {
     expect(validateTutorial({ mdxFile: "tutorial.mdx", uses: [], files, images, frontmatter: { logo: "https://example.com/l.png", preview: "off" } })).toEqual([]);
   });
 
-  it("accepts TutorialList sections and a logo from images/", () => {
+  it("accepts TutorialList sections, the filter, favorites and a logo from images/", () => {
     expect(
-      index([use("TutorialFilter", {}), use("TutorialList", {}), use("TutorialList", { tags: "REST, Python", level: "Beginner" }, 9)], { logo: "logo.svg" }),
+      index([use("TutorialFilter", {}), use("TutorialFavorites", {}, 3), use("TutorialList", {}), use("TutorialList", { tags: "REST, Python", level: "Beginner" }, 9)], { logo: "logo.svg" }),
     ).toEqual([]);
   });
 
@@ -722,13 +722,17 @@ describe("validateSeriesIndex", () => {
       ),
     ).toEqual([
       'tutorials/index.mdx:3:1 frontmatter logo "missing.svg" not found in images/ (or use an https:// URL)',
-      "tutorials/index.mdx:5:1 <Step> is not available in index.mdx (use <TutorialList> or <TutorialFilter>)",
+      "tutorials/index.mdx:5:1 <Step> is not available in index.mdx (use <TutorialList>, <TutorialFilter> or <TutorialFavorites>)",
       'tutorials/index.mdx:7:1 <TutorialList> unknown attribute "tag" (use tags or level)',
       "tutorials/index.mdx:8:1 <TutorialList> level must be a non-empty string",
     ]);
     expect(index([use("TutorialFilter", { tags: "Web" }, 2), use("TutorialFilter", {}, 6)])).toEqual([
       'tutorials/index.mdx:2:1 <TutorialFilter> takes no attributes (got "tags")',
       "tutorials/index.mdx:6:1 <TutorialFilter> can appear only once (it filters every list on the page)",
+    ]);
+    expect(index([use("TutorialFavorites", { title: "Saved" }, 2), use("TutorialFavorites", {}, 6)])).toEqual([
+      'tutorials/index.mdx:2:1 <TutorialFavorites> takes no attributes (got "title")',
+      "tutorials/index.mdx:6:1 <TutorialFavorites> can appear only once (it lists every favorite)",
     ]);
     expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups)']);
   });
