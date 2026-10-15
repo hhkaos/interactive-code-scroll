@@ -229,10 +229,11 @@ Install the prerequisites and keep this page open.
 |---|---|---|---|
 | [`preview`](#preview) | `expanded`, `collapsed`, `keep` | `keep` | Expands or collapses the Preview (or the Result pane) while the intro is shown: on load without a step in the URL, and each time the reader scrolls or steps back to it. |
 | [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Same as on `<Step>`, applied when the intro is shown. |
+| [`file`](#step) | path in `code/` (relative to each variant folder with [variants](#code-variants)) | the first tab | File tab shown while the intro is shown, with no focused lines: on load and each time the reader returns to it. Comes first in the tabs when frontmatter `files` does not set their order. Cannot be combined with `images` or `embed`. |
 | [`images`](#show-images-instead-of-code) | array of paths in `images/` | none | Images shown instead of code while the intro is shown, as on `<Step>`. |
 | [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown instead of code while the intro is shown, as on `<Step>`. Cannot be combined with `images`. |
 
-For a calm first screen, `<Intro preview="collapsed">` starts with the pane collapsed; the first step that sets `preview="expanded"` opens it. Other `<Step>` props (`file`, `region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
+For a calm first screen, `<Intro preview="collapsed">` starts with the pane collapsed; the first step that sets `preview="expanded"` opens it. To open on a file that no early step shows (a README, the finished app), use `<Intro file="README.md">`; with variants, every variant needs that file. Other `<Step>` props (`region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
 
 A tutorial without code (no `code/`, `preview: off`, every step with `images` or `embed`) can open on a picture or a title slide instead of an empty pane:
 
@@ -1091,12 +1092,13 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> embed "x" must be an https:// URL or a path in embeds/` | Use `https://` (not `http://`), or a relative path without `..` or a leading `/`. |
 | `<Step> "embed" and "images" cannot be combined; use one step for each` | Split the step in two. |
 | `<Intro> "embed" and "images" cannot be combined; use one of them` | Keep one; move the other to the first step. |
+| `<Intro> "file" and "images" cannot be combined; use one of them` | The intro shows either a file or media; move the other to the first step. |
 | `<Step> output "x" not found in output/` | Add the file to `output/` (or `output/<variant id>/`). |
 | `<Step> output "x" has no effect: code/index.html makes the tutorial web code, which shows the Preview` | Web code has no Result pane: remove `output` or `index.html`. |
 | `<Step> request "x" not found in requests/ (# @name x)` | Name the request with `# @name x` in a `.http` file under `requests/`. |
 | `<Step> maximize="preview" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
 | `<Step> duplicate id "x"` | Step ids are unique per tutorial. |
-| `<Intro> "x" is not available on <Intro> (only preview, maximize, images, embed)` | Move `file`, `region`, `output` or `request` to the first step. |
+| `<Intro> "x" is not available on <Intro> (only preview, maximize, file, images, embed)` | Move `region`, `output` or `request` to the first step. |
 | `<VarField> no "@var x" found in code/` | Add `// @var x` next to the literal in the code, or fix the name. |
 | `@var "x" must have the same default in every file: …` | Use the same literal in every file that marks `x`. |
 | `code/x: @var "y" is in a file not shown in tabs; …` | Show the file in tabs or remove the marker. |

@@ -61,8 +61,10 @@ does not count as a step, does not get a step number, and does not activate code
 intro, the top of the explanations panel is a no-step state; the first real step activates only when reached by
 scrolling, clicking or step-key navigation. The intro accepts the pane props of `<Step>`, `preview` and `maximize`
 (same values and validation), applied on load without a step hash and each time the reader returns to the intro; without
-them the pane keeps its state. It also accepts the media props of `<Step>`, `images` and `embed` (same resolution and
-validation, not combined), shown instead of code while the intro is shown; moving to a step swaps them as between steps
+them the pane keeps its state. It accepts `file` (same resolution and validation as on `<Step>`; with variants, every
+variant must have it, since the intro has no `only`): the file tab shown, with no focused lines, at the same moments;
+without it the code panel keeps the current file. The intro's file comes first in the step order of the tabs. It also accepts the media props of `<Step>`, `images` and `embed` (same resolution and
+validation, not combined with each other or with `file`), shown instead of code while the intro is shown; moving to a step swaps them as between steps
 (an embed of the same page with another fragment moves in place). When the intro has no media and the tutorial has
 nothing else to show next to it (no code tabs, no Preview, no step with `output` or `request`), the intro shows the media
 of the first step that has `images` or `embed` (no empty pane on load); entering that step keeps it as shown. Any other

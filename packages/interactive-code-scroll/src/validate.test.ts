@@ -35,6 +35,7 @@ describe("validateTutorial", () => {
         use("Intro", { images: { expression: '["a.png", "shots/b.png"]' } }),
         use("Intro", { embed: "slides/#/1", maximize: "code" }),
         use("Intro", { embed: "https://example.com/app" }),
+        use("Intro", { file: "main.js", preview: "collapsed" }),
       ),
     ).toEqual([]);
   });
@@ -63,8 +64,11 @@ describe("validateTutorial", () => {
     [use("Intro", { preview: "closed" }), '<Intro> "preview" must be one of expanded, collapsed, keep'],
     [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, preview, none'],
     [use("Intro", { maximize: "preview", preview: "collapsed" }), '<Intro> maximize="preview" conflicts with preview="collapsed"'],
-    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize, images, embed)'],
-    [use("Intro", { file: "main.js" }), '<Intro> "file" is not available on <Intro>'],
+    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize, file, images, embed)'],
+    [use("Intro", { file: "main.js", region: "config" }), '<Intro> "region" is not available on <Intro>'],
+    [use("Intro", { file: "nope.js" }), '<Intro> file "nope.js" not found in code/'],
+    [use("Intro", { file: "main.js", images: { expression: '["a.png"]' } }), '<Intro> "file" and "images" cannot be combined; use one of them'],
+    [use("Intro", { file: "main.js", embed: "slides/" }), '<Intro> "file" and "embed" cannot be combined; use one of them'],
     [use("Intro", { id: "intro" }), '<Intro> "id" is not available on <Intro>'],
     [use("Intro", { images: { expression: '["c.png"]' } }), '<Intro> image "c.png" not found in images/'],
     [use("Intro", { images: "a.png" }), '<Intro> "images" must be a static array of strings'],
@@ -504,6 +508,16 @@ describe("validateTutorial variants", () => {
       'tutorial.mdx:3:1 <Step> file "main.js" not found in variant "curl" (code/curl/main.js); add it or set "only"',
       'tutorial.mdx:3:1 <Step> region "nope" not found in code/python/geocode.py',
     ]);
+  });
+
+  it("requires the <Intro> file in every variant (no only=)", () => {
+    expect(run({}, use("Intro", { file: "main.js" }))).toEqual([
+      'tutorial.mdx:3:1 <Intro> file "main.js" not found in variant "curl" (code/curl/main.js); add it',
+      'tutorial.mdx:3:1 <Intro> file "main.js" not found in variant "python" (code/python/main.js); add it',
+    ]);
+    const shared = [...variantFiles, { path: "curl/main.js", source: "x" }, { path: "python/main.js", source: "x" }];
+    const all = variants.map((v) => ({ ...v, files: undefined }));
+    expect(run({ files: shared, frontmatter: { variants: all, preview: "both" } }, use("Intro", { file: "main.js" }))).toEqual([]);
   });
 
   it("reports unknown only= ids and only= without variants", () => {

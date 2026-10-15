@@ -53,8 +53,8 @@ const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
 const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
 const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
 const MAXIMIZE_STATES = new Set(["code", "preview", "none"]);
-/** The intro comes before any step: the pane state and media, no code focus or result. */
-const INTRO_PROPS = ["preview", "maximize", "images", "embed"];
+/** The intro comes before any step: the pane state, a file or media, no code focus or result. */
+const INTRO_PROPS = ["preview", "maximize", "file", "images", "embed"];
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -410,12 +410,7 @@ export function validateTutorial({
       } else if (!skipFileChecks) {
         if (only !== undefined) report('"only" requires frontmatter "variants"');
         const source = file === undefined ? undefined : parsed.get(file);
-        if (file !== undefined) {
-          if (binaries.includes(file)) report(`file "${file}" is binary and cannot be shown`);
-          else if (ignored.has(file)) report(`file "${file}" is gitignored (by ${ignored.get(file)}) and not published; add it to frontmatter "include" to publish it`);
-          else if (!files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
-          else if (!visibleSet.has(file)) report(`file "${file}" is not shown in tabs; add it to frontmatter "files"`);
-        }
+        if (file !== undefined) checkFile(file, report);
         if (region !== undefined) {
           if (file === undefined) report(`region "${region}" requires a "file"`);
           else if (source && !isJsonRegion(region) && !source.regions.some((r) => r.id === region)) {
@@ -430,6 +425,14 @@ export function validateTutorial({
     if (use.name === "Intro") {
       checkPaneState(text, report);
       checkMedia(use, text, report);
+      // The file tab shown while the intro is, with no focus (a region would be code focus).
+      const file = text("file");
+      if (file !== undefined) {
+        if (use.attributes.images !== undefined || use.attributes.embed !== undefined) {
+          report(`"file" and "${use.attributes.images !== undefined ? "images" : "embed"}" cannot be combined; use one of them`);
+        } else if (variants) checkVariantStep(variants, undefined, file, undefined, report, false);
+        else if (!skipFileChecks) checkFile(file, report);
+      }
       for (const attr of Object.keys(use.attributes)) {
         if (!INTRO_PROPS.includes(attr)) report(`"${attr}" is not available on <Intro> (only ${INTRO_PROPS.join(", ")})`);
       }
@@ -499,6 +502,14 @@ export function validateTutorial({
     if (!optional && !options.some((o) => o.value === target.value)) {
       report(`the code default ${JSON.stringify(target.value)} is not one of the options`);
     }
+  }
+
+  /** A `file=` without variants, shared by <Step> and <Intro>. */
+  function checkFile(file: string, report: (message: string) => void): void {
+    if (binaries.includes(file)) report(`file "${file}" is binary and cannot be shown`);
+    else if (ignored.has(file)) report(`file "${file}" is gitignored (by ${ignored.get(file)}) and not published; add it to frontmatter "include" to publish it`);
+    else if (!files.some((f) => f.path === file)) report(`file "${file}" not found in code/`);
+    else if (!visibleSet.has(file)) report(`file "${file}" is not shown in tabs; add it to frontmatter "files"`);
   }
 
   /** `images=` and `embed=` (shown instead of code), shared by <Step> and <Intro>. */
@@ -586,7 +597,10 @@ export function validateTutorial({
     file: string | undefined,
     region: string | undefined,
     report: (message: string) => void,
+    /** <Intro> has no `only`: every variant must have the file. */
+    canLimit = true,
   ): void {
+    const orOnly = canLimit ? ' or set "only"' : "";
     let covered = all;
     if (only !== undefined) {
       const ids = only.split(/\s+/).filter(Boolean);
@@ -606,7 +620,7 @@ export function validateTutorial({
         const path = `${variant.dir}/${file}`;
         if (binaries.includes(path)) report(`file "${file}" is binary in ${label} and cannot be shown`);
         else if (ignored.has(path)) report(`file "${file}" is gitignored in ${label} (code/${path} by ${ignored.get(path)}) and not published; add it to frontmatter "include" to publish it`);
-        else if (!files.some((f) => f.path === path)) report(`file "${file}" not found in ${label} (code/${path}); add it or set "only"`);
+        else if (!files.some((f) => f.path === path)) report(`file "${file}" not found in ${label} (code/${path}); add it${orOnly}`);
         else if (!variant.visible.has(path)) report(`file "${file}" is not shown in tabs in ${label}; add it to its "files"`);
         else if (region !== undefined) {
           const source = parsed.get(path);

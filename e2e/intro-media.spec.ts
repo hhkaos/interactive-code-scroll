@@ -75,3 +75,27 @@ test("step keys from an intro fallback move to the first step, even one without 
   await expect(page.locator(".media-panel")).toBeHidden();
   await expect(page.locator(".code-panel")).toBeVisible();
 });
+
+test("the intro shows its file with no focus on load and again when the reader returns", async ({ page }) => {
+  const tabs = page.locator("calcite-tab-title[data-file]");
+  const shown = page.locator(".code:not([hidden])");
+  await page.goto("/intro-file/");
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+  // The intro's file comes first in the tabs (step order), and it is shown.
+  await expect(tabs.first()).toHaveAttribute("data-file", "overview.js");
+  await expect(shown).toHaveAttribute("data-file", "overview.js");
+  await expect(page.locator(".code .line[data-focus]")).toHaveCount(0);
+
+  await page.keyboard.press("PageDown");
+  await expect(page).toHaveURL(/#setup$/);
+  await expect(shown).toHaveAttribute("data-file", "setup.js");
+  await expect(shown.locator(".line[data-focus]")).not.toHaveCount(0);
+
+  await page.keyboard.press("PageDown");
+  await expect(page).toHaveURL(/#text-only$/);
+  await page.keyboard.press("PageUp");
+  await page.keyboard.press("PageUp");
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+  await expect(shown).toHaveAttribute("data-file", "overview.js");
+  await expect(page.locator(".code .line[data-focus]")).toHaveCount(0);
+});

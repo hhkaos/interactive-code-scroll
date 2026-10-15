@@ -1,4 +1,8 @@
 ---
+import { readTutorialConfig } from "../frontmatter.ts";
+import { jsonVarsOf } from "../json-vars.ts";
+import { currentTutorial } from "../tutorial-data.ts";
+import { parsedFiles, stepFiles } from "../variants.ts";
 import StepMedia from "./StepMedia.astro";
 
 // Props are validated at MDX compile time (mdx-validation.ts).
@@ -7,16 +11,27 @@ interface Props {
   preview?: "expanded" | "collapsed" | "keep";
   /** Maximizes the code area or the pane under it while the intro is shown; `none` restores. */
   maximize?: "code" | "preview" | "none";
+  /** File tab shown, with no focus, while the intro is shown (relative to each variant folder with variants). */
+  file?: string;
   /** Images shown instead of code while the intro is shown (same as on <Step>). */
   images?: string[];
   /** Page shown instead of code while the intro is shown: an `https://` URL or a path under `embeds/`. */
   embed?: string;
 }
 
-const { preview, maximize, images, embed } = Astro.props;
+const { preview, maximize, file, images, embed } = Astro.props;
+const { files, frontmatter } = currentTutorial(Astro.locals);
+const { variants } = readTutorialConfig(frontmatter);
+const variantFiles = variants && file !== undefined ? stepFiles(variants, parsedFiles(files, jsonVarsOf(frontmatter)), { file }) : undefined;
 ---
 
-<section class="intro" data-preview={preview} data-maximize={maximize}>
+<section
+  class="intro"
+  data-preview={preview}
+  data-maximize={maximize}
+  data-file={variants ? undefined : file}
+  data-files={variantFiles ? JSON.stringify(variantFiles) : undefined}
+>
   <slot />
   <StepMedia images={images} embed={embed} />
 </section>

@@ -4,7 +4,6 @@
 
 - Let readers send feedback (GitHub issues?) and show the tutorial's last updated date.
 - Show authors?
-- The intro does not support the `file` property: could it be added without breaking anything?
 
 ## Backlog
 

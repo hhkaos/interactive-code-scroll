@@ -105,7 +105,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (block.dataset.maximize) document.dispatchEvent(new CustomEvent<string>(MAXIMIZE_EVENT, { detail: block.dataset.maximize }));
   }
 
-  /** File the step shows in the active variant (`data-files` maps variant id → file). */
+  /** File the step (or the intro) shows in the active variant (`data-files` maps variant id → file). */
   function fileOf(step: HTMLElement): string | undefined {
     if (!variants) return step.dataset.file;
     const files = JSON.parse(step.dataset.files ?? "{}") as Record<string, string>;
@@ -155,6 +155,9 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     showNotice(undefined);
     // Once per visit, like the pane state: re-rendering the same media would reload an embed.
     if (!atIntro) showPanel(introPanel());
+    // Without `file=`, the intro keeps the current file.
+    const introFile = !atIntro && intro ? fileOf(intro) : undefined;
+    if (introFile) showFile(introFile);
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: null }));
     if (progress) progress.textContent = "";
     if (progressBar) progressBar.value = 0;

@@ -145,10 +145,10 @@ export function tutorialValidation(
         const { jsonVars } = jsonVarTargets(mdxFile, uses, tutorial.files);
         frontmatter[JSON_VARS_KEY] = jsonVars;
         frontmatter[JSON_REGIONS_KEY] = jsonRegionTargets(mdxFile, uses, tutorial.files, readTutorialConfig(frontmatter).variants).jsonRegions;
-        // Without `files`, tabs follow the order in which steps first show each file.
+        // Without `files`, tabs follow the order in which the intro and the steps first show each file.
         const text = (value: AttributeValue | undefined) => (typeof value === "string" ? value : undefined);
         const steps = uses
-          .filter((use) => use.name === "Step")
+          .filter((use) => use.name === "Step" || use.name === "Intro")
           .map(({ attributes }) => ({ file: text(attributes.file), region: text(attributes.region), only: text(attributes.only) }));
         frontmatter[STEP_FILES_KEY] = stepFileOrder(steps, readTutorialConfig(frontmatter).variants, parsedFiles(tutorial.files, jsonVars));
         const sources = [...parsedFiles(tutorial.files, jsonVars).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];

@@ -6,9 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `<Intro file="…">`: the intro shows a file tab, with no focused lines, on load and each time the reader returns to it (without `file` the code panel keeps the current file, as before). Same resolution and validation as on `<Step>`; with variants every variant must have the file (the intro has no `only`). Not combined with `images` or `embed`; `region` stays a build error. The intro's file comes first in the step order of the tabs. The unknown-prop error now reads `(only preview, maximize, file, images, embed)`. Documented in the authoring reference, Features and SPEC. Unit tests in `validate.test.ts`; E2E in `e2e/intro-media.spec.ts` on the new `intro-file` tutorial of `fixtures/framework-fixture-media`.
+
 ### Changed
 
 - Scaffolder: the series index choice and the generated `index.mdx` call `<TutorialFilter />` a search bar (was "tag filter"), and the `index.mdx` text suggests `<TutorialFavorites />` for growing series.
+
+### Fixed
+
+- File and Result tabs no longer keep Calcite's focus ring after a mouse click (Calcite 5.1.2 draws it on `:focus`); keyboard focus still shows it. E2E in `e2e/tutorial-page.spec.ts`.
 
 ## [0.2.0-beta.5] - 2026-10-15
 
