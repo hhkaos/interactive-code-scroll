@@ -80,6 +80,27 @@ test("styles tutorial blockquotes as notes", async ({ page }) => {
   expect(styles).toEqual({ borderLeftWidth: "3px", paddingLeft: "18px", marginTop: "16px" });
 });
 
+test("styles tutorial tables with row rules aligned to the text", async ({ page }) => {
+  const table = page.locator("section.step#callback table");
+  await expect(table).toContainText("oauth-callback.html");
+
+  const styles = await table.evaluate((node) => {
+    const css = (el: Element) => getComputedStyle(el);
+    const th = node.querySelector("th")!;
+    const rows = node.querySelectorAll("tbody tr");
+    return {
+      thAlign: css(th).textAlign,
+      thRule: css(th).borderBottomWidth,
+      rowRule: css(rows[1].querySelector("td")!).borderTopWidth,
+      firstCellPadding: css(rows[0].querySelector("td")!).paddingLeft,
+      tableLeft: node.getBoundingClientRect().left,
+      textLeft: node.previousElementSibling!.getBoundingClientRect().left,
+    };
+  });
+  expect(styles).toMatchObject({ thAlign: "start", thRule: "2px", rowRule: "1px", firstCellPadding: "0px" });
+  expect(styles.tableLeft).toBe(styles.textLeft);
+});
+
 test("shows code blocks in the page's light/dark mode, not a fixed dark theme", async ({ page }) => {
   const block = page.locator(".intro pre");
   await expect(block).toHaveClass(/github-light-default github-dark-default/);

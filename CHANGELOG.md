@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - `<Intro file="…">`: the intro shows a file tab, with no focused lines, on load and each time the reader returns to it (without `file` the code panel keeps the current file, as before). Same resolution and validation as on `<Step>`; with variants every variant must have the file (the intro has no `only`). Not combined with `images` or `embed`; `region` stays a build error. The intro's file comes first in the step order of the tabs. The unknown-prop error now reads `(only preview, maximize, file, images, embed)`. Documented in the authoring reference, Features and SPEC. Unit tests in `validate.test.ts`; E2E in `e2e/intro-media.spec.ts` on the new `intro-file` tutorial of `fixtures/framework-fixture-media`.
+- Tables in the explanations are styled: left-aligned small headers over a 2px rule, hairlines between rows, `sm` text, the first column as the row label, and outer edges aligned with the text. Long cell content wraps instead of widening the panel. E2E in `e2e/tutorial-page.spec.ts` (new table in the `callback` step of `fixtures/framework-fixture`).
 
 ### Changed
 

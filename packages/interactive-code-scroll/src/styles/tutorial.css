@@ -169,6 +169,32 @@ body[data-docs-hidden] {
   }
   a { color: var(--calcite-color-text-link); }
 
+  /* Rules between rows only; outer edges align with the text. The first column labels the row. */
+  table {
+    width: 100%;
+    margin-block: 1rem;
+    border-collapse: collapse;
+    font-size: var(--calcite-font-size-sm);
+    line-height: 1.5;
+  }
+  :is(th, td) {
+    padding: 0.5rem 0.75rem;
+    vertical-align: top;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+  :is(th, td):first-child { padding-inline-start: 0; }
+  :is(th, td):last-child { padding-inline-end: 0; }
+  th {
+    border-block-end: 2px solid var(--calcite-color-border-2);
+    font-size: var(--calcite-font-size-xs);
+    font-weight: var(--calcite-font-weight-semibold);
+    letter-spacing: 0.02em;
+    color: var(--calcite-color-text-1);
+  }
+  tr + tr > td { border-block-start: 1px solid var(--calcite-color-border-3); }
+  td:first-child { font-weight: var(--calcite-font-weight-medium); color: var(--calcite-color-text-1); }
+
   /* Section headings between steps. */
   & > h2 { margin-block: 2.5rem 0.75rem; font-size: var(--calcite-font-size-xl); }
 
