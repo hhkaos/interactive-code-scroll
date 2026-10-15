@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.6] - 2026-10-16
+
 ### Added
 
 - `<VarField type="radio" layout="horizontal">` puts the radio buttons in a row (`vertical`, stacked, stays the default). `layout` on another type, or another value, is a build error. Documented in the authoring reference and SPEC. Unit tests in `validate.test.ts`; E2E in `e2e/vars.spec.ts` (the fixture's Key slot field is now horizontal).
