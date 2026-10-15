@@ -82,6 +82,12 @@ export function allTags(cards: readonly Pick<SeriesCard, "tags">[]): string[] {
   return [...new Set(cards.flatMap((card) => card.tags))];
 }
 
+/** `tagGroups` tags that no tutorial has (likely a typo): the filter would offer an empty choice. */
+export function unusedGroupTags(groups: readonly { tags: readonly string[] }[], cards: readonly Pick<SeriesCard, "tags">[]): string[] {
+  const used = new Set(allTags(cards));
+  return groups.flatMap((group) => group.tags).filter((tag) => !used.has(tag));
+}
+
 /** What sibling logic needs of a tutorial: its slug, family and index position. */
 export interface FamilyMember {
   slug: string;

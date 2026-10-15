@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { allTags, discoverTutorials, familyOf, familyProblems, parseTagList, selectCards, sortCards } from "./series.ts";
+import { allTags, discoverTutorials, familyOf, familyProblems, parseTagList, selectCards, sortCards, unusedGroupTags } from "./series.ts";
 
 function seriesWith(folders: Record<string, boolean>): string {
   const dir = mkdtempSync(join(tmpdir(), "ics-series-"));
@@ -60,6 +60,11 @@ describe("index cards", () => {
 
   it("lists every tag once in first-seen order", () => {
     expect(allTags(cards)).toEqual(["Web", "Python", "JavaScript"]);
+  });
+
+  it("finds tagGroups tags that no tutorial has", () => {
+    expect(unusedGroupTags([{ tags: ["Python", "Rust"] }, { tags: ["Web", "Go"] }], cards)).toEqual(["Rust", "Go"]);
+    expect(unusedGroupTags([{ tags: ["Python", "JavaScript"] }], cards)).toEqual([]);
   });
 });
 

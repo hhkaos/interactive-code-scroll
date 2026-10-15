@@ -725,7 +725,7 @@ describe("validateSeriesIndex", () => {
       'tutorials/index.mdx:2:1 <TutorialFilter> takes no attributes (got "tags")',
       "tutorials/index.mdx:6:1 <TutorialFilter> can appear only once (it filters every list on the page)",
     ]);
-    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme)']);
+    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups)']);
   });
 });
 

@@ -185,7 +185,7 @@ it("renders a custom series index page with the public series module", async () 
         "---",
         "<html><body>",
         '<ol id="custom">{tutorials.map((t) => <li><a href={t.href}>{t.title}</a> {t.level}</li>)}</ol>',
-        "<TutorialFilter />",
+        "<TutorialFilter tagGroups={{ Language: [\"Python\"], Platform: [\"Web\"] }} />",
         '<TutorialList tags="Python" />',
         "</body></html>",
         "",
@@ -199,6 +199,20 @@ it("renders a custom series index page with the public series module", async () 
     expect(html).toMatch(/<link rel="stylesheet" href="[^"]+\.css"|<style>[^<]*\.series-card/);
     expect(html).toMatch(/<script type="module" src="[^"]+\.js"/);
     expect(readFileSync(join(outDir, "alpha", "index.html"), "utf8")).toContain("Alpha");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);
+
+it("fails a series build when index.mdx tagGroups name a tag no tutorial has", async () => {
+  const root = mkdtempSync(fileURLToPath(new URL("./fixtures/tag-groups-", import.meta.url)));
+  try {
+    mkdirSync(join(root, "tutorials", "alpha", "code"), { recursive: true });
+    writeFileSync(join(root, "tutorials", "alpha", "tutorial.mdx"), "---\ntitle: Alpha\npreview: off\ntags: [Python]\n---\n\n# Alpha\n");
+    writeFileSync(join(root, "tutorials", "alpha", "code", "main.py"), "print(1)\n");
+    writeFileSync(join(root, "tutorials", "index.mdx"), "---\ntagGroups:\n  Language: [Python, Rust]\n---\n\n<TutorialFilter />\n\n<TutorialList />\n");
+    const run = build({ root, outDir: join(root, "dist"), integrations: [interactiveCodeScroll({ tutorials: "tutorials" })], logLevel: "silent" });
+    await expect(run).rejects.toThrow('index.mdx frontmatter tagGroups: no tutorial has the tag(s) "Rust"');
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

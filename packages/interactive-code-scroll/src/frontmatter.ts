@@ -59,6 +59,14 @@ export interface IndexConfig {
   /** Image in the series folder's `images/` (or an `https://` URL), shown in the header and used as favicon. */
   logo?: string;
   theme: Theme;
+  /** Tag families, in display order: group the filter's tags and set their colors and matching. */
+  tagGroups?: TagGroup[];
+}
+
+/** A tag family of the series filter (`tagGroups` in `index.mdx`). */
+export interface TagGroup {
+  name: string;
+  tags: string[];
 }
 
 /** An invalid frontmatter field; `key` lets validation point at its line. */
@@ -248,19 +256,44 @@ function optionalEntry<K extends string>(key: K, value: string | undefined): Par
   return value === undefined ? {} : ({ [key]: value } as Record<K, string>);
 }
 
-const INDEX_KEYS = new Set(["title", "description", "logo", "theme"]);
+const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups"]);
+
+const TAG_GROUPS_SHAPE = '"tagGroups" must map each family name to a list of tags, e.g. { Language: [Python, JavaScript] }';
+
+/** `tagGroups`: family name → non-empty tag list, in display order; a tag belongs to one family at most. */
+export function readTagGroups(value: unknown): TagGroup[] {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new FrontmatterError("tagGroups", TAG_GROUPS_SHAPE);
+  const groups: TagGroup[] = [];
+  const familyOf = new Map<string, string>();
+  for (const [name, tags] of Object.entries(value)) {
+    if (name.trim() === "") throw new FrontmatterError("tagGroups", '"tagGroups" family names must be non-empty');
+    if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string" && tag.trim() !== "" && !tag.includes(","))) {
+      throw new FrontmatterError("tagGroups", `"tagGroups" family "${name}" must be a list of non-empty tags without commas`);
+    }
+    if (tags.length === 0) throw new FrontmatterError("tagGroups", `"tagGroups" family "${name}" has no tags`);
+    const unique = [...new Set(tags.map((tag: string) => tag.trim()))];
+    for (const tag of unique) {
+      const other = familyOf.get(tag);
+      if (other !== undefined) throw new FrontmatterError("tagGroups", `"tagGroups" tag "${tag}" is in two families ("${other}" and "${name}")`);
+      familyOf.set(tag, name);
+    }
+    groups.push({ name, tags: unique });
+  }
+  return groups;
+}
 
 /** Validates a series `index.mdx` frontmatter; defaults: title "Tutorials", theme `auto`. */
 export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConfig {
-  const { title = "Tutorials", description, logo, theme = "auto" } = frontmatter;
+  const { title = "Tutorials", description, logo, theme = "auto", tagGroups } = frontmatter;
   const unknown = Object.keys(frontmatter).find((key) => !INDEX_KEYS.has(key));
-  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme)`);
+  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups)`);
   if (typeof title !== "string" || title.trim() === "") throw new FrontmatterError("title", '"title" must be a non-empty string');
   return {
     title,
     ...optionalEntry("description", optionalText("description", description)),
     ...optionalEntry("logo", optionalText("logo", logo)),
     theme: oneOf("theme", theme, THEMES),
+    ...(tagGroups === undefined ? {} : { tagGroups: readTagGroups(tagGroups) }),
   };
 }
 

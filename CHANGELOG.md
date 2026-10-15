@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Series index: optional tag families, `tagGroups` in `index.mdx` frontmatter or the `<TutorialFilter tagGroups>` prop on a custom index page (family name → tags, in display order). Validated at build: a tag in two families, an empty family and a tag no tutorial has are errors. The search bar (in progress) uses them to group, color and match tags.
+
 ### Changed
 
 - Series index: the header content (logo, theme action) lines up with the centered `.series-main` column (`--calcite-navigation-width: 72rem`); the bar background stays full width.

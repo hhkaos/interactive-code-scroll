@@ -205,6 +205,27 @@ describe("readIndexConfig", () => {
     expect(() => readIndexConfig({ title: "" })).toThrow(/"title" must be a non-empty string/);
     expect(() => readIndexConfig({ theme: "blue" })).toThrow(/"theme" must be one of/);
   });
+
+  it("reads tagGroups in order and rejects bad shapes and shared tags", () => {
+    expect(readIndexConfig({ tagGroups: { Language: ["Python", " JavaScript", "Python"], Auth: ["OAuth"] } }).tagGroups).toEqual([
+      { name: "Language", tags: ["Python", "JavaScript"] },
+      { name: "Auth", tags: ["OAuth"] },
+    ]);
+    expect(() => readIndexConfig({ tagGroups: ["Python"] })).toThrow(/"tagGroups" must map each family name to a list of tags/);
+    expect(() => readIndexConfig({ tagGroups: { Language: "Python" } })).toThrow(/family "Language" must be a list of non-empty tags without commas/);
+    expect(() => readIndexConfig({ tagGroups: { Language: ["a, b"] } })).toThrow(/without commas/);
+    expect(() => readIndexConfig({ tagGroups: { Language: [] } })).toThrow(/family "Language" has no tags/);
+    expect(() => readIndexConfig({ tagGroups: { " ": ["Python"] } })).toThrow(/family names must be non-empty/);
+    expect(() => readIndexConfig({ tagGroups: { Language: ["Python"], Data: ["Python"] } })).toThrow(
+      /tag "Python" is in two families \("Language" and "Data"\)/,
+    );
+    try {
+      readIndexConfig({ tagGroups: { Language: [] } });
+    } catch (error) {
+      expect(error).toBeInstanceOf(FrontmatterError);
+      expect((error as FrontmatterError).key).toBe("tagGroups");
+    }
+  });
 });
 
 describe("logo", () => {
