@@ -1,3 +1,4 @@
+import type { AstroConfig } from "astro";
 import { bundledLanguages, codeToHtml, type ShikiTransformer } from "shiki";
 import { extensionOf } from "./file-types.ts";
 import type { ParsedSource } from "./markers.ts";
@@ -43,6 +44,20 @@ const LANGS: Record<string, string> = {
   lua: "lua",
 };
 
+/** Light/dark Shiki themes shared by the code panel and the code blocks in the explanations. */
+export const CODE_THEMES = { light: "github-light-default", dark: "github-dark-default" } as const;
+
+type ShikiConfig = AstroConfig["markdown"]["shikiConfig"];
+
+/**
+ * Code blocks in the explanations follow the page's light/dark mode, like the code panel. A project
+ * that picks its own `theme`/`themes` keeps them (Astro's default is a single "github-dark").
+ */
+export function proseShikiConfig(shiki: ShikiConfig): ShikiConfig {
+  const customized = shiki.theme !== "github-dark" || Object.keys(shiki.themes).length > 0;
+  return customized ? shiki : { ...shiki, themes: CODE_THEMES, defaultColor: false };
+}
+
 /** `text` (no highlighting) or a language Shiki bundles. */
 export function isKnownLanguage(lang: string): boolean {
   return lang === "text" || lang in bundledLanguages;
@@ -66,7 +81,7 @@ export function highlight(
 ): Promise<string> {
   return codeToHtml(code, {
     lang: langFor(path, languages),
-    themes: { light: "github-light-default", dark: "github-dark-default" },
+    themes: CODE_THEMES,
     defaultColor: false,
     decorations: vars.map((v) => ({
         start: { line: v.line - 1, character: v.fromColumn },

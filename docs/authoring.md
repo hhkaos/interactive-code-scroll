@@ -185,6 +185,8 @@ Highlighting happens at build time and is chosen by file extension. Other files 
 | Shell | `sh`, `bash`, `ps1` |
 | Other languages | `py`, `kt`, `kts`, `gradle`, `swift`, `java`, `cs`, `cpp`, `h`, `hpp`, `qml`, `dart`, `lua` |
 
+Fenced code blocks in `tutorial.mdx` (` ```js `) use the same light and dark themes as the code panel. To use other themes, set `markdown.shikiConfig.theme` or `themes` in `astro.config.mjs`: a project that sets either keeps its own.
+
 ## Components
 
 <picture>

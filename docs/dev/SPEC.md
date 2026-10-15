@@ -138,7 +138,8 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - Entered values are included in downloads.
 
 ### Markdown content helpers
-- Standard Markdown blockquotes render as lightweight editorial notes.
+- Standard Markdown blockquotes render as lightweight editorial notes, neutral in inactive steps and brand-colored in the active one.
+- Fenced code blocks in the explanations follow the page's light/dark mode (the code panel's themes) unless the project sets its own Shiki `theme`/`themes`.
 - `<Hint id label>...</Hint>` renders inline clarification text with a dashed underline and a hover/focus popover. The `id` is required and unique; the body may contain HTML such as links. Hints are for short contextual explanations; longer or essential content should use standard prose or `<details>`.
 - `<details>`/`<summary>` disclosure blocks: the content needs a blank line after `<summary>` (and before `</details>`) to be parsed as Markdown blocks. Without it MDX wraps `<summary>` in a `<p>` (invalid HTML); the build warns with its MDX `file:line`.
 

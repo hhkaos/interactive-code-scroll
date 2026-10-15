@@ -110,7 +110,8 @@ See [Presenting a Tutorial](presenting.md).
 
 ## Writing tutorials
 
-- Markdown notes (blockquotes) and `<Hint>` popovers for short clarifications.
+- Markdown notes (blockquotes) and `<Hint>` popovers for short clarifications. Notes take the brand color only in the active step, so the reader always sees which step they are on.
+- Fenced code blocks in the explanations, with a copy button, follow the page's light/dark mode like the code panel.
 - **Strict validation**: a wrong file, region, variable, image, variant or frontmatter value fails the build with the MDX file, line and column. In dev mode the error appears as a browser overlay and validation re-runs when code or images change.
 - **Project wizard**: `npm create interactive-code-scroll@latest` asks for one tutorial or a series, what each tutorial uses (web app, REST API, script or native app, in one or several languages, as code variants or sibling tutorials), the index page and a GitHub Pages workflow, then writes a working example to start from. See [Create a Project](cli.md#create-a-project).
 - **Generic CLI**: `dev`, `build`, `serve`, `doctor` and `init-scripts` for any tutorial folder or series site (`--tutorials`, or detected from `tutorials/`; `--index` for a custom index page).

@@ -80,6 +80,30 @@ test("styles tutorial blockquotes as notes", async ({ page }) => {
   expect(styles).toEqual({ borderLeftWidth: "3px", paddingLeft: "18px", marginTop: "16px" });
 });
 
+test("shows code blocks in the page's light/dark mode, not a fixed dark theme", async ({ page }) => {
+  const block = page.locator(".intro pre");
+  await expect(block).toHaveClass(/github-light-default github-dark-default/);
+  const colors = await block.evaluate((pre) => ({
+    block: getComputedStyle(pre).backgroundColor,
+    panel: getComputedStyle(pre.closest(".docs")!).backgroundColor,
+    light: getComputedStyle(pre.querySelector("code span")!).getPropertyValue("--shiki-light"),
+  }));
+  expect(colors.block).toBe(colors.panel);
+  expect(colors.light).not.toBe("");
+});
+
+test("keeps notes neutral in inactive steps and brand-colored in the active one", async ({ page }) => {
+  const border = (selector: string) => page.locator(selector).evaluate((node) => getComputedStyle(node).borderLeftColor);
+  const brand = await border(".intro blockquote");
+  const note = "section.step#callback blockquote";
+  await expect(page.locator(note)).toContainText("stay neutral until the step is active");
+  expect(await border(note)).not.toBe(brand);
+
+  await page.goto("/#callback");
+  await expect(page.locator("section.step#callback")).toHaveAttribute("data-active", "");
+  await expect.poll(() => border(note)).toBe(brand);
+});
+
 test("styles tutorial disclosure blocks with compact spacing", async ({ page }) => {
   const details = page.locator("section.step#oauth details");
   const summary = details.locator("summary");

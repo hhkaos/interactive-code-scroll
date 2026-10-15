@@ -162,6 +162,7 @@ body[data-docs-hidden] {
     border-radius: var(--calcite-corner-radius-round);
     background: color-mix(in srgb, var(--calcite-color-brand) 8%, var(--calcite-color-foreground-1));
     color: var(--calcite-color-text-2);
+    transition: background-color 0.2s, border-color 0.2s;
 
     & > :first-child { margin-block-start: 0; }
     & > :last-child { margin-block-end: 0; }
@@ -296,13 +297,13 @@ body[data-docs-hidden] {
     padding: 0.875rem 1rem;
     border: 1px solid var(--calcite-color-border-2);
     border-radius: var(--calcite-corner-radius-round);
-    background: var(--calcite-color-inverse);
-    color: var(--calcite-color-text-inverse);
+    background: var(--calcite-color-foreground-1);
+    color: var(--calcite-color-text-1);
     font-family: var(--calcite-font-family-code);
     font-size: 0.875rem;
     line-height: 1.55;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--calcite-color-text-inverse) 50%, transparent) transparent;
+    scrollbar-color: var(--calcite-color-border-1) transparent;
 
     code {
       display: block;
@@ -312,6 +313,9 @@ body[data-docs-hidden] {
       color: inherit;
       font: inherit;
     }
+
+    /* Shiki dual themes (defaultColor: false), as in the code panel. */
+    span { color: light-dark(var(--shiki-light), var(--shiki-dark)); }
   }
 
   .docs-code-copy {
@@ -320,18 +324,19 @@ body[data-docs-hidden] {
     inset-inline-end: 0.5rem;
     z-index: 1;
     padding: 0.25rem 0.5rem;
-    border: 1px solid color-mix(in srgb, var(--calcite-color-text-inverse) 18%, transparent);
+    border: 1px solid var(--calcite-color-border-2);
     border-radius: var(--calcite-corner-radius-round);
     opacity: 0;
-    background: color-mix(in srgb, var(--calcite-color-inverse) 86%, var(--calcite-color-foreground-1));
-    color: var(--calcite-color-text-inverse);
+    background: var(--calcite-color-foreground-1);
+    color: var(--calcite-color-text-2);
     font: var(--calcite-font-size-xs) / 1.2 var(--calcite-font-family);
     cursor: pointer;
     transition: opacity 0.15s, border-color 0.15s, background-color 0.15s;
 
     &:hover, &:focus-visible {
-      border-color: color-mix(in srgb, var(--calcite-color-text-inverse) 34%, transparent);
-      background: color-mix(in srgb, var(--calcite-color-inverse) 76%, var(--calcite-color-foreground-1));
+      border-color: var(--calcite-color-border-1);
+      background: var(--calcite-color-foreground-2);
+      color: var(--calcite-color-text-1);
       outline: none;
     }
   }
@@ -391,6 +396,12 @@ body[data-docs-hidden] {
     }
   }
 
+
+  /* Brand color marks the active step only: notes in the other steps stay neutral. */
+  &:not([data-active]) blockquote {
+    border-inline-start-color: var(--calcite-color-border-1);
+    background: var(--calcite-color-foreground-2);
+  }
 
   &[data-active] {
     cursor: auto;

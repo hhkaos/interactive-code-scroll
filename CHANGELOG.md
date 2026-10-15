@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Notes (blockquotes) in inactive steps are neutral gray; only the active step's notes keep the brand bar and tint, so a previous step's note no longer looks like the active step. Code blocks in the explanations follow the page's light/dark mode with the code panel's themes (`github-light-default`/`github-dark-default`) instead of a fixed dark block; a project with its own `markdown.shikiConfig` `theme`/`themes` keeps them. Unit tests in `highlight.test.ts`; E2E in `e2e/tutorial-page.spec.ts` (new step note in `fixtures/framework-fixture`).
 - Scaffolder: the series index choice and the generated `index.mdx` call `<TutorialFilter />` a search bar (was "tag filter"), and the `index.mdx` text suggests `<TutorialFavorites />` for growing series.
 
 ### Fixed

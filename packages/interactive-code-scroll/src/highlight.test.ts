@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extensionOf } from "./file-types.ts";
-import { highlight, isKnownLanguage, langFor } from "./highlight.ts";
+import { CODE_THEMES, highlight, isKnownLanguage, langFor, proseShikiConfig } from "./highlight.ts";
 import { parseSource } from "./markers.ts";
 
 describe("highlight", () => {
@@ -78,5 +78,22 @@ describe("highlight", () => {
 
   it("rejects unknown languages", () => {
     expect(isKnownLanguage("snake")).toBe(false);
+  });
+});
+
+describe("proseShikiConfig", () => {
+  // Astro's default `markdown.shikiConfig`.
+  const defaults = { langs: [], theme: "github-dark", themes: {}, wrap: false, transformers: [], langAlias: {} };
+
+  it("replaces Astro's default single theme with the light/dark code themes, keeping the other options", () => {
+    const shiki = { ...defaults, langAlias: { cjs: "javascript" } };
+    expect(proseShikiConfig(shiki)).toEqual({ ...shiki, themes: CODE_THEMES, defaultColor: false });
+  });
+
+  it("keeps a project's own theme or themes", () => {
+    const theme = { ...defaults, theme: "nord" };
+    const themes = { ...defaults, themes: { light: "min-light", dark: "nord" } };
+    expect(proseShikiConfig(theme)).toBe(theme);
+    expect(proseShikiConfig(themes)).toBe(themes);
   });
 });

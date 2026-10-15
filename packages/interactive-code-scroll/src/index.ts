@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import { isSatteriProcessor, satteri } from "@astrojs/markdown-satteri";
 import type { AstroIntegration } from "astro";
+import { proseShikiConfig } from "./highlight.ts";
 import { tutorialValidation } from "./mdx-validation.ts";
 import { discoverTutorials, SERIES_INDEX } from "./series.ts";
 import { tutorialModule, type TutorialSource } from "./tutorial-module.ts";
@@ -52,7 +53,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         const processor = satteri({ ...base, mdastPlugins: [...(base?.mdastPlugins ?? []), validation] });
 
         updateConfig({
-          integrations: [mdx({ processor })],
+          integrations: [mdx({ processor, shikiConfig: proseShikiConfig(config.markdown.shikiConfig) })],
           vite: {
             plugins: [tutorialModule(sources, seriesDir, () => siteBase)],
             // pnpm does not hoist `cookie`; bundle it so Node never resolves a stray copy up the tree.
