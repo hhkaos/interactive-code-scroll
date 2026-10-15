@@ -1,5 +1,11 @@
 # TODO
 
+## Ideas to triage
+
+- Let readers send feedback (GitHub issues?) and show the tutorial's last updated date.
+- Show authors?
+- The intro does not support the `file` property: could it be added without breaking anything?
+
 ## Backlog
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
@@ -14,6 +20,10 @@ _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 - [ ] Publish the "OAuth PKCE with ArcGIS Maps SDK for JavaScript" tutorial.
 - [ ] Idea raised 2026-10-15, not needed yet: if series cards get 6+ variants, a compact "Available in 6 languages" band with logo-only links, each keeping its name as accessible name and never hiding it behind a hover tooltip (touch has no hover; shared logos such as ArcGIS API for Python / ArcGIS REST JS would be ambiguous). Today: at most four logo + label links, else three and "+N". Rules: `SPEC.md` (Variant links and tag logos).
 - [ ] Optional `logoDark` (tutorial, variant, `tagGroups` entries and `index.mdx`): same rules as `logo`. Card tag logos, variant links and the variant switcher render both images and CSS on `.calcite-mode-dark` picks one; the page header thumbnail (and favicon) follow the theme toggle from the client. Today logos must read on both backgrounds.
+
+- [ ] Card level icon per level: today every level shows `gauge`. Map the usual values (`Beginner`, `Intermediate`, `Advanced`) to distinct Calcite icons (check which exist), `gauge` as fallback for any other value.
+- [ ] Default file order: without `files` in the frontmatter, file tabs follow the first reference of each file in the steps (unreferenced files last, by path) instead of path order. Downloads and validation keep path order. Update `SPEC.md` first and check tests that assume path order.
+- [ ] Series index favorites: mark/unmark tutorials (stored per browser in `localStorage`, guarded) and show them first. Decide in `SPEC.md` first: tutorial vs variant, own section vs sorted first, interaction with search/filters and the existing reorder in `client/series.ts`.
 
 ## VarField input types (#3)
 

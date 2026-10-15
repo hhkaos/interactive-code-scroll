@@ -260,6 +260,11 @@ body[data-docs-hidden] {
       background: var(--calcite-color-foreground-1);
     }
 
+    /* Collapses with the first child's own top margin (pre, blockquote). */
+    &[open] > summary {
+      margin-block-end: 1rem;
+    }
+
     & > :not(summary) {
       margin-inline: 1rem;
     }

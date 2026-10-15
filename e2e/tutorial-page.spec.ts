@@ -96,9 +96,10 @@ test("styles tutorial disclosure blocks with compact spacing", async ({ page }) 
       marginTop: detailsStyle.marginTop,
       summaryPaddingTop: summaryStyle.paddingTop,
       summaryPaddingLeft: summaryStyle.paddingLeft,
+      firstParagraphGap: node.querySelector("p")!.getBoundingClientRect().top - node.querySelector("summary")!.getBoundingClientRect().bottom,
     };
   });
-  expect(styles).toEqual({ borderRadius: "4px", marginTop: "16px", summaryPaddingTop: "10px", summaryPaddingLeft: "16px" });
+  expect(styles).toEqual({ borderRadius: "4px", marginTop: "16px", summaryPaddingTop: "10px", summaryPaddingLeft: "16px", firstParagraphGap: 16 });
 });
 
 test("renders inline hints with rich tooltip content", async ({ page }) => {

@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Tutorial disclosure blocks (`<details>`): the first content element no longer touches the open summary (1rem gap, collapsing with blocks that have their own top margin), so authors no longer need an inline `margin-top`. The OAuth PKCE example gets the blank lines MDX needs around `<details>` content (it rendered `<p><summary>`).
 - Tutorial and series pages no longer jump or show unstyled content while Calcite loads (CLS 0.188 → 0 on a tutorial, 0.046 → 0.0003 on a series index, slow 4G + 4× CPU). Calcite's `main.css` is imported in the page frontmatter (a render-blocking stylesheet, also in dev, where a `<script>` import arrived late through JS) and before our CSS; `tutorial.css` gives unhydrated components their hydrated size (navigation, actions, icons, inputs, chips) and removes dialogs, tooltips and popovers from the flow (the image dialog took 672 px and squeezed the layout). E2E in `layout.spec.ts` and `series.spec.ts` compare the geometry with scripts disabled against the hydrated page.
 
 ## [0.2.0-beta.4] - 2026-10-15
