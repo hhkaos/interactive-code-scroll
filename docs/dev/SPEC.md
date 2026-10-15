@@ -172,6 +172,12 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
     - **Matching**: tags OR within a family and AND across families (all tags OR when there are no `tagGroups`); text and level AND with the tags.
     - **Family colors**: each family gets a color from an automatic palette that meets contrast in light and dark mode; color is never the only cue (the family name labels its group).
     - **Feedback and state**: "N of M tutorials" (each tutorial counted once, `aria-live`); each list keeps its empty message, and an empty result offers "Clear filters"; the state lives in the URL (`?q=…&tags=…&level=…`, updated with `replaceState`, read on load); `/` focuses the search input.
+  - **Favorites** *(planned; decisions 2026-10-15)*: readers mark and unmark tutorials as favorites on the index.
+    - **Unit**: the tutorial (its card), never a single variant.
+    - **Placement**: a "Favorites" section at the top of the index with the favorite cards; the lists below stay as they are (a favorite also shows in its own lists).
+    - **Filters**: the search, tag and level filters apply to the Favorites section too; it hides when no favorite matches or there are none.
+    - **Storage**: per browser in `localStorage` (no backend), namespaced by the site's `base` (several series can share an origin, e.g. GitHub Pages); every access guarded (private mode, blocked storage). Slugs no longer in the series are ignored. Without JavaScript nothing shows (no toggle, no section).
+    - **Open (UI review before implementing)**: the toggle's look and position on the card (it must sit above the stretched title link, like variant links, so links never nest), its accessible name and pressed state, the section title, and how it works with a custom `index.mdx` (automatic section vs. a component).
   - **Back to index**: in a series, the tutorial header has an action that returns to the index.
   - **Reader state**: stored Preview HTML is namespaced per tutorial. Site-wide on purpose: persisted vars (`ics:var:<name>`, unless `persist="tutorial"`), theme, splitter sizes and the variant choice (the reader's language carries across tutorials).
 - **GitHub Pages workflow** for author repos, documented in `docs/deployment.md` as a copy-paste `.github/workflows/pages.yml` in two flavors, npm and pnpm, identical except for the package manager steps. The same file publishes a single tutorial or a series site (the CLI detects the layout); it has no series-specific step.
