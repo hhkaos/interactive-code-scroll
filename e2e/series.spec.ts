@@ -21,15 +21,141 @@ test("index.mdx gives the index its title, prose and TutorialList sections in or
 
 test("the tag filter hides cards without a selected tag and counts tutorials", async ({ page }) => {
   await page.goto("/");
+  const tag = (name: string) => page.locator(`#series-tags-top .series-tag[data-tag="${name}"]`);
   await expect(page.locator("#series-count")).toHaveText("3 tutorials");
-  await page.locator('calcite-chip[value="Python"]').click();
+  // Most used first, with the number of tutorials on the page.
+  await expect(page.locator("#series-tags-top .series-tag").first()).toHaveAttribute("data-tag", "Web");
+  await expect(tag("Web").locator(".series-tag-count")).toHaveText(", 3 tutorials");
+  await tag("Python").click();
+  await expect(tag("Python")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".series-list").nth(0).locator(".series-card-title:visible")).toHaveText(["Beta Series Tutorial"]);
   await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
-  await page.locator('calcite-chip[value="JavaScript"]').click();
+  await expect(page).toHaveURL(/\?tags=Python$/);
+  // Same family (Language): either tag.
+  await tag("JavaScript").click();
   await expect(page.locator("#series-count")).toHaveText("2 of 3 tutorials");
-  await page.locator('calcite-chip[value="Python"]').click();
-  await page.locator('calcite-chip[value="JavaScript"]').click();
+  await tag("Python").click();
+  await tag("JavaScript").click();
   await expect(page.locator("#series-count")).toHaveText("3 tutorials");
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test("the popular tags fit one line and +N more groups every tag by family", async ({ page }) => {
+  await page.setViewportSize({ width: 700, height: 800 });
+  await page.goto("/");
+  const top = page.locator("#series-tags-top");
+  const all = page.locator("#series-tags-all");
+  const shown = top.locator(".series-tag:visible");
+  await expect(page.locator("#series-more")).toBeVisible();
+  const count = await shown.count();
+  expect(count).toBeGreaterThan(1);
+  expect(count).toBeLessThan(10);
+  await expect(page.locator("#series-more")).toHaveText(`+${10 - count} more`);
+  // One line: every visible tag shares the first one's top.
+  const tops = await shown.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
+  expect(new Set(tops).size).toBe(1);
+
+  await page.locator("#series-more").click();
+  await expect(top).toBeHidden();
+  await expect(page.locator("#series-more")).toHaveAttribute("aria-expanded", "true");
+  await expect(all.locator(".series-tag-group-name")).toHaveText(["Language", "Auth", "Other"]);
+  await expect(all.locator(".series-tag-group").nth(0)).toHaveAttribute("data-family", "0");
+  await expect(all.locator(".series-tag-group").nth(2)).not.toHaveAttribute("data-family");
+  await expect(all.locator(".series-tag[data-family]")).toHaveCount(0);
+  await all.locator('.series-tag[data-tag="Node.js"]').click();
+  await all.locator('.series-tag[data-tag="JavaScript"]').click();
+  await expect(page.locator("#series-count")).toHaveText("2 of 3 tutorials");
+  await all.locator('.series-tag[data-tag="OAuth"]').click();
+  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await expect(page.locator(".series-card-title:visible")).toHaveText(["Gamma Series Tutorial"]);
+  // The Scripts section has no match left.
+  await expect(page.locator(".series-list").nth(1).locator(".series-empty")).toBeVisible();
+  // Back to the row: selected tags stay visible even when rarer tags are left out.
+  await page.locator("#series-fewer").click();
+  for (const name of ["Node.js", "JavaScript", "OAuth"]) {
+    await expect(top.locator(`.series-tag[data-tag="${name}"]`)).toBeVisible();
+    await expect(top.locator(`.series-tag[data-tag="${name}"]`)).toHaveAttribute("aria-pressed", "true");
+  }
+});
+
+test("tag counts follow the search: no tag leads to zero results", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#series-search input").pressSequentially("beta");
+  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  // The row keeps only tags with results, by live count; JavaScript (0) is gone.
+  await expect(page.locator("#series-tags-top .series-tag:visible")).toHaveText([/^Web.*1/, /^Python.*1/]);
+  // Every other tag has no result: the panel is still reachable, without promising more matches.
+  await expect(page.locator("#series-more")).toHaveText("All tags");
+  await page.locator("#series-more").click();
+  await expect(page.locator('#series-tags-all .series-tag[data-tag="JavaScript"]')).toBeDisabled();
+  await expect(page.locator('#series-tags-all .series-tag[data-tag="Python"]')).toBeEnabled();
+  await expect(page.locator('#series-tags-all .series-tag[data-tag="Python"] .series-tag-count')).toHaveText(", 1 tutorial");
+});
+
+test("every tag shows on one line when it fits, without +N more", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 800 });
+  await page.goto("/");
+  await expect(page.locator("#series-tags-top .series-tag:visible")).toHaveCount(10);
+  await expect(page.locator("#series-more")).toBeHidden();
+});
+
+test("the search filters by text and level, highlights matches and keeps the state in the URL", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#series-search input").pressSequentially("TOKEN");
+  await expect(page.locator("#series-count")).toHaveText("2 of 3 tutorials");
+  await expect(page.locator(".series-card-description:visible mark").first()).toHaveText("token");
+  await expect(page).toHaveURL(/\?q=TOKEN$/);
+  await page.locator("#series-level").evaluate((select: HTMLElement & { value: string }) => {
+    select.value = "Beginner";
+    select.dispatchEvent(new CustomEvent("calciteSelectChange", { bubbles: true }));
+  });
+  await expect(page.locator(".series-card-title:visible")).toHaveText(["Alpha Series Tutorial"]);
+  await expect(page).toHaveURL(/\?q=TOKEN&level=Beginner$/);
+
+  await page.reload();
+  await expect(page.locator("#series-search")).toHaveJSProperty("inputValue", "TOKEN");
+  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+  await page.locator("#series-clear").click();
+  await expect(page.locator("#series-count")).toHaveText("3 tutorials");
+  await expect(page.locator("mark")).toHaveCount(0);
+  await expect(page.locator("#series-clear")).toBeHidden();
+  await expect(page).toHaveURL(/\/$/);
+
+  // An unknown tag or level in the URL is ignored.
+  await page.goto("/?tags=Nope,Python&level=Expert");
+  await expect(page.locator("#series-count")).toHaveText("1 of 3 tutorials");
+});
+
+test("typing suggests tags, and picking one selects it", async ({ page }) => {
+  await page.goto("/");
+  await page.keyboard.press("/");
+  await page.keyboard.type("oau");
+  const item = page.locator("calcite-autocomplete-item");
+  await expect(item).toHaveCount(1);
+  await expect(item).toHaveJSProperty("heading", "OAuth");
+  await expect(item.locator(".series-suggestion-meta")).toHaveText("Auth · 1");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\?tags=OAuth$/);
+  await expect(page.locator("#series-search")).toHaveJSProperty("inputValue", "");
+  await expect(page.locator('#series-tags-top .series-tag[data-tag="OAuth"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".series-card-tags li.is-match:visible")).toHaveText(["OAuth"]);
+});
+
+test("card tags are plain labels with their family", async ({ page }) => {
+  await page.goto("/");
+  const gamma = page.locator(".series-card", { hasText: "Gamma Series Tutorial" });
+  await expect(gamma.locator('.series-card-tags li[data-family="1"]')).toHaveText(["OAuth", "API keys"]);
+  await expect(gamma.locator("button")).toHaveCount(0);
+});
+
+test("without JavaScript the search bar is hidden and every card shows", async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/?tags=Python");
+  await expect(page.locator(".series-filter")).toBeHidden();
+  await expect(page.locator(".series-list").nth(0).locator(".series-card-title")).toHaveCount(3);
+  await context.close();
 });
 
 test("the index fits a phone without horizontal scrolling", async ({ page }) => {
@@ -230,5 +356,20 @@ test("the header keeps its hydrated height before Calcite loads", async ({ page,
   const unhydrated = await context.newPage();
   await unhydrated.goto("/");
   expect(await mainTop(unhydrated)).toBe(hydrated);
+  await context.close();
+});
+
+test("the search bar keeps its hydrated height before Calcite loads", async ({ page, browser, baseURL }) => {
+  const listTop = (p: Page) => p.locator(".series-list").first().evaluate((el) => Math.round(el.getBoundingClientRect().top));
+  await page.goto("/");
+  await expect(page.locator("#series-search")).toHaveAttribute("calcite-hydrated", "");
+  const hydrated = await listTop(page);
+
+  // Scripts blocked but JavaScript on: the bar shows (no <noscript>) and its components never hydrate.
+  const context = await browser.newContext({ baseURL, viewport: page.viewportSize() });
+  const unhydrated = await context.newPage();
+  await unhydrated.route(/\.js($|\?)/, (route) => route.abort());
+  await unhydrated.goto("/");
+  expect(await listTop(unhydrated)).toBe(hydrated);
   await context.close();
 });

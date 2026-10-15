@@ -9,23 +9,226 @@
   white-space: nowrap;
 }
 
+/*
+ * Tag family colors, by `tagGroups` position (dots: 3:1 against the page in light and dark).
+ * Tags without a family stay neutral.
+ */
+:root, .calcite-mode-light {
+  --ics-family-0: #2563eb;
+  --ics-family-1: #c2410c;
+  --ics-family-2: #15803d;
+  --ics-family-3: #9333ea;
+  --ics-family-4: #be185d;
+  --ics-family-5: #0e7490;
+  --ics-family-6: #a16207;
+  --ics-family-7: #4d7c0f;
+}
+.calcite-mode-dark {
+  --ics-family-0: #7aa7ff;
+  --ics-family-1: #fb923c;
+  --ics-family-2: #4ade80;
+  --ics-family-3: #c084fc;
+  --ics-family-4: #f472b6;
+  --ics-family-5: #22d3ee;
+  --ics-family-6: #facc15;
+  --ics-family-7: #a3e635;
+}
+[data-family="0"] { --ics-family: var(--ics-family-0); }
+[data-family="1"] { --ics-family: var(--ics-family-1); }
+[data-family="2"] { --ics-family: var(--ics-family-2); }
+[data-family="3"] { --ics-family: var(--ics-family-3); }
+[data-family="4"] { --ics-family: var(--ics-family-4); }
+[data-family="5"] { --ics-family: var(--ics-family-5); }
+[data-family="6"] { --ics-family: var(--ics-family-6); }
+[data-family="7"] { --ics-family: var(--ics-family-7); }
+
 .series-filter {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-block: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--calcite-color-border-3);
 }
 
-.series-filter-label,
+.series-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.series-search { flex: 1 1 18rem; }
+.series-level { flex: 0 1 12rem; }
+
+.series-tags-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* One line: the client hides the tags that do not fit (before it runs, the overflow is clipped). */
+.series-tags-row {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  gap: 0.375rem;
+  overflow: hidden;
+}
+
+.series-tags-top[hidden],
+.series-tags-all[hidden],
+.series-tag[hidden],
+.series-tags-toggle[hidden] { display: none; }
+
+.series-tags-all {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.series-tag-group {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  align-items: start;
+  gap: 0.5rem;
+  inline-size: 100%;
+}
+
+.series-tag-group-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.series-tag-group-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-top: 0.375rem;
+  font-size: var(--calcite-font-size-sm);
+  font-weight: var(--calcite-font-weight-medium, 500);
+  color: var(--calcite-color-text-2);
+
+  &::before {
+    content: "";
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--ics-family);
+  }
+}
+
+/* Tags without a family have no dot. */
+.series-tag-group:not([data-family]) .series-tag-group-name::before,
+.series-card-tags > li:not([data-family])::before { display: none; }
+
+/* Tag toggles: pills; pressed ones are tinted and checked (not color alone). */
+.series-tag {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  block-size: 1.75rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--calcite-color-border-1);
+  border-radius: 999px;
+  background: var(--calcite-color-foreground-1);
+  color: var(--calcite-color-text-1);
+  font: inherit;
+  font-size: var(--calcite-font-size-sm);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: var(--calcite-color-brand); }
+
+  &:focus-visible {
+    outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand));
+    outline-offset: 2px;
+  }
+
+  /* No result with this tag added. */
+  &:disabled {
+    border-style: dashed;
+    color: var(--calcite-color-text-3);
+    cursor: default;
+  }
+
+  /* Family dot in the popular row; the grouped panel names the family instead. */
+  &[data-family]::before {
+    content: "";
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--ics-family);
+  }
+
+  /* Pressed: a soft brand tint, not a solid fill, so family dots stay legible; color only means family. */
+  &[aria-pressed="true"] {
+    border-color: var(--calcite-color-brand);
+    background: color-mix(in srgb, var(--calcite-color-brand) 14%, var(--calcite-color-foreground-1));
+
+    &::after {
+      content: "\2713";
+      order: -1;
+      color: var(--calcite-color-brand);
+      font-weight: var(--calcite-font-weight-bold, 700);
+    }
+
+    .series-tag-count { color: var(--calcite-color-text-2); }
+  }
+}
+
+.series-tag-count {
+  color: var(--calcite-color-text-3);
+  font-size: var(--calcite-font-size-xs);
+}
+
+/* "+N more" and "Show fewer tags": text buttons. */
+.series-tags-toggle {
+  flex: none;
+  padding: 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--calcite-color-brand);
+  font: inherit;
+  font-size: var(--calcite-font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+
+  &:focus-visible {
+    outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand));
+    outline-offset: 2px;
+  }
+}
+
+.series-suggestion-meta {
+  font-size: var(--calcite-font-size-xs);
+  color: var(--calcite-color-text-3);
+}
+
+.series-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: 1.5rem;
+}
+
 .series-count {
   font-size: var(--calcite-font-size-sm);
   color: var(--calcite-color-text-2);
 }
 
-.series-count { margin-inline-start: auto; }
+.series-card mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--calcite-color-status-warning) 35%, transparent);
+  color: inherit;
+}
 
 .series-list { margin-block: 1rem 2rem; }
 
@@ -124,17 +327,32 @@
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.25rem 0.75rem;
   margin: 0;
   padding: 0;
 
+  /* Plain labels, not chips: the whole card is one link. */
   > li {
-    padding: 0 0.5rem;
-    border-radius: 999px;
-    background: var(--calcite-color-foreground-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
     font-size: var(--calcite-font-size-xs);
-    line-height: 1.6rem;
+    line-height: 1.25rem;
     color: var(--calcite-color-text-2);
+
+    &::before {
+      content: "";
+      flex: none;
+      inline-size: 0.4rem;
+      block-size: 0.4rem;
+      border-radius: 50%;
+      background: var(--ics-family, var(--calcite-color-text-3));
+    }
+
+    &.is-match {
+      color: var(--calcite-color-text-1);
+      font-weight: var(--calcite-font-weight-semibold, 600);
+    }
   }
 }
 
@@ -145,5 +363,6 @@
 }
 
 @media (max-width: 40rem) {
-  .series-count { margin-inline-start: 0; width: 100%; }
+  .series-level { flex-basis: 100%; }
+  .series-tag-group { grid-template-columns: 1fr; gap: 0.25rem; }
 }

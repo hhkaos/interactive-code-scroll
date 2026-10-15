@@ -1,5 +1,6 @@
 ---
 import { base, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { groupTags, OTHER_GROUP, tagCounts, topTags } from "../client/series-values.ts";
 import { FrontmatterError, readIndexConfig, readTagGroups } from "../frontmatter.ts";
 import { allTags, unusedGroupTags } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
@@ -11,7 +12,7 @@ interface Props {
   tagGroups?: Record<string, string[]>;
 }
 
-// Tag chips that filter every <TutorialList> on the page (client/series.ts); nothing when no tutorial has tags.
+// Search bar that filters every <TutorialList> on the page (client/series.ts).
 const cards = seriesCards(tutorials, base);
 const tags = allTags(cards);
 // index.mdx groups are shape-checked at MDX compile time; tag names are checked here, where the tutorials are known.
@@ -29,27 +30,97 @@ if (unused.length > 0) {
   const source = Astro.props.tagGroups === undefined ? "index.mdx frontmatter tagGroups" : "<TutorialFilter tagGroups>";
   throw new Error(`${source}: no tutorial has the tag(s) ${unused.map((t) => `"${t}"`).join(", ")}`);
 }
+const counts = tagCounts(cards);
+const ranked = topTags(counts, tags.length);
+const grouped = groupTags(tags, groups);
+const levels = [...new Set(cards.flatMap((card) => (card.level === undefined ? [] : [card.level])))];
+// Families are colored by position (series-list.css has the palette); "Other" stays neutral.
+const familyIndex = new Map(groups.flatMap((group, index) => group.tags.map((tag) => [tag, index] as const)));
+const family = (tag: string) => familyIndex.get(tag);
+const clientData = { groups, families: Object.fromEntries(familyIndex) };
 ---
 
-{
-  tags.length > 0 && (
-    <div class="series-filter">
-      <span class="series-filter-label">Filter by tag</span>
-      <calcite-chip-group id="series-filter" label="Filter by tag" selection-mode="multiple" scale="s">
-        {tags.map((tag) => (
-          <calcite-chip value={tag} label={tag}>
-            {tag}
-          </calcite-chip>
-        ))}
-      </calcite-chip-group>
-      <span id="series-count" class="series-count" aria-live="polite" />
-    </div>
-  )
-}
+<noscript><style>.series-filter { display: none; }</style></noscript>
+<search class="series-filter" aria-label="Search tutorials">
+  <div class="series-filter-row">
+    <calcite-autocomplete
+      id="series-search"
+      class="series-search"
+      label="Search tutorials"
+      placeholder="Search tutorials"
+      icon="search"
+      scale="m"
+    />
+    {
+      levels.length > 0 && (
+        <calcite-select id="series-level" class="series-level" label="Level" scale="m">
+          <calcite-option value="">All levels</calcite-option>
+          {levels.map((level) => (
+            <calcite-option value={level}>{level}</calcite-option>
+          ))}
+        </calcite-select>
+      )
+    }
+  </div>
+  {
+    tags.length > 0 && (
+      <div class="series-tags">
+        {/* Every tag, most used first; the client keeps the ones that fit on one line (selected ones first). */}
+        <div class="series-tags-top" id="series-tags-top">
+          <div class="series-tags-row" role="group" aria-label="Popular tags">
+            {ranked.map((tag) => (
+              <button type="button" class="series-tag" data-tag={tag} data-family={family(tag)} aria-pressed="false">
+                {tag}
+                <span class="series-tag-count">
+                  <span class="visually-hidden">, </span>
+                  {counts.get(tag)}
+                  <span class="visually-hidden"> {counts.get(tag) === 1 ? "tutorial" : "tutorials"}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+          <button type="button" id="series-more" class="series-tags-toggle" aria-expanded="false" aria-controls="series-tags-all">
+            More tags
+          </button>
+        </div>
+        <div class="series-tags-all" id="series-tags-all" hidden>
+          {grouped.map((group, index) => (
+            <div class="series-tag-group" data-family={group.name === OTHER_GROUP ? undefined : groups.findIndex((g) => g.name === group.name)}>
+              <span class="series-tag-group-name" id={`series-tag-group-${index}`}>{group.name}</span>
+              <div class="series-tag-group-tags" role="group" aria-labelledby={`series-tag-group-${index}`}>
+                {group.tags.map((tag) => (
+                  <button type="button" class="series-tag" data-tag={tag} aria-pressed="false">
+                    {tag}
+                    <span class="series-tag-count">
+                      <span class="visually-hidden">, </span>
+                      {counts.get(tag)}
+                      <span class="visually-hidden"> {counts.get(tag) === 1 ? "tutorial" : "tutorials"}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <button type="button" id="series-fewer" class="series-tags-toggle">
+            Show fewer tags
+          </button>
+        </div>
+      </div>
+    )
+  }
+  <div class="series-status">
+    <span id="series-count" class="series-count" aria-live="polite"></span>
+    <calcite-button id="series-clear" appearance="transparent" scale="s" icon-start="x" hidden>Clear filters</calcite-button>
+  </div>
+  <script is:inline type="application/json" id="series-filter-data" set:html={JSON.stringify(clientData).replace(/</g, "\\u003c")} />
+</search>
 
 <script>
-  import "@esri/calcite-components/components/calcite-chip";
-  import "@esri/calcite-components/components/calcite-chip-group";
+  import "@esri/calcite-components/components/calcite-autocomplete";
+  import "@esri/calcite-components/components/calcite-autocomplete-item";
+  import "@esri/calcite-components/components/calcite-button";
+  import "@esri/calcite-components/components/calcite-option";
+  import "@esri/calcite-components/components/calcite-select";
   import { startSeriesFilter } from "../client/series.ts";
 
   startSeriesFilter();

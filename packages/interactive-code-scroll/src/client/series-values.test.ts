@@ -6,6 +6,7 @@ import {
   highlightRanges,
   isEmptyState,
   knownState,
+  liveTagCounts,
   matchesFilter,
   matchesTags,
   matchesText,
@@ -119,6 +120,29 @@ describe("series tag lists", () => {
     expect(suggestTags("rest", many, ["REST API"], 1)).toEqual(["Restaurants"]);
     expect(suggestTags("  ", many, [])).toEqual([]);
     expect(suggestTags("pýth", many, [])).toEqual(["Python"]);
+  });
+});
+
+describe("series live tag counts", () => {
+  const families = familyMap([{ name: "Language", tags: ["Python", "JavaScript"] }]);
+  const cards = [
+    { title: "A", tags: ["Web", "JavaScript"] },
+    { title: "B", tags: ["Web", "Python"] },
+    { title: "C", tags: ["Python", "OAuth"] },
+  ];
+  const tags = ["Web", "JavaScript", "Python", "OAuth"];
+
+  it("counts what each tag would add to the selection", () => {
+    expect([...liveTagCounts(cards, tags, [])]).toEqual([
+      ["Web", 2],
+      ["JavaScript", 1],
+      ["Python", 2],
+      ["OAuth", 1],
+    ]);
+    // Python selected: JavaScript (same family, OR) adds A; Web and OAuth (AND) narrow.
+    expect(Object.fromEntries(liveTagCounts(cards, tags, ["Python"], families))).toEqual({ Web: 1, JavaScript: 1, Python: 2, OAuth: 1 });
+    // Only the cards past text and level are counted.
+    expect(liveTagCounts(cards.slice(1, 2), ["JavaScript", "Web"], []).get("JavaScript")).toBe(0);
   });
 });
 

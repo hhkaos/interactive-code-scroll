@@ -58,11 +58,30 @@ export function familyMap(groups: readonly FilterGroup[]): Map<string, string> {
 
 /** Text, tags and level together (AND). */
 export function matchesFilter(card: FilterCard, state: FilterState, familyOf: ReadonlyMap<string, string> = new Map()): boolean {
-  return (
-    (state.level === "" || card.level === state.level) &&
-    matchesTags(card.tags, state.tags, familyOf) &&
-    matchesText(card, searchWords(state.q))
-  );
+  return matchesTags(card.tags, state.tags, familyOf) && matchesTextAndLevel(card, state);
+}
+
+/** Cards that pass the text and level (the part of the filter that does not depend on tags). */
+export function matchesTextAndLevel(card: FilterCard, state: FilterState): boolean {
+  return (state.level === "" || card.level === state.level) && matchesText(card, searchWords(state.q));
+}
+
+/**
+ * For each tag, how many of `cards` (already past text and level) would match with that tag added to
+ * the selection; a selected tag counts the current matches that have it.
+ */
+export function liveTagCounts(
+  cards: readonly Pick<FilterCard, "tags">[],
+  tags: Iterable<string>,
+  selected: readonly string[],
+  familyOf: ReadonlyMap<string, string> = new Map(),
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const tag of tags) {
+    const wanted = selected.includes(tag) ? selected : [...selected, tag];
+    counts.set(tag, cards.filter((card) => card.tags.includes(tag) && matchesTags(card.tags, wanted, familyOf)).length);
+  }
+  return counts;
 }
 
 /** How many cards have each tag, in first-seen order. */

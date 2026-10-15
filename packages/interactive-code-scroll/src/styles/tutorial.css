@@ -45,7 +45,8 @@ body {
 :where(calcite-icon[scale="s"]:not([calcite-hydrated])) { inline-size: 1rem; block-size: 1rem; }
 :where(calcite-chip:not([calcite-hydrated])) { display: inline-block; block-size: 1.5rem; }
 /* Form fields: the input row, plus the label row when `label-text` is set. */
-:where(:is(calcite-input, calcite-combobox):not([calcite-hydrated])) { display: block; block-size: 2rem; }
+:where(:is(calcite-input, calcite-combobox, calcite-autocomplete, calcite-select):not([calcite-hydrated])) { display: block; block-size: 2rem; }
+:where(calcite-button[scale="s"]:not([calcite-hydrated], [hidden])) { display: inline-block; block-size: 1.5rem; }
 :where(:is(calcite-input, calcite-combobox)[label-text]:not([calcite-hydrated])) { block-size: 3.375rem; }
 
 /* ——— Header ——— */

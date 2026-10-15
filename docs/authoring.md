@@ -201,7 +201,7 @@ Components render the explanations panel on the left: the tags you write in MDX.
 | [`<VarField>`](#varfield) | `tutorial.mdx`, inside a step | A form field that edits a value in the code. |
 | [`<Hint>`](#hint) | `tutorial.mdx`, inline | A short popover for a side note. |
 | [`<TutorialList>`](#index-page) | `tutorials/index.mdx` | A section of tutorial cards on a series index. |
-| [`<TutorialFilter>`](#index-page) | `tutorials/index.mdx` | The tag filter of a series index. |
+| [`<TutorialFilter>`](#index-page) | `tutorials/index.mdx` | The search bar of a series index. |
 
 Build errors name the file, line and column: `tutorial/tutorial.mdx:12:1 <Step> region "config" not found in code/main.js`. See [Validation](#validation) for the common ones.
 
@@ -916,7 +916,16 @@ interactiveCodeScroll({ tutorials: "tutorials" })
 
 ### Index page
 
-`/` lists every tutorial as a card: logo, title, `description`, `level`, `duration` and `tags` from each tutorial's [frontmatter](#frontmatter), ordered by `order` (lower first; tutorials without it follow, by title). When any tutorial has tags, a tag filter shows only the cards with any of the selected tags.
+`/` lists every tutorial as a card: logo, title, `description`, `level`, `duration` and `tags` from each tutorial's [frontmatter](#frontmatter), ordered by `order` (lower first; tutorials without it follow, by title). Card tags are plain labels: the whole card is one link.
+
+Above the cards, a search bar filters every list on the page as the reader types:
+
+- **Text**: matches titles, descriptions, tags and levels, ignoring case and accents; every word must match. Matches are highlighted in titles and descriptions (from two characters on).
+- **Tag suggestions**: typing offers matching tags; picking one (arrow keys and Enter, or a click) selects it.
+- **Tags**: the most used tags that fit on one line, each with the number of tutorials it would show added to the current search, so no tag leads to an empty result (tags with none leave the line and are disabled in the panel; selected tags always stay); "+N more" lists every tag, grouped by family when you set [`tagGroups`](#tag-families).
+- **Level**: a dropdown, when any tutorial has a `level`.
+
+The count says how many tutorials match ("2 of 9 tutorials"), "Clear filters" resets everything, `/` focuses the search, and the URL keeps the state (`?q=token&tags=Python&level=Beginner`), so a filtered view can be shared. Without JavaScript the bar is hidden and every card shows.
 
 A card shows the tutorial's `logo` next to its title. A tutorial without `logo` whose [variants](#code-variants) have logos shows each distinct variant logo instead, labeled with the variant's name for screen readers. Cards without any logo keep the title at the start.
 
@@ -928,6 +937,9 @@ title: ArcGIS tutorials
 description: Build apps with ArcGIS, from REST to native SDKs.
 logo: logo.svg
 theme: auto
+tagGroups:
+  Language: [JavaScript, Python]
+  Auth: [OAuth, API keys]
 ---
 
 Start with the REST tutorials if you are new to location services.
@@ -949,15 +961,24 @@ Start with the REST tutorials if you are new to location services.
 | `description` | string | none | Shown under the title in the header and as the page's meta description (clipped on narrow screens). |
 | `logo` | image path or `https://` URL | none | Relative to `tutorials/images/` (that folder is never a tutorial), or an absolute `https://` URL. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered site-wide. |
+| `tagGroups` | family name → list of tags | none | [Tag families](#tag-families), in display order. |
 
 The body is free MDX prose with two components; anything else is a build error.
 
 | Component | Props | Description |
 |---|---|---|
 | `<TutorialList>` | `tags="A, B"`, `level="Beginner"` | A section of cards. `tags` (comma-separated, since a tag may contain spaces) keeps tutorials with any of those tags; `level` keeps that exact level; both combine. Without props it lists every tutorial. A tag or level no tutorial uses fails the build. |
-| `<TutorialFilter>` | none | The tag filter, where you place it. It filters every list on the page and counts tutorials once even when they appear in several sections. At most one per page; leave it out to show no filter. |
+| `<TutorialFilter>` | none | The search bar, where you place it. It filters every list on the page and counts tutorials once even when they appear in several sections. At most one per page; leave it out to show no search. |
 
-Without `index.mdx`, the index is the filter plus one list of every tutorial.
+Without `index.mdx`, the index is the search bar plus one list of every tutorial.
+
+#### Tag families
+
+With many tags, group them with `tagGroups`: a family name for each list of tags, in the order the "+N more" panel shows them. Tags without a family go under "Other".
+
+- Each family gets a color: a dot next to its tags on the chips and cards. Tags without a family have no dot.
+- Tags in the same family match **any** of them; different families must **all** match. With `Language: [JavaScript, Python]` and `Auth: [OAuth]`, selecting JavaScript, Python and OAuth shows OAuth tutorials in JavaScript or Python. Without `tagGroups`, any selected tag is enough.
+- Build errors: a tag in two families, an empty family, and a tag no tutorial has.
 
 ### Custom index page
 
@@ -988,14 +1009,14 @@ import { tutorials, TutorialFilter, TutorialList } from "interactive-code-scroll
     <ul>
       {tutorials.map((t) => <li><a href={t.href}>{t.title}</a> {t.level}</li>)}
     </ul>
-    <TutorialFilter />
+    <TutorialFilter tagGroups={{ Language: ["JavaScript", "Python"] }} />
     <TutorialList tags="Python" />
   </body>
 </html>
 ```
 
 - `tutorials` lists every tutorial in index order: `slug`, `href` (includes Astro's `base`), `title`, `tags`, and `description`, `level`, `duration`, `order` when set; `logo` (URL of the tutorial logo) or else `variantLogos` (`{ label, src }` per distinct variant logo) when any.
-- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
+- `<TutorialList>` and `<TutorialFilter>` work as in `index.mdx` and bring their own styles and filter script. `<TutorialFilter tagGroups={…}>` takes the [tag families](#tag-families) that `index.mdx` sets in its frontmatter. The page owns everything else (layout, header, theme). Include `<meta charset="utf-8" />`: Astro does not add it, and without it non-ASCII text (such as `—` or accents) renders garbled.
 - `index` must be an `.astro` file, needs `tutorials`, and cannot be combined with `tutorials/index.mdx` (build error: the file would be ignored).
 
 ### Sibling tutorials

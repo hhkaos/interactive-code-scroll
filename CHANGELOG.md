@@ -8,10 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Series index: optional tag families, `tagGroups` in `index.mdx` frontmatter or the `<TutorialFilter tagGroups>` prop on a custom index page (family name → tags, in display order). Validated at build: a tag in two families, an empty family and a tag no tutorial has are errors. The search bar (in progress) uses them to group, color and match tags.
+- Series index: optional tag families, `tagGroups` in `index.mdx` frontmatter or the `<TutorialFilter tagGroups>` prop on a custom index page (family name → tags, in display order). Validated at build: a tag in two families, an empty family and a tag no tutorial has are errors. The search bar uses them to group, color and match tags.
+- Series index: `<TutorialFilter>` is a search bar. Text search over titles, descriptions, tags and levels (case- and accent-insensitive, every word must match; applied 150 ms after the last keystroke) with highlighted matches; tag suggestions while typing (`calcite-autocomplete`); tag toggles with live counts (what each tag would show added to the current search; tags with no result leave the line and are disabled in the panel), as many of the most used as fit on one line, and "+N more" for every tag grouped by family; a level dropdown; tags match OR within a family and AND across families; "N of M tutorials", "Clear filters", `/` to focus, and the state in the URL (`?q=…&tags=…&level=…`). Without JavaScript the bar is hidden. Unhydrated autocomplete, select and small buttons keep their hydrated size (E2E compares the page with scripts blocked).
 
 ### Changed
 
+- Series index: card tags are plain labels with a family color dot instead of chip-styled pills (they were never clickable: the whole card is a link).
 - Series index: the header content (logo, theme action) lines up with the centered `.series-main` column (`--calcite-navigation-width: 72rem`); the bar background stays full width.
 
 ### Fixed

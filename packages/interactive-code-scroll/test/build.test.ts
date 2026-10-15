@@ -194,7 +194,8 @@ it("renders a custom series index page with the public series module", async () 
     await build({ root, outDir, integrations: [interactiveCodeScroll({ tutorials: "tutorials", index: "home.astro" })], logLevel: "silent" });
     const html = readFileSync(join(outDir, "index.html"), "utf8");
     expect(html).toContain('<ol id="custom"><li><a href="/beta/">Beta</a> Beginner</li><li><a href="/alpha/">Alpha</a> </li></ol>');
-    expect(html).toContain('<calcite-chip-group id="series-filter"');
+    expect(html).toContain('<calcite-autocomplete id="series-search"');
+    expect(html).toContain('"groups":[{"name":"Language","tags":["Python"]},{"name":"Platform","tags":["Web"]}]');
     expect(html.match(/class="series-card-title"[^>]*>([^<]+)</g)).toEqual([expect.stringContaining(">Beta<")]);
     expect(html).toMatch(/<link rel="stylesheet" href="[^"]+\.css"|<style>[^<]*\.series-card/);
     expect(html).toMatch(/<script type="module" src="[^"]+\.js"/);

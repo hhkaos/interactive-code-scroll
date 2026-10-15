@@ -4,7 +4,6 @@
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
-- [ ] Series search bar (replaces the tag-chip filter): text search with highlights, tag suggestions (`calcite-autocomplete`, check the Calcite docs first), top tags + "+N more" grouped by family, `tagGroups` in `index.mdx` / `<TutorialFilter>` with build validation, level dropdown, OR-within/AND-across family matching, family colors, plain card tags, URL state, `/` shortcut. Rules: `SPEC.md` (Series sites → Search and filter). Show screenshots for UX approval before release.
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).
 - [ ] Low priority (load already feels fast after the CLS fix, 2026-10-15): measure first with the throttled Playwright/Lighthouse run, then consider `<link rel="modulepreload">` for the page bundle in `<head>` (the module script sits at the end of a ~63 KB HTML) and splitting it (538 KB, 138 KB gzip): critical Calcite (navigation, action, progress) first, the rest (carousel, dialog, combobox, JSON tree…) through `import()`.

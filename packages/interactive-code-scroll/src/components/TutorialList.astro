@@ -1,5 +1,6 @@
 ---
-import { base, tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { base, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { readIndexConfig } from "../frontmatter.ts";
 import { parseTagList, selectCards } from "../series.ts";
 import { seriesCards } from "../tutorial-data.ts";
 import "@esri/calcite-components/main.css";
@@ -24,6 +25,10 @@ if (unknownTags.length > 0) {
 if (level !== undefined && !cards.some((card) => card.level === level)) {
   throw new Error(`<TutorialList level="${level}">: no tutorial has that level`);
 }
+// Family colors of index.mdx tagGroups (a custom page's <TutorialFilter tagGroups> sets them from the client).
+const familyIndex = new Map(
+  (readIndexConfig(seriesIndex?.frontmatter ?? {}).tagGroups ?? []).flatMap((group, index) => group.tags.map((tag) => [tag, index] as const)),
+);
 const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : { level }) });
 ---
 
@@ -31,7 +36,7 @@ const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : 
   <ul class="series-cards">
     {
       shown.map((card) => (
-        <li class="series-card-item" data-slug={card.slug} data-tags={JSON.stringify(card.tags)}>
+        <li class="series-card-item" data-slug={card.slug} data-tags={JSON.stringify(card.tags)} data-level={card.level}>
           <a class="series-card" href={card.href}>
             <div class="series-card-head">
               {/* Next to the title, the tutorial logo is decorative; variant logos stand alone, so they keep their label. */}
@@ -65,7 +70,7 @@ const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : 
             {card.tags.length > 0 && (
               <ul class="series-card-tags" aria-label="Tags">
                 {card.tags.map((tag) => (
-                  <li>{tag}</li>
+                  <li data-family={familyIndex.get(tag)}>{tag}</li>
                 ))}
               </ul>
             )}
@@ -74,7 +79,7 @@ const shown = selectCards(cards, { tags: wanted, ...(level === undefined ? {} : 
       ))
     }
   </ul>
-  <p class="series-empty" hidden>No tutorials match the selected tags.</p>
+  <p class="series-empty" hidden>No tutorials match the filters.</p>
 </div>
 
 <script>
