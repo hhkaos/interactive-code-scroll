@@ -138,6 +138,7 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 ### Markdown content helpers
 - Standard Markdown blockquotes render as lightweight editorial notes.
 - `<Hint id label>...</Hint>` renders inline clarification text with a dashed underline and a hover/focus popover. The `id` is required and unique; the body may contain HTML such as links. Hints are for short contextual explanations; longer or essential content should use standard prose or `<details>`.
+- `<details>`/`<summary>` disclosure blocks: the content needs a blank line after `<summary>` (and before `</details>`) to be parsed as Markdown blocks. Without it MDX wraps `<summary>` in a `<p>` (invalid HTML); the build warns with its MDX `file:line`.
 
 ### Download
 - **Single file** (button on each file tab).

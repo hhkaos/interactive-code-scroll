@@ -109,12 +109,18 @@ export function tutorialValidation(
     const frontmatter = frontmatterOf(ctx.data);
 
     const { uses, collect } = componentCollector((name) => COMPONENTS.has(name));
+    // A <summary> without a blank line after it is parsed as text, inside a <p>: invalid HTML that breaks the block's layout.
+    const inlineSummaries: { line: number; column: number }[] = [];
 
     return defineMdastPlugin({
       name: "interactive-code-scroll:validate",
       options: { position: true },
       mdxJsxFlowElement: collect,
-      mdxJsxTextElement: collect,
+      mdxJsxTextElement(node) {
+        collect(node);
+        const start = node.position?.start;
+        if (node.name === "summary") inlineSummaries.push({ line: start?.line ?? 0, column: start?.column ?? 0 });
+      },
       after() {
         const mdxFile = relative(process.cwd(), tutorial.mdxPath);
         const frontmatterLines = frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8"));
@@ -161,6 +167,9 @@ export function tutorialValidation(
           warn(
             `${mdxFile}:${frontmatterLines.include ?? 1}:1 frontmatter include "${pattern}" publishes code/${first!.path}${more}, which ${first!.by} excludes; make sure it holds no secrets or local state`,
           );
+        }
+        for (const { line, column } of inlineSummaries) {
+          warn(`${mdxFile}:${line}:${column} <summary> is rendered inside a paragraph; put a blank line between it and the <details> content`);
         }
         if (seriesDir === undefined && frontmatter.family !== undefined) {
           warn(`${mdxFile}:${frontmatterLines.family ?? 1}:1 frontmatter "family" has no effect outside a series site`);

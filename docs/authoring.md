@@ -431,6 +431,17 @@ The Preview runs from a <Hint id="same-origin" label="same-origin page">A real U
 
 The content between the tags is the popover. Use hints for brief side notes; use regular prose or `<details>` for essential or longer content.
 
+Leave a blank line after `<summary>` and before `</details>`, so the content is parsed as Markdown; otherwise MDX puts `<summary>` inside a paragraph and the build warns:
+
+```mdx
+<details>
+<summary>Why register more than one behavior?</summary>
+
+`registerOAuthInfos()` accepts an array.
+
+</details>
+```
+
 ## Code Markers
 
 <picture>
