@@ -187,9 +187,8 @@ body[data-docs-hidden] {
   :is(th, td):last-child { padding-inline-end: 0; }
   th {
     border-block-end: 2px solid var(--calcite-color-border-2);
-    font-size: var(--calcite-font-size-xs);
+    font-size: var(--calcite-font-size-sm);
     font-weight: var(--calcite-font-weight-semibold);
-    letter-spacing: 0.02em;
     color: var(--calcite-color-text-1);
   }
   tr + tr > td { border-block-start: 1px solid var(--calcite-color-border-3); }
