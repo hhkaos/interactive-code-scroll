@@ -12,7 +12,7 @@ A tutorial is a folder with `tutorial.mdx` (the explanations), `code/` (the fina
 </picture>
 
 - **Side-by-side layout**: explanations on the left, code on the right. Both splitters (explanations/code, code/Preview) can be dragged, and their sizes are remembered. A handle on the splitter hides or shows the explanations.
-- **Steps drive the code panel**: when a step becomes active, it can switch file, focus a region (the rest of the file turns gray and the region scrolls into view) or show images instead of code. A text-only step keeps the current file and clears the focus.
+- **Steps drive the code panel**: when a step becomes active, it can switch file, focus a region (the rest of the file turns gray and the region scrolls into view) or show images instead of code. A text-only step keeps the current file and clears the focus. A file switch stands out: the step names the new file in a chip, and its tab flashes when the step becomes active.
 - **Several ways to move**: scrolling (the step crossing the middle of the panel becomes active), clicking a step, arrow keys and PageUp/PageDown (presentation clickers work too, even while the focus is in a field or the Result pane).
 - **Numbered steps, progress bar and deep links**: every step heading carries its number; `#step-id` links open the tutorial at that step.
 - **Optional introduction**: content before the first step that is not numbered and does not focus any code. It can start with the Preview or Result pane collapsed or maximized (`<Intro preview="collapsed">`), open on a given file (`<Intro file="README.md">`), and show images or an embedded page instead of code (`<Intro images={["overview.png"]}>`); a tutorial with nothing else to show opens on the first step's media.
@@ -43,6 +43,7 @@ See [Code Markers](authoring.md#code-markers) and [Files Not Shown in Tabs](auth
 </picture>
 
 - `<VarField>` inputs in the explanations update the code as the reader types (client ID, API key, portal URL…). The literal in the code is the default.
+- **Field types**: text, multi-line text, number, switch, dropdown, radio buttons (stacked or in a row) and a searchable combobox, with choices inline or from a JSON file. Consecutive fields share a row when the panel is wide enough.
 - **Secret fields** are masked in the form and in the code, with a reveal toggle.
 - **Persisted fields** are remembered per site, so a credential typed once fills every tutorial on the same site; `persist="tutorial"` keeps a value to one tutorial.
 - Values are escaped for each language and quote style, and are included in Preview and downloads.
@@ -111,7 +112,7 @@ See [Presenting a Tutorial](presenting.md).
 ## Writing tutorials
 
 - Markdown notes (blockquotes) and `<Hint>` popovers for short clarifications. Notes take the brand color only in the active step, so the reader always sees which step they are on.
-- Fenced code blocks in the explanations, with a copy button, follow the page's light/dark mode like the code panel.
+- Fenced code blocks in the explanations, with a copy button, follow the page's light/dark mode like the code panel. Markdown tables are styled to match the page.
 - **Strict validation**: a wrong file, region, variable, image, variant or frontmatter value fails the build with the MDX file, line and column. In dev mode the error appears as a browser overlay and validation re-runs when code or images change.
 - **Project wizard**: `npm create interactive-code-scroll@latest` asks for one tutorial or a series, what each tutorial uses (web app, REST API, script or native app, in one or several languages, as code variants or sibling tutorials), the index page and a GitHub Pages workflow, then writes a working example to start from. See [Create a Project](cli.md#create-a-project).
 - **Generic CLI**: `dev`, `build`, `serve`, `doctor` and `init-scripts` for any tutorial folder or series site (`--tutorials`, or detected from `tutorials/`; `--index` for a custom index page).

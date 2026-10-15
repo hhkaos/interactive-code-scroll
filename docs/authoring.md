@@ -187,6 +187,8 @@ Highlighting happens at build time and is chosen by file extension. Other files 
 
 Fenced code blocks in `tutorial.mdx` (` ```js `) use the same light and dark themes as the code panel. To use other themes, set `markdown.shikiConfig.theme` or `themes` in `astro.config.mjs`: a project that sets either keeps its own.
 
+Markdown tables in `tutorial.mdx` are styled to match the page: a header row over a rule, hairlines between rows and the first column as the row label. Long cell content wraps instead of widening the panel.
+
 ## Components
 
 <picture>
@@ -297,6 +299,8 @@ A [text-only step](#how-a-tutorial-works) keeps the current file visible and cle
 
 Without `region`, the whole file shows with no highlight. Without `file`, the step keeps the file on screen.
 
+A step that shows another file than the step before it names that file in a chip on its heading row. When the reader reaches it, the new file tab flashes and the code fades in before scrolling to the region, so the switch is hard to miss; screen readers hear "Showing <file>". Deep links and tab clicks switch without the animation, and reduced motion drops it.
+
 ##### Show images instead of code
 
 ```mdx title="tutorial/tutorial.mdx"
@@ -372,6 +376,8 @@ A form field linked to an [`@var` marker](#variables) in code. What the reader t
 <VarField name="clientId" label="Client ID" secret persist />
 <VarField name="portalUrl" label="Portal URL" placeholder="https://example.com" persist />
 ```
+
+Consecutive `<VarField>`s form a group laid out in as many columns as the explanations panel fits (one at the default split; more when the reader widens it). A `textarea` takes the whole row; prose between fields starts a new group.
 
 | Prop | Values | Default | Description |
 |---|---|---|---|

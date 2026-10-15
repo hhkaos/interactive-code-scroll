@@ -35,6 +35,10 @@ Before v1, breaking changes may happen in alpha and beta releases. Each breaking
 - an actionable validation error when possible,
 - a fixture/E2E case when the behavior is observable through a tutorial.
 
+### 0.2.0-beta.6: wider explanations and field rows
+
+The explanations no longer cap lines at 70 characters: text uses the panel's width when the reader widens it. Consecutive `<VarField>`s are laid out in as many columns as the panel fits; put prose between fields that must stay on their own row. Notes (blockquotes) in inactive steps are now gray, and fenced code blocks follow the light/dark mode with the code panel's themes unless `astro.config.mjs` sets `markdown.shikiConfig.theme` or `themes`. No tutorial changes are needed; check pages that relied on the old layout.
+
 ### 0.2.0-beta.5: file tab order without `files`
 
 A tutorial (or variant) without frontmatter `files` now orders its file tabs by the steps: each file in the order a `<Step>` first shows it, then the rest by path. Before, every tab was in path order. Check your tabs after upgrading; to keep another order, list it in `files`. See [Files Not Shown In Tabs](authoring.md#files-not-shown-in-tabs).
