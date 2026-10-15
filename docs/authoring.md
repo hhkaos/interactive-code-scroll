@@ -299,7 +299,7 @@ Without `region`, the whole file shows with no highlight. Without `file`, the st
 <Step id="register-app" images={["1-create-item.png", "2-copy-client-id.png"]}>
 ```
 
-Paths are relative to `images/`. Step keys page through the images before moving to the next step; clicking one opens a full-screen viewer. The value must be a JSX array written in place (`images={[…]}`), not a string or a variable.
+Paths are relative to `images/`. Step keys page through the images before moving to the next step; clicking one opens a full-screen viewer. The value must be a JSX array written in place (`images={[…]}`), not a string or a variable. The [intro](#intro) takes the same prop, shown before the first step.
 
 ##### Show an embedded page instead of code
 
