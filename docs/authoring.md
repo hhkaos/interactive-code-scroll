@@ -931,6 +931,11 @@ interactiveCodeScroll({ tutorials: "tutorials" })
 
 `/` lists every tutorial as a card: title, `description`, `level`, `duration`, technologies and `tags` from each tutorial's [frontmatter](#frontmatter) (plus its [variant](#code-variants) labels as tags), ordered by `order` (lower first; tutorials without it follow, by title). Card tags are plain labels: the whole card is one link.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/series-index-dark.png">
+  <img alt="A series index: the header with the series logo, title and description; a search bar with a level dropdown and tag toggles with counts; then two sections of tutorial cards, each with a title, description, level bars, duration, tags with family colors and logos, a favorite star, and on one card an Available in band with cURL and Python links." src="../site/public/screenshots/series-index-light.png" width="800" height="700">
+</picture>
+
 Above the cards, a search bar filters every list on the page as the reader types:
 
 - **Text**: matches titles, descriptions, tags and levels, ignoring case and accents; every word must match. Matches are highlighted in titles and descriptions (from two characters on).

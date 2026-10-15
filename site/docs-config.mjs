@@ -77,8 +77,13 @@ export function rewriteDocsPicture(html) {
   const dark = attribute(html.match(/<source\s[^>]*>/)?.[0] ?? "", "srcset") ?? light;
   const alt = attribute(img, "alt") ?? "";
   if (!light?.startsWith(screenshotsPath) || !dark?.startsWith(screenshotsPath)) return undefined;
+  // Width and height only reserve the aspect ratio (docs.css scales the image): the img's own pair when it has
+  // both (a crop of the page), else the full-page capture size of scripts/screenshots.mjs.
+  const width = attribute(img, "width");
+  const height = attribute(img, "height");
+  const [w, h] = width && height ? [width, height] : ["1440", "860"];
   const image = (path, scheme) =>
-    `<img class="docs-shot-${scheme}" src="${base}screenshots/${path.slice(screenshotsPath.length)}" alt="${alt}" width="1440" height="860" loading="lazy" decoding="async">`;
+    `<img class="docs-shot-${scheme}" src="${base}screenshots/${path.slice(screenshotsPath.length)}" alt="${alt}" width="${w}" height="${h}" loading="lazy" decoding="async">`;
   return `<div class="docs-shot">${image(dark, "dark")}${image(light, "light")}</div>`;
 }
 

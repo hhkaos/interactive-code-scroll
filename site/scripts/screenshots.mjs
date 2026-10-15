@@ -1,5 +1,6 @@
 // Regenerates the light/dark screenshots in public/screenshots/ (used by the landing page, the root README and docs/*.md)
 // from the built showcase tutorials. Run `pnpm build:showcase` first.
+// series-index-*.png are manual captures of a published series site (no series in the showcase): not regenerated here.
 import { chromium } from "@playwright/test";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
