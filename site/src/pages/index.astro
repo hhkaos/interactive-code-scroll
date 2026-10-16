@@ -76,6 +76,7 @@ const highlights = [
 ];
 
 const features = [
+  { icon: "🔊", title: "Read aloud", text: "Listen from introduction to closing recap, with pause, speed and optional automatic advance. Follow highlighted sentences and, with compatible voices, words." },
   { icon: "📡", title: "Request runner", text: "Run `.http` requests from the page, with captured output when there is no token and a JSON viewer." },
   { icon: "✏️", title: "Fields → code", text: "Readers type their own values; code, Preview and downloads update. Secrets stay in their browser." },
   { icon: "📦", title: "Copy & ZIP", text: "Readers leave with a runnable project. Markers are stripped from everything they copy." },
@@ -765,7 +766,7 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
 
   .feature-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
   }
 
