@@ -702,16 +702,18 @@ body[data-presenting] .step-nav { display: none; }
   }
 }
 
-/* Above the intro: a reader's cue (is this still current?), not for the audience of a presentation. */
-.docs-updated {
+/* Above the intro: a reader's cues (is this still current? how long? how hard?), not for the audience of a presentation. */
+.docs-meta {
   display: flex;
-  align-items: center;
-  gap: 0.375rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
   margin-block: 0 1rem;
   font-size: var(--calcite-font-size-sm);
   color: var(--calcite-color-text-3);
+
+  > span { display: inline-flex; align-items: center; gap: 0.375rem; }
 }
-body[data-presenting] .docs-updated { display: none; }
+body[data-presenting] .docs-meta { display: none; }
 
 .intro {
   padding: 0 0 1.5rem;

@@ -3,6 +3,7 @@ import type { GetStaticPaths } from "astro";
 import { base, series, seriesIndex, site, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
+import LevelIcon from "../components/LevelIcon.astro";
 import Outro from "../components/Outro.astro";
 import Step from "../components/Step.astro";
 import VarField from "../components/VarField.astro";
@@ -249,10 +250,26 @@ const clientData = JSON.stringify({
       <div class="docs-column">
         <main class="docs">
           {
-            config.updated && (
-              <p class="docs-updated">
-                <calcite-icon icon="calendar" scale="s" aria-hidden="true" />
-                <span>Updated <time datetime={config.updated}>{formatUpdated(config.updated)}</time></span>
+            (config.updated || config.duration || config.level) && (
+              <p class="docs-meta">
+                {config.updated && (
+                  <span>
+                    <calcite-icon icon="calendar" scale="s" aria-hidden="true" />
+                    <span>Updated <time datetime={config.updated}>{formatUpdated(config.updated)}</time></span>
+                  </span>
+                )}
+                {config.duration && (
+                  <span>
+                    <calcite-icon icon="clock" scale="s" aria-hidden="true" />
+                    <span class="visually-hidden">Duration:</span> {config.duration}
+                  </span>
+                )}
+                {config.level && (
+                  <span>
+                    <LevelIcon level={config.level} />
+                    <span class="visually-hidden">Level:</span> {config.level}
+                  </span>
+                )}
               </p>
             )
           }

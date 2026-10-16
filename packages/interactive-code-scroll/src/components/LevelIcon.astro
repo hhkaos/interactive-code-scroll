@@ -1,0 +1,23 @@
+---
+import { levelRank } from "../series.ts";
+import "../styles/level-icon.css";
+
+// The `level` icon of the series cards and the intro meta line (internal): difficulty bars for the usual levels, else a gauge.
+interface Props {
+  level: string;
+}
+
+const rank = levelRank(Astro.props.level);
+---
+
+{
+  rank ? (
+    <svg class="series-level-bars" data-rank={rank} viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="2" y="9" width="3" height="5" rx="1" />
+      <rect x="6.5" y="5.5" width="3" height="8.5" rx="1" />
+      <rect x="11" y="2" width="3" height="12" rx="1" />
+    </svg>
+  ) : (
+    <calcite-icon icon="gauge" scale="s" aria-hidden="true" />
+  )
+}

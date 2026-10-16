@@ -25,6 +25,7 @@ rewriteFile(join(dist, "index.js"), (text) =>
 for (const path of [
   "src/components/Hint.astro",
   "src/components/Intro.astro",
+  "src/components/LevelIcon.astro",
   "src/components/Outro.astro",
   "src/components/Step.astro",
   "src/components/StepMedia.astro",
@@ -39,6 +40,7 @@ for (const path of [
   "src/styles/tutorial.css",
   "src/styles/series.css",
   "src/styles/series-list.css",
+  "src/styles/level-icon.css",
 ]) {
   const source = join(packageRoot, path);
   const target = join(dist, path.replace(/^src\//, ""));
@@ -48,6 +50,7 @@ for (const path of [
 
 rewriteAstroImports(join(dist, "components", "Hint.astro"));
 rewriteAstroImports(join(dist, "components", "Intro.astro"));
+rewriteAstroImports(join(dist, "components", "LevelIcon.astro"));
 rewriteAstroImports(join(dist, "components", "Outro.astro"));
 rewriteAstroImports(join(dist, "components", "Step.astro"));
 rewriteAstroImports(join(dist, "components", "StepMedia.astro"));

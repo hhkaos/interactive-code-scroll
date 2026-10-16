@@ -1,6 +1,7 @@
 ---
 import { formatUpdated } from "../frontmatter.ts";
-import { cardParts, levelRank, tagFor, type SeriesCard } from "../series.ts";
+import { cardParts, tagFor, type SeriesCard } from "../series.ts";
+import LevelIcon from "./LevelIcon.astro";
 
 // One card of <TutorialList> and <TutorialFavorites> (internal: not in index.mdx or the public module).
 interface Props {
@@ -26,15 +27,7 @@ const { links, more, plainTags } = cardParts(card);
       <p class="series-card-meta">
         {card.level && (
           <span>
-            {levelRank(card.level) ? (
-              <svg class="series-level-bars" data-rank={levelRank(card.level)} viewBox="0 0 16 16" aria-hidden="true">
-                <rect x="2" y="9" width="3" height="5" rx="1" />
-                <rect x="6.5" y="5.5" width="3" height="8.5" rx="1" />
-                <rect x="11" y="2" width="3" height="12" rx="1" />
-              </svg>
-            ) : (
-              <calcite-icon icon="gauge" scale="s" aria-hidden="true" />
-            )}
+            <LevelIcon level={card.level} />
             <span class="visually-hidden">Level:</span> {card.level}
           </span>
         )}

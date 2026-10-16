@@ -167,14 +167,14 @@ order: 1
 
 ### Series index and siblings
 
-Ignored in a single-tutorial site, except `description`, which is also the page's meta description, and `updated`, which also shows atop the explanations.
+Ignored in a single-tutorial site, except `description`, which is also the page's meta description, and `updated`, `duration` and `level`, which also show on a line atop the explanations (hidden in presentation mode).
 
 | Field | Values | Default | Description |
 |---|---|---|---|
 | [`tags`](#index-page) | list of strings | none | Series index card tags and filter values, e.g. `[REST, Python]`. No commas inside a tag. |
-| [`level`](#index-page) | string | none | Series index card, e.g. `Beginner`; `<TutorialList level>` matches it exactly. `Beginner`, `Intermediate` and `Advanced` (any case) show one to three difficulty bars; other values a generic gauge icon. |
-| [`duration`](#index-page) | string | none | Series index card, e.g. `20 min`. |
-| [`updated`](#index-page) | date `YYYY-MM-DD` | none | Last content update, e.g. `updated: 2026-10-16`, shown as "Updated Oct 16, 2026" on the series index card and above the explanations (hidden in presentation mode). Set by hand: it means the content was reviewed, not that a file changed. Quoted or not; an impossible date is a build error. |
+| [`level`](#index-page) | string | none | Series index card and the line above the explanations, e.g. `Beginner`; `<TutorialList level>` matches it exactly. `Beginner`, `Intermediate` and `Advanced` (any case) show one to three difficulty bars; other values a generic gauge icon. |
+| [`duration`](#index-page) | string | none | Series index card and the line above the explanations (with a clock icon), e.g. `20 min`. |
+| [`updated`](#index-page) | date `YYYY-MM-DD` | none | Last content update, e.g. `updated: 2026-10-16`, shown as "Updated Oct 16, 2026" on the series index card and above the explanations, before `duration` and `level` (hidden in presentation mode). Set by hand: it means the content was reviewed, not that a file changed. Quoted or not; an impossible date is a build error. |
 | [`order`](#index-page) | number | none | Series index position: lower first; tutorials without it come after, by title. Also orders the [sibling](#sibling-tutorials) switcher. |
 | [`family`](#sibling-tutorials) | string | none | Links sibling tutorials of a series site. Needs `familyLabel`. |
 | [`familyLabel`](#sibling-tutorials) | string | none | This tutorial's name in the sibling menu, e.g. `Python`. Unique within the family. |

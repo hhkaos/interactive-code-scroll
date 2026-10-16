@@ -2,8 +2,7 @@
 
 ## Step index and outline (SPEC: Step navigation, Step outline, Presentation mode; decision 2026-10-16)
 
-Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private). Suggested commits, each with tests:
-5. Intro meta line: `duration` and `level` next to "Updated"; document it in the authoring guide (`duration` / `level` rows) and features.
+Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private). Remaining (manual):
 - Check `b` / `.` (step index) with a real clicker.
 
 ---

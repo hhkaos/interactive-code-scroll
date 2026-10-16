@@ -25,7 +25,7 @@ test("index.mdx gives the index its title, prose and TutorialList sections in or
   await expect(alpha.locator(".series-card-variants")).toHaveCount(0);
 });
 
-test("updated shows on the card and above the explanations, not in presentation mode", async ({ page }) => {
+test("updated shows on the card; the intro meta line adds duration and level, not in presentation mode", async ({ page }) => {
   await page.goto("/");
   const cards = page.locator(".series-list").first().locator(".series-card");
   // Unquoted in the fixture: YAML's Date reaches the page as the same calendar day.
@@ -34,13 +34,21 @@ test("updated shows on the card and above the explanations, not in presentation 
   await expect(cards.nth(1).locator(".series-card-updated")).toHaveCount(0);
 
   await page.goto("/alpha/");
-  const updated = page.locator(".docs > .docs-updated");
-  await expect(updated).toHaveText("Updated Oct 16, 2026");
-  await expect(page.locator(".docs > :first-child")).toHaveClass("docs-updated");
+  const meta = page.locator(".docs > .docs-meta");
+  await expect(page.locator(".docs > :first-child")).toHaveClass("docs-meta");
+  // Updated, duration, level; the icons and labels for screen readers come with them.
+  await expect(meta.locator(":scope > span")).toHaveText(["Updated Oct 16, 2026", "Duration: 10 min", "Level: Beginner"]);
+  await expect(meta.locator('calcite-icon[icon="calendar"], calcite-icon[icon="clock"]')).toHaveCount(2);
+  // The card's difficulty bars, not a second rendering.
+  await expect(meta.locator(".series-level-bars")).toHaveAttribute("data-rank", "1");
   await page.locator("#present-toggle").click();
-  await expect(updated).toBeHidden();
+  await expect(meta).toBeHidden();
+  // Without updated, the line keeps the rest.
+  await page.goto("/beta/");
+  await expect(page.locator(".docs-meta > span")).toHaveText(["Duration: 20 min", "Level: Intermediate"]);
+  await expect(page.locator(".docs-meta .series-level-bars")).toHaveAttribute("data-rank", "2");
   await page.goto("/gamma/");
-  await expect(page.locator(".docs-updated")).toHaveCount(0);
+  await expect(page.locator(".docs-meta")).toHaveCount(0);
 });
 
 test("the tag filter hides cards without a selected tag and counts tutorials", async ({ page }) => {

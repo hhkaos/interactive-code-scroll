@@ -1,0 +1,12 @@
+/* Difficulty bars (LevelIcon.astro): as many filled as the level's rank, the rest faint. Same box as a scale="s" icon. */
+.series-level-bars {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+
+  rect { opacity: 0.3; }
+  &[data-rank="1"] rect:nth-child(-n + 1),
+  &[data-rank="2"] rect:nth-child(-n + 2),
+  &[data-rank="3"] rect { opacity: 1; }
+}
