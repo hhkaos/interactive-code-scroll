@@ -38,12 +38,16 @@ test("downloads the project as a ZIP with form values applied", async ({ page })
     `${folder}/index.html`,
     `${folder}/main.js`,
     `${folder}/oauth-callback.html`,
+    `${folder}/pages/signed-out.html`,
     `${folder}/report.py`,
     `${folder}/settings.json`,
+    `${folder}/shared.js`,
     `${folder}/style.css`,
   ]);
   const png = execFileSync("unzip", ["-p", zip, `${folder}/assets/pixel.png`]);
   expect(png.equals(readFileSync("fixtures/framework-fixture/tutorial/code/assets/pixel.png"))).toBe(true);
+  // The page itself, not the loader page preview/ serves for it.
+  expect(execFileSync("unzip", ["-p", zip, `${folder}/pages/signed-out.html`], { encoding: "utf8" })).toContain('<p id="signed-out">');
   const report = execFileSync("unzip", ["-p", zip, `${folder}/report.py`], { encoding: "utf8" });
   expect(report).toContain('CLIENT_ID = "secret-id"');
   expect(report).toContain('MAX_RESULTS = 10\nVERBOSE = False\nREFERRER = ""\nPORTAL = "https://www.arcgis.com"');

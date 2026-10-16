@@ -727,6 +727,13 @@ Values are inserted as typed, with line breaks removed.
 
 Web code runs in a live Preview under the code panel. It needs `code/index.html` (with code variants, see [Preview and downloads](#preview-and-downloads)). The generated site publishes every file under `code/` next to the Preview page, with markers stripped, so relative links such as `./main.js` or `./oauth-callback.html` keep working.
 
+Form values reach every file the Preview loads, not only the scripts and stylesheets `index.html` links:
+
+- **Imported modules and fetched files**: a module that `index.html` (or another module) imports, such as a shared `./config.js`, and a file the code reads with `fetch()` run with the current values.
+- **Other HTML pages**: any other `.html` file, such as an OAuth callback page opened in a popup, runs from its own URL under `preview/` with the current values, so `redirect_uri` and `window.opener` keep working. Opened without the tutorial (another browser, a cleared site storage), it runs with the code defaults.
+
+Files read in other ways (a `Worker`, `XMLHttpRequest`, a CSS `@import`) get the code defaults.
+
 The [`preview`](#frontmatter) frontmatter field picks the mode:
 
 | Value | Reader gets |

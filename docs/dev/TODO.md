@@ -12,33 +12,6 @@ Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private).
 
 ---
 
-Bug: <VarField> values don't reach files the Preview loads indirectly, which breaks OAuth demos with ArcGIS REST JS.
-
-Repro (tutorial with code/index.html, main.js, config.js, callback.html):
-- config.js: `export const clientId = "YOUR_CLIENT_ID"; // @var clientId`
-- main.js does `import { clientId } from "./config.js"` and calls ArcGISIdentityManager.beginOAuth2({ clientId, redirectUri, popup: true }).
-- callback.html (popup redirect target) also imports ./config.js and calls ArcGISIdentityManager.completeOAuth2({ clientId, ... }).
-- Enter a Client ID in the VarField, sign in from the Preview → the app sends "YOUR_CLIENT_ID".
-
-Cause:
-- buildPreviewHtml (dist/preview/build-html.js) only inlines <script src> and <link rel=stylesheet> referenced from index.html, with values applied (projectFiles(files, values())).
-- Any other local file is fetched from /preview/<path>, which preview/page.astro's GET serves from disk with markers stripped and *code defaults*:
-  - ES module imports (`import ... from "./config.js"`);
-  - secondary pages such as an OAuth callback.html.
-- REST JS completeOAuth2 needs the real clientId: it reads localStorage `ARCGIS_REST_JS_AUTH_STATE_<clientId>` and dispatches `arcgis-rest-js-popup-auth-<clientId>` on window.opener. The examples/oauth-pkce example only works because the Maps SDK callback page needs no clientId.
-
-Expected: every code/ file the Preview loads (imported modules, fetched files, other .html pages opened in popups or iframes) sees the current form values, as the ZIP does.
-
-Possible approach (your call):
-1. Imported modules: when building the preview HTML, add import map entries (merged with any import map already in the entry HTML) that map each local module path, resolved against the preview URL, to a data:/blob: URL of its value-applied source. Mind modules that import other local modules: either rewrite their specifiers too, or map them all.
-2. Secondary .html pages: publish them under preview/ as loader pages (like variantPreviewPage) that read their value-applied, inlined HTML from localStorage (one key per file, written by startPreview). That keeps a real same-origin URL, so OAuth redirect_uri and window.opener keep working.
-3. Add a test with an OAuth-like setup: index.html + main.js importing config.js, plus callback.html importing config.js; assert both get the VarField value.
-4. Document the limitation/behaviour in docs/authoring.md (Preview / VarField sections).
-
-Context: tutorial at demos/credential-console-basics in the "working-with-arcgis-rest-js-dtseu-2026" talk repo currently works around it by putting the config in main.js (window.oauthOptions) and having callback.html read window.opener.oauthOptions. Once fixed, that tutorial can go back to a shared config.js.
-
-
-
 ## Ideas to triage
 
 - Show authors?

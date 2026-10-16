@@ -78,6 +78,7 @@ See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables
 - Runs the tutorial's web code (`code/index.html`) from a real page of the site: embedded, in a new tab, or both.
 - Refreshes after form changes, or with Run. A step can expand or collapse it.
 - OAuth sign-in works from the embedded Preview through a popup, and in the new tab through a normal redirect.
+- Form values reach every file the app loads: imported modules (a shared `config.js`), fetched files and other pages such as an OAuth callback.
 
 See [Preview](authoring.md#preview).
 

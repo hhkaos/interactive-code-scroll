@@ -14,7 +14,7 @@ import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
 import { jsonRegionsOf, jsonVarsOf } from "../json-vars.ts";
 import { zipBadge, zipLabel } from "../downloads.ts";
-import { PREVIEW_ENTRY } from "../preview/build-html.ts";
+import { PREVIEW_ENTRY, previewPagesOf } from "../preview/build-html.ts";
 import { MAX_SEGMENTED } from "../client/variant-values.ts";
 import { variantVisible } from "../variants.ts";
 import { selectVisible, stepFilesOf } from "../visible-files.ts";
@@ -65,10 +65,11 @@ const firstIsWeb = !variants || previewEntries.includes(`${variants[0]!.dir}/${P
 const hasResult =
   (outputs.length > 0 || requests.length > 0) && (variants ? previewEntries.length < variants.length : !textPaths.includes(PREVIEW_ENTRY));
 const resultFirst = variants ? !firstIsWeb : true;
-// The page embeds tabbed files plus the Preview entries; the ZIP fetches everything else from preview/.
-const embedded = new Set([...visible, ...previewEntries]);
 const jsonVars = jsonVarsOf(frontmatter);
 const jsonRegions = jsonRegionsOf(frontmatter);
+// The page embeds tabbed files and the Preview's pages (other HTML pages are loader pages under
+// preview/, so the ZIP cannot fetch them there); the ZIP fetches everything else from preview/.
+const embedded = new Set([...visible, ...previewEntries, ...previewPagesOf(textPaths, variants?.map((v) => v.dir))]);
 const parsed = files
   .filter((f) => embedded.has(f.path))
   .map((f) => ({ path: f.path, parsed: parseSource(f.source, `code/${f.path}`, jsonVars[f.path], jsonRegions[f.path]) }));

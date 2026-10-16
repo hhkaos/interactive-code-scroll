@@ -6,6 +6,10 @@
       window.parent?.postMessage({ type: "fixture:callback", search: location.search }, location.origin);
       // #endregion
     </script>
+    <script type="module">
+      import { sharedClientId } from "./shared.js";
+      document.documentElement.dataset.sharedClientId = sharedClientId;
+    </script>
   </head>
   <body></body>
 </html>

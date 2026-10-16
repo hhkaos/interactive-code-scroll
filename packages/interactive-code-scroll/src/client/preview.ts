@@ -1,5 +1,5 @@
 import { inFolder, projectFiles, publishedUrl, type ParsedFile } from "../downloads.ts";
-import { buildPreviewHtml, PREVIEW_ENTRY, previewStorageKey, type PreviewTarget } from "../preview/build-html.ts";
+import { buildPreviewHtml, PREVIEW_ENTRY, previewPageKey, previewPagesOf, previewStorageKey, type PreviewTarget } from "../preview/build-html.ts";
 import { setAction } from "./actions.ts";
 import { VARIANT_EVENT, type VariantsHandle } from "./variants.ts";
 
@@ -36,17 +36,30 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
   const frame = document.querySelector<HTMLElement>(".preview-frame");
   const iframe = frame?.querySelector("iframe");
 
-  /** Project, page and storage slot of the code the Preview runs; `undefined` for a variant without web code. */
+  /** Project (with values and with code defaults), page, folder URL and storage slot of the code the Preview runs; `undefined` for a variant without web code. */
   const target = () => {
-    if (!variants) return { files: projectFiles(files, values()), page: pageUrl, variant: undefined };
+    const base = new URL(pageUrl, location.href).href;
+    if (!variants) return { files: projectFiles(files, values()), defaults: projectFiles(files, {}), page: pageUrl, baseUrl: base, variant: undefined };
     const { id, dir } = variants.active();
     if (!files.some((f) => f.path === `${dir}/${PREVIEW_ENTRY}`)) return undefined;
-    // The explicit file name also resolves in dev, where `preview/<dir>/` is not mapped to its index.html.
-    return { files: inFolder(projectFiles(files, values()), dir), page: publishedUrl(pageUrl, `${dir}/${PREVIEW_ENTRY}`), variant: id };
+    return {
+      files: inFolder(projectFiles(files, values()), dir),
+      defaults: inFolder(projectFiles(files, {}), dir),
+      // The explicit file name also resolves in dev, where `preview/<dir>/` is not mapped to its index.html.
+      page: publishedUrl(pageUrl, `${dir}/${PREVIEW_ENTRY}`),
+      baseUrl: new URL(publishedUrl(base, `${dir}/`)).href,
+      variant: id,
+    };
   };
   const open = (kind: PreviewTarget) => {
     const current = target();
-    return current && store(buildPreviewHtml(current.files), kind, current.page, current.variant, tutorial);
+    if (!current) return undefined;
+    const options = { baseUrl: current.baseUrl, defaults: current.defaults };
+    // The project's other pages (an OAuth callback…) read their copy from their loader pages.
+    for (const path of previewPagesOf(Object.keys(current.files))) {
+      localStorage.setItem(previewPageKey(path, current.variant, tutorial), buildPreviewHtml(current.files, path, options));
+    }
+    return store(buildPreviewHtml(current.files, PREVIEW_ENTRY, options), kind, current.page, current.variant, tutorial);
   };
 
   const run = () => {

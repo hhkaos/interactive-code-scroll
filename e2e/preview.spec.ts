@@ -26,6 +26,29 @@ test("form values reach the preview after the debounce, markers stripped", async
   expect(await previewScript(page)).not.toContain("@var");
 });
 
+test("form values reach files the Preview loads itself: imported modules and other pages", async ({ page, context }) => {
+  await page.goto("/#config");
+  await expandPreview(page);
+  // The Preview inlines main.js, not shared.js: main.js imports it, and so does oauth-callback.html.
+  const root = frame(page).locator("html");
+  await expect(root).toHaveAttribute("data-shared-client-id", "YOUR_CLIENT_ID");
+  await page.locator('calcite-input[data-var="clientId"] input').fill("shared-id");
+  await expect(root).toHaveAttribute("data-shared-client-id", "shared-id", { timeout: 10_000 });
+
+  // The OAuth callback opens at its own URL (redirect_uri) and gets the same values.
+  const callback = await context.newPage();
+  await callback.goto("/preview/oauth-callback.html?code=1");
+  await expect(callback.locator("html")).toHaveAttribute("data-shared-client-id", "shared-id");
+  await expect(callback).toHaveURL(/\/preview\/oauth-callback\.html\?code=1$/);
+});
+
+test("another preview page opened without the tutorial runs with code defaults", async ({ browser, baseURL }) => {
+  const fresh = await browser.newPage({ baseURL });
+  await fresh.goto("/preview/oauth-callback.html");
+  await expect(fresh.locator("html")).toHaveAttribute("data-shared-client-id", "YOUR_CLIENT_ID");
+  await fresh.close();
+});
+
 test("the preview collapses to its header and reopens", async ({ page }) => {
   await page.goto("/");
   await page.locator("#preview-toggle").click();
@@ -75,7 +98,9 @@ test("code/ files are published next to the preview page, markers stripped", asy
   const callback = await request.get("/preview/oauth-callback.html");
   expect(callback.status()).toBe(200);
   expect(callback.headers()["content-type"]).toContain("text/html");
+  // Other HTML pages are loader pages: the tutorial's copy from localStorage, else this one.
   const html = await callback.text();
+  expect(html).toContain('localStorage.getItem("ics:preview:page:oauth-callback.html")');
   expect(html).toContain("fixture:callback");
   expect(html).not.toContain("#region");
 

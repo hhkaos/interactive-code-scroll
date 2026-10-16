@@ -260,19 +260,21 @@ test("renders build-time highlighted code with markers stripped", async ({ page 
   await expect(main.locator('.line[data-regions~="oauth"]').first()).toContainText("fixtureState");
   await expect(main).not.toContainText("#region");
   await expect(main).not.toContainText("@var");
-  await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "oauth-callback.html", "report.py", "settings.json", "style.css"]);
+  await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "shared.js", "oauth-callback.html", "report.py", "settings.json", "style.css"]);
 });
 
 test("shows only the files listed in frontmatter as tabs; the ZIP action counts every file", async ({ page }) => {
-  await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "oauth-callback.html", "report.py", "settings.json", "style.css"]);
+  await expect(page.locator("calcite-tab-title")).toHaveText(["index.html", "main.js", "shared.js", "oauth-callback.html", "report.py", "settings.json", "style.css"]);
   await expect(page.locator('.code[data-file="README.md"]')).toHaveCount(0);
   const zip = page.locator("calcite-action#download-zip");
   await expect(zip).toBeVisible();
-  await expect(zip).toHaveAttribute("text", "Download project (ZIP) · 9 files (3 not shown in tabs)");
+  await expect(zip).toHaveAttribute("text", "Download project (ZIP) · 11 files (4 not shown in tabs)");
   const badge = await page.locator(".zip-action").evaluate((el) => getComputedStyle(el, "::after").content);
-  expect(badge).toBe('"9"');
+  expect(badge).toBe('"11"');
   const embedded = await page.locator("#ics-data").evaluate((el) => JSON.parse(el.textContent!) as { files: { path: string }[]; fetched: string[] });
   expect(embedded.files.map((f) => f.path)).not.toContain("README.md");
+  // Other HTML pages are embedded even without a tab: preview/ serves them as loader pages.
+  expect(embedded.files.map((f) => f.path)).toContain("pages/signed-out.html");
   expect(embedded.fetched).toEqual([".env.example", "README.md", "assets/pixel.png"]);
 });
 

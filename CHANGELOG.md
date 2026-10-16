@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Preview: form values now reach files the app loads itself, not only the scripts and stylesheets `index.html` links: imported modules (e.g. a shared `config.js`, through an import map to `data:` copies), files read with `fetch()`, and the project's other HTML pages (e.g. an OAuth `callback.html`), now loader pages at their own URL under `preview/` that run the tutorial's latest copy (code defaults when opened without it). Other HTML pages are embedded in the tutorial page even without a tab, so the ZIP keeps their real content.
 - The closing slide's QR code could stay empty under `astro dev` (the slide showed only the URL): Vite found `qrcode-generator` at runtime, re-optimized and answered the lazy import with "504 Outdated Optimize Dep". The integration now pre-bundles the browser's lazy dependencies (`qrcode-generator`, `fflate`) at dev start. If the encoder still fails to load, the slide hides the empty box and keeps the URL, and the console says why. Unit test in `index.test.ts`; E2E in `e2e/series.spec.ts` (the QR code is now checked too).
 
 ## [0.2.0-beta.7] - 2026-10-16

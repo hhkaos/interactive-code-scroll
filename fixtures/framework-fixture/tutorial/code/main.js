@@ -1,3 +1,7 @@
+import { sharedClientId } from "./shared.js";
+
+document.documentElement.dataset.sharedClientId = sharedClientId;
+
 // #region config
 const clientId = "YOUR_CLIENT_ID"; // @var clientId
 const portalUrl = "https://fixture.example.test"; // @var portalUrl
