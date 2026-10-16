@@ -4,6 +4,8 @@ declare module "virtual:interactive-code-scroll/tutorial" {
   export const series: boolean;
   /** The site's base path (Astro `base`), e.g. `/` or `/repo/`. */
   export const base: string;
+  /** Astro `site` (e.g. `https://owner.github.io`), when the project sets one. */
+  export const site: string | undefined;
   /** Every tutorial of the site (one, with slug `""`, for a single-tutorial site). */
   export const tutorials: import("./tutorial-data.ts").TutorialData[];
   /** A series' optional `index.mdx`. */

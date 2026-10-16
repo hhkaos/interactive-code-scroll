@@ -148,6 +148,7 @@ order: 1
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
 | [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. It identifies the tutorial, so [series](#series-sites) index cards do not show it: they show [tag logos and variant links](#index-page). Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |
 | [`completion`](#outro) | boolean | `true` | The closing panel after the last step: "Next" becomes "Finish" there and opens it. `false` removes it ("Next" stays disabled at the last step). |
+| [`presentationUrl`](presenting.md#during-the-talk) | `http://` or `https://` URL | the series' `index.mdx` one, else Astro `site` + the tutorial's path, else the page URL | Where the QR code of the closing slide (presentation mode) points, e.g. the published copy when you present from `localhost`. `{slug}` is replaced. |
 | [`feedbackUrl`](#outro) | `https://` or `mailto:` URL | the series' `index.mdx` one | "Send feedback" link in the closing panel; none without a URL. `{slug}` and `{title}` are replaced (URL-encoded), e.g. `https://github.com/owner/repo/issues/new?title=Feedback:%20{title}`. |
 
 ### Code and Preview
@@ -279,7 +280,7 @@ You signed in with OAuth and showed a private layer. Next, store the token secur
 </Outro>
 ```
 
-Frontmatter `completion: false` removes the panel (then `<Outro>` is a build error).
+Frontmatter `completion: false` removes the panel (then `<Outro>` is a build error). In presentation mode the panel is a full-screen [closing slide](presenting.md#during-the-talk): the `<Outro>`, the next tutorial and a QR code of the tutorial's URL instead of the reader actions.
 
 ### `<Step>`
 
@@ -1021,6 +1022,7 @@ Start with the REST tutorials if you are new to location services.
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered site-wide. |
 | `tagGroups` | family name → list of tags (or `{ name, logo }`) | none | [Tag families](#tag-families), in display order, and tag logos. |
 | `feedbackUrl` | `https://` or `mailto:` URL | none | Default [feedback link](#outro) of every tutorial; a tutorial's own `feedbackUrl` replaces it. `{slug}` and `{title}` are the tutorial's. |
+| `presentationUrl` | `http://` or `https://` URL | none | Default QR code URL of every tutorial's [closing slide](presenting.md#during-the-talk), e.g. `https://owner.github.io/tutorials/{slug}/`; a tutorial's own `presentationUrl` replaces it. |
 
 The body is free MDX prose with three components; anything else is a build error.
 

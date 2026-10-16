@@ -217,6 +217,13 @@ describe("completion panel", () => {
     expect(keyOf({ next: "Display Map" })).toBe("next");
     expect(keyOf({ feedbackUrl: "http://example.com" })).toBe("feedbackUrl");
     expect(keyOf({ feedbackUrl: "javascript:alert(1)" })).toBe("feedbackUrl");
+    expect(keyOf({ presentationUrl: "mailto:a@b.c" })).toBe("presentationUrl");
+  });
+
+  it("reads presentationUrl (http or https), also as the index.mdx default", () => {
+    expect(readTutorialConfig({ presentationUrl: "https://owner.github.io/t/{slug}/" }).presentationUrl).toBe("https://owner.github.io/t/{slug}/");
+    expect(readTutorialConfig({ presentationUrl: "http://192.168.1.20:4321/" }).presentationUrl).toBe("http://192.168.1.20:4321/");
+    expect(readIndexConfig({ presentationUrl: "https://example.com/{slug}/" }).presentationUrl).toBe("https://example.com/{slug}/");
   });
 
   it("reads the series default feedbackUrl in index.mdx", () => {

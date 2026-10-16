@@ -35,3 +35,41 @@ test("hiding the explanations gives code the full width; keys still move steps",
   await expect(page.locator("section.step#oauth h2")).toBeInViewport();
   await expect(page).toHaveURL(/#oauth$/);
 });
+
+test("in presentation mode the clicker ends on a full-screen closing slide with a QR code", async ({ page }) => {
+  const slide = page.locator("body > .completion[data-slide]");
+  await page.goto("/#embed-next-slide");
+  await page.locator("#present-toggle").click();
+  await page.keyboard.press("PageDown");
+  await expect(slide).toBeVisible();
+  await expect(page.locator("#completion-heading")).toBeFocused();
+  // For the room: a QR code of the tutorial's URL (no presentationUrl or Astro site here: the page's own), no reader actions.
+  await expect(slide.locator(".completion-qr svg")).toBeVisible();
+  await expect(slide.locator(".completion-share-url")).toHaveAttribute("href", /^http:\/\/localhost:\d+\/$/);
+  await expect(slide.locator(".completion-actions")).toBeHidden();
+  const box = (await slide.locator(".completion-qr").boundingBox())!;
+  expect(box.width).toBeGreaterThan(500);
+
+  // PageUp returns to the last step; the panel goes back to the end of the explanations.
+  await page.keyboard.press("PageUp");
+  await expect(slide).toHaveCount(0);
+  await expect(page.locator("main.docs > .completion")).toHaveCount(1);
+  await expect(page.locator("#step-count")).toHaveText("Step 10 of 10");
+
+  // Esc on the slide leaves presentation mode; the reader stays on the (completed) panel.
+  await page.keyboard.press("PageDown");
+  await expect(slide).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("body")).not.toHaveAttribute("data-presenting", "");
+  await expect(page.locator("main.docs > .completion")).toBeInViewport();
+  await expect(page.locator("#step-position")).toHaveText("Done");
+});
+
+test("the closing slide also opens with the explanations hidden", async ({ page }) => {
+  await page.goto("/#embed-next-slide");
+  await page.locator("#present-toggle").click();
+  await page.locator("#docs-toggle").click();
+  await page.keyboard.press("PageDown");
+  await expect(page.locator("body > .completion[data-slide]")).toBeVisible();
+  await expect(page.locator("#completion-heading")).toBeFocused();
+});

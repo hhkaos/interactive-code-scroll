@@ -605,3 +605,13 @@ test("the closing panel links the next tutorial: next, else series order; none a
   await expect(nextLink).toHaveCount(0);
   await expect(panel.locator("calcite-button", { hasText: "Send feedback" })).toHaveAttribute("href", "mailto:docs@example.com");
 });
+
+test("the closing slide's QR code points at the series presentationUrl, with {slug} filled in", async ({ page }) => {
+  await page.goto("/alpha/#render");
+  await page.locator("#present-toggle").click();
+  await page.keyboard.press("PageDown");
+  const slide = page.locator("body > .completion[data-slide]");
+  await expect(slide.locator(".completion-share-url")).toHaveAttribute("href", "https://example.com/series-fixture/alpha/");
+  await expect(slide.locator(".completion-share-url")).toHaveText("example.com/series-fixture/alpha/");
+  await expect(slide.locator(".completion-next")).toBeVisible();
+});

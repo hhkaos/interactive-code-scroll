@@ -768,7 +768,7 @@ describe("validateSeriesIndex", () => {
       'tutorials/index.mdx:2:1 <TutorialFavorites> takes no attributes (got "title")',
       "tutorials/index.mdx:6:1 <TutorialFavorites> can appear only once (it lists every favorite)",
     ]);
-    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl)']);
+    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl)']);
   });
 });
 

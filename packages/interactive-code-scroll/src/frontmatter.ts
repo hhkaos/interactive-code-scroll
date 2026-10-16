@@ -56,6 +56,8 @@ export interface TutorialConfig {
   next?: string | false;
   /** Feedback link in the closing panel (overrides the series `index.mdx` one); `{slug}` and `{title}` are filled in. */
   feedbackUrl?: string;
+  /** Public URL of the tutorial for the closing slide's QR code (overrides the series one); `{slug}` is filled in. */
+  presentationUrl?: string;
 }
 
 /** Frontmatter of a series site's optional `index.mdx`. */
@@ -69,6 +71,8 @@ export interface IndexConfig {
   tagGroups?: TagGroup[];
   /** Default feedback link of every tutorial's closing panel (see `TutorialConfig.feedbackUrl`). */
   feedbackUrl?: string;
+  /** Default QR code URL of every tutorial's closing slide (see `TutorialConfig.presentationUrl`). */
+  presentationUrl?: string;
 }
 
 /** A tag family of the series filter (`tagGroups` in `index.mdx`). */
@@ -212,6 +216,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     completion = true,
     next,
     feedbackUrl,
+    presentationUrl,
   } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
@@ -245,6 +250,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     completion,
     ...(next === undefined ? {} : { next: next as string | false }),
     ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
+    ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
   };
 }
 
@@ -256,6 +262,15 @@ function readFeedbackUrl(value: unknown): string | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "string" || !/^(https:\/\/|mailto:)\S+$/i.test(value)) {
     throw new FrontmatterError("feedbackUrl", '"feedbackUrl" must be an https:// or mailto: URL, e.g. https://github.com/owner/repo/issues/new?title={title}');
+  }
+  return value;
+}
+
+/** `presentationUrl`: an `http(s)://` URL (a public copy, or a local network address for the room). */
+function readPresentationUrl(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !/^https?:\/\/\S+$/i.test(value)) {
+    throw new FrontmatterError("presentationUrl", '"presentationUrl" must be an http:// or https:// URL, e.g. https://owner.github.io/tutorials/{slug}/');
   }
   return value;
 }
@@ -273,7 +288,7 @@ function optionalEntry<K extends string>(key: K, value: string | undefined): Par
   return value === undefined ? {} : ({ [key]: value } as Record<K, string>);
 }
 
-const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups", "feedbackUrl"]);
+const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups", "feedbackUrl", "presentationUrl"]);
 
 const TAG_GROUPS_SHAPE = '"tagGroups" must map each family name to a list of tags, e.g. { Language: [Python, JavaScript] }';
 
@@ -329,9 +344,9 @@ export function readTagGroups(value: unknown, { withLogos = true }: { withLogos?
 
 /** Validates a series `index.mdx` frontmatter; defaults: title "Tutorials", theme `auto`. */
 export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConfig {
-  const { title = "Tutorials", description, logo, theme = "auto", tagGroups, feedbackUrl } = frontmatter;
+  const { title = "Tutorials", description, logo, theme = "auto", tagGroups, feedbackUrl, presentationUrl } = frontmatter;
   const unknown = Object.keys(frontmatter).find((key) => !INDEX_KEYS.has(key));
-  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl)`);
+  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl)`);
   if (typeof title !== "string" || title.trim() === "") throw new FrontmatterError("title", '"title" must be a non-empty string');
   return {
     title,
@@ -340,6 +355,7 @@ export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConf
     theme: oneOf("theme", theme, THEMES),
     ...(tagGroups === undefined ? {} : { tagGroups: readTagGroups(tagGroups) }),
     ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
+    ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
   };
 }
 

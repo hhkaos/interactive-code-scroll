@@ -37,7 +37,7 @@ Before v1, breaking changes may happen in alpha and beta releases. Each breaking
 
 ### Unreleased: closing panel after the last step
 
-Every tutorial now ends with a closing panel: at the last step "Next" becomes "Finish" instead of being disabled. The panel offers the code download, the Preview tab and, in a series, the next tutorial (the next one in index order unless you set [`next`](authoring.md#series-index-and-siblings)) and the index. No tutorial changes are needed. Optionally add an [`<Outro>`](authoring.md#outro) with your own closing text and a [`feedbackUrl`](authoring.md#page) (per tutorial, or once for a series in `tutorials/index.mdx`); check that the suggested next tutorial makes sense in your series, or set `next: false`. To keep the old ending, set `completion: false`.
+Every tutorial now ends with a closing panel: at the last step "Next" becomes "Finish" instead of being disabled. The panel offers the code download, the Preview tab and, in a series, the next tutorial (the next one in index order unless you set [`next`](authoring.md#series-index-and-siblings)) and the index. No tutorial changes are needed. Optionally add an [`<Outro>`](authoring.md#outro) with your own closing text and a [`feedbackUrl`](authoring.md#page) (per tutorial, or once for a series in `tutorials/index.mdx`); check that the suggested next tutorial makes sense in your series, or set `next: false`. To keep the old ending, set `completion: false`. In presentation mode the clicker now ends on a closing slide with a QR code of the tutorial; if you present from `localhost`, set [`presentationUrl`](presenting.md#during-the-talk) (or Astro `site`) so it opens the published copy.
 
 ### 0.2.0-beta.6: wider explanations and field rows
 

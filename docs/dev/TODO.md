@@ -10,7 +10,7 @@
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
-- [ ] Completion panel, phase B: in presentation mode the clicker advances past the last step to a full-screen closing slide (the panel is in the explanations, which presentation can hide). Rules: `SPEC.md` (Step navigation → Completion panel).
+- [ ] Bug (reported 2026-10-16): leaving browser full screen (presentation mode) can switch the tutorial to another step. Likely cause: the window height changes, the docs center line moves and the observer activates the step now crossing it; the step engine only re-centers the active step on width changes (`ResizeObserver` on `docs.clientWidth` in `client/steps.ts`). Also check the closing slide → Esc path.
 - [ ] Phone layout follow-ups (rules in `SPEC.md` Layout → Phones): tooltips stay open after a tap (no hover on touch); hints by tap; `100dvh` so the virtual keyboard (VarFields) does not hide the layout; check on a real iOS and Android device.
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).

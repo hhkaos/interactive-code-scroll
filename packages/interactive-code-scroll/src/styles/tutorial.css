@@ -658,6 +658,92 @@ body[data-presenting] .step-nav { display: none; }
   gap: 0.5rem;
 }
 
+/* Presentation mode: the closing slide (client/completion.ts moves the panel to <body>). For the room: the
+   reader actions give way to a QR code of the tutorial's URL, as large as the screen allows (text left, QR
+   right; stacked on portrait screens). Step keys (PageUp) return to the last step; Esc leaves presentation
+   mode and puts the panel back. */
+.completion[data-slide] {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 1fr repeat(4, auto) 1fr;
+  justify-items: center;
+  column-gap: 5vw;
+  margin: 0;
+  padding: 5vh 6vw;
+  border: 0;
+  border-radius: 0;
+  overflow-y: auto;
+  font-size: clamp(var(--calcite-font-size-lg), 1.6vw, var(--calcite-font-size-2xl));
+  line-height: 1.6;
+  color: var(--calcite-color-text-2);
+  text-align: center;
+  animation: ics-slide-fade 0.35s ease-out;
+
+  & > * { grid-column: 1; animation: ics-slide-rise 0.5s ease-out; }
+  .completion-icon { grid-row: 2; transform: scale(1.5); }
+  h2 {
+    grid-row: 3;
+    margin-block: 1.5rem 1rem;
+    color: var(--calcite-color-text-1);
+    font-size: clamp(var(--calcite-font-size-4), 3.5vw, var(--calcite-font-size-7));
+    font-weight: var(--calcite-font-weight-semibold);
+    line-height: 1.2;
+  }
+  .completion-outro { grid-row: 4; }
+  /* Outside .docs: its text rules no longer apply to the <Outro>. */
+  p, ul, ol { margin-block: 0 0.75rem; }
+  a { color: var(--calcite-color-text-link); }
+  .completion-next { grid-row: 5; width: min(100%, 32rem); margin-block: 1rem 0; padding: 1rem 1.25rem; text-align: start; }
+  .completion-next-title { font-size: var(--calcite-font-size-2xl); }
+  .completion-actions { display: none; }
+  .completion-share {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .completion-qr { width: min(80vh, 45vw); }
+}
+
+/* Portrait screens: one column, the QR code under the text. */
+@media (orientation: portrait) {
+  .completion[data-slide] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 1fr repeat(5, auto) 1fr;
+    .completion-share { grid-column: 1; grid-row: 5; margin-block-start: 1.5rem; }
+    .completion-next { grid-row: 6; }
+    .completion-qr { width: min(50vh, 80vw); }
+  }
+}
+
+@keyframes ics-slide-fade { from { opacity: 0; } }
+@keyframes ics-slide-rise { from { opacity: 0; transform: translateY(1rem); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .completion[data-slide], .completion[data-slide] > * { animation: none; }
+}
+
+/* Only the closing slide shows the QR code. Dark modules on white in both themes: scanners need the contrast. */
+.completion-share { display: none; }
+
+.completion-qr {
+  aspect-ratio: 1;
+  border-radius: var(--calcite-corner-radius-round);
+  background: #fff;
+  svg { display: block; width: 100%; height: 100%; }
+}
+
+.completion-share-url {
+  font-size: var(--calcite-font-size-lg);
+  overflow-wrap: anywhere;
+}
+
 /* ——— Right panel (code, images, preview, result) ——— */
 
 .right {

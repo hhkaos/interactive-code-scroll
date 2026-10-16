@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { feedbackHref, nextProblems, nextTutorial } from "./completion.ts";
+import { fillUrl, nextProblems, nextTutorial } from "./completion.ts";
 
 const series = [
   { slug: "alpha", title: "Alpha" },
@@ -37,14 +37,14 @@ describe("nextProblems", () => {
   });
 });
 
-describe("feedbackHref", () => {
+describe("fillUrl", () => {
   it("fills {slug} and {title}, URL-encoded", () => {
-    expect(feedbackHref("https://github.com/o/r/issues/new?title=Feedback:%20{title}&labels={slug}", { slug: "display-map", title: "Display a map & pan" })).toBe(
+    expect(fillUrl("https://github.com/o/r/issues/new?title=Feedback:%20{title}&labels={slug}", { slug: "display-map", title: "Display a map & pan" })).toBe(
       "https://github.com/o/r/issues/new?title=Feedback:%20Display%20a%20map%20%26%20pan&labels=display-map",
     );
   });
 
   it("leaves URLs without placeholders as they are", () => {
-    expect(feedbackHref("mailto:docs@example.com", { slug: "", title: "T" })).toBe("mailto:docs@example.com");
+    expect(fillUrl("mailto:docs@example.com", { slug: "", title: "T" })).toBe("mailto:docs@example.com");
   });
 });

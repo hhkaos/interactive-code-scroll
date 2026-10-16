@@ -29,6 +29,8 @@ export interface InteractiveCodeScrollOptions {
 
 export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}): AstroIntegration {
   let siteBase = "/";
+  /** Astro `site` (the public origin), when the project sets one. */
+  let siteUrl: string | undefined;
   return {
     name: "interactive-code-scroll",
     hooks: {
@@ -57,7 +59,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         updateConfig({
           integrations: [mdx({ processor, shikiConfig: proseShikiConfig(config.markdown.shikiConfig) })],
           vite: {
-            plugins: [tutorialModule(sources, seriesDir, () => siteBase)],
+            plugins: [tutorialModule(sources, seriesDir, () => siteBase, () => siteUrl)],
             // pnpm does not hoist `cookie`; bundle it so Node never resolves a stray copy up the tree.
             environments: { prerender: { resolve: { noExternal: ["cookie"] } } },
           },
@@ -74,6 +76,7 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
       // The final base, after every integration's config updates.
       "astro:config:done": ({ config }) => {
         siteBase = config.base;
+        siteUrl = config.site;
       },
     },
   };

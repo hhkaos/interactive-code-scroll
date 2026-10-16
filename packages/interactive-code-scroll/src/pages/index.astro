@@ -1,13 +1,13 @@
 ---
 import type { GetStaticPaths } from "astro";
-import { base, series, seriesIndex, tutorials } from "virtual:interactive-code-scroll/tutorial";
+import { base, series, seriesIndex, site, tutorials } from "virtual:interactive-code-scroll/tutorial";
 import Hint from "../components/Hint.astro";
 import Intro from "../components/Intro.astro";
 import Outro from "../components/Outro.astro";
 import Step from "../components/Step.astro";
 import VarField from "../components/VarField.astro";
 import { logoUrl, readIndexConfig, readTutorialConfig } from "../frontmatter.ts";
-import { feedbackHref } from "../completion.ts";
+import { fillUrl } from "../completion.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
 import { jsonRegionsOf, jsonVarsOf } from "../json-vars.ts";
@@ -104,8 +104,17 @@ const currentSibling = siblings.find((s) => s.current);
 const siblingLogos = siblings.some((s) => s.logo);
 // Closing panel after the last step: the next tutorial (series only) and the feedback link (the tutorial's, else the series').
 const nextUp = config.completion && series ? nextTutorialOf(tutorials, slug, base) : undefined;
-const feedbackTemplate = config.feedbackUrl ?? (seriesIndex ? readIndexConfig(seriesIndex.frontmatter).feedbackUrl : undefined);
-const feedback = config.completion && feedbackTemplate ? feedbackHref(feedbackTemplate, { slug, title: config.title }) : undefined;
+const indexConfig = seriesIndex ? readIndexConfig(seriesIndex.frontmatter) : undefined;
+const feedbackTemplate = config.feedbackUrl ?? indexConfig?.feedbackUrl;
+const feedback = config.completion && feedbackTemplate ? fillUrl(feedbackTemplate, { slug, title: config.title }) : undefined;
+// The closing slide's QR code: `presentationUrl`, else the public URL Astro `site` gives; without either,
+// client/completion.ts uses the page's own URL.
+const presentationTemplate = config.presentationUrl ?? indexConfig?.presentationUrl;
+const presentationUrl = presentationTemplate
+  ? fillUrl(presentationTemplate, { slug, title: config.title })
+  : site
+    ? new URL(tutorialBase(base, slug), site).href
+    : undefined;
 const clientVariants = variants?.map(({ id, label, dir, entry }, i) => ({ id, label, dir, entry, ...(variantLogos![i] && { logo: variantLogos![i] }) }));
 // Escape "<" so embedded code containing </script> cannot close the data block.
 const clientData = JSON.stringify({
@@ -219,6 +228,11 @@ const clientData = JSON.stringify({
                 <calcite-icon class="completion-icon" icon="check-circle-f" scale="l" />
                 <h2 id="completion-heading" tabindex="-1">You've completed {config.title}</h2>
                 <div class="completion-outro" />
+                {/* Presentation mode only: the closing slide's QR code (client/completion.ts draws it). */}
+                <div class="completion-share" data-url={presentationUrl}>
+                  <div class="completion-qr" role="img" aria-label="QR code of the tutorial's URL" />
+                  <a class="completion-share-url" target="_blank" rel="noopener" />
+                </div>
                 {
                   nextUp && (
                     <a class="completion-next" href={nextUp.href}>

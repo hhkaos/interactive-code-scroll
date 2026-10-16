@@ -29,7 +29,7 @@ export function nextProblems(members: readonly CompletionMember[]): string[] {
   });
 }
 
-/** `feedbackUrl` with `{slug}` and `{title}` filled in (URL-encoded). */
-export function feedbackHref(template: string, { slug, title }: { slug: string; title: string }): string {
+/** A `feedbackUrl` or `presentationUrl` with `{slug}` and `{title}` filled in (URL-encoded). */
+export function fillUrl(template: string, { slug, title }: { slug: string; title: string }): string {
   return template.replaceAll("{slug}", encodeURIComponent(slug)).replaceAll("{title}", encodeURIComponent(title));
 }
