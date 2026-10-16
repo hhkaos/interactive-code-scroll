@@ -205,12 +205,16 @@ test("Finish opens the closing panel; Back and scrolling up return to the last s
   await expect(panel).toBeInViewport();
   await expect(page.locator("#completion-heading")).toBeFocused();
   await expect(page.locator("#completion-heading")).toHaveText("You've completed Framework Fixture Tutorial");
-  // The last step stays active underneath.
+  // The last step stays active underneath (for the code panel), but the panel carries the active marking.
   await expect(page.locator("section.step#embed-next-slide")).toHaveAttribute("data-active", "");
+  await expect(page.locator("section.step#embed-next-slide")).toHaveCSS("box-shadow", "none");
+  await expect(panel).toHaveCSS("box-shadow", /inset/);
 
   await page.locator("#step-back").click();
   await expect(page.locator("#step-position")).toHaveText("10 / 10");
   await expect(page.locator("body")).not.toHaveAttribute("data-completed");
+  await expect(page.locator("section.step#embed-next-slide")).toHaveCSS("box-shadow", /inset/);
+  await expect(panel).toHaveCSS("box-shadow", "none");
   await expect(next).toHaveText("Finish");
 
   // Step keys do the same.
