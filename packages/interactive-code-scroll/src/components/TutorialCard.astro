@@ -1,4 +1,5 @@
 ---
+import { formatUpdated } from "../frontmatter.ts";
 import { cardParts, levelRank, tagFor, type SeriesCard } from "../series.ts";
 
 // One card of <TutorialList> and <TutorialFavorites> (internal: not in index.mdx or the public module).
@@ -21,7 +22,7 @@ const { links, more, plainTags } = cardParts(card);
       <a class="series-card-title" href={card.href} data-href={card.href}>{card.title}</a>
     </h3>
     {card.description && <p class="series-card-description">{card.description}</p>}
-    {(card.level || card.duration) && (
+    {(card.level || card.duration || card.updated) && (
       <p class="series-card-meta">
         {card.level && (
           <span>
@@ -41,6 +42,12 @@ const { links, more, plainTags } = cardParts(card);
           <span>
             <calcite-icon icon="clock" scale="s" aria-hidden="true" />
             <span class="visually-hidden">Duration:</span> {card.duration}
+          </span>
+        )}
+        {card.updated && (
+          <span class="series-card-updated">
+            <calcite-icon icon="calendar" scale="s" aria-hidden="true" />
+            <span>Updated <time datetime={card.updated}>{formatUpdated(card.updated)}</time></span>
           </span>
         )}
       </p>

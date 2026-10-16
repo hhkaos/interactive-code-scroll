@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FrontmatterError, frontmatterKeyLines, isRemoteLogo, logoUrl, readIndexConfig, readTagGroups, readTutorialConfig } from "./frontmatter.ts";
+import { FrontmatterError, formatUpdated, frontmatterKeyLines, isRemoteLogo, logoUrl, readIndexConfig, readTagGroups, readTutorialConfig } from "./frontmatter.ts";
 
 describe("readTutorialConfig", () => {
   it("applies defaults", () => {
@@ -172,6 +172,22 @@ describe("series metadata", () => {
     expect(keyOf({ level: 1 })).toBe("level");
     expect(keyOf({ duration: [] })).toBe("duration");
     expect(keyOf({ order: "1" })).toBe("order");
+  });
+
+  it("reads updated as a YYYY-MM-DD date, quoted, as YAML's Date or as that Date in JSON", () => {
+    expect(readTutorialConfig({ updated: "2026-10-16" }).updated).toBe("2026-10-16");
+    expect(readTutorialConfig({ updated: new Date("2026-10-16") }).updated).toBe("2026-10-16");
+    // The MDX module exports its frontmatter as JSON: the page reads the Date's ISO text.
+    expect(readTutorialConfig({ updated: "2026-10-16T00:00:00.000Z" }).updated).toBe("2026-10-16");
+    expect(readTutorialConfig({}).updated).toBeUndefined();
+    for (const updated of ["16/10/2026", "2026-10-16T10:00", "2026-10-16T10:00:00.000Z", "2026-02-30", "2026-13-01", "", 20261016, new Date("nope")]) {
+      expect(() => readTutorialConfig({ updated })).toThrow('"updated" must be a date as YYYY-MM-DD');
+    }
+  });
+
+  it("formats updated dates in UTC", () => {
+    expect(formatUpdated("2026-10-16")).toBe("Oct 16, 2026");
+    expect(formatUpdated("2027-01-01")).toBe("Jan 1, 2027");
   });
 
   it("reads family and familyLabel together", () => {

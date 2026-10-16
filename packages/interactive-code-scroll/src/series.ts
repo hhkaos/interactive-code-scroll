@@ -51,6 +51,8 @@ export interface SeriesCard {
   tags: string[];
   level?: string;
   duration?: string;
+  /** Last content update (`YYYY-MM-DD`). */
+  updated?: string;
   order?: number;
   /** URL of the tutorial `logo` (the page header's; the default cards do not show it). */
   logo?: string;

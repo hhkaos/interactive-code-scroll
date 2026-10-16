@@ -6,7 +6,7 @@ import Intro from "../components/Intro.astro";
 import Outro from "../components/Outro.astro";
 import Step from "../components/Step.astro";
 import VarField from "../components/VarField.astro";
-import { logoUrl, readIndexConfig, readTutorialConfig } from "../frontmatter.ts";
+import { formatUpdated, logoUrl, readIndexConfig, readTutorialConfig } from "../frontmatter.ts";
 import { fillUrl } from "../completion.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
@@ -220,6 +220,14 @@ const clientData = JSON.stringify({
     <div class="layout">
       <div class="docs-column">
         <main class="docs">
+          {
+            config.updated && (
+              <p class="docs-updated">
+                <calcite-icon icon="calendar" scale="s" aria-hidden="true" />
+                <span>Updated <time datetime={config.updated}>{formatUpdated(config.updated)}</time></span>
+              </p>
+            )
+          }
           <Content components={{ Hint, Intro, Outro, Step, VarField }} />
           {
             config.completion && (

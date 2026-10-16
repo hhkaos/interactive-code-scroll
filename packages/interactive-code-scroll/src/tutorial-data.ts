@@ -82,7 +82,7 @@ export function seriesCards(
   return sortCards(
     tutorials.map(({ slug, frontmatter, images }) => {
       const config = readTutorialConfig(frontmatter);
-      const { title, description, level, duration, order } = config;
+      const { title, description, level, duration, updated, order } = config;
       const variants = config.variants ?? [];
       const tags = cardTags(config.tags, variants.map((v) => v.label), groupTags);
       const variantLogos = variants.flatMap((v) => {
@@ -109,6 +109,7 @@ export function seriesCards(
         ...(description === undefined ? {} : { description }),
         ...(level === undefined ? {} : { level }),
         ...(duration === undefined ? {} : { duration }),
+        ...(updated === undefined ? {} : { updated }),
         ...(order === undefined ? {} : { order }),
         ...(logo === undefined ? {} : { logo }),
         ...(Object.keys(logos).length === 0 ? {} : { tagLogos: logos }),

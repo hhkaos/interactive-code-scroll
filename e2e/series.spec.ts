@@ -25,6 +25,24 @@ test("index.mdx gives the index its title, prose and TutorialList sections in or
   await expect(alpha.locator(".series-card-variants")).toHaveCount(0);
 });
 
+test("updated shows on the card and above the explanations, not in presentation mode", async ({ page }) => {
+  await page.goto("/");
+  const cards = page.locator(".series-list").first().locator(".series-card");
+  // Unquoted in the fixture: YAML's Date reaches the page as the same calendar day.
+  await expect(cards.first().locator(".series-card-updated time")).toHaveAttribute("datetime", "2026-10-16");
+  await expect(cards.first().locator(".series-card-updated")).toHaveText("Updated Oct 16, 2026");
+  await expect(cards.nth(1).locator(".series-card-updated")).toHaveCount(0);
+
+  await page.goto("/alpha/");
+  const updated = page.locator(".docs > .docs-updated");
+  await expect(updated).toHaveText("Updated Oct 16, 2026");
+  await expect(page.locator(".docs > :first-child")).toHaveClass("docs-updated");
+  await page.locator("#present-toggle").click();
+  await expect(updated).toBeHidden();
+  await page.goto("/gamma/");
+  await expect(page.locator(".docs-updated")).toHaveCount(0);
+});
+
 test("the tag filter hides cards without a selected tag and counts tutorials", async ({ page }) => {
   await page.goto("/");
   const tag = (name: string) => page.locator(`#series-tags-top .series-tag[data-tag="${name}"]`);

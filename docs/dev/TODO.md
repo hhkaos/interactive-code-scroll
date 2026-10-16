@@ -2,7 +2,6 @@
 
 ## Ideas to triage
 
-- Show the tutorial's last updated date (reader feedback: planned in the completion panel).
 - Show authors?
 - Review Google Codelabs navigation patterns (e.g. https://codelabs.developers.google.com/codelabs/the-lit-path?hl=en#5) and decide which to adopt or adapt: a table of contents (step overview, sense of progress, jump to any step) and a header with "XX mins remaining" ("Back" / "Next" buttons: done). The tool serves both as a tutorial and as a presentation, so check each idea against both uses (e.g. hide or collapse them in presentation mode) and against what the page already has (step navigation, progress).
 

@@ -46,6 +46,8 @@ export interface TutorialConfig {
   tags: string[];
   level?: string;
   duration?: string;
+  /** Last content update (`YYYY-MM-DD`), shown on the index card and atop the explanations. */
+  updated?: string;
   /** Index position: lower first; tutorials without it come after, by title. */
   order?: number;
   /** Sibling tutorials: same `family` on a series site, told apart by `familyLabel` in the header switcher. */
@@ -210,6 +212,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     tags,
     level,
     duration,
+    updated,
     order,
     family,
     familyLabel,
@@ -245,6 +248,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     tags: readTags(tags),
     ...optionalEntry("level", optionalText("level", level)),
     ...optionalEntry("duration", optionalText("duration", duration)),
+    ...optionalEntry("updated", readUpdated(updated)),
     ...(order === undefined ? {} : { order: order as number }),
     ...readFamily(family, familyLabel),
     completion,
@@ -252,6 +256,27 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
     ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
   };
+}
+
+/**
+ * `updated`: a calendar date as `YYYY-MM-DD`. YAML reads an unquoted date as a `Date` at midnight UTC
+ * (MDX compile time), and the MDX module's exported frontmatter holds it as JSON, its ISO text (page
+ * render time); every form is accepted and the result is always the `YYYY-MM-DD` text.
+ */
+function readUpdated(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  const day = (date: Date) => (Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 10));
+  const text = value instanceof Date ? day(value) : typeof value === "string" ? value.replace(/^(\d{4}-\d{2}-\d{2})T00:00:00\.000Z$/, "$1") : value;
+  // Round trip: refuses impossible days (2026-02-30), which Date would roll over.
+  if (typeof text !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(text) || day(new Date(`${text}T00:00:00Z`)) !== text) {
+    throw new FrontmatterError("updated", '"updated" must be a date as YYYY-MM-DD, e.g. 2026-10-16');
+  }
+  return text;
+}
+
+/** An `updated` date as readers see it, e.g. "Oct 16, 2026" (in UTC: the date never shifts a day). */
+export function formatUpdated(date: string): string {
+  return new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
 }
 
 /** Same rule as series folder names (series.ts `SLUG_PATTERN`). */

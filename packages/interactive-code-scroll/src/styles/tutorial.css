@@ -451,6 +451,17 @@ body[data-presenting] .step-nav { display: none; }
   }
 }
 
+/* Above the intro: a reader's cue (is this still current?), not for the audience of a presentation. */
+.docs-updated {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-block: 0 1rem;
+  font-size: var(--calcite-font-size-sm);
+  color: var(--calcite-color-text-3);
+}
+body[data-presenting] .docs-updated { display: none; }
+
 .intro {
   padding: 0 0 1.5rem;
   border-bottom: 1px solid var(--calcite-color-border-3);
