@@ -35,11 +35,11 @@ Before v1, breaking changes may happen in alpha and beta releases. Each breaking
 - an actionable validation error when possible,
 - a fixture/E2E case when the behavior is observable through a tutorial.
 
-### Unreleased: selection toolbar
+### 0.2.0-beta.7: selection toolbar
 
 Selecting text in the explanations or the code now shows a small toolbar to [ask about the selection](authoring.md#asking-about-a-selection): "Ask the author" (with a `feedbackUrl`) and "Ask AI" (ChatGPT and Claude). It is on by default. No tutorial changes are needed; to receive the selected text in your issues, add `{context}` to `feedbackUrl` (e.g. `...issues/new?title={title}&body={context}`). To choose the actions, or add your product's assistant, set [`ask`](authoring.md#page) per tutorial or in `tutorials/index.mdx`; `ask: false` turns the toolbar off.
 
-### Unreleased: closing panel after the last step
+### 0.2.0-beta.7: closing panel after the last step
 
 Every tutorial now ends with a closing panel: at the last step "Next" becomes "Finish" instead of being disabled. The panel offers the code download, the Preview tab and, in a series, the next tutorial (the next one in index order unless you set [`next`](authoring.md#series-index-and-siblings)) and the index. No tutorial changes are needed. Optionally add an [`<Outro>`](authoring.md#outro) with your own closing text and a [`feedbackUrl`](authoring.md#page) (per tutorial, or once for a series in `tutorials/index.mdx`); check that the suggested next tutorial makes sense in your series, or set `next: false`. To keep the old ending, set `completion: false`. In presentation mode the clicker now ends on a closing slide with a QR code of the tutorial; if you present from `localhost`, set [`presentationUrl`](presenting.md#during-the-talk) (or Astro `site`) so it opens the published copy.
 

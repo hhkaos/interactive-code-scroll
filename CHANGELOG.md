@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.7] - 2026-10-16
+
 ### Added
 
 - Ask about a selection: selecting text in the explanations (two words or more) or in the code panel (three characters or more) shows a floating toolbar with "Ask the author" (`feedbackUrl` with new `{context}`, `{selection}` and `{url}` placeholders; the closing panel fills them empty) and "Ask AI" (ChatGPT and Claude prefill links, or custom `{ label, url }` assistants with an optional `{prompt}`). The context carries the tutorial, the step, a link back with a text fragment and the selection (code: file, lines, secret values masked, cut at 500 characters); AI actions also copy the prompt and say so. Not shown on touch input or in presentation mode; Esc hides it. New frontmatter `ask` (list or `false`; series default in `index.mdx`), default `[author, chatgpt, claude]` (`author` only with a `feedbackUrl`; listed explicitly without one is a build error). Unit tests in `ask.test.ts`, `client/ask-values.test.ts` and `frontmatter.test.ts`; E2E in `e2e/ask.spec.ts`. Docs: authoring section, features section and landing highlight with a new `ask-oauth` screenshot (`site/scripts/screenshots.mjs`); the `oauth-pkce` example sets a `feedbackUrl` and an "Esri's Ask AI" custom assistant.
