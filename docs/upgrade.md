@@ -35,7 +35,7 @@ Before v1, breaking changes may happen in alpha and beta releases. Each breaking
 - an actionable validation error when possible,
 - a fixture/E2E case when the behavior is observable through a tutorial.
 
-### Unreleased: step outline next to the intro
+### 0.2.0-beta.8: step outline next to the intro
 
 An `<Intro>` with no `file`, `images` or `embed` now shows the [step outline](authoring.md#step-outline) (the list of steps) in the code area instead of the first file. Set `outline: false` in the frontmatter (or once in `tutorials/index.mdx` for a series) to keep the code there. The Back / Next position now opens a [step index](authoring.md#step-index); step headings are its titles, so keep them short. In presentation mode, Alt+P enters and leaves it, `O` and `E` are shortcuts and a lone Alt press lists the keys ([Presenting](presenting.md#during-the-talk)).
 

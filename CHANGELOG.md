@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.8] - 2026-10-17
+
 ### Added
 
 - Read aloud: a compact Listen button next to the step position opens an audio row with pause/resume, stop, speed and voice settings, with opt-in automatic step advance. Narration highlights sentences and, where supported, words without changing the selection. Fields, requests and presentation mode pause playback. Alt+Shift+L controls playback outside fields. Voice, speed and automatic advance are remembered in localStorage without starting playback on return. No new dependencies.
