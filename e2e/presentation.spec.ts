@@ -73,3 +73,22 @@ test("the closing slide also opens with the explanations hidden", async ({ page 
   await expect(page.locator("body > .completion[data-slide]")).toBeVisible();
   await expect(page.locator("#completion-heading")).toBeFocused();
 });
+
+test("entering and leaving presentation mode keeps the active step", async ({ page }) => {
+  for (const id of ["config", "oauth", "sign-in", "embed-slides"]) {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`/#${id}`);
+    await expect(page.locator(`section.step#${id}`)).toHaveAttribute("data-active", "");
+    await page.locator("#present-toggle").click();
+    await expect.poll(() => page.evaluate(() => document.fullscreenElement?.tagName)).toBe("HTML");
+    await expect(page).toHaveURL(new RegExp(`#${id}$`));
+    await page.keyboard.press("Escape");
+    await expect(page.locator("body")).not.toHaveAttribute("data-presenting", "");
+    // Headless full screen keeps the window size; a real browser gives the toolbar height back on exit.
+    await page.setViewportSize({ width: 1440, height: 780 });
+    // Past the observer's settle time: a step switch would have happened by now.
+    await page.waitForTimeout(800);
+    await expect(page).toHaveURL(new RegExp(`#${id}$`));
+    await expect(page.locator(`section.step#${id}`)).toHaveAttribute("data-active", "");
+  }
+});

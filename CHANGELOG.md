@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Entering or leaving presentation mode (and leaving browser full screen) could switch to another step: the explanations change height (the Back / Next bar hides, the browser toolbar comes back), the center line moves and the step crossing it became active. The step engine now keeps the active step (or the closing panel) centered on height changes too, as it already did on width changes. E2E in `e2e/presentation.spec.ts`.
 - A tutorial with a single code variant no longer shows a one-option variant switcher (one variant is no choice, as on series cards). E2E in `e2e/series.spec.ts` (`delta`).
 - Presentation mode no longer leaves the ZIP count badge behind when it hides the download actions. E2E in `e2e/presentation.spec.ts`.
 

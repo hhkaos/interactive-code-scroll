@@ -522,13 +522,15 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   backButton?.addEventListener("click", () => step(-1));
   nextButton?.addEventListener("click", () => step(1));
 
-  /** Re-centers the active step after a layout change; the observer may not switch steps meanwhile. */
+  /** Re-centers the active step (or the closing panel) after a layout change; the observer may not switch steps meanwhile. */
   function keepActiveCentered(): void {
     if (current < 0) return;
-    keyTarget = current;
+    keyTarget = completed ? steps.length : current;
     clearTimeout(keyTargetTimer);
     keyTargetTimer = setTimeout(endKeyScroll, 1500);
-    showStep(current, true, "auto");
+    // On the closing slide the panel is out of the explanations (client/completion.ts).
+    if (completed && completion && docs.contains(completion)) reveal(docs, completion, completion, { center: true });
+    else if (!completed) showStep(current, true, "auto");
   }
 
   // Explanations shown again: bring the active step's text back to the center line.
@@ -536,12 +538,16 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (!(event as CustomEvent<{ hidden: boolean }>).detail.hidden) keepActiveCentered();
   });
 
-  // Resizing the explanations (splitter, window) reflows their text: keep the active step, never switch.
+  // Resizing the explanations keeps the active step, never switches: a new width (splitter, window) reflows
+  // their text; a new height (presentation mode hides the Back / Next bar, leaving full screen gives the
+  // browser toolbar back) moves the center line. Resize observers run before intersection observers.
   let docsWidth = docs.clientWidth;
+  let docsHeight = docs.clientHeight;
   new ResizeObserver(() => {
-    if (docs.clientWidth === docsWidth) return;
+    if (docs.clientWidth === docsWidth && docs.clientHeight === docsHeight) return;
     docsWidth = docs.clientWidth;
-    if (!restoring && docsWidth > 0) keepActiveCentered();
+    docsHeight = docs.clientHeight;
+    if (!restoring && docsWidth > 0 && docsHeight > 0) keepActiveCentered();
   }).observe(docs);
 
   // Clicking a step activates it (short steps and the first ones may never cross the center line).
