@@ -61,6 +61,9 @@ When a change touches how `site/` or a tutorial is served (routes, `public/`, ba
 ### Markdown transforms and the content cache
 After changing a Markdown transform (e.g. `docsMarkdown()` in `site/docs-config.mjs`), stop the dev server and delete `site/.astro/data-store.json` before reviewing in dev. The content layer reuses rendered HTML until a file's content changes, so dev keeps serving the old output while build/E2E are correct. (This once served raw `<picture>` tags and 404 screenshots in `pnpm site`.)
 
+### New .astro files must reach the package
+Add every new `.astro` component or page to the copy list (and `rewriteAstroImports`) in `packages/interactive-code-scroll/scripts/build-package.mjs`. Workspace builds, fixtures and E2E import from `src/` and pass; the published package only has the listed files. (A new `<Outro>` once broke the packed build; only `pnpm test:pack` caught it.)
+
 ### Test tutorials inside the repo see its .gitignore
 The `code/` listing applies every `.gitignore` up to the git repo root, so a tutorial a test creates under this repo (e.g. `test/fixtures/<name>-*`) inherits the root `.gitignore` (`.vscode/`, `dist/`…). Give such a temp project its own `.git` folder (`mkdirSync(join(root, ".git"))`) unless the test is about parent rules. (The root `.vscode/` rule once silenced an expected `code/.vscode/ is not published` warning in `test/build.test.ts`.)
 

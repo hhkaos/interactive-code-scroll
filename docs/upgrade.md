@@ -35,6 +35,10 @@ Before v1, breaking changes may happen in alpha and beta releases. Each breaking
 - an actionable validation error when possible,
 - a fixture/E2E case when the behavior is observable through a tutorial.
 
+### Unreleased: closing panel after the last step
+
+Every tutorial now ends with a closing panel: at the last step "Next" becomes "Finish" instead of being disabled. The panel offers the code download, the Preview tab and, in a series, the next tutorial (the next one in index order unless you set [`next`](authoring.md#series-index-and-siblings)) and the index. No tutorial changes are needed. Optionally add an [`<Outro>`](authoring.md#outro) with your own closing text and a [`feedbackUrl`](authoring.md#page) (per tutorial, or once for a series in `tutorials/index.mdx`); check that the suggested next tutorial makes sense in your series, or set `next: false`. To keep the old ending, set `completion: false`.
+
 ### 0.2.0-beta.6: wider explanations and field rows
 
 The explanations no longer cap lines at 70 characters: text uses the panel's width when the reader widens it. Consecutive `<VarField>`s are laid out in as many columns as the panel fits; put prose between fields that must stay on their own row. Notes (blockquotes) in inactive steps are now gray, and fenced code blocks follow the light/dark mode with the code panel's themes unless `astro.config.mjs` sets `markdown.shikiConfig.theme` or `themes`. No tutorial changes are needed; check pages that relied on the old layout.

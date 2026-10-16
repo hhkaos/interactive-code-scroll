@@ -11,7 +11,6 @@
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 - [ ] Completion panel, phase B: in presentation mode the clicker advances past the last step to a full-screen closing slide (the panel is in the explanations, which presentation can hide). Rules: `SPEC.md` (Step navigation → Completion panel).
-- [ ] Flaky E2E (seen 2026-10-16, also without the completion panel): `e2e/step-engine.spec.ts` "clicking a step activates it" fails ~1 in 2 runs under load; after a field click the URL ends at `#config` instead of `#load-sdk`.
 - [ ] Phone layout follow-ups (rules in `SPEC.md` Layout → Phones): tooltips stay open after a tap (no hover on touch); hints by tap; `100dvh` so the virtual keyboard (VarFields) does not hide the layout; check on a real iOS and Android device.
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).
