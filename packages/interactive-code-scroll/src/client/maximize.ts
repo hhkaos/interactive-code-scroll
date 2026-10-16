@@ -77,7 +77,8 @@ export function startMaximize(): void {
   addEventListener(
     "keydown",
     (event) => {
-      if (event.key !== "Escape" || !state || document.querySelector("calcite-dialog[open]")) return;
+      // An open dialog, and the step index (a popover: it closes itself), take Esc first.
+      if (event.key !== "Escape" || !state || document.querySelector("calcite-dialog[open], #step-index:popover-open")) return;
       event.stopImmediatePropagation();
       set(undefined);
     },

@@ -56,6 +56,19 @@ test("a notice lists every variant of the step", async ({ page }) => {
   await expect(page.locator("#variant-notice [slot=link]")).toHaveText("Switch to Python");
 });
 
+test("the step index dims steps for other variants and names them", async ({ page }) => {
+  await page.goto("/?variant=curl#config");
+  await page.locator("#step-position").click();
+  const wrap = page.locator('#step-index a[href="#client"]');
+  await expect(wrap).toHaveAttribute("data-other-variants", "");
+  await expect(wrap).toContainText("For Python and Node.js");
+  await expect(page.locator('#step-index a[href="#flags"]')).not.toHaveAttribute("data-other-variants");
+  await page.keyboard.press("Escape");
+  await pick(page, "python");
+  await expect(page.locator('#step-index a[href="#client"]')).not.toHaveAttribute("data-other-variants");
+  await expect(page.locator('#step-index a[href="#flags"]')).toContainText("For cURL");
+});
+
 test("a text-only step keeps the matching file, else the new variant's entry", async ({ page }) => {
   await page.goto("/#deps");
   await expect(shown(page)).toHaveAttribute("data-file", "python/requirements.txt");

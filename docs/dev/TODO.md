@@ -3,7 +3,6 @@
 ## Step index and outline (SPEC: Step navigation, Step outline, Presentation mode; decision 2026-10-16)
 
 Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private). Suggested commits, each with tests:
-2. Step index popover from the Back / Next position (phone: bottom sheet), "Step X of N" header, positional checks, animated open, step keys move the real step while open, `otherVariantSteps` handling.
 3. `outline` media on `<Intro>` / `<Step>` (validation, build errors, auto on media-less intros, frontmatter `outline: false`, presentation sizing). New `.astro` files → `build-package.mjs` copy list.
 4. Presentation mode: header "Step X of N" button opens the large index; `O`, `b`, `.` and `E` shortcuts only while presenting; Esc order. Check `b` / `.` with a real clicker.
 5. Intro meta line: `duration` and `level` next to "Updated".

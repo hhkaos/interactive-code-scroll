@@ -221,6 +221,11 @@ const clientData = JSON.stringify({
     </calcite-navigation>
     {/* Under the header, not in its `progress` slot (a top strip sized for calcite-progress). Segments come from client/steps.ts. */}
     <div id="progress-bar" class="step-progress" role="progressbar" aria-label="Tutorial progress" aria-valuemin="0" aria-valuenow="0"></div>
+    {/* Step index: a native popover (top layer), so it shows wherever its trigger is. Items come from client/step-index.ts. */}
+    <div id="step-index" class="step-index" popover role="dialog" aria-labelledby="step-index-heading">
+      <p id="step-index-heading" class="step-index-heading"></p>
+      <ol class="step-index-list"></ol>
+    </div>
     {
       !currentSibling && (
         /* The full title when the header clips it (client/layout.ts sets the reference element only then). */
@@ -281,7 +286,11 @@ const clientData = JSON.stringify({
         {/* Same moves as the step keys (client/steps.ts); hidden in presentation mode. */}
         <nav class="step-nav" aria-label="Steps">
           <calcite-button id="step-back" appearance="outline" kind="neutral" icon-start="chevron-left" label="Previous step" disabled>Back</calcite-button>
-          <span id="step-position"></span>
+          {/* Opens the step index (client/step-index.ts); steps.ts writes the position and the accessible name. */}
+          <button type="button" id="step-position" class="step-position" popovertarget="step-index" aria-haspopup="dialog" aria-expanded="false">
+            <calcite-icon icon="list-number" scale="s" aria-hidden="true" />
+            <span id="step-position-text"></span>
+          </button>
           <calcite-button id="step-next" icon-end="chevron-right" label="Next step">Next</calcite-button>
         </nav>
       </div>
@@ -530,6 +539,7 @@ const clientData = JSON.stringify({
       import { startPreview } from "../client/preview.ts";
       import { startResult } from "../client/result.ts";
       import { startStepEngine } from "../client/steps.ts";
+      import { startStepIndex } from "../client/step-index.ts";
       import { startVars } from "../client/vars.ts";
       import { startVariants, type VariantInfo } from "../client/variants.ts";
 
@@ -563,6 +573,7 @@ const clientData = JSON.stringify({
       // Before the step engine: it sizes the bottom room after the panel with the <Outro> in it.
       startCompletion();
       const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
+      startStepIndex(engine, variants);
       startImageViewer();
       startEmbedOpen();
       if (data.ask) startAsk({ title: data.title, ...data.ask });

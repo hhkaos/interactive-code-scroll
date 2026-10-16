@@ -216,11 +216,150 @@ body[data-docs-hidden] {
   background: var(--calcite-color-foreground-1);
 }
 
-#step-position {
+/* The position opens the step index: a quiet button that looks like the text it replaced until hovered. */
+.step-position {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.5625rem;
+  border: 1px solid transparent;
+  border-radius: var(--calcite-corner-radius-sharp, 0.25rem);
+  background: none;
+  font: inherit;
   font-size: var(--calcite-font-size-sm);
-  color: var(--calcite-color-text-3);
+  color: var(--calcite-color-text-2);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:hover, &[aria-expanded="true"] {
+    border-color: var(--calcite-color-border-1);
+    background: var(--calcite-color-foreground-2);
+    color: var(--calcite-color-text-1);
+  }
+  &:focus-visible { outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand)); outline-offset: 2px; }
+}
+
+/* ——— Step index (native popover): above its trigger; a bottom sheet on phones ——— */
+.step-index {
+  box-sizing: border-box;
+  position: fixed;
+  inset: auto auto var(--index-bottom, 4rem) var(--index-left, 1rem);
+  inline-size: min(22rem, calc(100vw - 1rem));
+  max-block-size: min(24rem, 70vh);
+  margin: 0;
+  padding: 0.5rem;
+  overflow: auto;
+  border: 1px solid var(--calcite-color-border-3);
+  border-radius: var(--calcite-corner-radius-round, 0.375rem);
+  background: var(--calcite-color-foreground-1);
+  color: var(--calcite-color-text-1);
+  box-shadow: var(--calcite-shadow-md, 0 6px 24px rgb(0 0 0 / 0.16));
+  scrollbar-width: thin;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity 160ms ease-out, transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), overlay 160ms allow-discrete, display 160ms allow-discrete;
+
+  &:popover-open {
+    opacity: 1;
+    transform: none;
+    @starting-style { opacity: 0; transform: translateY(6px) scale(0.96); }
+  }
+  /* Staggered entrance; items updated in place while open (live step keys) do not replay it. */
+  &:popover-open li { animation: ics-index-item 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 18ms + 60ms); }
+
+  @media (max-width: 40rem) {
+    inset: auto 0 0 0;
+    inline-size: 100%;
+    max-block-size: 75vh;
+    padding: 0.75rem 0.75rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-width: 1px 0 0;
+    border-radius: 0.75rem 0.75rem 0 0;
+    transform: translateY(100%);
+    transition-duration: 240ms;
+    &:popover-open { @starting-style { transform: translateY(100%); } }
+    &::backdrop { background: rgb(0 0 0 / 0.4); }
+  }
+}
+@keyframes ics-index-item { from { opacity: 0; transform: translateY(6px); } }
+
+.step-index-heading {
+  margin: 0;
+  padding: 0.125rem 0.625rem 0.5rem;
+  font-size: var(--calcite-font-size-sm);
+  font-weight: var(--calcite-font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+.step-index-list {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: grid;
+    grid-template-columns: 1.375rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.4375rem 0.625rem;
+    border-radius: var(--calcite-corner-radius-sharp, 0.25rem);
+    color: var(--calcite-color-text-2);
+    font-size: var(--calcite-font-size-sm);
+    text-decoration: none;
+    transition: background-color 0.2s, box-shadow 0.2s;
+
+    &:hover { background: var(--calcite-color-foreground-2); color: var(--calcite-color-text-1); }
+    &:focus-visible { outline: 2px solid var(--calcite-color-focus, var(--calcite-color-brand)); outline-offset: -2px; }
+    &[data-state="seen"] .step-index-title { color: var(--calcite-color-text-3); }
+    &[data-other-variants] .step-index-title { color: var(--calcite-color-text-3); opacity: 0.8; }
+    /* Same marking as the active step in the explanations. */
+    &[aria-current="step"] {
+      background: color-mix(in srgb, var(--calcite-color-brand) 12%, var(--calcite-color-foreground-1));
+      box-shadow: inset 3px 0 0 var(--calcite-color-brand);
+      color: var(--calcite-color-text-1);
+      font-weight: var(--calcite-font-weight-medium);
+    }
+  }
+}
+.step-index-mark {
+  display: grid;
+  place-items: center;
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+  border: 1px solid var(--calcite-color-border-1);
+  border-radius: var(--calcite-corner-radius-pill);
+  font-size: var(--calcite-font-size-xs);
+  font-weight: var(--calcite-font-weight-medium);
+  font-variant-numeric: tabular-nums;
+
+  [data-state="seen"] > & {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--calcite-color-status-success) 18%, transparent);
+    color: var(--calcite-color-status-success);
+  }
+  [aria-current="step"] > & {
+    border-color: var(--calcite-color-brand);
+    background: var(--calcite-color-brand);
+    color: var(--calcite-color-text-inverse);
+  }
+}
+.step-index-variants {
+  display: block;
+  font-size: var(--calcite-font-size-xs);
+  font-weight: var(--calcite-font-weight-regular);
+}
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-index, .step-index:popover-open li { transition: none; animation: none; }
 }
 
 body[data-presenting] .step-nav { display: none; }

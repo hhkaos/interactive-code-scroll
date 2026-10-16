@@ -14,6 +14,18 @@ type TabTitle = HTMLElement & { selected: boolean };
 /** Fired on every step change; detail: the active step, or `null` when none is (intro). */
 export const STEP_EVENT = "ics:step";
 
+/** Fired whenever the reader's place changes (step, intro, closing panel, visible steps); detail: `StepProgress`. */
+export const PROGRESS_EVENT = "ics:progress";
+
+export interface StepProgress {
+  /** The steps the reader can reach, in order. */
+  steps: HTMLElement[];
+  /** Index in `steps`; -1 at the intro. */
+  current: number;
+  /** On the closing panel. */
+  completed: boolean;
+}
+
 const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => [
   ...root.querySelectorAll<T>(selector),
 ];
@@ -21,6 +33,10 @@ const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode 
 /** Scroll/keyboard-driven steps: active step → file, region focus, images, hash and progress. */
 export interface StepEngine {
   step(delta: -1 | 1): void;
+  /** Scrolls to and activates step `index` of the reachable steps (the step index's links). */
+  goToStep(index: number): void;
+  /** The reader's place now (later changes come with `PROGRESS_EVENT`). */
+  progress(): StepProgress;
 }
 
 /** Scrolls `container` so that `first`…`last` are visible (see `revealScroll`). */
@@ -54,7 +70,7 @@ export interface StepEngineOptions {
 
 export function startStepEngine({ variants, otherVariantSteps = "notice" }: StepEngineOptions = {}): StepEngine {
   const allSteps = $$("section.step");
-  if (allSteps.length === 0) return { step: () => {} };
+  if (allSteps.length === 0) return { step: () => {}, goToStep: () => {}, progress: () => ({ steps: [], current: -1, completed: false }) };
   const hideOthers = !!variants && otherVariantSteps === "hide";
   const covers = (step: HTMLElement) => !variants || coversVariant(step.dataset.only, variants.active().id);
   /** Steps the reader can reach: with `hide`, only those of the active variant (numbering follows them). */
@@ -77,7 +93,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   const progressBar = document.querySelector<HTMLElement>("#progress-bar");
   const backButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-back");
   const nextButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-next");
-  const position = document.querySelector<HTMLElement>("#step-position");
+  const position = document.querySelector<HTMLElement>("#step-position-text");
+  const positionButton = document.querySelector<HTMLElement>("#step-position");
   /** The closing panel after the last step (absent with `completion: false`). */
   const completion = docs.querySelector<HTMLElement>(".completion");
   /** The intro's own `images=` / `embed=`. */
@@ -426,6 +443,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   /** One segment per visible step: seen, current or pending. */
   function syncProgress(): void {
+    document.dispatchEvent(new CustomEvent<StepProgress>(PROGRESS_EVENT, { detail: { steps, current, completed } }));
     if (!progressBar) return;
     const states = progressStates(current, steps.length, completed);
     if (progressBar.childElementCount !== states.length) {
@@ -450,6 +468,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
       nextButton.setAttribute("label", state.finish ? "Finish the tutorial" : "Next step");
     }
     if (position) position.textContent = state.position;
+    positionButton?.setAttribute("aria-label", `${state.position}: all steps`);
   }
 
   /** Step keys first page through the active step's (or the intro's own) carousel; true when they did. */
@@ -654,5 +673,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     for (const type of TAKE_OVER_EVENTS) removeEventListener(type, takeOver, true);
   };
   for (const type of TAKE_OVER_EVENTS) addEventListener(type, takeOver, { capture: true, passive: true });
-  return { step };
+  const goToStep = (index: number) => {
+    if (index >= 0 && index < steps.length) goTo(index);
+  };
+  return { step, goToStep, progress: () => ({ steps, current, completed }) };
 }

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Step index: the Back / Next position ("5 / 10", with a list icon) opens a list of the reachable steps, headed "Step 5 of 10", with a check on the steps before the current one and the current one marked. Clicking a step jumps to it; step keys move the real step while the list is open and the list follows; Esc, a click outside or the button close it. A native `popover` anchored above the button, a bottom sheet over a scrim on phones, with a short scale/fade and staggered entrance (none with reduced motion). Steps for other variants (`otherVariantSteps: notice`) are dimmed and name their variants; hidden ones are left out. Esc closes it before a maximized pane or presentation mode.
+
 ### Changed
 
 - Progress bar: a 6px bar right under the header (it used to be Calcite's strip on the header's top edge) with one flush segment per visible step, colored seen, current or pending; full on the closing panel. It is a `role="progressbar"` with `aria-valuenow` and `aria-valuetext` ("Step 5 of 10", "Introduction", "Done") instead of a `calcite-progress` value. Not clickable.
