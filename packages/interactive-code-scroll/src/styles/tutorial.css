@@ -601,6 +601,63 @@ body[data-presenting] .step-nav { display: none; }
   }
 }
 
+/* ——— Closing panel ("Finish", client/steps.ts) ——— */
+
+.completion {
+  margin-block-start: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--calcite-color-border-3);
+  border-radius: var(--calcite-corner-radius-round);
+  background: var(--calcite-color-foreground-1);
+
+  h2 {
+    margin-block: 0.5rem 0.75rem;
+    font-size: var(--calcite-font-size-xl);
+    /* Focused by "Finish" for screen readers; not a control, so no focus ring. */
+    &:focus { outline: none; }
+  }
+}
+
+.completion-icon { color: var(--calcite-color-status-success); }
+
+.completion-outro > .outro {
+  & > :first-child { margin-top: 0; }
+  & > :last-child { margin-bottom: 1rem; }
+}
+
+.completion-next {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  margin-block-end: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--calcite-color-border-2);
+  border-radius: var(--calcite-corner-radius-round);
+  color: var(--calcite-color-text-1);
+  text-decoration: none;
+  transition: border-color 0.15s, background-color 0.15s;
+
+  &:hover, &:focus-visible {
+    border-color: var(--calcite-color-brand);
+    background: var(--calcite-color-foreground-2);
+  }
+  calcite-icon { grid-row: 1 / span 2; grid-column: 2; color: var(--calcite-color-brand); }
+}
+
+.completion-next-label {
+  font-size: var(--calcite-font-size-sm);
+  color: var(--calcite-color-text-3);
+}
+
+.completion-next-title { font-weight: var(--calcite-font-weight-semibold); }
+
+.completion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 /* ——— Right panel (code, images, preview, result) ——— */
 
 .right {

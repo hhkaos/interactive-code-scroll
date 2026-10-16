@@ -94,19 +94,27 @@ export interface StepButtonsInput {
   image: number;
   /** Images in that carousel (0 without one). */
   images: number;
+  /** The page has a closing panel after the last step. */
+  completion?: boolean;
+  /** The closing panel is shown (after "Finish"). */
+  completed?: boolean;
 }
 
 export interface StepButtonsState {
   back: boolean;
   next: boolean;
-  /** "3 / 9", or "9 steps" at the intro. */
+  /** "Next" reads "Finish": its next move opens the closing panel (or it did). */
+  finish: boolean;
+  /** "3 / 9", "9 steps" at the intro, "Done" on the closing panel. */
   position: string;
 }
 
 /** Back / Next enabled states: they move like the step keys (see `carouselTarget` and the step engine). */
-export function stepButtons({ current, count, hasIntro, image, images }: StepButtonsInput): StepButtonsState {
+export function stepButtons({ current, count, hasIntro, image, images, completion = false, completed = false }: StepButtonsInput): StepButtonsState {
+  if (completion && completed) return { back: true, next: false, finish: true, position: "Done" };
   const back = image > 0 || current > 0 || (current === 0 && hasIntro);
-  const next = image < images - 1 || current < count - 1;
+  const more = image < images - 1 || current < count - 1;
+  const finish = completion && !more && current === count - 1;
   const position = current < 0 ? `${count} ${count === 1 ? "step" : "steps"}` : `${current + 1} / ${count}`;
-  return { back, next, position };
+  return { back, next: more || finish, finish, position };
 }

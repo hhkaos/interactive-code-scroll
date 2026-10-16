@@ -147,6 +147,8 @@ order: 1
 | [`description`](#index-page) | string | none | One sentence: the page's meta description (search results, link previews) and, in a [series site](#series-sites), the index card text. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
 | [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. It identifies the tutorial, so [series](#series-sites) index cards do not show it: they show [tag logos and variant links](#index-page). Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |
+| [`completion`](#outro) | boolean | `true` | The closing panel after the last step: "Next" becomes "Finish" there and opens it. `false` removes it ("Next" stays disabled at the last step). |
+| [`feedbackUrl`](#outro) | `https://` or `mailto:` URL | the series' `index.mdx` one | "Send feedback" link in the closing panel; none without a URL. `{slug}` and `{title}` are replaced (URL-encoded), e.g. `https://github.com/owner/repo/issues/new?title=Feedback:%20{title}`. |
 
 ### Code and Preview
 
@@ -172,6 +174,7 @@ Ignored in a single-tutorial site, except `description`, which is also the page'
 | [`order`](#index-page) | number | none | Series index position: lower first; tutorials without it come after, by title. Also orders the [sibling](#sibling-tutorials) switcher. |
 | [`family`](#sibling-tutorials) | string | none | Links sibling tutorials of a series site. Needs `familyLabel`. |
 | [`familyLabel`](#sibling-tutorials) | string | none | This tutorial's name in the sibling menu, e.g. `Python`. Unique within the family. |
+| [`next`](#outro) | tutorial slug, or `false` | the next tutorial in index order | "Next tutorial" link in the [closing panel](#outro), e.g. `next: display-map-python`. `false` shows none. A slug that is not another tutorial of the series is a build error. |
 
 ### Syntax highlighting
 
@@ -202,6 +205,7 @@ Components render the explanations panel on the left: the tags you write in MDX.
 |---|---|---|
 | [`<Intro>`](#intro) | `tutorial.mdx` | Content before the first step: not numbered, no code focus. Can open on a file, show images or a page, and set the Preview / Result pane state. |
 | [`<Step>`](#step) | `tutorial.mdx` | One step: its explanation and what the code panel shows. |
+| [`<Outro>`](#outro) | `tutorial.mdx`, after the last step | Your own text in the closing panel ("what you learned", where to go next). |
 | [`<VarField>`](#varfield) | `tutorial.mdx`, inside a step | A form field that edits a value in the code. |
 | [`<Hint>`](#hint) | `tutorial.mdx`, inline | A short popover for a side note. |
 | [`<TutorialList>`](#index-page) | `tutorials/index.mdx` | A section of tutorial cards on a series index. |
@@ -254,6 +258,28 @@ A tutorial without code (no `code/`, `preview: off`, every step with `images` or
 Moving from the intro to a step swaps the media as between steps: the same embedded page with another fragment (`oauth-slides/#/1` on the intro, `oauth-slides/#/2` on the first step) moves in place, without reloading.
 
 When the intro shows nothing and there is nothing else to show next to it (no code tabs, no Preview and no step with `output` or `request`), it shows the media of the first step that has `images` or `embed`, so the page never opens on an empty pane. Entering that step keeps the media as it is. Tutorials with code, a Preview or a Result pane keep showing them next to the intro.
+
+### `<Outro>`
+
+Every tutorial ends with a closing panel after its last step: at the last step "Next" becomes "Finish", which scrolls to the panel (scrolling there does the same), and Back returns to the last step. The panel says "You've completed <title>" and offers the next steps:
+
+- **Next tutorial** (series only): frontmatter [`next`](#series-index-and-siblings), else the next tutorial in index order; none after the last one or with `next: false`.
+- **Download code**: the ZIP of the code panel (active variant, form values applied).
+- **Open preview**: with `preview: tab` or `both`.
+- **All tutorials** (series only): back to the index.
+- **Send feedback**: with a [`feedbackUrl`](#page), set per tutorial or for the whole series in `index.mdx`.
+
+`<Outro>` adds your own text to the panel, between the heading and the actions. It takes no props, must come after the last `<Step>` and can be used once.
+
+```mdx title="tutorial/tutorial.mdx"
+<Outro>
+
+You signed in with OAuth and showed a private layer. Next, store the token securely on a server.
+
+</Outro>
+```
+
+Frontmatter `completion: false` removes the panel (then `<Outro>` is a build error).
 
 ### `<Step>`
 
@@ -994,6 +1020,7 @@ Start with the REST tutorials if you are new to location services.
 | `logo` | image path or `https://` URL | none | Relative to `tutorials/images/` (that folder is never a tutorial), or an absolute `https://` URL. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered site-wide. |
 | `tagGroups` | family name → list of tags (or `{ name, logo }`) | none | [Tag families](#tag-families), in display order, and tag logos. |
+| `feedbackUrl` | `https://` or `mailto:` URL | none | Default [feedback link](#outro) of every tutorial; a tutorial's own `feedbackUrl` replaces it. `{slug}` and `{title}` are the tutorial's. |
 
 The body is free MDX prose with three components; anything else is a build error.
 
@@ -1108,6 +1135,8 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> maximize="preview" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
 | `<Step> duplicate id "x"` | Step ids are unique per tutorial. |
 | `<Intro> "x" is not available on <Intro> (only preview, maximize, file, images, embed)` | Move `region`, `output` or `request` to the first step. |
+| `<Outro> must come after the last <Step>` | Move it to the end of `tutorial.mdx`. |
+| `tutorials/x: "next" tutorial "y" is not in the series` | Use the folder name of another tutorial, or `next: false`. |
 | `<VarField> no "@var x" found in code/` | Add `// @var x` next to the literal in the code, or fix the name. |
 | `@var "x" must have the same default in every file: …` | Use the same literal in every file that marks `x`. |
 | `code/x: @var "y" is in a file not shown in tabs; …` | Show the file in tabs or remove the marker. |

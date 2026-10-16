@@ -103,19 +103,30 @@ describe("stepButtons", () => {
   const base = { count: 9, hasIntro: false, image: 0, images: 0 };
 
   it("disables Back at the first step without an intro, and Next at the last step", () => {
-    expect(stepButtons({ ...base, current: 0 })).toEqual({ back: false, next: true, position: "1 / 9" });
-    expect(stepButtons({ ...base, current: 8 })).toEqual({ back: true, next: false, position: "9 / 9" });
+    expect(stepButtons({ ...base, current: 0 })).toEqual({ back: false, next: true, finish: false, position: "1 / 9" });
+    expect(stepButtons({ ...base, current: 8 })).toEqual({ back: true, next: false, finish: false, position: "9 / 9" });
   });
 
   it("lets Back return from the first step to the intro, and disables it there", () => {
     expect(stepButtons({ ...base, hasIntro: true, current: 0 }).back).toBe(true);
-    expect(stepButtons({ ...base, hasIntro: true, current: -1 })).toEqual({ back: false, next: true, position: "9 steps" });
+    expect(stepButtons({ ...base, hasIntro: true, current: -1 })).toEqual({ back: false, next: true, finish: false, position: "9 steps" });
   });
 
   it("pages through a carousel before leaving the step", () => {
     expect(stepButtons({ ...base, current: 0, image: 1, images: 3 }).back).toBe(true);
     expect(stepButtons({ ...base, current: 8, image: 1, images: 3 }).next).toBe(true);
     expect(stepButtons({ ...base, current: 8, image: 2, images: 3 }).next).toBe(false);
+  });
+
+  it("turns Next into Finish at the last step (and its last image) when the page has a closing panel", () => {
+    const end = { ...base, completion: true };
+    expect(stepButtons({ ...end, current: 7 })).toMatchObject({ next: true, finish: false });
+    expect(stepButtons({ ...end, current: 8, image: 1, images: 3 })).toMatchObject({ next: true, finish: false });
+    expect(stepButtons({ ...end, current: 8, image: 2, images: 3 })).toEqual({ back: true, next: true, finish: true, position: "9 / 9" });
+  });
+
+  it("shows Done on the closing panel, with Back enabled and Finish disabled", () => {
+    expect(stepButtons({ ...base, completion: true, completed: true, current: 8 })).toEqual({ back: true, next: false, finish: true, position: "Done" });
   });
 
   it("says step in the singular", () => {

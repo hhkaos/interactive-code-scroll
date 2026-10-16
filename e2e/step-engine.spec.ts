@@ -190,7 +190,53 @@ test("Back / Next move like the step keys, carousel images first", async ({ page
 
   await page.goto("/#embed-next-slide");
   await expect(page.locator("#step-position")).toHaveText("10 / 10");
+  await expect(next).toHaveText("Finish");
+  await expect(next).not.toHaveAttribute("disabled");
+});
+
+test("Finish opens the closing panel; Back and scrolling up return to the last step", async ({ page }) => {
+  const next = page.locator("#step-next");
+  const panel = page.locator(".completion");
+  await page.goto("/#embed-next-slide");
+  await next.click();
+  await expect(page.locator("#step-position")).toHaveText("Done");
+  await expect(page.locator("body")).toHaveAttribute("data-completed", "");
   await expect(next).toHaveAttribute("disabled", "");
+  await expect(panel).toBeInViewport();
+  await expect(page.locator("#completion-heading")).toBeFocused();
+  await expect(page.locator("#completion-heading")).toHaveText("You've completed Framework Fixture Tutorial");
+  // The last step stays active underneath.
+  await expect(page.locator("section.step#embed-next-slide")).toHaveAttribute("data-active", "");
+
+  await page.locator("#step-back").click();
+  await expect(page.locator("#step-position")).toHaveText("10 / 10");
+  await expect(page.locator("body")).not.toHaveAttribute("data-completed");
+  await expect(next).toHaveText("Finish");
+
+  // Step keys do the same.
+  await page.keyboard.press("PageDown");
+  await expect(page.locator("#step-position")).toHaveText("Done");
+  await page.keyboard.press("PageUp");
+  await expect(page.locator("#step-position")).toHaveText("10 / 10");
+});
+
+test("the closing panel holds the <Outro> and the code, Preview and feedback actions", async ({ page }) => {
+  const panel = page.locator(".completion");
+  await page.goto("/");
+  // The <Outro> content moves from the end of the explanations into the panel, before the actions.
+  await expect(panel.locator(".completion-outro .outro")).toBeVisible();
+  await expect(panel.locator(".completion-outro strong")).toHaveText("Markdown");
+  await expect(page.locator(".docs > .outro")).toHaveCount(0);
+  // Single tutorial: no next tutorial and no index.
+  await expect(panel.locator(".completion-next")).toHaveCount(0);
+  await expect(panel.locator("calcite-button")).toHaveText(["Download code", "Open preview", "Send feedback"]);
+  await expect(panel.locator("calcite-button", { hasText: "Send feedback" })).toHaveAttribute(
+    "href",
+    "https://github.com/example/fixture/issues/new?title=Framework%20Fixture%20Tutorial",
+  );
+  const download = page.waitForEvent("download");
+  await panel.locator("#completion-zip").click();
+  expect((await download).suggestedFilename()).toBe("framework-fixture-tutorial.zip");
 });
 
 test("clicking a carousel image opens it large; step keys page it; leaving the step closes it", async ({ page }) => {
@@ -219,13 +265,15 @@ test("Esc closes the image viewer", async ({ page }) => {
   await expect(page.locator("#image-viewer")).not.toHaveAttribute("open", "");
 });
 
-test("the last step is reachable by scrolling, with no more blank room than needed", async ({ page }) => {
+test("the last step and the closing panel are reachable by scrolling, with no more blank room than needed", async ({ page }) => {
   await page.goto("/#config");
   await page.locator("main.docs").hover();
   await page.mouse.wheel(0, 10_000);
+  // Scrolling to the closing panel completes the tutorial; the last step stays active underneath.
   await expect(page.locator("section.step#embed-next-slide")).toHaveAttribute("data-active", "");
+  await expect(page.locator("#step-position")).toHaveText("Done");
   const room = await page.locator("main.docs").evaluate((docs) => {
-    const last = [...docs.querySelectorAll("section.step")].at(-1)!;
+    const last = docs.querySelector(".completion")!;
     const below = docs.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom;
     return { below, half: docs.clientHeight / 2 };
   });

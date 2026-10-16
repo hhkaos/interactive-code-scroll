@@ -50,6 +50,12 @@ export interface TutorialConfig {
   order?: number;
   /** Sibling tutorials: same `family` on a series site, told apart by `familyLabel` in the header switcher. */
   family?: { id: string; label: string };
+  /** The closing panel after the last step ("Finish"); default true. */
+  completion: boolean;
+  /** Next tutorial in the closing panel: a series slug, or `false` for none; absent: the next one in series order. */
+  next?: string | false;
+  /** Feedback link in the closing panel (overrides the series `index.mdx` one); `{slug}` and `{title}` are filled in. */
+  feedbackUrl?: string;
 }
 
 /** Frontmatter of a series site's optional `index.mdx`. */
@@ -61,6 +67,8 @@ export interface IndexConfig {
   theme: Theme;
   /** Tag families, in display order: group the filter's tags and set their colors and matching. */
   tagGroups?: TagGroup[];
+  /** Default feedback link of every tutorial's closing panel (see `TutorialConfig.feedbackUrl`). */
+  feedbackUrl?: string;
 }
 
 /** A tag family of the series filter (`tagGroups` in `index.mdx`). */
@@ -201,11 +209,18 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     order,
     family,
     familyLabel,
+    completion = true,
+    next,
+    feedbackUrl,
   } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
   if (logo !== undefined && typeof logo !== "string") throw new FrontmatterError("logo", '"logo" must be a string');
   if (order !== undefined && (typeof order !== "number" || !Number.isFinite(order))) throw new FrontmatterError("order", '"order" must be a number');
+  if (typeof completion !== "boolean") throw new FrontmatterError("completion", '"completion" must be a boolean');
+  if (next !== undefined && next !== false && (typeof next !== "string" || !TUTORIAL_SLUG.test(next))) {
+    throw new FrontmatterError("next", '"next" must be the slug (folder name) of a tutorial of the series, or false');
+  }
   const variantList = readVariants(variants);
   if (variantList !== undefined && files !== undefined) {
     throw new FrontmatterError("files", '"files" cannot be used with "variants"; set "files" on each variant instead');
@@ -227,7 +242,22 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     ...optionalEntry("duration", optionalText("duration", duration)),
     ...(order === undefined ? {} : { order: order as number }),
     ...readFamily(family, familyLabel),
+    completion,
+    ...(next === undefined ? {} : { next: next as string | false }),
+    ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
   };
+}
+
+/** Same rule as series folder names (series.ts `SLUG_PATTERN`). */
+const TUTORIAL_SLUG = /^[a-z0-9][a-z0-9-]*$/;
+
+/** `feedbackUrl`: an `https://` or `mailto:` URL. */
+function readFeedbackUrl(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !/^(https:\/\/|mailto:)\S+$/i.test(value)) {
+    throw new FrontmatterError("feedbackUrl", '"feedbackUrl" must be an https:// or mailto: URL, e.g. https://github.com/owner/repo/issues/new?title={title}');
+  }
+  return value;
 }
 
 function readFamily(family: unknown, familyLabel: unknown): Pick<TutorialConfig, "family"> {
@@ -243,7 +273,7 @@ function optionalEntry<K extends string>(key: K, value: string | undefined): Par
   return value === undefined ? {} : ({ [key]: value } as Record<K, string>);
 }
 
-const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups"]);
+const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups", "feedbackUrl"]);
 
 const TAG_GROUPS_SHAPE = '"tagGroups" must map each family name to a list of tags, e.g. { Language: [Python, JavaScript] }';
 
@@ -299,9 +329,9 @@ export function readTagGroups(value: unknown, { withLogos = true }: { withLogos?
 
 /** Validates a series `index.mdx` frontmatter; defaults: title "Tutorials", theme `auto`. */
 export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConfig {
-  const { title = "Tutorials", description, logo, theme = "auto", tagGroups } = frontmatter;
+  const { title = "Tutorials", description, logo, theme = "auto", tagGroups, feedbackUrl } = frontmatter;
   const unknown = Object.keys(frontmatter).find((key) => !INDEX_KEYS.has(key));
-  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups)`);
+  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl)`);
   if (typeof title !== "string" || title.trim() === "") throw new FrontmatterError("title", '"title" must be a non-empty string');
   return {
     title,
@@ -309,6 +339,7 @@ export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConf
     ...optionalEntry("logo", optionalText("logo", logo)),
     theme: oneOf("theme", theme, THEMES),
     ...(tagGroups === undefined ? {} : { tagGroups: readTagGroups(tagGroups) }),
+    ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
   };
 }
 

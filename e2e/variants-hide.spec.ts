@@ -34,3 +34,10 @@ test("a link to a hidden step switches to its variant", async ({ page }) => {
   await expect(page.locator("section.step#flags")).toHaveAttribute("data-active", "");
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "curl/main.sh");
 });
+
+test("completion: false has no closing panel: Next stays disabled at the last step", async ({ page }) => {
+  await page.goto("/#request");
+  await expect(page.locator(".completion")).toHaveCount(0);
+  await expect(page.locator("#step-next")).toHaveText("Next");
+  await expect(page.locator("#step-next")).toHaveAttribute("disabled", "");
+});

@@ -78,6 +78,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   const backButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-back");
   const nextButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-next");
   const position = document.querySelector<HTMLElement>("#step-position");
+  /** The closing panel after the last step (absent with `completion: false`). */
+  const completion = docs.querySelector<HTMLElement>(".completion");
   /** The intro's own `images=` / `embed=`. */
   const introMedia = intro?.querySelector<HTMLTemplateElement>(":scope > template.step-media") ?? null;
   // Nothing else to show next to the intro (no code tabs, Preview or Result pane): it borrows the first step media.
@@ -216,6 +218,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   let current = -1;
   let atIntro = false;
+  /** The closing panel is shown ("Finish"): the last step stays active underneath. */
+  let completed = false;
   let mediaIndex = 0;
 
   function clearFocus(): void {
@@ -223,7 +227,15 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     for (const pane of $$(".code[data-has-focus]")) pane.removeAttribute("data-has-focus");
   }
 
+  function setCompleted(on: boolean): void {
+    if (on === completed) return;
+    completed = on;
+    document.body.toggleAttribute("data-completed", on);
+    syncButtons();
+  }
+
   function clearActive(): void {
+    setCompleted(false);
     current = -1;
     allSteps.forEach((s) => s.removeAttribute("data-active"));
     clearFocus();
@@ -324,7 +336,10 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   /** `fromEnd`: entering backwards starts a carousel at its last image. */
   function activate(index: number, fromEnd = false): void {
-    if (index === current || index < 0) return;
+    if (index < 0) return;
+    // Back on a step: the closing panel is no longer the reader's place.
+    setCompleted(false);
+    if (index === current) return;
     current = index;
     atIntro = false;
     const step = steps[index]!;
@@ -385,6 +400,15 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
       }
       const entering = entries.find((e) => e.isIntersecting);
       if (!entering) return;
+      if (entering.target === completion) {
+        // Scrolled to the closing panel: same as "Finish" (a "Finish" scroll only confirms it).
+        if (keyTarget === steps.length) endKeyScroll();
+        else if (keyTarget === undefined) {
+          activate(steps.length - 1);
+          setCompleted(true);
+        }
+        return;
+      }
       const index = steps.indexOf(entering.target as HTMLElement);
       if (keyTarget !== undefined) {
         if (index === keyTarget) endKeyScroll();
@@ -395,6 +419,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     { root: docs, rootMargin: "-50% 0px -50% 0px" },
   );
   allSteps.forEach((step) => observer.observe(step));
+  if (completion) observer.observe(completion);
 
   /** Media the step keys page through: the active step's, or the intro's own (not the one it borrows). */
   function pagedMedia(): HTMLTemplateElement | null {
@@ -404,9 +429,14 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   /** Back / Next: enabled where the step keys can move, and the position. */
   function syncButtons(): void {
     const images = pagedMedia() ? mediaCount() : 0;
-    const state = stepButtons({ current, count: steps.length, hasIntro, image: images ? mediaIndex : 0, images });
+    const state = stepButtons({ current, count: steps.length, hasIntro, image: images ? mediaIndex : 0, images, completion: !!completion, completed });
     if (backButton) backButton.disabled = !state.back;
-    if (nextButton) nextButton.disabled = !state.next;
+    if (nextButton) {
+      nextButton.disabled = !state.next;
+      nextButton.textContent = state.finish ? "Finish" : "Next";
+      nextButton.setAttribute("icon-end", state.finish ? "check" : "chevron-right");
+      nextButton.setAttribute("label", state.finish ? "Finish the tutorial" : "Next step");
+    }
     if (position) position.textContent = state.position;
   }
 
@@ -436,9 +466,30 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     activate(index, fromEnd);
   }
 
+  /** "Finish": scrolls to the closing panel and moves the focus to its heading. */
+  function finish(): void {
+    userNavigated = true;
+    userScrolling = false;
+    keyTarget = steps.length;
+    clearTimeout(keyTargetTimer);
+    keyTargetTimer = setTimeout(endKeyScroll, 1500);
+    reveal(docs, completion!, completion!, { center: true, behavior: "smooth" });
+    setCompleted(true);
+    completion!.querySelector<HTMLElement>("#completion-heading")?.focus({ preventScroll: true });
+  }
+
   /** Moves one step (or one carousel image) forwards/backwards, with snapping. */
   function step(delta: -1 | 1): void {
+    if (completed) {
+      // Back from the closing panel returns to the last step (on its last image).
+      if (delta < 0) goTo(current);
+      return;
+    }
     if (moveCarousel(delta)) return;
+    if (delta > 0 && completion && current === steps.length - 1) {
+      finish();
+      return;
+    }
     if (current < 0 && delta < 0) return;
     if (hasIntro && current === 0 && delta < 0) {
       goToIntro("smooth");
@@ -525,8 +576,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (index >= 0) goTo(index);
   });
 
-  // Just enough room below the last step for it to reach the center line (no fixed blank tail).
-  const last = allSteps.at(-1)!;
+  // Just enough room below the last step (or the closing panel) for it to reach the center line (no fixed blank tail).
+  const last = completion ?? allSteps.at(-1)!;
   const tail = new ResizeObserver(() => {
     docs.style.setProperty("--tail", `${Math.max(docs.clientHeight / 2 - last.offsetHeight / 2, 32)}px`);
   });
@@ -545,9 +596,12 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     showFile(counterpartFile(shown, from, to, tabs));
     markFileChanges();
     if (!active || steps.length === 0) return;
+    // On the closing panel, the reader stays there (e.g. switching before downloading the code).
+    const wasCompleted = completed;
     current = -1;
-    activate(nearestVisible(allSteps, steps, active));
-    keepActiveCentered();
+    activate(wasCompleted ? steps.length - 1 : nearestVisible(allSteps, steps, active));
+    if (wasCompleted) setCompleted(true);
+    else keepActiveCentered();
   });
 
   /** With `hide`, a link to a step of another variant switches to the step's first variant. */

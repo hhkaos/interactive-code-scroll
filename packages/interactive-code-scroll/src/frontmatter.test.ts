@@ -11,6 +11,7 @@ describe("readTutorialConfig", () => {
       languages: {},
       otherVariantSteps: "notice",
       tags: [],
+      completion: true,
     });
   });
 
@@ -23,6 +24,7 @@ describe("readTutorialConfig", () => {
       languages: {},
       otherVariantSteps: "notice",
       tags: [],
+      completion: true,
     });
   });
 
@@ -186,6 +188,40 @@ describe("series metadata", () => {
     expect(keyOf({ familyLabel: "Python" })).toBe("familyLabel");
     expect(keyOf({ family: "", familyLabel: "Python" })).toBe("family");
     expect(keyOf({ family: "display-map", familyLabel: 3 })).toBe("familyLabel");
+  });
+});
+
+describe("completion panel", () => {
+  const keyOf = (frontmatter: Record<string, unknown>) => {
+    try {
+      readTutorialConfig(frontmatter);
+    } catch (error) {
+      return (error as FrontmatterError).key;
+    }
+  };
+
+  it("reads completion, next and feedbackUrl", () => {
+    expect(readTutorialConfig({ completion: false, next: "display-map-js", feedbackUrl: "https://github.com/o/r/issues/new?title={title}" })).toMatchObject({
+      completion: false,
+      next: "display-map-js",
+      feedbackUrl: "https://github.com/o/r/issues/new?title={title}",
+    });
+    expect(readTutorialConfig({ next: false }).next).toBe(false);
+    expect(readTutorialConfig({ feedbackUrl: "mailto:docs@example.com" }).feedbackUrl).toBe("mailto:docs@example.com");
+    expect(readTutorialConfig({})).not.toHaveProperty("next");
+  });
+
+  it("rejects invalid values with the key", () => {
+    expect(keyOf({ completion: "no" })).toBe("completion");
+    expect(keyOf({ next: true })).toBe("next");
+    expect(keyOf({ next: "Display Map" })).toBe("next");
+    expect(keyOf({ feedbackUrl: "http://example.com" })).toBe("feedbackUrl");
+    expect(keyOf({ feedbackUrl: "javascript:alert(1)" })).toBe("feedbackUrl");
+  });
+
+  it("reads the series default feedbackUrl in index.mdx", () => {
+    expect(readIndexConfig({ feedbackUrl: "https://example.com/feedback?t={slug}" }).feedbackUrl).toBe("https://example.com/feedback?t={slug}");
+    expect(() => readIndexConfig({ feedbackUrl: "ftp://x" })).toThrow(/"feedbackUrl" must be an https:\/\/ or mailto: URL/);
   });
 });
 

@@ -94,6 +94,22 @@ describe("validateTutorial", () => {
     ]);
   });
 
+  it("accepts one <Outro> after the last step", () => {
+    expect(validate(use("Intro", {}, 1), use("Step", { id: "a" }, 5), use("Outro", {}, 9))).toEqual([]);
+  });
+
+  it("reports <Outro> props, a second <Outro> and an <Outro> before a step", () => {
+    expect(validate(use("Outro", { id: "end" }, 9))).toEqual(['tutorial.mdx:9:1 <Outro> "id" is not available on <Outro> (it takes no props)']);
+    expect(validate(use("Step", { id: "a" }, 1), use("Outro", {}, 5), use("Outro", {}, 9))).toEqual(["tutorial.mdx:9:1 <Outro> can be used only once"]);
+    expect(validate(use("Outro", {}, 1), use("Step", { id: "a" }, 5))).toEqual(["tutorial.mdx:1:1 <Outro> must come after the last <Step>"]);
+  });
+
+  it("reports an <Outro> with completion: false", () => {
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", uses: [use("Outro", {}, 9)], files, images, embeds, frontmatter: { completion: false } })).toEqual([
+      'tutorial.mdx:9:1 <Outro> has no effect with frontmatter "completion: false"',
+    ]);
+  });
+
   it("reports duplicate hint ids at the second occurrence", () => {
     expect(validate(use("Hint", { id: "redirect-uri", label: "Redirect URI" }, 1), use("Hint", { id: "redirect-uri", label: "Redirect URI" }, 9))).toEqual([
       'tutorial.mdx:9:1 <Hint> duplicate id "redirect-uri"',
@@ -752,7 +768,7 @@ describe("validateSeriesIndex", () => {
       'tutorials/index.mdx:2:1 <TutorialFavorites> takes no attributes (got "title")',
       "tutorials/index.mdx:6:1 <TutorialFavorites> can appear only once (it lists every favorite)",
     ]);
-    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups)']);
+    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl)']);
   });
 });
 

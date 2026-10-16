@@ -1,4 +1,5 @@
 import type { MDXContent } from "astro";
+import { nextProblems, nextTutorial, type CompletionMember } from "./completion.ts";
 import { logoUrl, readTutorialConfig, type TagGroup } from "./frontmatter.ts";
 import { cardTags, familyOf, familyProblems, sortCards, tagFor, tagLogos, type FamilyMember, type SeriesCard } from "./series.ts";
 import type { SourceFile } from "./tutorial-files.ts";
@@ -166,4 +167,26 @@ export function siblingsOf(tutorials: readonly TutorialData[], slug: string, bas
     ...(m.logo && { logo: m.logo }),
     current: m.slug === slug,
   }));
+}
+
+/** Tutorials in series index order, with their `next` (validated at MDX compile time). */
+function completionMembers(tutorials: readonly TutorialData[]): CompletionMember[] {
+  return sortCards(
+    tutorials.map(({ slug, frontmatter }) => {
+      const { title, order, next } = readTutorialConfig(frontmatter);
+      return { slug, title, ...(order === undefined ? {} : { order }), ...(next === undefined ? {} : { next }) };
+    }),
+  );
+}
+
+/** Cross-tutorial `next` rules (the slug must be another tutorial of the series). */
+export function checkNext(tutorials: readonly TutorialData[]): void {
+  const errors = nextProblems(completionMembers(tutorials));
+  if (errors.length > 0) throw new Error(`interactive-code-scroll: next tutorial:\n  ${errors.join("\n  ")}`);
+}
+
+/** The closing panel's next tutorial for `slug`, as a link; none outside a series. */
+export function nextTutorialOf(tutorials: readonly TutorialData[], slug: string, base: string): { title: string; href: string } | undefined {
+  const next = nextTutorial(completionMembers(tutorials), slug);
+  return next && { title: next.title, href: tutorialBase(base, next.slug) };
 }

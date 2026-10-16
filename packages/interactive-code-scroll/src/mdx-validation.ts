@@ -12,7 +12,7 @@ import { JSON_REGIONS_KEY, JSON_VARS_KEY } from "./json-vars.ts";
 import { jsonRegionTargets, jsonVarTargets, validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 import { parsedFiles, stepFileOrder } from "./variants.ts";
 
-const COMPONENTS = new Set(["Hint", "Intro", "Step", "VarField"]);
+const COMPONENTS = new Set(["Hint", "Intro", "Outro", "Step", "VarField"]);
 
 export class TutorialValidationError extends Error {
   /** Position in the MDX of the first problem that has one: the MDX compiler turns it into the dev overlay `loc`. */
@@ -179,6 +179,9 @@ export function tutorialValidation(
         }
         if (seriesDir === undefined && frontmatter.family !== undefined) {
           warn(`${mdxFile}:${frontmatterLines.family ?? 1}:1 frontmatter "family" has no effect outside a series site`);
+        }
+        if (seriesDir === undefined && frontmatter.next !== undefined) {
+          warn(`${mdxFile}:${frontmatterLines.next ?? 1}:1 frontmatter "next" has no effect outside a series site`);
         }
       },
     });

@@ -438,6 +438,14 @@ export function validateTutorial({
       }
     }
 
+    if (use.name === "Outro") {
+      // Its content goes into the closing panel, after the last step.
+      for (const attr of Object.keys(use.attributes)) report(`"${attr}" is not available on <Outro> (it takes no props)`);
+      if (uses.indexOf(use) !== uses.findIndex((u) => u.name === "Outro")) report("can be used only once");
+      else if (uses.slice(uses.indexOf(use)).some((u) => u.name === "Step")) report("must come after the last <Step>");
+      if (config?.completion === false) report('has no effect with frontmatter "completion: false"');
+    }
+
     if (use.name === "Hint") {
       const id = text("id");
       if (!id) report('requires an "id"');

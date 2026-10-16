@@ -242,7 +242,8 @@ test("cards open their tutorial and the header links back to the index", async (
   await expect(page).toHaveURL(/\/alpha\/$/);
   await expect(page.locator("#header-title h1")).toHaveText("Alpha Series Tutorial");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", "A web app with a persisted token field and a Preview.");
-  await page.getByRole("link", { name: "All tutorials" }).click();
+  // The header's link (the closing panel has another one).
+  await page.locator(".app-header").getByRole("link", { name: "All tutorials" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("calcite-navigation-logo")).toHaveAttribute("heading", "Series Fixture");
 });
@@ -578,4 +579,29 @@ test.describe("on a phone", () => {
     await expect(page.locator("#family-dropdown > calcite-button")).toHaveAttribute("appearance", "outline");
     await expect(page.locator("#header-title .page-title-logo")).toBeVisible();
   });
+});
+
+test("the closing panel links the next tutorial: next, else series order; none after the last or with next: false", async ({ page }) => {
+  const panel = page.locator(".completion");
+  const nextLink = panel.locator(".completion-next");
+  // alpha has no `next`: the next one in index order.
+  await page.goto("/alpha/");
+  await expect(nextLink).toHaveAttribute("href", /\/beta\/$/);
+  await expect(nextLink.locator(".completion-next-title")).toHaveText("Beta Series Tutorial");
+  await expect(panel.locator("calcite-button", { hasText: "All tutorials" })).toHaveAttribute("href", /\/$/);
+  // The series default feedback link, with {title} and {slug} filled in.
+  await expect(panel.locator("calcite-button", { hasText: "Send feedback" })).toHaveAttribute(
+    "href",
+    "https://github.com/example/series-fixture/issues/new?title=Feedback:%20Alpha%20Series%20Tutorial&labels=alpha",
+  );
+  // beta: `next: gamma` skips delta.
+  await page.goto("/beta/");
+  await expect(nextLink).toHaveAttribute("href", /\/gamma\/$/);
+  // delta: `next: false`.
+  await page.goto("/delta/");
+  await expect(nextLink).toHaveCount(0);
+  // gamma is the last one; its own feedbackUrl overrides the series one.
+  await page.goto("/gamma/");
+  await expect(nextLink).toHaveCount(0);
+  await expect(panel.locator("calcite-button", { hasText: "Send feedback" })).toHaveAttribute("href", "mailto:docs@example.com");
 });
