@@ -80,7 +80,7 @@ test("Listen is opt-in; word highlights preserve selection; pause/resume rejects
   expect(await page.evaluate(() => CSS.highlights.has("ics-speech"))).toBe(false);
 });
 
-test("automatic advance is optional, skips carousel paging and stops at the last step", async ({ page }) => {
+test("automatic advance is optional, skips carousel paging and reads the closing panel", async ({ page }) => {
   await mockSpeech(page);
   await page.goto("/#load-sdk");
   await playPause(page);
@@ -103,8 +103,16 @@ test("automatic advance is optional, skips carousel paging and stops at the last
   const lastUrl = page.url();
   await playPause(page);
   await finishStep(page);
-  await expect(page.locator("#speech-toggle")).toHaveText("Listen");
+  await expect(page.locator("body")).toHaveAttribute("data-completed", "");
+  await expect.poll(() => spoken(page)).toBe("You've completed Framework Fixture Tutorial");
+  await mock(page, "end");
+  expect(await spoken(page)).toContain("Outro prose with Markdown and a link");
+  expect(await page.evaluate(() => [...CSS.highlights.get("ics-speech")!][0]!.toString())).toContain("Outro prose");
+  await finishStep(page);
+  await expect(page.locator("#speech-bar")).toBeHidden();
   expect(page.url()).toBe(lastUrl);
+  await mock(page, "staleEnd");
+  await expect(page.locator("#step-position-text")).toHaveText("Done");
 });
 
 test("fields pause narration; presentation hides it and preserves manual resume", async ({ page }) => {
@@ -244,4 +252,57 @@ test("blocked storage leaves playback usable", async ({ page }) => {
   await playPause(page);
   await page.locator("#speech-rate").selectOption("1.5");
   expect(await spoken(page)).toBeTruthy();
+});
+
+
+test("manual Finish follows the outro while playing, and Listen can read it again", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#embed-next-slide");
+  await playPause(page);
+  await page.locator("#step-next").click();
+  await expect.poll(() => spoken(page)).toBe("You've completed Framework Fixture Tutorial");
+  await mock(page, "end");
+  expect(await spoken(page)).toContain("Outro prose with Markdown and a link");
+  await page.keyboard.press("Alt+Shift+L");
+  await expect(page.locator("#speech-toggle")).toHaveText("Resume");
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toContain("Outro prose");
+  await finishStep(page);
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  const calls = await page.evaluate(() => (window as any).speechMock.calls.join(" ") as string);
+  expect(calls).not.toMatch(/Download code|Open preview|Next tutorial|Send feedback/);
+  await playPause(page);
+  expect(await spoken(page)).toBe("You've completed Framework Fixture Tutorial");
+  await page.locator("#step-back").click();
+  await expect(page.locator("body")).not.toHaveAttribute("data-completed", "");
+  await expect.poll(() => spoken(page)).not.toMatch(/You've completed|Outro prose/);
+});
+
+test("Finish while paused waits for Resume before reading the outro", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#embed-next-slide");
+  await playPause(page);
+  await page.keyboard.press("Alt+Shift+L");
+  await page.locator("#step-next").click();
+  await expect(page.locator("#speech-toggle")).toHaveText("Resume");
+  expect(await spoken(page)).toBeUndefined();
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe("You've completed Framework Fixture Tutorial");
+});
+
+test("without a closing panel automatic narration stops after the final step", async ({ page }) => {
+  await mockSpeech(page);
+  await page.addInitScript(() => {
+    new MutationObserver((_, observer) => {
+      const panel = document.querySelector(".completion");
+      if (panel) { panel.remove(); observer.disconnect(); }
+    }).observe(document, { childList: true, subtree: true });
+  });
+  await page.goto("/#embed-next-slide");
+  await playPause(page);
+  await page.locator(".speech-settings summary").click();
+  await page.locator("#speech-auto").check();
+  await finishStep(page);
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  await expect(page.locator("body")).not.toHaveAttribute("data-completed", "");
 });

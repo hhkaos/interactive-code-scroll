@@ -35,6 +35,8 @@ export interface StepEngine {
   step(delta: -1 | 1): void;
   /** Scrolls to and activates step `index` of the reachable steps (the step index's links). */
   goToStep(index: number): void;
+  /** Opens the closing panel from the last step, skipping any remaining carousel images. */
+  goToCompletion(): void;
   /** The reader's place now (later changes come with `PROGRESS_EVENT`). */
   progress(): StepProgress;
 }
@@ -83,7 +85,7 @@ export interface StepEngineOptions {
 
 export function startStepEngine({ variants, otherVariantSteps = "notice", introOutline = true }: StepEngineOptions = {}): StepEngine {
   const allSteps = $$("section.step");
-  if (allSteps.length === 0) return { step: () => {}, goToStep: () => {}, progress: () => ({ steps: [], current: -1, completed: false }) };
+  if (allSteps.length === 0) return { step: () => {}, goToStep: () => {}, goToCompletion: () => {}, progress: () => ({ steps: [], current: -1, completed: false }) };
   const hideOthers = !!variants && otherVariantSteps === "hide";
   const covers = (step: HTMLElement) => !variants || coversVariant(step.dataset.only, variants.active().id);
   /** Steps the reader can reach: with `hide`, only those of the active variant (numbering follows them). */
@@ -721,5 +723,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
   const goToStep = (index: number) => {
     if (index >= 0 && index < steps.length) goTo(index);
   };
-  return { step, goToStep, progress: () => ({ steps, current, completed }) };
+  const goToCompletion = () => {
+    if (completion && current === steps.length - 1 && !completed) finish();
+  };
+  return { step, goToStep, goToCompletion, progress: () => ({ steps, current, completed }) };
 }

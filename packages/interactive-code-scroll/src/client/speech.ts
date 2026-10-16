@@ -2,7 +2,7 @@ import { PROGRESS_EVENT, type StepEngine } from "./steps.ts";
 import { SPEECH_STORAGE_KEY, speechPreferences, speechSentences, speechVoices, speechWord } from "./speech-text.ts";
 
 interface Sentence { text: string; range(start?: number, end?: number): Range; block: HTMLElement }
-const SKIP = "pre, script, style, template, button, input, textarea, select, [contenteditable], [hidden], [aria-hidden=true], calcite-button, calcite-action, .var-field, .var-fields, .step-file";
+const SKIP = "pre, script, style, template, button, input, textarea, select, [contenteditable], [hidden], [aria-hidden=true], calcite-button, calcite-action, .var-field, .var-fields, .step-file, .completion-actions, .completion-next, .completion-share";
 
 /** Read prose only, preserving text nodes and the reader's selection. */
 function sentences(root: HTMLElement, lang: string): Sentence[] {
@@ -128,16 +128,18 @@ export function startSpeech(engine: StepEngine): void {
   }
   function currentRoot(): HTMLElement | undefined {
     const progress = engine.progress();
-    if (progress.completed) return;
+    if (progress.completed) return document.querySelector<HTMLElement>(".completion") ?? undefined;
     return progress.current < 0 ? document.querySelector<HTMLElement>(".intro") ?? undefined : progress.steps[progress.current];
   }
   function advance(): void {
     if (state !== "playing") return;
     if (!auto.checked) { pause(); return; }
     const progress = engine.progress();
-    if (progress.current + 1 >= progress.steps.length) { stop("Narration finished"); return; }
+    if (progress.completed) { stop("Narration finished"); return; }
     advancing = true;
-    engine.goToStep(progress.current + 1);
+    if (progress.current + 1 < progress.steps.length) engine.goToStep(progress.current + 1);
+    else if (document.querySelector(".completion")) engine.goToCompletion();
+    else { advancing = false; stop("Narration finished"); return; }
     advancing = false;
     start();
   }
@@ -146,7 +148,8 @@ export function startSpeech(engine: StepEngine): void {
     const sentence = queue[index];
     if (!sentence) {
       clearHighlight();
-      if (auto.checked) timer = setTimeout(advance, 700);
+      if (engine.progress().completed) stop("Narration finished");
+      else if (auto.checked) timer = setTimeout(advance, 700);
       else { state = "paused"; render("Step finished. Resume to read it again, or choose the next step."); }
       return;
     }
@@ -218,7 +221,6 @@ export function startSpeech(engine: StepEngine): void {
   });
   document.addEventListener(PROGRESS_EVENT, () => {
     if (advancing || state === "idle") return;
-    if (engine.progress().completed) { stop(); return; }
     if (root !== currentRoot()) {
       const playing = state === "playing";
       cancel();
