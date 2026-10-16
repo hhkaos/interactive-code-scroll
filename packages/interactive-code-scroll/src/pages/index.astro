@@ -313,13 +313,41 @@ const clientData = JSON.stringify({
           }
         </main>
         {/* Same moves as the step keys (client/steps.ts); hidden in presentation mode. */}
+        <section id="speech-bar" class="speech-bar" aria-label="Read aloud" hidden>
+          <div class="speech-row">
+            <button type="button" id="speech-toggle" aria-keyshortcuts="Alt+Shift+L" title="Listen / pause / resume (Alt+Shift+L)">
+              <calcite-icon icon="sound" scale="s" aria-hidden="true" /><span>Listen</span>
+            </button>
+            <div id="speech-controls" class="speech-controls" hidden>
+              <button type="button" id="speech-stop"><calcite-icon icon="stop-square" scale="s" aria-hidden="true" />Stop</button>
+              <label class="speech-speed">Speed <select id="speech-rate" aria-label="Narration speed">
+                <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option>
+              </select></label>
+              <details class="speech-settings">
+                <summary aria-label="Narration settings" title="Narration settings"><calcite-icon icon="gear" scale="s" aria-hidden="true" /></summary>
+                <div class="speech-settings-panel">
+                  <label>Voice<select id="speech-voice"></select></label>
+                  <label class="speech-auto"><input id="speech-auto" type="checkbox" />Advance automatically</label>
+                  <small>Pauses when you use a field or run a request. Some voices require a connection.</small>
+                  <small>Shortcut: Alt+Shift+L. Resume may repeat the current word or sentence.</small>
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+        <span id="speech-status" role="status"></span>
         <nav class="step-nav" aria-label="Steps">
           <calcite-button id="step-back" appearance="outline" kind="neutral" icon-start="chevron-left" label="Previous step" disabled>Back</calcite-button>
           {/* Opens the step index (client/step-index.ts); steps.ts writes the position and the accessible name. */}
-          <button type="button" id="step-position" class="step-position" popovertarget="step-index" aria-haspopup="dialog" aria-expanded="false">
-            <calcite-icon icon="list-number" scale="s" aria-hidden="true" />
-            <span id="step-position-text"></span>
-          </button>
+          <div class="step-position-group">
+            <button type="button" id="step-position" class="step-position" popovertarget="step-index" aria-haspopup="dialog" aria-expanded="false">
+              <calcite-icon icon="list-number" scale="s" aria-hidden="true" />
+              <span id="step-position-text"></span>
+            </button>
+            <button type="button" id="speech-launch" class="speech-launch" aria-label="Listen to this tutorial" aria-controls="speech-bar" aria-expanded="false" aria-keyshortcuts="Alt+Shift+L" hidden>
+              <calcite-icon icon="sound" scale="s" aria-hidden="true" /><span>Listen</span>
+            </button>
+          </div>
           <calcite-button id="step-next" icon-end="chevron-right" label="Next step">Next</calcite-button>
         </nav>
       </div>
@@ -571,6 +599,7 @@ const clientData = JSON.stringify({
       import { startResult } from "../client/result.ts";
       import { startStepEngine } from "../client/steps.ts";
       import { startStepIndex } from "../client/step-index.ts";
+      import { startSpeech } from "../client/speech.ts";
       import { startVars } from "../client/vars.ts";
       import { startVariants, type VariantInfo } from "../client/variants.ts";
 
@@ -606,6 +635,7 @@ const clientData = JSON.stringify({
       startCompletion();
       const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps, introOutline: data.outline });
       startStepIndex(engine, variants);
+      startSpeech(engine);
       startImageViewer();
       startEmbedOpen();
       if (data.ask) startAsk({ title: data.title, ...data.ask });

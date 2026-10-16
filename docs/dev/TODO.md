@@ -21,6 +21,8 @@ Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private).
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
+- [ ] Check native narration on real desktop, Android and iOS voices: word-boundary availability, resume position, online voices and playback after a tab is backgrounded. Automated speech tests use a deterministic engine and do not validate voice quality or device behavior.
+
 - [ ] Phone layout follow-ups (rules in `SPEC.md` Layout → Phones): tooltips stay open after a tap (no hover on touch); hints by tap; `100dvh` so the virtual keyboard (VarFields) does not hide the layout; check on a real iOS and Android device.
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).

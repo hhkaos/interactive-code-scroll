@@ -515,6 +515,16 @@ Leave a blank line after `<summary>` and before `</details>`, so the content is 
 </details>
 ```
 
+### Listen to a tutorial
+
+When the browser supplies a voice matching the page language, **Listen** appears next to the step-position button between Back and Next. The audio row stays hidden until Listen is pressed. It reads the current introduction or step's headings and prose, leaving out form fields, controls and code blocks. Inline code is read as part of its sentence. No author configuration or TTS service is required.
+
+After starting, the bar offers Pause / Resume, Stop, speed and settings for the voice and **Advance automatically** (off by default). Alt+Shift+L starts, pauses or resumes outside editable fields. Stop or pressing Listen again closes the audio row. Voice, speed and automatic advance are remembered per site in localStorage; returning never starts playback automatically. Available voices come from the browser; voices marked **online** may require a connection.
+
+The current sentence is highlighted; voices that emit word boundaries refine it to the current word. Browsers without custom text highlights mark the current paragraph instead. The reader's selection and links remain intact. Resume repeats the latest word, or the current sentence if the voice supplies no word boundaries.
+
+Automatic advance waits briefly after the step, then reads the next reachable step, keeping the code panel synchronized. It skips hidden steps and does not page through carousels or control slides inside embedded pages. It stops after the last step without completing the tutorial or opening another one. Changing steps manually follows the new step while playing; while paused, it waits for Resume. Using a field or running a request pauses narration. Presentation mode hides the bar and pauses audio; leaving presentation never resumes audio automatically.
+
 ### Step index
 
 Readers can open a list of the tutorial's steps from the position between Back and Next ("5 / 10", with a list icon). It shows each step's number and heading, a check on the steps before the current one, and the current one marked; clicking a step jumps to it. On phones it opens as a bottom sheet. In [presentation mode](presenting.md#during-the-talk) the header's "Step 5 of 10" opens it as a large centered list, also with `O`. Nothing to write: the list comes from your steps and their headings. Steps for other [variants](#steps-across-variants) are dimmed with their variant names (`otherVariantSteps: notice`) or left out (`hide`).
