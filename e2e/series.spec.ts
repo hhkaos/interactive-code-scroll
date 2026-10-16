@@ -240,7 +240,7 @@ test("cards open their tutorial and the header links back to the index", async (
   await page.goto("/");
   await page.locator(".series-list .series-card", { hasText: "Alpha Series Tutorial" }).first().click();
   await expect(page).toHaveURL(/\/alpha\/$/);
-  await expect(page.locator("calcite-navigation-logo")).toHaveAttribute("heading", "Alpha Series Tutorial");
+  await expect(page.locator("#header-title h1")).toHaveText("Alpha Series Tutorial");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", "A web app with a persisted token field and a Preview.");
   await page.getByRole("link", { name: "All tutorials" }).click();
   await expect(page).toHaveURL(/\/$/);
@@ -395,9 +395,8 @@ test("the family menu sits after the title with even 16px gaps around its divide
   const trigger = page.locator("#family-dropdown calcite-button");
   await expect(trigger).toBeVisible();
   const gaps = await page.evaluate(() => {
-    const logo = document.querySelector("calcite-navigation-logo")!.shadowRoot!;
     const text = document.createRange();
-    text.selectNodeContents(logo.querySelector("h1")!);
+    text.selectNodeContents(document.querySelector("#header-title h1")!);
     const divider = document.querySelector(".family-switcher")!;
     const before = getComputedStyle(divider, "::before");
     const dividerLeft = divider.getBoundingClientRect().left;
@@ -477,13 +476,13 @@ test("cards link to each variant when a tutorial has two or more", async ({ page
 
 test("the variant switcher shows variant logos and the header follows the active one", async ({ page }) => {
   await page.goto("/beta/");
-  const header = page.locator(".app-header calcite-navigation-logo");
+  const header = page.locator("#header-title .page-title-logo");
   const items = page.locator("#variant-switcher calcite-segmented-control-item");
   await expect(items.nth(0).locator("img.variant-logo")).toHaveAttribute("src", logoSrc("browser", "e8a317"));
   await expect(items.nth(1).locator("img.variant-logo")).toHaveAttribute("alt", "");
-  await expect(header).toHaveJSProperty("thumbnail", await items.nth(0).locator("img").getAttribute("src"));
+  await expect(header).toHaveAttribute("src", (await items.nth(0).locator("img").getAttribute("src"))!);
   await items.nth(1).click();
-  await expect(header).toHaveJSProperty("thumbnail", await items.nth(1).locator("img").getAttribute("src"));
+  await expect(header).toHaveAttribute("src", (await items.nth(1).locator("img").getAttribute("src"))!);
   // The favicon stays on the first variant's logo (beta has no tutorial logo).
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", logoSrc("browser", "e8a317"));
 });
@@ -517,17 +516,66 @@ test("the search bar keeps its hydrated height before Calcite loads", async ({ p
   await context.close();
 });
 
+test("a tutorial with a single variant shows no variant switcher", async ({ page }) => {
+  await page.goto("/delta/");
+  await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "python/main.py");
+  await expect(page.locator("#variant-switcher")).toHaveCount(0);
+  await expect(page.locator("#variant-dropdown")).toHaveCount(0);
+  await expect(page.locator(".code-panel .header-divider")).toHaveCount(0);
+});
+
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-  test("the header fits: a long title is clipped, the sibling switcher and theme toggle stay on screen", async ({ page }) => {
+  test("the sibling menu becomes the title's second line; tapping the title opens it", async ({ page }) => {
     await page.goto("/beta/#config");
-    const title = page.locator(".app-header > calcite-navigation-logo");
-    await expect(title).toHaveAttribute("data-clipped", "");
-    for (const control of ["#family-dropdown", "#theme-toggle"]) {
+    const title = page.locator("#header-title");
+    await expect(title.locator("#family-dropdown calcite-button")).toHaveText("REST API");
+    await expect(title.locator(".page-title-logo")).toBeHidden();
+    await expect(title).not.toHaveAttribute("data-clipped");
+    // The label lines up with the h1 and both sit inside the 64px bar.
+    const h1 = (await title.locator("h1").boundingBox())!;
+    const label = await page.evaluate(() => {
+      const text = document.createRange();
+      text.selectNodeContents(document.querySelector("#family-dropdown calcite-button")!);
+      return text.getBoundingClientRect().left;
+    });
+    expect(Math.abs(label - h1.x)).toBeLessThanOrEqual(10);
+    for (const control of ["#header-title", "#theme-toggle"]) {
       const box = (await page.locator(control).boundingBox())!;
       expect(box.x + box.width).toBeLessThanOrEqual(390);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+    await title.locator("h1").click();
+    await expect(page.locator("#family-dropdown")).toHaveAttribute("open", "");
+    await expect(page.locator("#family-dropdown calcite-dropdown-item")).toHaveCount(3);
+    // Menu styles follow the menu under the title (they once hung on .family-switcher: full-size logos).
+    const logo = (await page.locator("#family-dropdown .family-logo").first().boundingBox())!;
+    expect(logo.width).toBeLessThanOrEqual(20);
+    // The title tap is not a pointer focus on the trigger, so no ring either way; a tap on the trigger hides it.
+    await page.keyboard.press("Escape");
+    await page.locator("#family-dropdown calcite-button").click();
+    await expect(page.locator("#family-dropdown calcite-button")).toHaveCSS("--calcite-color-focus", "transparent");
+    // The title fits: the menu does not repeat it.
+    await expect(page.locator("#family-dropdown .family-title")).toHaveCount(0);
+  });
+
+  test("a clipped title ends in an ellipsis and heads the sibling menu in full", async ({ page }) => {
+    // Narrow enough to clip this short title (no logo and a smaller font on phones).
+    await page.setViewportSize({ width: 220, height: 700 });
+    await page.goto("/beta/#config");
+    await expect(page.locator("#header-title")).toHaveAttribute("data-clipped", "");
+    await expect(page.locator("#header-title h1")).toHaveCSS("text-overflow", "ellipsis");
+    await page.locator("#header-title h1").click();
+    await expect(page.locator("#family-dropdown .family-title")).toHaveAttribute("group-title", "Beta Series Tutorial");
+  });
+
+  test("on a desktop the menu stays a separate button after the title", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/beta/#config");
+    await expect(page.locator(".family-switcher #family-dropdown")).toHaveCount(1);
+    await expect(page.locator("#family-dropdown > calcite-button")).toHaveAttribute("appearance", "outline");
+    await expect(page.locator("#header-title .page-title-logo")).toBeVisible();
   });
 });

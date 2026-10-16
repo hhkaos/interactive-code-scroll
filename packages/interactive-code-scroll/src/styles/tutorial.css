@@ -38,6 +38,8 @@ body {
   background: var(--calcite-color-foreground-1);
   border-block-end: 1px solid var(--calcite-color-border-3);
 }
+/* Our title block is not a Calcite component: hidden with the bar's other children until it lays out the slots. */
+:where(calcite-navigation:not([calcite-hydrated])) > .page-title { visibility: hidden; }
 :where(:is(calcite-dialog, calcite-tooltip, calcite-popover):not([calcite-hydrated])) { display: none; }
 :where(calcite-action:not([calcite-hydrated])) { display: inline-block; min-inline-size: 2rem; block-size: 2rem; }
 :where(calcite-action[scale="s"]:not([calcite-hydrated])) { min-inline-size: 1.5rem; block-size: 1.5rem; }
@@ -51,10 +53,53 @@ body {
 
 /* ——— Header ——— */
 
-/* Its width is capped by client/layout.ts (fitHeaderTitle): a long title is clipped, never pushing the actions out. */
-.app-header > calcite-navigation-logo {
+/* Header title: our own block in the navigation's logo slot (calcite-navigation-logo cannot show an
+   ellipsis, hold a control on its second line or align it: docs/dev/research/calcite-gaps.md). Same
+   geometry as Calcite's at scale m. Its width is capped by client/layout.ts (startHeaderTitle), so a
+   long title ends in an ellipsis instead of pushing the actions out. */
+.page-title {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 100%;
+  min-width: 0;
+  padding-inline: 1rem;
+}
+.page-title-logo {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  object-fit: contain;
+  &[hidden] { display: none; }
+}
+.page-title-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.page-title-heading {
+  max-width: 100%;
+  margin: 0;
   overflow: hidden;
-  &[data-clipped] { mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent); }
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--calcite-font-size-xl);
+  font-weight: var(--calcite-font-weight-medium);
+  line-height: 1.25;
+  color: var(--calcite-color-text-1);
+}
+/* A clipped title opens its full text in a popover (tutorials without siblings). */
+body:has(#title-popover) #header-title[data-clipped] .page-title-heading { cursor: pointer; }
+.title-popover-text {
+  max-width: min(22rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: var(--calcite-font-size-md);
+  font-weight: var(--calcite-font-weight-medium);
+  line-height: 1.4;
+  color: var(--calcite-color-text-1);
 }
 
 .header-actions {
@@ -1128,7 +1173,10 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
     height: 1.5rem;
     background: var(--calcite-color-border-2);
   }
+}
 
+/* The sibling menu: in .family-switcher on desktop, under the title on phones (client/layout.ts moves it). */
+#family-dropdown {
   /* Sibling logo before its label in the menu; an empty slot keeps labels aligned. */
   & .family-logo {
     display: inline-block;
@@ -1167,13 +1215,22 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
   .splitter, .docs-toggle, #present-toggle { display: none; }
   .step-nav { padding-inline: 1rem; }
   .docs { --gutter: 1rem; }
-  .family-switcher { gap: 0.5rem; padding-inline-end: 0.25rem; }
+  /* No logo (the variant switcher right below shows it); the sibling menu is the title's second
+     line (client/layout.ts moves it), its label aligned with the h1. */
+  .page-title { padding-inline: 0.75rem 0.5rem; }
+  .page-title-logo { display: none; }
+  .page-title-heading { font-size: var(--calcite-font-size-md); }
+  .family-switcher { display: none; }
+  .page-title #family-dropdown > calcite-button {
+    margin-inline-start: -0.5rem;
+    --calcite-button-text-color: var(--calcite-color-text-2);
+  }
 }
 
 /* Phones (portrait or landscape): no copy/download (reading, not coding). The Preview / Result pane
    keeps only its header under the code; its header opens it maximized (client/maximize.ts,
    COMPACT_PANES_QUERY). */
-@media (max-width: 40rem), (max-height: 30rem) and (max-width: 60rem) {
+@media (max-width: 40rem), (max-height: 30rem) and (max-width: 60rem) and (pointer: coarse) {
   #copy-file, #download-file, .zip-action { display: none; }
   .preview-splitter { display: none; }
   body:not([data-maximized="preview"]) :is(.preview, .result) {

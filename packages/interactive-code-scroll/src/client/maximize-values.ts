@@ -17,7 +17,8 @@ export function toggleMaximize(current: Maximized | undefined, pane: Maximized):
 }
 
 /**
- * Phones, portrait or landscape (landscape phones are at most ~932px wide; a short desktop window is not one): the Preview / Result pane shows only its header
+ * Phones, portrait or landscape (landscape phones are at most ~932px wide and touch-driven; a desktop
+ * window at 200 % zoom is as short, but keeps its panes): the Preview / Result pane shows only its header
  * and opens maximized. Keep in sync with the media queries in styles/tutorial.css.
  */
-export const COMPACT_PANES_QUERY = "(max-width: 40rem), (max-height: 30rem) and (max-width: 60rem)";
+export const COMPACT_PANES_QUERY = "(max-width: 40rem), (max-height: 30rem) and (max-width: 60rem) and (pointer: coarse)";

@@ -150,8 +150,15 @@ const clientData = JSON.stringify({
           </a>
         )
       }
-      {/* The page's h1: tutorial.mdx should not repeat the title. */}
-      <calcite-navigation-logo slot="logo" heading={config.title} heading-level="1" thumbnail={headerLogo} />
+      {/* The page's h1: tutorial.mdx should not repeat the title. Our own block, not calcite-navigation-logo:
+          that one cannot show an ellipsis, wrap a second-line control or align it (docs/dev/research/calcite-gaps.md).
+          On phones client/layout.ts moves the sibling menu under the h1. */}
+      <div slot="logo" id="header-title" class="page-title">
+        <img class="page-title-logo" src={headerLogo} alt="" hidden={!headerLogo || undefined} />
+        <div class="page-title-text">
+          <h1 class="page-title-heading">{config.title}</h1>
+        </div>
+      </div>
       {
         currentSibling && (
           <div slot="content-start" class="family-switcher">
@@ -186,6 +193,14 @@ const clientData = JSON.stringify({
       </div>
       <calcite-progress slot="progress" id="progress-bar" value="0" label="Tutorial progress" />
     </calcite-navigation>
+    {
+      !currentSibling && (
+        /* The full title when the header clips it (client/layout.ts sets the reference element only then). */
+        <calcite-popover id="title-popover" label="Tutorial title" placement="bottom-start" auto-close scale="s">
+          <p class="title-popover-text">{config.title}</p>
+        </calcite-popover>
+      )
+    }
     <div class="layout">
       <div class="docs-column">
         <main class="docs">
@@ -217,7 +232,8 @@ const clientData = JSON.stringify({
         <div class="code-panel">
           <div class="panel-header">
             {
-              variants && (
+              /* One variant is no choice: no switcher (as on series cards). */
+              variants && variants.length > 1 && (
                 <>
                   {/* Segmented up to MAX_SEGMENTED variants; client/variants.ts falls back to the dropdown when it does not fit. */}
                   {variants.length <= MAX_SEGMENTED && (

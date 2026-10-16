@@ -13,8 +13,8 @@ test("shows the frontmatter logo in the header and as favicon", async ({ page })
   // Vite inlines small assets as data: URIs; larger ones get a hashed URL.
   const favicon = await page.locator('link[rel="icon"]').getAttribute("href");
   expect(favicon).toMatch(/^data:image\/svg\+xml|fixture-logo.*\.svg$/);
-  await expect(page.locator("calcite-navigation-logo")).toHaveJSProperty("thumbnail", favicon);
-  const shown = page.locator("calcite-navigation-logo img");
+  const shown = page.locator("#header-title .page-title-logo");
+  await expect(shown).toHaveAttribute("src", favicon!);
   await expect(shown).toBeVisible();
   expect(await shown.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 });

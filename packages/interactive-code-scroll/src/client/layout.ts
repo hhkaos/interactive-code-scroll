@@ -3,6 +3,7 @@ import {
   clampSplit,
   DOCS_SPLIT,
   parseStoredSplit,
+  PHONE_QUERY,
   PREVIEW_SPLIT,
   resolveMode,
   splitFromPointer,
@@ -105,7 +106,7 @@ export function startLayout(): void {
     applyMode(next);
   });
 
-  fitHeaderTitle();
+  startHeaderTitle();
 
   const layout = document.querySelector<HTMLElement>(".layout");
   const docsSplitter = document.querySelector<HTMLElement>(".layout .splitter");
@@ -126,19 +127,82 @@ export function startLayout(): void {
   }
 }
 
-/** Caps the header title to the room the other header slots leave (see `titleRoom`); it is clipped past that. */
-function fitHeaderTitle(): void {
+/**
+ * Shows `url` (the tutorial's or the active variant's logo) before the header title; none hides it.
+ * Phones never show it (CSS): the variant switcher right below already does.
+ */
+export function setHeaderLogo(url: string | undefined): void {
+  const img = document.querySelector<HTMLImageElement>("#header-title .page-title-logo");
+  if (!img) return;
+  if (url) img.src = url;
+  img.hidden = !url;
+}
+
+/**
+ * Header title (our own block in the navigation's logo slot): capped to the room the other header
+ * slots leave (see `titleRoom`), with an ellipsis past that. On phones the sibling menu moves under
+ * the h1 as a compact second line, and tapping the h1 opens it too. A clipped title opens its full
+ * text: at the head of the sibling menu, else in a popover.
+ */
+function startHeaderTitle(): void {
   const header = document.querySelector<HTMLElement>(".app-header");
-  const title = header?.querySelector<HTMLElement>(":scope > calcite-navigation-logo");
-  if (!header || !title) return;
+  const title = header?.querySelector<HTMLElement>(":scope > #header-title");
+  const heading = title?.querySelector<HTMLElement>("h1");
+  if (!header || !title || !heading) return;
+  const text = title.querySelector<HTMLElement>(".page-title-text")!;
+  const switcher = header.querySelector<HTMLElement>(":scope > .family-switcher");
+  const menu = switcher?.querySelector<HTMLElement & { open: boolean }>("#family-dropdown");
+  const trigger = menu?.querySelector<HTMLElement>("calcite-button");
+  const popover = document.querySelector<HTMLElement & { referenceElement?: HTMLElement; open: boolean }>("#title-popover");
+  const phone = matchMedia(PHONE_QUERY);
   const others = [...header.children].filter(
     (el): el is HTMLElement => el instanceof HTMLElement && el !== title && el.slot !== "progress",
   );
+  // Added only while needed: Calcite draws a separator above the next group even when this one is hidden.
+  const fullTitle = document.createElement("calcite-dropdown-group");
+  fullTitle.setAttribute("group-title", heading.textContent ?? "");
+  fullTitle.setAttribute("selection-mode", "none");
+  fullTitle.className = "family-title";
+
   const fit = () => {
     title.style.maxWidth = `${titleRoom(header.clientWidth, others.map((el) => el.getBoundingClientRect().width))}px`;
-    // Calcite's ellipsis never shows (the shadow heading keeps its full width): CSS fades the cut instead.
-    title.toggleAttribute("data-clipped", title.scrollWidth > title.clientWidth + 1);
+    const clipped = heading.scrollWidth > heading.clientWidth + 1;
+    title.toggleAttribute("data-clipped", clipped);
+    if (menu && clipped && phone.matches) {
+      if (!fullTitle.isConnected) menu.querySelector("calcite-dropdown-group")?.before(fullTitle);
+    } else fullTitle.remove();
+    if (popover) {
+      if (clipped) popover.referenceElement = heading;
+      else {
+        popover.open = false;
+        popover.removeAttribute("reference-element");
+        popover.referenceElement = undefined;
+      }
+    }
   };
+  // The menu itself moves (one menu, one set of links): a button in the header on desktop, a
+  // compact second line of the title on phones.
+  const applyPhone = () => {
+    if (!menu || !switcher || !trigger) return;
+    const onPhone = phone.matches;
+    (onPhone ? text : switcher).append(menu);
+    trigger.setAttribute("appearance", onPhone ? "transparent" : "outline");
+    trigger.setAttribute("scale", onPhone ? "s" : "m");
+    fit();
+  };
+  if (menu) {
+    // The second line is a small target: the h1 opens the menu too. Calcite closes it on any
+    // outside pointerdown and click (this tap included), so remember whether the tap found it open
+    // and open it after the click has gone through.
+    let wasOpen = false;
+    heading.addEventListener("pointerdown", () => (wasOpen = menu.open));
+    heading.addEventListener("click", () => {
+      if (phone.matches && !wasOpen) requestAnimationFrame(() => (menu.open = true));
+    });
+  }
+  phone.addEventListener("change", applyPhone);
+  applyPhone();
+  fit();
   const observer = new ResizeObserver(fit);
-  for (const el of [header, ...others]) observer.observe(el);
+  for (const el of [header, heading, ...others]) observer.observe(el);
 }

@@ -39,6 +39,24 @@ test.describe("portrait phone", () => {
   });
 });
 
+test.describe("narrow phone", () => {
+  // Narrow enough to clip the fixture's title (no logo and a smaller font on phones).
+  test.use({ viewport: { width: 200, height: 700 }, hasTouch: true });
+
+  test("tapping a clipped title shows it in full; a title that fits does nothing", async ({ page }) => {
+    await page.goto("/#config");
+    const title = page.locator("#header-title");
+    await expect(title).toHaveAttribute("data-clipped", "");
+    await title.locator("h1").click();
+    await expect(page.locator("#title-popover")).toHaveAttribute("open", "");
+    await expect(page.locator("#title-popover")).toContainText("Framework Fixture Tutorial");
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(title).not.toHaveAttribute("data-clipped");
+    await expect(page.locator("#title-popover")).not.toHaveAttribute("open");
+  });
+});
+
 test.describe("landscape phone", () => {
   test.use({ viewport: { width: 844, height: 390 }, hasTouch: true });
 

@@ -36,6 +36,9 @@ export function parseStoredSplit(stored: string | null | undefined, range: Split
   return stored == null ? range.fallback : clampSplit(Number(stored), range);
 }
 
+/** Phones in portrait: stacked layout, compact header. Keep in sync with styles/tutorial.css. */
+export const PHONE_QUERY = "(max-width: 40rem)";
+
 /**
  * Width left for the header title (logo slot) once the other header slots (series home, sibling
  * switcher, actions) take theirs. Calcite wraps each slot in a flex box without `min-width: 0`, so

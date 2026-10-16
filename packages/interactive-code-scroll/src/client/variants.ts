@@ -1,3 +1,4 @@
+import { setHeaderLogo } from "./layout.ts";
 import { pickVariant, readStoredVariant, switcherKind, withVariantParam, writeStoredVariant } from "./variant-values.ts";
 
 export interface VariantInfo {
@@ -67,7 +68,6 @@ export function startVariants(list: readonly VariantInfo[], tutorialLogo?: strin
   )!;
   const control = document.querySelector<HTMLElement & { value: string }>("#variant-switcher");
   const dropdown = document.querySelector<HTMLElement>("#variant-dropdown");
-  const headerLogo = document.querySelector<HTMLElement & { thumbnail?: string }>(".app-header calcite-navigation-logo");
 
   const apply = () => {
     for (const nav of document.querySelectorAll<HTMLElement>("calcite-tab-nav[data-variant]")) nav.hidden = nav.dataset.variant !== active.id;
@@ -79,7 +79,7 @@ export function startVariants(list: readonly VariantInfo[], tutorialLogo?: strin
     }
     const trigger = dropdown?.querySelector("[slot=trigger]");
     if (trigger) setTriggerLabel(trigger, active);
-    if (headerLogo) headerLogo.thumbnail = active.logo ?? tutorialLogo;
+    setHeaderLogo(active.logo ?? tutorialLogo);
   };
 
   const set = (id: string) => {
