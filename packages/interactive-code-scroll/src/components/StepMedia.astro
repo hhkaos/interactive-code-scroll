@@ -3,14 +3,16 @@ import { base } from "virtual:interactive-code-scroll/tutorial";
 import { embedUrl, resolveEmbed } from "../embed.ts";
 import { currentTutorial, tutorialBase } from "../tutorial-data.ts";
 
-// What `images=` / `embed=` show instead of code, for <Step> and <Intro> (validated at MDX compile time).
+// What `images=` / `embed=` / `outline` show instead of code, for <Step> and <Intro> (validated at MDX compile time).
 interface Props {
   images?: string[];
   /** Page shown instead of code: an `https://` URL or a path under `embeds/` (e.g. `slides/#/3`). */
   embed?: string;
+  /** The step outline (filled in the browser by client/step-index.ts: it follows the reader's place). */
+  outline?: boolean;
 }
 
-const { images, embed } = Astro.props;
+const { images, embed, outline } = Astro.props;
 const { slug, images: imageUrls, embeds } = currentTutorial(Astro.locals);
 const resolvedEmbed = embed === undefined ? undefined : resolveEmbed(embed, embeds);
 const embedSrc = resolvedEmbed && !("error" in resolvedEmbed) ? embedUrl(resolvedEmbed, tutorialBase(base, slug)) : undefined;
@@ -34,6 +36,13 @@ const embedSrc = resolvedEmbed && !("error" in resolvedEmbed) ? embedUrl(resolve
     <template class="step-media">
       {/* Cross-origin pages keep their own origin; same-origin embeds are author-trusted like the Preview. */}
       <iframe class="step-embed" src={embedSrc} title={`Embedded page: ${embed}`} sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" allow="fullscreen" />
+    </template>
+  ) : null
+}
+{
+  outline ? (
+    <template class="step-media">
+      <div class="step-outline" data-step-outline />
     </template>
   ) : null
 }

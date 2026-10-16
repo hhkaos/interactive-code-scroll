@@ -142,6 +142,8 @@ const clientData = JSON.stringify({
   zipCounts,
   variants: clientVariants,
   otherVariantSteps: config.otherVariantSteps,
+  // A media-less <Intro> shows the step outline unless `outline: false` (the tutorial's, else the series').
+  outline: config.outline ?? indexConfig?.outline ?? true,
   siblings: siblings.map(({ slug, href, variants }) => ({ slug, href, variants })),
   ask: hasAsk ? ask : undefined,
 }).replace(/</g, "\\u003c");
@@ -372,6 +374,8 @@ const clientData = JSON.stringify({
               </calcite-notice>
             )
           }
+          {/* The step outline of an intro or a <Step outline> (client/steps.ts shows it; client/step-index.ts fills it). */}
+          <div class="code-outline" hidden><div class="step-outline" data-step-outline /></div>
           {visible.map((path) => <div class="code" data-file={path} hidden={path !== initialFile} set:html={highlighted.get(path)} />)}
         </div>
         <div class="media-panel" hidden></div>
@@ -557,6 +561,7 @@ const clientData = JSON.stringify({
         zipCounts?: Record<string, { total: number; withoutTab: number }>;
         variants?: VariantInfo[];
         otherVariantSteps: "notice" | "hide";
+        outline: boolean;
         siblings: SiblingInfo[];
         ask?: AskConfig;
       };
@@ -572,7 +577,7 @@ const clientData = JSON.stringify({
       startFamily(data.siblings, variants);
       // Before the step engine: it sizes the bottom room after the panel with the <Outro> in it.
       startCompletion();
-      const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
+      const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps, introOutline: data.outline });
       startStepIndex(engine, variants);
       startImageViewer();
       startEmbedOpen();

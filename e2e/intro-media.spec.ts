@@ -99,3 +99,59 @@ test("the intro shows its file with no focus on load and again when the reader r
   await expect(shown).toHaveAttribute("data-file", "overview.js");
   await expect(page.locator(".code .line[data-focus]")).toHaveCount(0);
 });
+
+const outline = (page: Page) => page.locator(".code-outline [data-step-outline]");
+const code = (page: Page) => page.locator(".code-panel .code:not([hidden])");
+
+test("a media-less intro shows the step outline under the code header; a step in it jumps there", async ({ page }) => {
+  await page.goto("/step-outline/");
+  await expect(outline(page)).toBeVisible();
+  await expect(page.locator(".code-panel .panel-header")).toBeVisible();
+  await expect(code(page)).toBeHidden();
+  await expect(outline(page).locator(".step-outline-heading")).toHaveText("Steps");
+  await expect(outline(page).locator(".step-index-title")).toHaveText(["Setup", "Halfway there", "Finish"]);
+  await expect(outline(page).locator('a[data-state="pending"]')).toHaveCount(3);
+
+  await outline(page).locator("a").first().click();
+  await expect(page).toHaveURL(/#setup$/);
+  await expect(code(page)).toBeVisible();
+  await expect(outline(page)).toBeHidden();
+});
+
+test("a file tab leaves the outline for its code until the next step", async ({ page }) => {
+  await page.goto("/step-outline/");
+  await expect(outline(page)).toBeVisible();
+  await page.locator('calcite-tab-title[data-file="setup.js"]').click();
+  await expect(code(page)).toBeVisible();
+  await expect(outline(page)).toBeHidden();
+  await expect(page.locator("section.step[data-active]")).toHaveCount(0);
+});
+
+test("<Step outline> shows the outline as a recap, with its own place marked", async ({ page }) => {
+  await page.goto("/step-outline/#recap");
+  await expect(outline(page)).toBeVisible();
+  await expect(outline(page).locator('a[data-state="seen"]')).toHaveCount(1);
+  await expect(outline(page).locator('a[aria-current="step"] .step-index-title')).toHaveText("Halfway there");
+  await page.keyboard.press("PageDown");
+  await expect(page).toHaveURL(/#finish$/);
+  await expect(code(page)).toBeVisible();
+  // Back to the recap: the outline follows the reader's place.
+  await page.keyboard.press("PageUp");
+  await expect(outline(page).locator('a[aria-current="step"] .step-index-title')).toHaveText("Halfway there");
+});
+
+test("without code, the intro's outline fills the media panel", async ({ page }) => {
+  await page.goto("/outline-no-code/");
+  const media = page.locator(".media-panel [data-step-outline]");
+  await expect(media).toBeVisible();
+  await expect(media.locator(".step-index-title")).toHaveText(["Read", "Done"]);
+  await expect(page.locator(".code-panel")).toBeHidden();
+});
+
+test("the outline is larger on a presentation screen", async ({ page }) => {
+  await page.goto("/step-outline/");
+  const reading = (await outline(page).boundingBox())!.width;
+  await page.locator("#present-toggle").click();
+  await expect(page.locator("body")).toHaveAttribute("data-presenting", "");
+  await expect.poll(async () => (await outline(page).boundingBox())!.width).toBeGreaterThan(reading);
+});

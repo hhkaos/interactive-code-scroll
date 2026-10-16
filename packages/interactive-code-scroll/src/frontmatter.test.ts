@@ -242,6 +242,14 @@ describe("completion panel", () => {
     expect(readIndexConfig({ presentationUrl: "https://example.com/{slug}/" }).presentationUrl).toBe("https://example.com/{slug}/");
   });
 
+  it("reads outline, also as the index.mdx default", () => {
+    expect(readTutorialConfig({ outline: false }).outline).toBe(false);
+    expect(readTutorialConfig({})).not.toHaveProperty("outline");
+    expect(readIndexConfig({ outline: false }).outline).toBe(false);
+    expect(keyOf({ outline: "no" })).toBe("outline");
+    expect(() => readIndexConfig({ outline: 1 })).toThrow(/"outline" must be a boolean/);
+  });
+
   it("reads the series default feedbackUrl in index.mdx", () => {
     expect(readIndexConfig({ feedbackUrl: "https://example.com/feedback?t={slug}" }).feedbackUrl).toBe("https://example.com/feedback?t={slug}");
     expect(() => readIndexConfig({ feedbackUrl: "ftp://x" })).toThrow(/"feedbackUrl" must be an https:\/\/ or mailto: URL/);

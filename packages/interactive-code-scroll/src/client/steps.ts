@@ -53,6 +53,17 @@ function reveal(
   if (target !== undefined) container.scrollTo({ top: target, behavior: options.behavior ?? "auto" });
 }
 
+/** Same markup as `<StepMedia outline>`, for an intro that shows the outline by default. */
+function outlineTemplate(): HTMLTemplateElement {
+  const template = document.createElement("template");
+  template.className = "step-media";
+  const outline = document.createElement("div");
+  outline.className = "step-outline";
+  outline.dataset.stepOutline = "";
+  template.content.append(outline);
+  return template;
+}
+
 /** Duration of the code pane's entering transition (`ics-file-enter` in tutorial.css). */
 const FILE_ENTER_MS = 180;
 
@@ -66,9 +77,11 @@ export interface StepEngineOptions {
   variants?: VariantsHandle;
   /** How steps limited to other variants (`only=`) look: a notice in the code panel, or hidden. */
   otherVariantSteps?: "notice" | "hide";
+  /** A media-less <Intro> shows the step outline (frontmatter `outline`, default true). */
+  introOutline?: boolean;
 }
 
-export function startStepEngine({ variants, otherVariantSteps = "notice" }: StepEngineOptions = {}): StepEngine {
+export function startStepEngine({ variants, otherVariantSteps = "notice", introOutline = true }: StepEngineOptions = {}): StepEngine {
   const allSteps = $$("section.step");
   if (allSteps.length === 0) return { step: () => {}, goToStep: () => {}, progress: () => ({ steps: [], current: -1, completed: false }) };
   const hideOthers = !!variants && otherVariantSteps === "hide";
@@ -97,8 +110,10 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   const positionButton = document.querySelector<HTMLElement>("#step-position");
   /** The closing panel after the last step (absent with `completion: false`). */
   const completion = docs.querySelector<HTMLElement>(".completion");
-  /** The intro's own `images=` / `embed=`. */
-  const introMedia = intro?.querySelector<HTMLTemplateElement>(":scope > template.step-media") ?? null;
+  /** The intro's own `images=` / `embed=` / `outline`, else the automatic outline of a media-less intro. */
+  const introMedia =
+    intro?.querySelector<HTMLTemplateElement>(":scope > template.step-media") ??
+    (introOutline && intro?.hasAttribute("data-auto-outline") ? outlineTemplate() : null);
   // Nothing else to show next to the intro (no code tabs, Preview or Result pane): it borrows the first step media.
   const usesResult = allSteps.some((s) => s.dataset.output !== undefined || s.dataset.outputs !== undefined || s.dataset.requests !== undefined);
   const emptyPane = !document.querySelector(".code") && !document.querySelector("section.preview") && !usesResult;
@@ -199,6 +214,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   // File tabs only: the Result pane has its own tab titles.
   for (const title of $$("calcite-tab-title[data-file]")) {
     title.addEventListener("calciteTabsActivate", () => showFile(title.dataset.file!));
+    // A tab (even the selected one) leaves the outline for its code, until the next step.
+    title.addEventListener("click", () => showOutline(false));
   }
 
   /** File shown before the first step: the intro's, else the first tab of the active variant. */
@@ -293,6 +310,13 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
 
   function showMedia(template: HTMLTemplateElement, index: number): void {
     const fragment = template.content.cloneNode(true) as DocumentFragment;
+    // The step outline: client/step-index.ts fills it once it is in the panel.
+    if (fragment.querySelector("[data-step-outline]")) {
+      mediaIndex = 0;
+      mediaPanel.replaceChildren(fragment);
+      announceMedia();
+      return;
+    }
     const embed = fragment.querySelector<HTMLIFrameElement>("iframe.step-embed");
     if (embed) {
       showEmbed(embed);
@@ -334,8 +358,29 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   /** Template whose media the panel shows (`null`: the code). */
   let shownMedia: HTMLTemplateElement | null = null;
 
+  /** The step outline under the code panel's header: the language switcher, tabs and ZIP stay usable. */
+  const codeOutline = codePanel.querySelector<HTMLElement>(":scope > .code-outline");
+  function showOutline(on: boolean): void {
+    if (!codeOutline) return;
+    codeOutline.hidden = !on;
+    codePanel.toggleAttribute("data-outline", on);
+  }
+
   /** Shows a step's (or the intro's) media instead of code, at image `index`; `null` shows the code. */
   function showPanel(media: HTMLTemplateElement | null, index = 0): void {
+    // With code tabs, the outline replaces only the code (tutorials without code show it in the media panel).
+    const inCode = !!media && !!codeOutline && !!document.querySelector(".code") && !!media.content.querySelector("[data-step-outline]");
+    showOutline(inCode);
+    if (inCode) {
+      mediaPanel.hidden = true;
+      codePanel.hidden = false;
+      if (shownMedia !== media) {
+        shownMedia = media;
+        mediaPanel.replaceChildren();
+        announceMedia();
+      }
+      return;
+    }
     mediaPanel.hidden = !media;
     codePanel.hidden = !!media;
     // Already shown (the intro's fallback is the first step's media): no re-render, no embed reload.

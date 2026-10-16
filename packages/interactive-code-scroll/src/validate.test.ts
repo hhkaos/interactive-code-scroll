@@ -64,7 +64,7 @@ describe("validateTutorial", () => {
     [use("Intro", { preview: "closed" }), '<Intro> "preview" must be one of expanded, collapsed, keep'],
     [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, preview, none'],
     [use("Intro", { maximize: "preview", preview: "collapsed" }), '<Intro> maximize="preview" conflicts with preview="collapsed"'],
-    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize, file, images, embed)'],
+    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize, file, images, embed, outline)'],
     [use("Intro", { file: "main.js", region: "config" }), '<Intro> "region" is not available on <Intro>'],
     [use("Intro", { file: "nope.js" }), '<Intro> file "nope.js" not found in code/'],
     [use("Intro", { file: "main.js", images: { expression: '["a.png"]' } }), '<Intro> "file" and "images" cannot be combined; use one of them'],
@@ -75,6 +75,11 @@ describe("validateTutorial", () => {
     [use("Intro", { embed: "deck/" }), '<Intro> embed "deck/" not found in embeds/'],
     [use("Intro", { embed: "http://example.com" }), '<Intro> embed "http://example.com" must be an https:// URL or a path in embeds/'],
     [use("Intro", { embed: "slides/", images: { expression: '["a.png"]' } }), '<Intro> "embed" and "images" cannot be combined; use one of them'],
+    [use("Step", { id: "a", outline: { expression: "false" } }), '"outline" takes no value: write <Step outline>'],
+    [use("Step", { id: "a", outline: true, file: "main.js" }), '"outline" and "file" cannot be combined; use one of them'],
+    [use("Step", { id: "a", outline: true, images: { expression: '["a.png"]' } }), '"outline" and "images" cannot be combined'],
+    [use("Intro", { outline: true, embed: "slides/" }), '<Intro> "outline" and "embed" cannot be combined'],
+    [use("Intro", { outline: "yes" }), '<Intro> "outline" takes no value: write <Intro outline>'],
     [use("Hint", { label: "Redirect URI" }), '<Hint> requires an "id"'],
     [use("Hint", { id: "Redirect URI", label: "Redirect URI" }), 'id "Redirect URI" must be lowercase letters, digits and dashes'],
     [use("Hint", { id: "redirect-uri" }), '<Hint> requires a "label"'],
@@ -92,6 +97,10 @@ describe("validateTutorial", () => {
     expect(validate(use("Step", { id: "a" }, 1), use("Step", { id: "a" }, 9))).toEqual([
       'tutorial.mdx:9:1 <Step> duplicate id "a"',
     ]);
+  });
+
+  it("accepts outline on <Intro> and <Step>", () => {
+    expect(validate(use("Intro", { outline: true, preview: "collapsed" }, 1), use("Step", { id: "recap", outline: true }, 5))).toEqual([]);
   });
 
   it("accepts one <Outro> after the last step", () => {
@@ -768,7 +777,7 @@ describe("validateSeriesIndex", () => {
       'tutorials/index.mdx:2:1 <TutorialFavorites> takes no attributes (got "title")',
       "tutorials/index.mdx:6:1 <TutorialFavorites> can appear only once (it lists every favorite)",
     ]);
-    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl, ask)']);
+    expect(index([], { preview: "off" })).toEqual(['tutorials/index.mdx:4:1 frontmatter "preview" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl, ask, outline)']);
   });
 });
 

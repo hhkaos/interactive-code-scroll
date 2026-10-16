@@ -33,8 +33,8 @@ test("renders <Intro> as non-step tutorial intro", async ({ page }) => {
   await expect(page.locator("section.step[data-active]")).toHaveCount(0);
   await expect(page.locator("#progress-bar")).toHaveAttribute("aria-valuenow", "0");
   await expect(page.locator('#progress-bar > [data-state="pending"]')).toHaveCount(10);
-  // The intro has code to show: no fallback to the media of a later step.
-  await expect(page.locator(".code-panel")).toBeVisible();
+  // A media-less intro shows the step outline, not the media of a later step.
+  await expect(page.locator(".code-outline [data-step-outline]")).toBeVisible();
   await expect(page.locator(".media-panel")).toBeHidden();
 });
 

@@ -17,9 +17,13 @@ interface Props {
   images?: string[];
   /** Page shown instead of code while the intro is shown: an `https://` URL or a path under `embeds/`. */
   embed?: string;
+  /** The step outline instead of code while the intro is shown (the default without other media; frontmatter `outline: false` turns that off). */
+  outline?: boolean;
 }
 
-const { preview, maximize, file, images, embed } = Astro.props;
+const { preview, maximize, file, images, embed, outline } = Astro.props;
+// No file or media of its own: the browser shows the outline unless `outline: false` (client/steps.ts).
+const autoOutline = !outline && file === undefined && !images?.length && embed === undefined;
 const { files, frontmatter } = currentTutorial(Astro.locals);
 const { variants } = readTutorialConfig(frontmatter);
 const variantFiles = variants && file !== undefined ? stepFiles(variants, parsedFiles(files, jsonVarsOf(frontmatter)), { file }) : undefined;
@@ -31,7 +35,8 @@ const variantFiles = variants && file !== undefined ? stepFiles(variants, parsed
   data-maximize={maximize}
   data-file={variants ? undefined : file}
   data-files={variantFiles ? JSON.stringify(variantFiles) : undefined}
+  data-auto-outline={autoOutline ? "" : undefined}
 >
   <slot />
-  <StepMedia images={images} embed={embed} />
+  <StepMedia images={images} embed={embed} outline={outline} />
 </section>

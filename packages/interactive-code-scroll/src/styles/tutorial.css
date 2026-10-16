@@ -1021,6 +1021,18 @@ calcite-tab-title:focus:not(:focus-visible) { --calcite-color-focus: transparent
   flex-direction: column;
 
   &[hidden] { display: none; }
+  /* The outline replaces the code under the header (tabs, language switcher, ZIP stay). */
+  &[data-outline] > .code { display: none; }
+}
+.code-outline {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  container-type: size;
+
+  &[hidden] { display: none; }
 }
 
 .code {
@@ -1107,6 +1119,34 @@ calcite-tab-title:focus:not(:focus-visible) { --calcite-color-focus: transparent
   calcite-carousel { width: 100%; }
   /* An embedded page fills the panel. */
   &:has(.step-embed) { padding: 0; }
+}
+
+/* Step outline in the code area: the step index's list as an agenda; larger on a presentation screen. */
+.step-outline {
+  inline-size: min(28rem, 100%);
+  max-block-size: 100cqb;
+  overflow: auto;
+  scrollbar-width: thin;
+
+  .step-index-list a { font-size: var(--calcite-font-size-md); padding-block: 0.5rem; }
+  /* Columns when the list is taller than the pane (client/step-index.ts sets --rows). */
+  .step-index-list[style*="--rows"] { grid-auto-flow: column; grid-template-rows: repeat(var(--rows), auto); column-gap: 1rem; }
+  &:has(.step-index-list[style*="--rows"]) { inline-size: 100%; }
+}
+.step-outline-heading {
+  margin: 0 0 0.75rem;
+  padding-inline: 0.625rem;
+  font-size: var(--calcite-font-size-xl);
+  font-weight: var(--calcite-font-weight-medium);
+  color: var(--calcite-color-text-1);
+}
+body[data-presenting] .step-outline {
+  inline-size: min(44rem, 100%);
+
+  .step-outline-heading { font-size: var(--calcite-font-size-2xl); }
+  .step-index-list { gap: 0.25rem; }
+  .step-index-list a { font-size: var(--calcite-font-size-lg); padding: 0.625rem 0.875rem; grid-template-columns: 1.875rem minmax(0, 1fr); }
+  .step-index-mark { inline-size: 1.875rem; block-size: 1.875rem; font-size: var(--calcite-font-size-sm); }
 }
 
 .step-embed {

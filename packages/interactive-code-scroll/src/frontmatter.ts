@@ -63,6 +63,8 @@ export interface TutorialConfig {
   presentationUrl?: string;
   /** Selection toolbar actions (replaces the series list); `false` for none; absent: the series', else the default. */
   ask?: AskEntry[] | false;
+  /** `false`: an `<Intro>` without media keeps the code instead of the step outline; absent: the series', else true. */
+  outline?: boolean;
 }
 
 /** Frontmatter of a series site's optional `index.mdx`. */
@@ -80,6 +82,8 @@ export interface IndexConfig {
   presentationUrl?: string;
   /** Default selection toolbar actions of every tutorial (see `TutorialConfig.ask`). */
   ask?: AskEntry[] | false;
+  /** Default step outline of every tutorial's media-less `<Intro>` (see `TutorialConfig.outline`). */
+  outline?: boolean;
 }
 
 /** A tag family of the series filter (`tagGroups` in `index.mdx`). */
@@ -226,12 +230,14 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     feedbackUrl,
     presentationUrl,
     ask,
+    outline,
   } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
   if (logo !== undefined && typeof logo !== "string") throw new FrontmatterError("logo", '"logo" must be a string');
   if (order !== undefined && (typeof order !== "number" || !Number.isFinite(order))) throw new FrontmatterError("order", '"order" must be a number');
   if (typeof completion !== "boolean") throw new FrontmatterError("completion", '"completion" must be a boolean');
+  checkOutline(outline);
   if (next !== undefined && next !== false && (typeof next !== "string" || !TUTORIAL_SLUG.test(next))) {
     throw new FrontmatterError("next", '"next" must be the slug (folder name) of a tutorial of the series, or false');
   }
@@ -262,7 +268,12 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
     ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
     ...readAsk(ask),
+    ...(outline === undefined ? {} : { outline: outline as boolean }),
   };
+}
+
+function checkOutline(value: unknown): void {
+  if (value !== undefined && typeof value !== "boolean") throw new FrontmatterError("outline", '"outline" must be a boolean');
 }
 
 function readAsk(value: unknown): Pick<TutorialConfig, "ask"> {
@@ -326,7 +337,7 @@ function optionalEntry<K extends string>(key: K, value: string | undefined): Par
   return value === undefined ? {} : ({ [key]: value } as Record<K, string>);
 }
 
-const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups", "feedbackUrl", "presentationUrl", "ask"]);
+const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups", "feedbackUrl", "presentationUrl", "ask", "outline"]);
 
 const TAG_GROUPS_SHAPE = '"tagGroups" must map each family name to a list of tags, e.g. { Language: [Python, JavaScript] }';
 
@@ -382,9 +393,10 @@ export function readTagGroups(value: unknown, { withLogos = true }: { withLogos?
 
 /** Validates a series `index.mdx` frontmatter; defaults: title "Tutorials", theme `auto`. */
 export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConfig {
-  const { title = "Tutorials", description, logo, theme = "auto", tagGroups, feedbackUrl, presentationUrl, ask } = frontmatter;
+  const { title = "Tutorials", description, logo, theme = "auto", tagGroups, feedbackUrl, presentationUrl, ask, outline } = frontmatter;
   const unknown = Object.keys(frontmatter).find((key) => !INDEX_KEYS.has(key));
-  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl, ask)`);
+  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl, ask, outline)`);
+  checkOutline(outline);
   if (typeof title !== "string" || title.trim() === "") throw new FrontmatterError("title", '"title" must be a non-empty string');
   return {
     title,
@@ -395,6 +407,7 @@ export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConf
     ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
     ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
     ...readAsk(ask),
+    ...(outline === undefined ? {} : { outline: outline as boolean }),
   };
 }
 

@@ -56,6 +56,16 @@ test("a notice lists every variant of the step", async ({ page }) => {
   await expect(page.locator("#variant-notice [slot=link]")).toHaveText("Switch to Python");
 });
 
+test("the intro's outline keeps the language switcher and fits every step in columns", async ({ page }) => {
+  await page.goto("/");
+  const outline = page.locator(".code-outline [data-step-outline]");
+  await expect(outline).toBeVisible();
+  await expect(page.locator("#variant-switcher")).toBeVisible();
+  // Ten steps over the code area's top half (the Result pane takes the rest): more than one column, none cut off.
+  await expect(outline.locator(".step-index-list")).toHaveAttribute("style", /--rows/);
+  for (const link of await outline.locator("a").all()) await expect(link).toBeInViewport({ ratio: 1 });
+});
+
 test("the step index dims steps for other variants and names them", async ({ page }) => {
   await page.goto("/?variant=curl#config");
   await page.locator("#step-position").click();

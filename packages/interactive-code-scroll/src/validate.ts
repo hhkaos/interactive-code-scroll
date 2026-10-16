@@ -54,7 +54,7 @@ const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
 const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
 const MAXIMIZE_STATES = new Set(["code", "preview", "none"]);
 /** The intro comes before any step: the pane state, a file or media, no code focus or result. */
-const INTRO_PROPS = ["preview", "maximize", "file", "images", "embed"];
+const INTRO_PROPS = ["preview", "maximize", "file", "images", "embed", "outline"];
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -523,8 +523,16 @@ export function validateTutorial({
     else if (!visibleSet.has(file)) report(`file "${file}" is not shown in tabs; add it to frontmatter "files"`);
   }
 
-  /** `images=` and `embed=` (shown instead of code), shared by <Step> and <Intro>. */
+  /** `images=`, `embed=` and `outline` (shown instead of code), shared by <Step> and <Intro>. */
   function checkMedia(use: ComponentUse, text: (attr: string) => string | undefined, report: (message: string) => void): void {
+    const outline = use.attributes.outline;
+    if (outline !== undefined) {
+      if (outline !== true) report(`"outline" takes no value: write <${use.name} outline>`);
+      // The outline replaces the code panel: no file to show or focus there.
+      for (const other of ["file", "region", "images", "embed"]) {
+        if (use.attributes[other] !== undefined) report(`"outline" and "${other}" cannot be combined; use one of them`);
+      }
+    }
     const imagesAttr = use.attributes.images;
     if (imagesAttr !== undefined) {
       const list = typeof imagesAttr === "object" ? parseStringArray(imagesAttr.expression) : undefined;
