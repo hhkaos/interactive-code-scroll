@@ -6,7 +6,8 @@ codeWrap: true
 logo: fixture-logo.svg
 files: ["index.html", "*.js", "oauth-callback.html", "*.py", "settings.json", "style.css"]
 include: [".env.example"]
-feedbackUrl: https://github.com/example/fixture/issues/new?title={title}
+feedbackUrl: https://github.com/example/fixture/issues/new?title={title}&body={context}
+ask: [author, chatgpt, { label: Docs assistant, url: "https://docs.example.com/assistant" }]
 ---
 
 <Intro>

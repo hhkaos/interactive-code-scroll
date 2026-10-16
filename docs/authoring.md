@@ -149,7 +149,8 @@ order: 1
 | [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. It identifies the tutorial, so [series](#series-sites) index cards do not show it: they show [tag logos and variant links](#index-page). Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |
 | [`completion`](#outro) | boolean | `true` | The closing panel after the last step: "Next" becomes "Finish" there and opens it. `false` removes it ("Next" stays disabled at the last step). |
 | [`presentationUrl`](presenting.md#during-the-talk) | `http://` or `https://` URL | the series' `index.mdx` one, else Astro `site` + the tutorial's path, else the page URL | Where the QR code of the closing slide (presentation mode) points, e.g. the published copy when you present from `localhost`. `{slug}` is replaced. |
-| [`feedbackUrl`](#outro) | `https://` or `mailto:` URL | the series' `index.mdx` one | "Send feedback" link in the closing panel; none without a URL. `{slug}` and `{title}` are replaced (URL-encoded), e.g. `https://github.com/owner/repo/issues/new?title=Feedback:%20{title}`. |
+| [`feedbackUrl`](#outro) | `https://` or `mailto:` URL | the series' `index.mdx` one | "Send feedback" link in the closing panel and ["Ask the author"](#asking-about-a-selection) in the selection toolbar; none without a URL. `{slug}` and `{title}` are replaced (URL-encoded), e.g. `https://github.com/owner/repo/issues/new?title=Feedback:%20{title}`; `{context}`, `{selection}` and `{url}` carry a selection (empty in the closing panel). |
+| [`ask`](#asking-about-a-selection) | list of `author`, `chatgpt`, `claude`, `{ label, url }`, or `false` | the series' `index.mdx` one, else `[author, chatgpt, claude]` | Actions of the selection toolbar, in menu order. `false` turns it off. |
 
 ### Code and Preview
 
@@ -282,6 +283,24 @@ You signed in with OAuth and showed a private layer. Next, store the token secur
 ```
 
 Frontmatter `completion: false` removes the panel (then `<Outro>` is a build error). In presentation mode the panel is a full-screen [closing slide](presenting.md#during-the-talk): the `<Outro>`, the next tutorial and a QR code of the tutorial's URL instead of the reader actions.
+
+### Asking about a selection
+
+Readers who select text in the explanations (two words or more) or in the code panel get a small toolbar over the selection:
+
+- **Ask the author** opens your [`feedbackUrl`](#page) with the selection's context, so the question reaches you (for example as a GitHub issue).
+- **Ask AI** opens an AI assistant with a ready prompt: the tutorial title, the step, a link back to the selection and the selected text (from the code panel: the file, its lines and the code, with [secret](#varfield) values masked). The prompt is also copied to the clipboard, because the assistants' prefill links are not official and may change.
+
+The link back opens the step and highlights the selected text ([text fragment](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments)). The toolbar shows when the selection ends, not while dragging, and never on touch screens or in presentation mode; Esc hides it.
+
+Put `{context}` in `feedbackUrl` to receive the selection as Markdown (link, step, quoted text), or `{selection}` and `{url}` separately. A template without them still opens, without the selection. The closing panel's "Send feedback" fills them empty.
+
+```yaml title="tutorial/tutorial.mdx (or tutorials/index.mdx for the whole series)"
+feedbackUrl: https://github.com/owner/repo/issues/new?title=Question:%20{title}&body={context}
+ask: [author, chatgpt, claude, { label: "Esri's Ask AI", url: "https://developers.arcgis.com/" }]
+```
+
+`ask` lists the toolbar's actions in order; `false` turns the toolbar off. A tutorial's `ask` replaces the series list. The default is `[author, chatgpt, claude]`, where `author` is left out without a `feedbackUrl` (listing `author` yourself without one is a build error). A `{ label, url }` entry adds another assistant (`https://` only): `{prompt}` in `url` is replaced with the prompt, and without it the page opens as is and the reader pastes the copied prompt (the menu marks it with a copy icon). With one assistant the toolbar shows "Ask <label>" instead of a menu.
 
 ### `<Step>`
 
@@ -1023,6 +1042,7 @@ Start with the REST tutorials if you are new to location services.
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered site-wide. |
 | `tagGroups` | family name → list of tags (or `{ name, logo }`) | none | [Tag families](#tag-families), in display order, and tag logos. |
 | `feedbackUrl` | `https://` or `mailto:` URL | none | Default [feedback link](#outro) of every tutorial; a tutorial's own `feedbackUrl` replaces it. `{slug}` and `{title}` are the tutorial's. |
+| `ask` | list of `author`, `chatgpt`, `claude`, `{ label, url }`, or `false` | `[author, chatgpt, claude]` | Default [selection toolbar](#asking-about-a-selection) actions of every tutorial; a tutorial's own `ask` replaces it. |
 | `presentationUrl` | `http://` or `https://` URL | none | Default QR code URL of every tutorial's [closing slide](presenting.md#during-the-talk), e.g. `https://owner.github.io/tutorials/{slug}/`; a tutorial's own `presentationUrl` replaces it. |
 
 The body is free MDX prose with three components; anything else is a build error.

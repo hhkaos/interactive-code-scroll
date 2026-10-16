@@ -25,6 +25,37 @@ const shots = [
     path: "showcase/oauth-pkce/#config",
     action: (page) => page.locator('calcite-input[data-var="clientId"] input').fill("a1B2c3D4e5F6g7H8"),
   },
+  {
+    // The selection toolbar with the AI menu open, over a sentence of the OAuth step.
+    name: "ask-oauth",
+    path: "showcase/oauth-pkce/#oauth",
+    action: async (page) => {
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => {
+        const paragraph = [...document.querySelectorAll("#oauth p")].find((p) => p.textContent.includes("popup: true"));
+        const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+        const range = document.createRange();
+        let started = false;
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!started && node.textContent.includes("popup: true")) {
+            range.setStart(node, node.textContent.indexOf("popup: true"));
+            started = true;
+          }
+          const end = node.textContent.indexOf("in a popup");
+          if (started && end >= 0) {
+            range.setEnd(node, end + "in a popup".length);
+            break;
+          }
+        }
+        getSelection().removeAllRanges();
+        getSelection().addRange(range);
+      });
+      await page.waitForTimeout(800);
+      await page.click("#ask-ai-menu calcite-button");
+    },
+    // A small toolbar: zoomed in (same 1440 x 860 ratio as the other shots, at twice the size).
+    crop: { around: ["#oauth h2", "#ask-bar", "#ask-ai-menu calcite-dropdown-group"], width: 720, height: 430 },
+  },
   { name: "result-rest-text", path: "showcase/rest-geocode/?variant=python#results" },
   // Which part of the page a docs section is about: the rest is dimmed.
   { name: "area-explanations", path: "showcase/oauth-pkce/#config", highlight: ".docs" },
@@ -75,6 +106,15 @@ function highlightArea(highlight) {
   document.body.append(mark);
 }
 
+/** The `width` x `height` viewport area centered on what `around` names (and the selection), kept inside the viewport. */
+function cropArea({ around, width, height }) {
+  const rects = [...around.map((selector) => document.querySelector(selector).getBoundingClientRect()), getSelection().getRangeAt(0).getBoundingClientRect()];
+  const cx = (Math.min(...rects.map((r) => r.left)) + Math.max(...rects.map((r) => r.right))) / 2;
+  const cy = (Math.min(...rects.map((r) => r.top)) + Math.max(...rects.map((r) => r.bottom))) / 2;
+  const clamp = (value, max) => Math.round(Math.max(0, Math.min(value, max)));
+  return { x: clamp(cx - width / 2, innerWidth - width), y: clamp(cy - height / 2, innerHeight - height), width, height };
+}
+
 const server = createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://localhost");
   let file = join(publicDir, decodeURIComponent(url.pathname.slice(base.length - 1)));
@@ -91,12 +131,13 @@ const browser = await chromium.launch();
 for (const colorScheme of ["light", "dark"]) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 860 }, deviceScaleFactor: 2, colorScheme });
   const page = await context.newPage();
-  for (const { name, path, url, action, highlight } of shots.filter(({ name }) => !only.length || only.includes(name))) {
+  for (const { name, path, url, action, highlight, crop } of shots.filter(({ name }) => !only.length || only.includes(name))) {
     await page.goto(url ?? `${origin}${base}${path}`, { waitUntil: "networkidle" });
     await action?.(page);
     await page.waitForTimeout(2000);
     if (highlight) await page.evaluate(highlightArea, highlight);
-    await page.screenshot({ path: join(publicDir, "screenshots", `${name}-${colorScheme}.png`) });
+    const clip = crop && (await page.evaluate(cropArea, crop));
+    await page.screenshot({ path: join(publicDir, "screenshots", `${name}-${colorScheme}.png`), ...(clip && { clip }) });
   }
   await context.close();
 }

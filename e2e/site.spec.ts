@@ -174,7 +174,7 @@ test("docs links carry the base path and resolve, anchors included; repository-o
 test("docs screenshots load under the base and follow the page theme", async ({ page, request }) => {
   await page.goto(`${BASE}docs/features/`);
   const shots = page.locator(".sl-markdown-content .docs-shot");
-  await expect(shots).toHaveCount(7);
+  await expect(shots).toHaveCount(8);
   const srcs = await shots.locator("img").evaluateAll((images) => images.map((image) => image.getAttribute("src")!));
   for (const src of srcs) {
     expect(src).toMatch(new RegExp(`^${BASE}screenshots/[a-z-]+-(dark|light)\\.png$`));

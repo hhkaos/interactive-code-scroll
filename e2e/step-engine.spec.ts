@@ -236,7 +236,7 @@ test("the closing panel holds the <Outro> and the code, Preview and feedback act
   await expect(panel.locator("calcite-button")).toHaveText(["Download code", "Open preview", "Send feedback"]);
   await expect(panel.locator("calcite-button", { hasText: "Send feedback" })).toHaveAttribute(
     "href",
-    "https://github.com/example/fixture/issues/new?title=Framework%20Fixture%20Tutorial",
+    "https://github.com/example/fixture/issues/new?title=Framework%20Fixture%20Tutorial&body=",
   );
   const download = page.waitForEvent("download");
   await panel.locator("#completion-zip").click();

@@ -1404,3 +1404,37 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
     :is(#preview-toggle, #result-toggle) { --calcite-icon-color: transparent; }
   }
 }
+
+/* ——— Selection toolbar (client/ask.ts) ———
+   Floats over a selection in the explanations or the code, above maximized panes (z-index 10, 11). */
+.ask-bar {
+  position: fixed;
+  z-index: 12;
+  display: flex;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  border: 1px solid var(--calcite-color-border-2);
+  border-radius: var(--calcite-corner-radius-round);
+  background: var(--calcite-color-foreground-1);
+  box-shadow: var(--calcite-shadow-md);
+
+  &[hidden] { display: none; }
+}
+
+/* "Prompt copied": a short message over the step navigation. */
+.ask-status {
+  position: fixed;
+  inset-block-end: 4.5rem;
+  inset-inline-start: 50%;
+  z-index: 12;
+  translate: -50% 0;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--calcite-corner-radius-round);
+  background: var(--calcite-color-inverse);
+  color: var(--calcite-color-text-inverse);
+  font-size: var(--calcite-font-size-sm);
+  box-shadow: var(--calcite-shadow-md);
+
+  &[hidden] { display: none; }
+}

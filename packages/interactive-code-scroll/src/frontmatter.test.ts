@@ -246,6 +246,24 @@ describe("completion panel", () => {
     expect(readIndexConfig({ feedbackUrl: "https://example.com/feedback?t={slug}" }).feedbackUrl).toBe("https://example.com/feedback?t={slug}");
     expect(() => readIndexConfig({ feedbackUrl: "ftp://x" })).toThrow(/"feedbackUrl" must be an https:\/\/ or mailto: URL/);
   });
+
+  it("reads ask lists and false, also as the index.mdx default", () => {
+    const custom = { label: "Esri's Ask AI", url: "https://developers.arcgis.com/" };
+    expect(readTutorialConfig({ ask: ["claude", "author", custom] }).ask).toEqual(["claude", "author", custom]);
+    expect(readTutorialConfig({ ask: false }).ask).toBe(false);
+    expect(readTutorialConfig({}).ask).toBeUndefined();
+    expect(readIndexConfig({ ask: ["chatgpt"] }).ask).toEqual(["chatgpt"]);
+  });
+
+  it("rejects invalid ask entries with the key", () => {
+    expect(keyOf({ ask: true })).toBe("ask");
+    expect(keyOf({ ask: ["gemini"] })).toBe("ask");
+    expect(keyOf({ ask: ["claude", "claude"] })).toBe("ask");
+    expect(keyOf({ ask: [{ label: "Docs bot" }] })).toBe("ask");
+    expect(keyOf({ ask: [{ label: "Docs bot", url: "http://example.com/?q={prompt}" }] })).toBe("ask");
+    expect(keyOf({ ask: [{ label: "", url: "https://example.com/" }] })).toBe("ask");
+    expect(() => readTutorialConfig({ ask: [{ label: "Bot", url: "https://x.test/", icon: "x" }] })).toThrow(/unknown field "icon"/);
+  });
 });
 
 describe("readIndexConfig", () => {

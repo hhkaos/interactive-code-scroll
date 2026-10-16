@@ -1,3 +1,4 @@
+import { askProblem, type AskEntry } from "./ask.ts";
 import { isKnownLanguage } from "./highlight.ts";
 
 export const PREVIEW_MODES = ["off", "iframe", "tab", "both"] as const;
@@ -60,6 +61,8 @@ export interface TutorialConfig {
   feedbackUrl?: string;
   /** Public URL of the tutorial for the closing slide's QR code (overrides the series one); `{slug}` is filled in. */
   presentationUrl?: string;
+  /** Selection toolbar actions (replaces the series list); `false` for none; absent: the series', else the default. */
+  ask?: AskEntry[] | false;
 }
 
 /** Frontmatter of a series site's optional `index.mdx`. */
@@ -75,6 +78,8 @@ export interface IndexConfig {
   feedbackUrl?: string;
   /** Default QR code URL of every tutorial's closing slide (see `TutorialConfig.presentationUrl`). */
   presentationUrl?: string;
+  /** Default selection toolbar actions of every tutorial (see `TutorialConfig.ask`). */
+  ask?: AskEntry[] | false;
 }
 
 /** A tag family of the series filter (`tagGroups` in `index.mdx`). */
@@ -220,6 +225,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     next,
     feedbackUrl,
     presentationUrl,
+    ask,
   } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
@@ -255,7 +261,14 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     ...(next === undefined ? {} : { next: next as string | false }),
     ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
     ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
+    ...readAsk(ask),
   };
+}
+
+function readAsk(value: unknown): Pick<TutorialConfig, "ask"> {
+  const problem = askProblem(value);
+  if (problem !== undefined) throw new FrontmatterError("ask", problem);
+  return value === undefined ? {} : { ask: value as AskEntry[] | false };
 }
 
 /**
@@ -313,7 +326,7 @@ function optionalEntry<K extends string>(key: K, value: string | undefined): Par
   return value === undefined ? {} : ({ [key]: value } as Record<K, string>);
 }
 
-const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups", "feedbackUrl", "presentationUrl"]);
+const INDEX_KEYS = new Set(["title", "description", "logo", "theme", "tagGroups", "feedbackUrl", "presentationUrl", "ask"]);
 
 const TAG_GROUPS_SHAPE = '"tagGroups" must map each family name to a list of tags, e.g. { Language: [Python, JavaScript] }';
 
@@ -369,9 +382,9 @@ export function readTagGroups(value: unknown, { withLogos = true }: { withLogos?
 
 /** Validates a series `index.mdx` frontmatter; defaults: title "Tutorials", theme `auto`. */
 export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConfig {
-  const { title = "Tutorials", description, logo, theme = "auto", tagGroups, feedbackUrl, presentationUrl } = frontmatter;
+  const { title = "Tutorials", description, logo, theme = "auto", tagGroups, feedbackUrl, presentationUrl, ask } = frontmatter;
   const unknown = Object.keys(frontmatter).find((key) => !INDEX_KEYS.has(key));
-  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl)`);
+  if (unknown !== undefined) throw new FrontmatterError(unknown, `"${unknown}" is not an index.mdx field (use title, description, logo, theme, tagGroups, feedbackUrl, presentationUrl, ask)`);
   if (typeof title !== "string" || title.trim() === "") throw new FrontmatterError("title", '"title" must be a non-empty string');
   return {
     title,
@@ -381,6 +394,7 @@ export function readIndexConfig(frontmatter: Record<string, unknown>): IndexConf
     ...(tagGroups === undefined ? {} : { tagGroups: readTagGroups(tagGroups) }),
     ...optionalEntry("feedbackUrl", readFeedbackUrl(feedbackUrl)),
     ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
+    ...readAsk(ask),
   };
 }
 

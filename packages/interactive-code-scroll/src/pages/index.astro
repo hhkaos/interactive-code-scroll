@@ -8,6 +8,7 @@ import Step from "../components/Step.astro";
 import VarField from "../components/VarField.astro";
 import { formatUpdated, logoUrl, readIndexConfig, readTutorialConfig } from "../frontmatter.ts";
 import { fillUrl } from "../completion.ts";
+import { resolveAsk, withoutSelection } from "../ask.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
 import { jsonRegionsOf, jsonVarsOf } from "../json-vars.ts";
@@ -106,7 +107,16 @@ const siblingLogos = siblings.some((s) => s.logo);
 const nextUp = config.completion && series ? nextTutorialOf(tutorials, slug, base) : undefined;
 const indexConfig = seriesIndex ? readIndexConfig(seriesIndex.frontmatter) : undefined;
 const feedbackTemplate = config.feedbackUrl ?? indexConfig?.feedbackUrl;
-const feedback = config.completion && feedbackTemplate ? fillUrl(feedbackTemplate, { slug, title: config.title }) : undefined;
+const filledFeedback = feedbackTemplate && fillUrl(feedbackTemplate, { slug, title: config.title });
+const feedback = config.completion && filledFeedback ? withoutSelection(filledFeedback) : undefined;
+// The selection toolbar: the tutorial's `ask`, else the series', else the default (author only with a feedback URL).
+let ask: ReturnType<typeof resolveAsk>;
+try {
+  ask = resolveAsk(config.ask ?? indexConfig?.ask, filledFeedback);
+} catch (error) {
+  throw new Error(`${series ? `tutorials/${slug}` : "tutorial.mdx"}: ${(error as Error).message}`);
+}
+const hasAsk = ask.author !== undefined || ask.assistants.length > 0;
 // The closing slide's QR code: `presentationUrl`, else the public URL Astro `site` gives; without either,
 // client/completion.ts uses the page's own URL.
 const presentationTemplate = config.presentationUrl ?? indexConfig?.presentationUrl;
@@ -133,6 +143,7 @@ const clientData = JSON.stringify({
   variants: clientVariants,
   otherVariantSteps: config.otherVariantSteps,
   siblings: siblings.map(({ slug, href, variants }) => ({ slug, href, variants })),
+  ask: hasAsk ? ask : undefined,
 }).replace(/</g, "\\u003c");
 ---
 
@@ -445,6 +456,53 @@ const clientData = JSON.stringify({
         }
       </aside>
     </div>
+    {
+      hasAsk && (
+        /* Shown over a selection in the explanations or the code (client/ask.ts fills the links). */
+        <>
+          <div id="ask-bar" class="ask-bar" role="toolbar" aria-label="Ask about the selection" hidden>
+            {
+              ask.author && (
+                <calcite-button id="ask-author" href="#" target="_blank" rel="noopener" appearance="transparent" kind="neutral" scale="s" icon-start="speech-bubble">
+                  Ask the author
+                </calcite-button>
+              )
+            }
+            {
+              ask.assistants.length === 1 && (
+                <calcite-button data-assistant="0" href="#" target="_blank" rel="noopener" appearance="transparent" kind="neutral" scale="s" icon-start="magic-wand">
+                  Ask {ask.assistants[0]!.label}
+                </calcite-button>
+              )
+            }
+            {
+              ask.assistants.length > 1 && (
+                <calcite-dropdown id="ask-ai-menu" scale="s" placement="bottom-start" overlay-positioning="fixed">
+                  <calcite-button slot="trigger" appearance="transparent" kind="neutral" scale="s" icon-start="magic-wand" icon-end="chevron-down">
+                    Ask AI
+                  </calcite-button>
+                  <calcite-dropdown-group group-title="Ask with the selection">
+                    {ask.assistants.map((assistant, i) => (
+                      /* Without {prompt} the assistant opens empty: the icon says the prompt is copied. */
+                      <calcite-dropdown-item
+                        data-assistant={String(i)}
+                        href="#"
+                        target="_blank"
+                        rel="noopener"
+                        icon-end={assistant.url.includes("{prompt}") ? undefined : "copy-to-clipboard"}
+                      >
+                        {assistant.label}
+                      </calcite-dropdown-item>
+                    ))}
+                  </calcite-dropdown-group>
+                </calcite-dropdown>
+              )
+            }
+          </div>
+          <p id="ask-status" class="ask-status" role="status" hidden />
+        </>
+      )
+    }
     <calcite-dialog id="image-viewer" modal placement="cover" heading="Image">
       <img alt="" />
     </calcite-dialog>
@@ -458,6 +516,8 @@ const clientData = JSON.stringify({
       import { startHints } from "../client/hints.ts";
       import { keyToDelta } from "../client/navigation.ts";
       import { startTooltips } from "../client/actions.ts";
+      import { startAsk } from "../client/ask.ts";
+      import type { AskConfig } from "../ask.ts";
       import { startCompletion } from "../client/completion.ts";
       import { startDownloads } from "../client/downloads.ts";
       import { startEmbedOpen } from "../client/embed.ts";
@@ -487,6 +547,7 @@ const clientData = JSON.stringify({
         variants?: VariantInfo[];
         otherVariantSteps: "notice" | "hide";
         siblings: SiblingInfo[];
+        ask?: AskConfig;
       };
 
       startTooltips();
@@ -503,6 +564,7 @@ const clientData = JSON.stringify({
       const engine = startStepEngine({ variants, otherVariantSteps: data.otherVariantSteps });
       startImageViewer();
       startEmbedOpen();
+      if (data.ask) startAsk({ title: data.title, ...data.ask });
       let refreshPreview = () => {};
       let refreshRequest = () => {};
       const vars = startVars(() => {
