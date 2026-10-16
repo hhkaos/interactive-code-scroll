@@ -8,7 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Phone layout. Below 40rem wide the page stacks: code on top, explanations below at full width with the Back / Next bar, no splitters, explanations handle or Present button. The header title now shrinks to the room the series home, sibling switcher and actions leave (clipped with a fade; Calcite's ellipsis never shows), so the switcher and theme toggle stay on screen with no page-level horizontal scroll at any width. On phones in either orientation (below 40rem wide, or below 30rem high and 60rem wide) copy, download and ZIP are hidden and the Preview / Result pane keeps only its header; tapping its title opens it maximized and restores the layout. Unit tests in `layout-values.test.ts`; E2E in `e2e/phone-layout.spec.ts` (390×844 and 844×390) and `e2e/series.spec.ts`.
 - Back / Next buttons in a bar pinned to the bottom of the explanations, with the position ("3 / 9"; "9 steps" at the intro). They move like the step keys (carousel images first; Back from the first step returns to the intro); Back is disabled at the intro and Next at the last step. Always shown, not an author option; hidden in presentation mode and with the explanations hidden. The explanations column is now `div.docs-column` (`main.docs` plus `nav.step-nav`). SPEC also plans a stacked layout for phones. Unit tests in `navigation.test.ts`; E2E in `e2e/step-engine.spec.ts` and `e2e/presentation.spec.ts`.
+
+### Fixed
+
+- Presentation mode no longer leaves the ZIP count badge behind when it hides the download actions. E2E in `e2e/presentation.spec.ts`.
 
 ## [0.2.0-beta.6] - 2026-10-16
 

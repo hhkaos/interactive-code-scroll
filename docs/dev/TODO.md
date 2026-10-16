@@ -10,7 +10,7 @@
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
-- [ ] Stacked layout on phones (est. 3–4 days; rules in `SPEC.md` Layout, to confirm in a UX review): code area on top, explanations below at full width with the Back / Next bar at the bottom, no splitters; Preview / Result pane opened from the code header instead of stacked; scroll activation adapted to the stacked geometry (in a 390×844 prototype scrolling did not activate steps); compact page header; tap instead of hover for hints and tooltips; `100dvh`; E2E with phone viewports (390×844, 844×390).
+- [ ] Phone layout follow-ups (rules in `SPEC.md` Layout → Phones): tooltips stay open after a tap (no hover on touch); hints by tap; `100dvh` so the virtual keyboard (VarFields) does not hide the layout; check on a real iOS and Android device.
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).
 - [ ] Low priority (load already feels fast after the CLS fix, 2026-10-15): measure first with the throttled Playwright/Lighthouse run, then consider `<link rel="modulepreload">` for the page bundle in `<head>` (the module script sits at the end of a ~63 KB HTML) and splitting it (538 KB, 138 KB gzip): critical Calcite (navigation, action, progress) first, the rest (carousel, dialog, combobox, JSON tree…) through `import()`.

@@ -1,5 +1,5 @@
 import { setAction } from "./actions.ts";
-import { MAXIMIZE_EVENT, stepMaximize, toggleMaximize, type Maximized } from "./maximize-values.ts";
+import { COMPACT_PANES_QUERY, MAXIMIZE_EVENT, stepMaximize, toggleMaximize, type Maximized } from "./maximize-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 
 export { MAXIMIZE_EVENT };
@@ -46,6 +46,19 @@ export function startMaximize(): void {
 
   // Steps (`maximize=`) and the Preview iframe (forwarded Esc) ask through the event.
   document.addEventListener(MAXIMIZE_EVENT, (event) => set(stepMaximize(state, (event as CustomEvent<string>).detail)));
+
+  // Small screens have no room to expand the pane in place: its header opens it maximized (and
+  // restores the layout). Capture phase, before the Preview / Result collapse handlers.
+  const compact = matchMedia(COMPACT_PANES_QUERY);
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (!compact.matches || !(event.target instanceof Element) || !event.target.closest("#preview-toggle, #result-toggle")) return;
+      event.stopImmediatePropagation();
+      set(toggleMaximize(state, "preview"));
+    },
+    { capture: true },
+  );
 
   // Collapsing the maximized pane (its header or a step's preview="collapsed") restores the layout first.
   for (const toggle of document.querySelectorAll("#preview-toggle, #result-toggle")) {

@@ -51,6 +51,12 @@ body {
 
 /* ——— Header ——— */
 
+/* Its width is capped by client/layout.ts (fitHeaderTitle): a long title is clipped, never pushing the actions out. */
+.app-header > calcite-navigation-logo {
+  overflow: hidden;
+  &[data-clipped] { mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent); }
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -67,7 +73,7 @@ body {
 body:not([data-presenting]) #step-count { display: none; }
 
 /* Presentation mode: compact controls (progress, preview, exit stay). */
-body[data-presenting] :is(#theme-toggle, #copy-file, #download-file, #download-zip) { display: none; }
+body[data-presenting] :is(#theme-toggle, #copy-file, #download-file, .zip-action) { display: none; }
 
 /* ——— Panels ——— */
 
@@ -1144,4 +1150,37 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
 
 @media (prefers-reduced-motion: reduce) {
   .code[data-entering] { animation: none; }
+}
+
+/* ——— Phones: stacked layout ———
+   Code on top, explanations (with the Back / Next bar) below at full width. No splitters, no
+   hidden explanations, no presentation mode. */
+@media (max-width: 40rem) {
+  .layout,
+  body[data-docs-hidden] .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 50% auto minmax(0, 1fr);
+  }
+  .right { grid-row: 1; }
+  .gutter { grid-row: 2; width: auto; height: 1px; }
+  .docs-column, body[data-docs-hidden] .docs-column { grid-row: 3; display: flex; }
+  .splitter, .docs-toggle, #present-toggle { display: none; }
+  .step-nav { padding-inline: 1rem; }
+  .docs { --gutter: 1rem; }
+  .family-switcher { gap: 0.5rem; padding-inline-end: 0.25rem; }
+}
+
+/* Phones (portrait or landscape): no copy/download (reading, not coding). The Preview / Result pane
+   keeps only its header under the code; its header opens it maximized (client/maximize.ts,
+   COMPACT_PANES_QUERY). */
+@media (max-width: 40rem), (max-height: 30rem) and (max-width: 60rem) {
+  #copy-file, #download-file, .zip-action { display: none; }
+  .preview-splitter { display: none; }
+  body:not([data-maximized="preview"]) :is(.preview, .result) {
+    flex: none;
+    border-top: 1px solid var(--calcite-color-border-3);
+    :is(.preview-frame, .result-frame) { display: none; }
+    /* Expanded or collapsed means nothing here: no chevron. */
+    :is(#preview-toggle, #result-toggle) { --calcite-icon-color: transparent; }
+  }
 }

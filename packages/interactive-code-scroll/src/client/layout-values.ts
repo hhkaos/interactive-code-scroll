@@ -35,3 +35,12 @@ export function splitFromPointer(pointer: number, start: number, size: number, r
 export function parseStoredSplit(stored: string | null | undefined, range: SplitRange): number {
   return stored == null ? range.fallback : clampSplit(Number(stored), range);
 }
+
+/**
+ * Width left for the header title (logo slot) once the other header slots (series home, sibling
+ * switcher, actions) take theirs. Calcite wraps each slot in a flex box without `min-width: 0`, so
+ * the title never shrinks on its own and pushes the actions off a phone screen.
+ */
+export function titleRoom(headerWidth: number, otherWidths: readonly number[]): number {
+  return Math.max(0, Math.floor(headerWidth - otherWidths.reduce((sum, width) => sum + width, 0)));
+}

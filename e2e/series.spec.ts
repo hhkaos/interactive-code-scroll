@@ -516,3 +516,18 @@ test("the search bar keeps its hydrated height before Calcite loads", async ({ p
   expect(await listTop(unhydrated)).toBe(hydrated);
   await context.close();
 });
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  test("the header fits: a long title is clipped, the sibling switcher and theme toggle stay on screen", async ({ page }) => {
+    await page.goto("/beta/#config");
+    const title = page.locator(".app-header > calcite-navigation-logo");
+    await expect(title).toHaveAttribute("data-clipped", "");
+    for (const control of ["#family-dropdown", "#theme-toggle"]) {
+      const box = (await page.locator(control).boundingBox())!;
+      expect(box.x + box.width).toBeLessThanOrEqual(390);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+});

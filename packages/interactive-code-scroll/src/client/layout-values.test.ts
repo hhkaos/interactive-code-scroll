@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampSplit, DOCS_SPLIT, parseStoredSplit, PREVIEW_SPLIT, resolveMode, splitFromPointer } from "./layout-values.ts";
+import { clampSplit, DOCS_SPLIT, parseStoredSplit, PREVIEW_SPLIT, resolveMode, splitFromPointer, titleRoom } from "./layout-values.ts";
 
 describe("resolveMode", () => {
   it("prefers a stored manual choice", () => {
@@ -37,5 +37,16 @@ describe("split", () => {
     expect(parseStoredSplit(null, DOCS_SPLIT)).toBe(DOCS_SPLIT.fallback);
     expect(parseStoredSplit("55", DOCS_SPLIT)).toBe(55);
     expect(parseStoredSplit("junk", PREVIEW_SPLIT)).toBe(PREVIEW_SPLIT.fallback);
+  });
+});
+
+describe("titleRoom", () => {
+  it("leaves the title what the other header slots do not take", () => {
+    expect(titleRoom(355, [49, 142, 32])).toBe(132);
+    expect(titleRoom(1440.6, [32])).toBe(1408);
+  });
+
+  it("never goes negative", () => {
+    expect(titleRoom(300, [200, 150])).toBe(0);
   });
 });

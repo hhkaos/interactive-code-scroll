@@ -15,3 +15,9 @@ export function stepMaximize(current: Maximized | undefined, attr: string | unde
 export function toggleMaximize(current: Maximized | undefined, pane: Maximized): Maximized | undefined {
   return current === pane ? undefined : pane;
 }
+
+/**
+ * Phones, portrait or landscape (landscape phones are at most ~932px wide; a short desktop window is not one): the Preview / Result pane shows only its header
+ * and opens maximized. Keep in sync with the media queries in styles/tutorial.css.
+ */
+export const COMPACT_PANES_QUERY = "(max-width: 40rem), (max-height: 30rem) and (max-width: 60rem)";

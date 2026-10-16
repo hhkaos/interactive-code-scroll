@@ -7,6 +7,7 @@ import {
   resolveMode,
   splitFromPointer,
   THEME_KEY,
+  titleRoom,
   type Mode,
   type SplitRange,
 } from "./layout-values.ts";
@@ -104,6 +105,8 @@ export function startLayout(): void {
     applyMode(next);
   });
 
+  fitHeaderTitle();
+
   const layout = document.querySelector<HTMLElement>(".layout");
   const docsSplitter = document.querySelector<HTMLElement>(".layout .splitter");
   if (layout && docsSplitter) {
@@ -121,4 +124,21 @@ export function startLayout(): void {
       fromEnd: true,
     });
   }
+}
+
+/** Caps the header title to the room the other header slots leave (see `titleRoom`); it is clipped past that. */
+function fitHeaderTitle(): void {
+  const header = document.querySelector<HTMLElement>(".app-header");
+  const title = header?.querySelector<HTMLElement>(":scope > calcite-navigation-logo");
+  if (!header || !title) return;
+  const others = [...header.children].filter(
+    (el): el is HTMLElement => el instanceof HTMLElement && el !== title && el.slot !== "progress",
+  );
+  const fit = () => {
+    title.style.maxWidth = `${titleRoom(header.clientWidth, others.map((el) => el.getBoundingClientRect().width))}px`;
+    // Calcite's ellipsis never shows (the shadow heading keeps its full width): CSS fades the cut instead.
+    title.toggleAttribute("data-clipped", title.scrollWidth > title.clientWidth + 1);
+  };
+  const observer = new ResizeObserver(fit);
+  for (const el of [header, ...others]) observer.observe(el);
 }
