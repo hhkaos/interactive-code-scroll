@@ -2,7 +2,7 @@
 
 ## Ideas to triage
 
-- Let readers send feedback (GitHub issues?) and show the tutorial's last updated date.
+- Show the tutorial's last updated date (reader feedback: planned in the completion panel).
 - Show authors?
 - Review Google Codelabs navigation patterns (e.g. https://codelabs.developers.google.com/codelabs/the-lit-path?hl=en#5) and decide which to adopt or adapt: a table of contents (step overview, sense of progress, jump to any step) and a header with "XX mins remaining" ("Back" / "Next" buttons: done). The tool serves both as a tutorial and as a presentation, so check each idea against both uses (e.g. hide or collapse them in presentation mode) and against what the page already has (step navigation, progress).
 
@@ -10,6 +10,7 @@
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
+- [ ] Completion panel after the last step: "Next" → "Finish", check + "You've completed <title>", next tutorial / ZIP / Preview / feedback / back to index, `completion`, `next`, `feedbackUrl` frontmatter, optional MDX component for author prose, closing slide in presentation mode. Rules: `SPEC.md` (Step navigation → Completion panel). Decide at implementation: actions for a single tutorial (ZIP + feedback only?), which "series order" with several `<TutorialList>` sections, what replaces "next" on the last tutorial of a series ("Browse all tutorials"?), position text on the panel ("Done"?).
 - [ ] Phone layout follow-ups (rules in `SPEC.md` Layout → Phones): tooltips stay open after a tap (no hover on touch); hints by tap; `100dvh` so the virtual keyboard (VarFields) does not hide the layout; check on a real iOS and Android device.
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).
