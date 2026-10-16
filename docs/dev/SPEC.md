@@ -30,6 +30,7 @@ It targets tutorials in any programming language and toolchain, not only browser
 
 ### Layout
 - **Side-by-side**: documentation (left) and code (right).
+- **Stacked on phones** *(planned, rules to confirm in a UX review)*: below a narrow breakpoint the code area takes the top of the screen and the explanations scroll below it at full width, with the Back / Next bar at the bottom; splitters are hidden; the Preview and the Result pane are not stacked (too little height) but open from the code header; scrolling the explanations activates steps as on desktop.
 - **Resizable splitters** between docs and code, and between code and Preview; sizes are remembered. Resizing the explanations (splitter or window) keeps the active step centered and never switches steps while the text reflows. A handle on the docs/code splitter hides/shows the explanations.
 - **Logo** (optional, `logo` frontmatter, a file in `images/` or an absolute `https://` URL): shown in the header and used as favicon (identity, not technology: series index cards do not show it, see Variant links and tag logos). Square SVG, or PNG of at least 512×512. Logos must read on light and dark backgrounds (an optional `logoDark` is planned, see TODO).
 - **Light + Dark** with a manual toggle (remembered). The author sets the tutorial's default with the `theme` frontmatter (`auto` = `prefers-color-scheme`, the default; `light`; `dark`). The code panel and the Preview iframe follow the page mode (the iframe's `prefers-color-scheme` follows it, so apps using `calcite-mode-auto` match).
@@ -84,6 +85,7 @@ When a step comes into focus, its text block can:
 - **Keyboard / clicker**: arrows and PageDown/PageUp jump to the next/previous step with snapping (compatible with presentation clickers). PageDown/PageUp (what clickers send) move steps wherever the focus is (fields, the JSON tree, Result pane tabs and controls, splitters, the Preview), except in multi-line text; arrows stay with the focused field or widget that uses them (fields, the JSON tree, the Body/Headers tabs, "Run as", splitters).
 - **Deep link per step**: URL with `#step-id` to share or resume.
 - **Progress indicator**: a bar under the header; "Step X of N" text in presentation mode.
+- **Back / Next buttons** (decision 2026-10-16): a bar pinned to the bottom of the explanations, always shown (not an author option), with "Back", the position ("3 / 9"; "9 steps" at the intro) and "Next". They move exactly like the step keys (carousel images first, then steps; Back from the first step returns to the intro when there is one). Back is disabled at the intro (without an intro: at the first step and its first image); Next at the last step and its last image. Hidden in presentation mode (keys and the clicker drive it; the header shows "Step X of N") and with the explanations hidden.
 
 ### Image carousel
 - Step keys (arrows, PageUp/PageDown, clickers) first page through the carousel's images; past the last image they move to the next step, before the first image to the previous step. Entering a carousel step backwards starts at its last image.
@@ -277,7 +279,7 @@ Goal: a first visit makes people want to try it now or save it for later, and le
 - Running non-web code in the browser (e.g. Pyodide, native builds): non-web code shows captured output instead.
 - Custom themes (the UI uses Esri's Calcite Design System; light/dark only).
 - Support for browsers without JavaScript.
-- Mobile-first: the experience is desktop-first.
+- Mobile-first: the experience is desktop-first; phones get a stacked layout (see Layout), not a separate design.
 - Offline mode / PWA.
 - Visual regression and automated accessibility tests.
 - Analytics and SEO in generated tutorials. (The project website has basic SEO/Open Graph tags; no analytics anywhere.)

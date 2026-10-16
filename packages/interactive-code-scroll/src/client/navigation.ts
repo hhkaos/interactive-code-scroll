@@ -83,3 +83,30 @@ export function revealScroll(
   const span = bottom - top;
   return span + 2 * margin <= view ? top - (view - span) / 2 : top - margin;
 }
+
+export interface StepButtonsInput {
+  /** Active step index; -1 at the intro (or before any step is active). */
+  current: number;
+  /** Steps the reader can reach. */
+  count: number;
+  hasIntro: boolean;
+  /** Selected image of the carousel the step keys page through (0 without one). */
+  image: number;
+  /** Images in that carousel (0 without one). */
+  images: number;
+}
+
+export interface StepButtonsState {
+  back: boolean;
+  next: boolean;
+  /** "3 / 9", or "9 steps" at the intro. */
+  position: string;
+}
+
+/** Back / Next enabled states: they move like the step keys (see `carouselTarget` and the step engine). */
+export function stepButtons({ current, count, hasIntro, image, images }: StepButtonsInput): StepButtonsState {
+  const back = image > 0 || current > 0 || (current === 0 && hasIntro);
+  const next = image < images - 1 || current < count - 1;
+  const position = current < 0 ? `${count} ${count === 1 ? "step" : "steps"}` : `${current + 1} / ${count}`;
+  return { back, next, position };
+}

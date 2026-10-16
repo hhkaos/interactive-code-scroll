@@ -4,11 +4,13 @@
 
 - Let readers send feedback (GitHub issues?) and show the tutorial's last updated date.
 - Show authors?
+- Review Google Codelabs navigation patterns (e.g. https://codelabs.developers.google.com/codelabs/the-lit-path?hl=en#5) and decide which to adopt or adapt: a table of contents (step overview, sense of progress, jump to any step) and a header with "XX mins remaining" ("Back" / "Next" buttons: done). The tool serves both as a tutorial and as a presentation, so check each idea against both uses (e.g. hide or collapse them in presentation mode) and against what the page already has (step navigation, progress).
 
 ## Backlog
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
+- [ ] Stacked layout on phones (est. 3–4 days; rules in `SPEC.md` Layout, to confirm in a UX review): code area on top, explanations below at full width with the Back / Next bar at the bottom, no splitters; Preview / Result pane opened from the code header instead of stacked; scroll activation adapted to the stacked geometry (in a 390×844 prototype scrolling did not activate steps); compact page header; tap instead of hover for hints and tooltips; `100dvh`; E2E with phone viewports (390×844, 844×390).
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).
 - [ ] Low priority (load already feels fast after the CLS fix, 2026-10-15): measure first with the throttled Playwright/Lighthouse run, then consider `<link rel="modulepreload">` for the page bundle in `<head>` (the module script sits at the end of a ~63 KB HTML) and splitting it (538 KB, 138 KB gzip): critical Calcite (navigation, action, progress) first, the rest (carousel, dialog, combobox, JSON tree…) through `import()`.

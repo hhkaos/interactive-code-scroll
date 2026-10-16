@@ -1,4 +1,4 @@
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, revealScroll, type RevealOptions } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, revealScroll, stepButtons, type RevealOptions } from "./navigation.ts";
 import { forwardStepKeys, samePage } from "./embed.ts";
 import { MEDIA_EVENT } from "./image-viewer.ts";
 import { MAXIMIZE_EVENT } from "./maximize-values.ts";
@@ -75,6 +75,9 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
   const progress = document.querySelector<HTMLElement>("#step-count");
   const progressBar = document.querySelector<HTMLElement & { value: number }>("#progress-bar");
+  const backButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-back");
+  const nextButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-next");
+  const position = document.querySelector<HTMLElement>("#step-position");
   /** The intro's own `images=` / `embed=`. */
   const introMedia = intro?.querySelector<HTMLTemplateElement>(":scope > template.step-media") ?? null;
   // Nothing else to show next to the intro (no code tabs, Preview or Result pane): it borrows the first step media.
@@ -233,6 +236,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: null }));
     if (progress) progress.textContent = "";
     if (progressBar) progressBar.value = 0;
+    syncButtons();
     if (location.hash) history.replaceState(null, "", `${location.pathname}${location.search}`);
     // Once per visit: scrolling at the top calls this again, and re-expanding reloads the Preview.
     if (!atIntro) applyPaneState(intro);
@@ -254,6 +258,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
    * so each change re-creates the carousel from the step's template.
    */
   function announceMedia(): void {
+    syncButtons();
     const image = mediaPanel.querySelectorAll<HTMLImageElement>(".step-image")[mediaIndex] ?? null;
     document.dispatchEvent(new CustomEvent(MEDIA_EVENT, { detail: mediaPanel.hidden ? null : image }));
   }
@@ -327,6 +332,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     history.replaceState(null, "", `#${step.id}`);
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
     if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
+    syncButtons();
     applyPaneState(step);
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: step }));
 
@@ -390,9 +396,23 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   );
   allSteps.forEach((step) => observer.observe(step));
 
+  /** Media the step keys page through: the active step's, or the intro's own (not the one it borrows). */
+  function pagedMedia(): HTMLTemplateElement | null {
+    return current < 0 ? (atIntro ? introMedia : null) : mediaOf(steps[current]);
+  }
+
+  /** Back / Next: enabled where the step keys can move, and the position. */
+  function syncButtons(): void {
+    const images = pagedMedia() ? mediaCount() : 0;
+    const state = stepButtons({ current, count: steps.length, hasIntro, image: images ? mediaIndex : 0, images });
+    if (backButton) backButton.disabled = !state.back;
+    if (nextButton) nextButton.disabled = !state.next;
+    if (position) position.textContent = state.position;
+  }
+
   /** Step keys first page through the active step's (or the intro's own) carousel; true when they did. */
   function moveCarousel(delta: -1 | 1): boolean {
-    const template = current < 0 ? (atIntro ? introMedia : null) : mediaOf(steps[current]);
+    const template = pagedMedia();
     if (!template) return false;
     const target = carouselTarget(mediaIndex, mediaCount(), delta);
     if (target === undefined) return false;
@@ -447,6 +467,9 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     },
     { capture: true },
   );
+
+  backButton?.addEventListener("click", () => step(-1));
+  nextButton?.addEventListener("click", () => step(1));
 
   /** Re-centers the active step after a layout change; the observer may not switch steps meanwhile. */
   function keepActiveCentered(): void {
@@ -518,6 +541,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     const active = allSteps.find((s) => s.hasAttribute("data-active"));
     const shown = document.querySelector<HTMLElement>(".code:not([hidden])")?.dataset.file;
     applyHidden();
+    syncButtons();
     showFile(counterpartFile(shown, from, to, tabs));
     markFileChanges();
     if (!active || steps.length === 0) return;

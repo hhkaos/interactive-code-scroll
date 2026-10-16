@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Back / Next buttons in a bar pinned to the bottom of the explanations, with the position ("3 / 9"; "9 steps" at the intro). They move like the step keys (carousel images first; Back from the first step returns to the intro); Back is disabled at the intro and Next at the last step. Always shown, not an author option; hidden in presentation mode and with the explanations hidden. The explanations column is now `div.docs-column` (`main.docs` plus `nav.step-nav`). SPEC also plans a stacked layout for phones. Unit tests in `navigation.test.ts`; E2E in `e2e/step-engine.spec.ts` and `e2e/presentation.spec.ts`.
+
 ## [0.2.0-beta.6] - 2026-10-16
 
 ### Added

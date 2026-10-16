@@ -162,6 +162,37 @@ test("step keys page through a carousel before leaving the step", async ({ page 
   await expect(page).toHaveURL(/#ui$/);
 });
 
+test("Back / Next move like the step keys, carousel images first", async ({ page }) => {
+  const back = page.locator("#step-back");
+  const next = page.locator("#step-next");
+  const shown = () =>
+    page.locator(".media-panel calcite-carousel").evaluate((c: HTMLElement & { selectedItem?: Element }) =>
+      c.selectedItem?.getAttribute("label"),
+    );
+  await page.goto("/");
+  await expect(page.locator("#step-position")).toHaveText("10 steps");
+  await expect(back).toHaveAttribute("disabled", "");
+  await next.click();
+  await expect(page).toHaveURL(/#load-sdk$/);
+  await expect(page.locator("#step-position")).toHaveText("1 / 10");
+  await expect(back).not.toHaveAttribute("disabled");
+  await back.click();
+  await expect(page).not.toHaveURL(/#/);
+
+  await page.goto("/#register-app");
+  await expect.poll(shown).toBe("fixture-one.svg");
+  await next.click();
+  await expect.poll(shown).toBe("fixture-two.svg");
+  await expect(page).toHaveURL(/#register-app$/);
+  await back.click();
+  await back.click();
+  await expect(page).toHaveURL(/#ui$/);
+
+  await page.goto("/#embed-next-slide");
+  await expect(page.locator("#step-position")).toHaveText("10 / 10");
+  await expect(next).toHaveAttribute("disabled", "");
+});
+
 test("clicking a carousel image opens it large; step keys page it; leaving the step closes it", async ({ page }) => {
   const dialog = page.locator("#image-viewer");
   await page.goto("/#register-app");

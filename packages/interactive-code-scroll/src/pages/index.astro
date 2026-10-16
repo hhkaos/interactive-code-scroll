@@ -187,9 +187,17 @@ const clientData = JSON.stringify({
       <calcite-progress slot="progress" id="progress-bar" value="0" label="Tutorial progress" />
     </calcite-navigation>
     <div class="layout">
-      <main class="docs">
-        <Content components={{ Hint, Intro, Step, VarField }} />
-      </main>
+      <div class="docs-column">
+        <main class="docs">
+          <Content components={{ Hint, Intro, Step, VarField }} />
+        </main>
+        {/* Same moves as the step keys (client/steps.ts); hidden in presentation mode. */}
+        <nav class="step-nav" aria-label="Steps">
+          <calcite-button id="step-back" appearance="outline" kind="neutral" icon-start="chevron-left" label="Previous step" disabled>Back</calcite-button>
+          <span id="step-position"></span>
+          <calcite-button id="step-next" icon-end="chevron-right" label="Next step">Next</calcite-button>
+        </nav>
+      </div>
       <div class="gutter">
         <div
           class="splitter"

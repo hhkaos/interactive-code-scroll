@@ -81,7 +81,7 @@ body[data-presenting] :is(#theme-toggle, #copy-file, #download-file, #download-z
 /* Hidden explanations: code gets the full width; steps still move with keys/clicker. */
 body[data-docs-hidden] {
   .layout { grid-template-columns: auto minmax(0, 1fr); }
-  .docs, .splitter { display: none; }
+  .docs-column, .splitter { display: none; }
   /* The gutter stays as a rail at the left edge, holding the "show" handle. */
   .docs-toggle { left: 0; transform: translateY(-50%); }
 }
@@ -126,6 +126,35 @@ body[data-docs-hidden] {
 }
 .layout[data-resizing] { cursor: col-resize; }
 .right[data-resizing] { cursor: row-resize; }
+
+/* Explanations column: the scrolling text plus the Back / Next bar pinned under it. */
+.docs-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  .docs { flex: 1; }
+}
+
+.step-nav {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  border-block-start: 1px solid var(--calcite-color-border-3);
+  background: var(--calcite-color-foreground-1);
+}
+
+#step-position {
+  font-size: var(--calcite-font-size-sm);
+  color: var(--calcite-color-text-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-presenting] .step-nav { display: none; }
 
 .docs, .code {
   scrollbar-width: thin;
