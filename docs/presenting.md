@@ -17,11 +17,14 @@ How to show a tutorial in a talk, a workshop or a screen share. For writing one,
 
 ## During the talk
 
-- **Presentation mode**: the header's presentation icon enters browser full screen with a compact toolbar. The handle on the explanations splitter hides the explanations so the code gets the full width. Esc leaves.
-- **Clickers and keys**: PageDown/PageUp move steps wherever the focus is: a form field, the JSON tree, the Result pane's tabs and controls, or the Preview. Only multi-line text keeps them. Arrow keys also move steps, except inside fields and widgets that use them (JSON tree, Body/Headers tabs, "Run as", splitters).
+- **Presentation mode**: the header's presentation icon (or Alt+P, Option+P on a Mac) enters browser full screen with a compact toolbar; Alt+P again leaves it. The handle on the explanations splitter hides the explanations so the code gets the full width. Esc leaves.
+- **Step index**: in presentation mode the header's "Step X of N" opens the list of steps, large and centered. Step keys keep moving the real step while it is open; a step in the list jumps to it.
+- **Single-key shortcuts** (presentation mode only, never in fields): `O` opens and closes the step index (`b` and `.` too, which many clickers send from their "blank screen" button); `E` shows and hides the explanations.
+- **Forgot a key?** Press and release Alt (Option) on its own, outside fields: a strip at the bottom of the screen lists the keys of the current mode. Any other key, a click or Alt again hides it.
+- **Clickers and keys**: check your clicker before the talk. Its arrows usually send PageDown/PageUp; its "blank screen" button often sends `b` or `.`, which opens the step index here. PageDown/PageUp move steps wherever the focus is: a form field, the JSON tree, the Result pane's tabs and controls, or the Preview. Only multi-line text keeps them. Arrow keys also move steps, except inside fields and widgets that use them (JSON tree, Body/Headers tabs, "Run as", splitters).
 - **Images**: on a step with images, step keys page through them before moving to the next step; clicking an image opens a full-screen viewer.
 - **Splitters**: drag them to give the code or the Preview more room. Their sizes are remembered.
-- **Closing slide**: past the last step, the clicker opens a full-screen slide with "You've completed …", the author's [`<Outro>`](authoring.md#outro) text, the next tutorial of the series and a large QR code of the tutorial's URL, so the room can open it. PageUp returns to the last step. The QR code points at [`presentationUrl`](authoring.md#page) when the tutorial (or the series' `index.mdx`) sets it, else at the public URL from Astro's `site` setting, else at the page itself: when you present from `localhost`, set one of the first two so the QR code opens the published copy.
+- **Closing slide**: past the last step, the clicker opens a full-screen slide with "You've completed …", the author's [`<Outro>`](authoring.md#outro) text, the next tutorial of the series and a large QR code of the tutorial's URL, so the room can open it. PageUp returns to the last step. The QR code points at [`presentationUrl`](authoring.md#page) when the tutorial (or the series' `index.mdx`) sets it, else at the public URL from Astro's `site` setting, else at the page itself: when you present from `localhost`, set one of the first two so the QR code opens the published copy. If the QR code cannot be drawn, the slide shows the URL alone (the browser console says why; reload to try again).
 
 ## Maximized panes
 
@@ -31,4 +34,4 @@ Authors can maximize a pane from a step (or from the intro), for example to show
 
 ## Leaving with Esc
 
-Esc goes one level at a time: an open image viewer, then the maximized pane, then presentation mode (from the closing slide too: the page stays on the closing panel). In browser full screen, the browser takes the first Esc to leave full screen (and presentation mode); the pane stays maximized until the next Esc.
+Esc goes one level at a time: an open image viewer, then the step index, then the maximized pane, then presentation mode (from the closing slide too: the page stays on the closing panel). In browser full screen this order holds in Chrome and Edge: the page locks Esc (Keyboard Lock API), and holding Esc for a moment leaves full screen, as the browser's banner says. Firefox and Safari do not support that lock: there the browser takes the first Esc to leave full screen (and presentation mode), closing an open step index with it; the pane stays maximized until the next Esc. Present from Chrome or Edge to keep Esc for the page.

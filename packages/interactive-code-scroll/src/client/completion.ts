@@ -37,21 +37,38 @@ export function startCompletion(): void {
   new MutationObserver(sync).observe(body, { attributes: true, attributeFilter: ["data-presenting", "data-completed"] });
 }
 
-/** The slide's QR code and link: the build's public URL (`data-url`), else this page without its hash. Drawn once. */
+/** The QR code being drawn: one encoder load at a time. */
+let drawing: Promise<void> | undefined;
+
+/**
+ * The slide's QR code and link: the build's public URL (`data-url`), else this page without its hash.
+ * A failed encoder load (e.g. a dev server that re-optimized its dependencies) is logged and hides the
+ * empty box: the slide keeps the URL. Browsers keep a failed module load until the page reloads.
+ */
 async function drawQr(panel: HTMLElement): Promise<void> {
   const share = panel.querySelector<HTMLElement>(".completion-share");
   const box = share?.querySelector<HTMLElement>(".completion-qr");
-  if (!share || !box || box.hasAttribute("data-drawn")) return;
-  box.toggleAttribute("data-drawn", true);
+  if (!share || !box || box.hasAttribute("data-drawn") || drawing) return;
   const url = share.dataset.url ?? `${location.origin}${location.pathname}`;
   const link = share.querySelector<HTMLAnchorElement>(".completion-share-url")!;
   link.href = url;
   link.textContent = url.replace(/^https?:\/\//, "");
   // Only presenters reach the slide: the encoder loads in presentation mode, not with the page.
-  const { default: qrcode } = await import("qrcode-generator");
-  const qr = qrcode(0, "M");
-  qr.addData(url);
-  qr.make();
-  // Generated markup (modules only, no text from the URL).
-  box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  drawing = import("qrcode-generator")
+    .then(({ default: qrcode }) => {
+      const qr = qrcode(0, "M");
+      qr.addData(url);
+      qr.make();
+      // Generated markup (modules only, no text from the URL).
+      box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+      box.toggleAttribute("data-drawn", true);
+    })
+    .catch((error: unknown) => {
+      box.hidden = true;
+      console.error("InteractiveCodeScroll: the QR code could not be drawn; reload the page to try again.", error);
+    })
+    .finally(() => {
+      drawing = undefined;
+    });
+  await drawing;
 }

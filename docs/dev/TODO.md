@@ -3,9 +3,8 @@
 ## Step index and outline (SPEC: Step navigation, Step outline, Presentation mode; decision 2026-10-16)
 
 Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private). Suggested commits, each with tests:
-4. Presentation mode: header "Step X of N" button opens the large index; `O`, `b`, `.` and `E` shortcuts only while presenting; Esc order. Check `b` / `.` with a real clicker.
-5. Intro meta line: `duration` and `level` next to "Updated".
-6. Docs: authoring guide (`outline`, frontmatter, shortcuts).
+5. Intro meta line: `duration` and `level` next to "Updated"; document it in the authoring guide (`duration` / `level` rows) and features.
+- Check `b` / `.` (step index) with a real clicker.
 
 ---
 

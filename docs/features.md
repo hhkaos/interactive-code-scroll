@@ -15,8 +15,10 @@ A tutorial is a folder with `tutorial.mdx` (the explanations), `code/` (the fina
 - **Phones**: in portrait the code sits on top and the explanations scroll below it, with Back / Next at the bottom; tapping the title shows it in full or opens the sibling tutorial menu. On phones the Preview and Result pane open full screen from their header, and copy/download actions are hidden.
 - **Steps drive the code panel**: when a step becomes active, it can switch file, focus a region (the rest of the file turns gray and the region scrolls into view) or show images instead of code. A text-only step keeps the current file and clears the focus. A file switch stands out: the step names the new file in a chip, and its tab flashes when the step becomes active.
 - **Several ways to move**: scrolling (the step crossing the middle of the panel becomes active), clicking a step, the Back / Next buttons under the explanations (hidden in presentation mode), arrow keys and PageUp/PageDown (presentation clickers work too, even while the focus is in a field or the Result pane).
+- **Step index**: the position between Back and Next ("5 / 10") opens the list of steps, with a check on the ones already seen and the current one marked; a click jumps to a step, and step keys keep moving while it is open. A bottom sheet on phones. See [Step index](authoring.md#step-index).
+- **Step outline**: the same list as an agenda in the code area, next to an intro without media and on any step with `outline` (a recap halfway through). See [Step outline](authoring.md#step-outline).
 - **A closing panel**: at the last step "Next" becomes "Finish", which opens a short "You've completed …" panel with the next tutorial of the series, the code download, the Preview, the index and an optional feedback link, plus the author's own closing text (`<Outro>`). In presentation mode it is a full-screen closing slide with a large QR code of the tutorial's URL.
-- **Numbered steps, progress bar and deep links**: every step heading carries its number; `#step-id` links open the tutorial at that step.
+- **Numbered steps, progress bar and deep links**: every step heading carries its number; a thin bar under the header shows the steps seen, the current one and those left; `#step-id` links open the tutorial at that step.
 - **Optional introduction**: content before the first step that is not numbered and does not focus any code. It can start with the Preview or Result pane collapsed or maximized (`<Intro preview="collapsed">`), open on a given file (`<Intro file="README.md">`), and show images or an embedded page instead of code (`<Intro images={["overview.png"]}>`); a tutorial with nothing else to show opens on the first step's media.
 - **Light and dark**: follows the OS by default; the author can set a default and the reader's toggle wins. The code panel and the Preview follow the page.
 - **Readable at high zoom**, with line numbers and optional wrapping of long lines. The Result pane header turns long labels into icons instead of clipping them, and a short pane scrolls as a whole.
@@ -118,7 +120,10 @@ See [`<Step>`](authoring.md#step).
   <img alt="Presentation mode: the tutorial fills the screen with a compact toolbar, with the cURL request of the current step highlighted." src="../site/public/screenshots/present-rest-curl-light.png" width="900">
 </picture>
 
-- **Presentation mode** hides the header; the explanations can be hidden too. Step keys and clickers keep working, including while the focus is inside the Preview, a form field or the Result pane.
+- **Presentation mode** (the header icon or Alt+P) fills the screen with a compact toolbar; the explanations can be hidden too. Step keys and clickers keep working, including while the focus is inside the Preview, a form field or the Result pane.
+- **Step index on screen**: the header's "Step 5 of 10" opens a large, centered list of the steps; the clicker keeps moving the real step while it is open.
+- **Single-key shortcuts while presenting**: `O` (or a clicker's "blank screen" key, `b` / `.`) opens and closes the step index, `E` shows and hides the explanations. A lone Alt press shows the keys of the current mode in a small strip at the bottom.
+- **Esc one level at a time**: a dialog, the step index, a maximized pane, then presentation mode, also in browser full screen in Chrome and Edge.
 - **Maximize a pane**: the code, the Preview or the Result pane fills the window from its header icon or from a step or the intro (`maximize=`); the icon or Esc restores the layout. Step keys keep working.
 - **Serve locally** with the CLI when the venue's network is unreliable.
 

@@ -125,3 +125,57 @@ export type ProgressState = "seen" | "current" | "pending";
 export function progressStates(current: number, count: number, completed = false): ProgressState[] {
   return Array.from({ length: count }, (_, i) => (completed || i < current ? "seen" : i === current ? "current" : "pending"));
 }
+
+export type PresentationShortcut = "index" | "explanations";
+
+/** `O` opens/closes the step index (`b` and `.` too: many clickers send them from their "blank screen" button); `E` the explanations. */
+const PRESENTATION_KEYS: Readonly<Record<string, PresentationShortcut>> = { o: "index", b: "index", ".": "index", e: "explanations" };
+
+export interface ShortcutContext {
+  presenting: boolean;
+  /** Focus in a field (see `isEditableTag`) or in multi-line text. */
+  editable: boolean;
+  /** Ctrl, Alt or Meta held (Shift is fine: `O` and `o` both open the index). */
+  modifier: boolean;
+}
+
+/** The single-key shortcut for `key`: presentation mode only (WCAG 2.1.4), never typed into a field or with a modifier. */
+export function presentationShortcut(key: string, { presenting, editable, modifier }: ShortcutContext): PresentationShortcut | undefined {
+  if (!presenting || editable || modifier) return undefined;
+  return PRESENTATION_KEYS[key.toLowerCase()];
+}
+
+export interface KeyChord {
+  code: string;
+  altKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  shiftKey: boolean;
+}
+
+/**
+ * Alt+P (Option+P) enters or leaves presentation mode. Read from the physical key: Option+P types "π" on
+ * macOS. Not in fields (Option+P types there), and not AltGr (Ctrl+Alt on Windows) or with other modifiers.
+ */
+export function isPresentChord({ code, altKey, ctrlKey, metaKey, shiftKey }: KeyChord, editable: boolean): boolean {
+  return code === "KeyP" && altKey && !ctrlKey && !metaKey && !shiftKey && !editable;
+}
+
+export interface ShortcutHint {
+  keys: string[];
+  label: string;
+}
+
+/** The keys the Alt hint lists: what works in the current mode (single keys only while presenting). */
+export function shortcutHints(presenting: boolean, mac: boolean): ShortcutHint[] {
+  const present = { keys: [mac ? "⌥" : "Alt", "P"], label: presenting ? "Exit presentation" : "Present" };
+  const steps = { keys: ["←", "→"], label: "Previous / next step" };
+  if (!presenting) return [present, steps];
+  return [
+    present,
+    steps,
+    { keys: ["O"], label: "Step list" },
+    { keys: ["E"], label: "Explanations" },
+    { keys: ["Esc"], label: "Close / exit" },
+  ];
+}

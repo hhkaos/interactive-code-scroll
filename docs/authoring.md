@@ -147,6 +147,7 @@ order: 1
 | [`description`](#index-page) | string | none | One sentence: the page's meta description (search results, link previews) and, in a [series site](#series-sites), the index card text. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
 | [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. It identifies the tutorial, so [series](#series-sites) index cards do not show it: they show [tag logos and variant links](#index-page). Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |
+| [`outline`](#step-outline) | boolean | the series' `index.mdx` one, else `true` | `false`: an `<Intro>` with no `file`, `images` or `embed` keeps the code panel instead of the [step outline](#step-outline). |
 | [`completion`](#outro) | boolean | `true` | The closing panel after the last step: "Next" becomes "Finish" there and opens it. `false` removes it ("Next" stays disabled at the last step). |
 | [`presentationUrl`](presenting.md#during-the-talk) | `http://` or `https://` URL | the series' `index.mdx` one, else Astro `site` + the tutorial's path, else the page URL | Where the QR code of the closing slide (presentation mode) points, e.g. the published copy when you present from `localhost`. `{slug}` is replaced. |
 | [`feedbackUrl`](#outro) | `https://` or `mailto:` URL | the series' `index.mdx` one | "Send feedback" link in the closing panel and ["Ask the author"](#asking-about-a-selection) in the selection toolbar; none without a URL. `{slug}` and `{title}` are replaced (URL-encoded), e.g. `https://github.com/owner/repo/issues/new?title=Feedback:%20{title}`; `{context}`, `{selection}` and `{url}` carry a selection (empty in the closing panel). |
@@ -243,6 +244,9 @@ Install the prerequisites and keep this page open.
 | [`file`](#step) | path in `code/` (relative to each variant folder with [variants](#code-variants)) | the first tab | File tab shown while the intro is shown, with no focused lines: on load and each time the reader returns to it. Comes first in the tabs when frontmatter `files` does not set their order. Cannot be combined with `images` or `embed`. |
 | [`images`](#show-images-instead-of-code) | array of paths in `images/` | none | Images shown instead of code while the intro is shown, as on `<Step>`. |
 | [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown instead of code while the intro is shown, as on `<Step>`. Cannot be combined with `images`. |
+| [`outline`](#step-outline) | no value | on when the intro sets no `file`, `images` or `embed` | The list of steps instead of code. Cannot be combined with `file`, `images` or `embed`. |
+
+An intro with no `file`, `images` or `embed` shows the [step outline](#step-outline) next to it: the reader sees the plan of the tutorial before starting. Set frontmatter `outline: false` to keep the code panel there instead.
 
 For a calm first screen, `<Intro preview="collapsed">` starts with the pane collapsed; the first step that sets `preview="expanded"` opens it. To open on a file that no early step shows (a README, the finished app), use `<Intro file="README.md">`; with variants, every variant needs that file. Other `<Step>` props (`region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
 
@@ -333,6 +337,9 @@ Explain the change here.
 | [`preview`](#preview) | `expanded`, `collapsed`, `keep` | `keep` | Expands or collapses the Preview (or the Result pane) when the step activates. |
 | [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Maximizes the code area (code, images or embedded page) or the pane under it (Preview or Result pane); `none` restores the layout. |
 | [`only`](#steps-across-variants) | variant ids | all variants | With `variants`: space-separated ids the step applies to, e.g. `only="python curl"`. |
+| [`outline`](#step-outline) | no value | none | The list of steps instead of code, e.g. for a recap halfway through. Cannot be combined with `file`, `region`, `images` or `embed`. |
+
+The step's heading is also its title in the [step index](#step-index) and the [step outline](#step-outline); a step without a heading is listed as "Step N". Keep headings short.
 
 A [text-only step](#how-a-tutorial-works) keeps the current file visible and clears any previous region focus.
 
@@ -401,6 +408,14 @@ Adds a **Run request** button that sends `# @name geocode-get` from `requests/`.
 ```
 
 See [Maximize from a step](#maximize-from-a-step).
+
+##### Recap the plan halfway through
+
+```mdx title="tutorial/tutorial.mdx"
+<Step id="recap" outline>
+```
+
+See [Step outline](#step-outline).
 
 ##### Apply a step to some languages only
 
@@ -499,6 +514,34 @@ Leave a blank line after `<summary>` and before `</details>`, so the content is 
 
 </details>
 ```
+
+### Step index
+
+Readers can open a list of the tutorial's steps from the position between Back and Next ("5 / 10", with a list icon). It shows each step's number and heading, a check on the steps before the current one, and the current one marked; clicking a step jumps to it. On phones it opens as a bottom sheet. In [presentation mode](presenting.md#during-the-talk) the header's "Step 5 of 10" opens it as a large centered list, also with `O`. Nothing to write: the list comes from your steps and their headings. Steps for other [variants](#steps-across-variants) are dimmed with their variant names (`otherVariantSteps: notice`) or left out (`hide`).
+
+### Step outline
+
+The same list can fill the code area as an agenda, headed "Steps": next to an `<Intro>` that shows nothing else (by default), or on a step with `outline`, such as a recap halfway through. It follows the reader (checks, current step) and each item jumps to its step. The language switcher, file tabs and ZIP button stay; a click on a tab shows that file until the next step. In a tutorial without code it fills the media panel. A long list takes up to four columns to fit; in presentation mode the text is larger.
+
+```mdx title="tutorial/tutorial.mdx"
+<Intro>
+
+## What you will build
+
+</Intro>
+
+…
+
+<Step id="recap" outline>
+
+## Where we are
+
+Half of the app is in place. Next, sign-in.
+
+</Step>
+```
+
+Frontmatter `outline: false` (per tutorial, or for a whole series in `tutorials/index.mdx`) keeps the code panel next to an intro without media; `<Intro outline>` and `<Step outline>` still show it.
 
 ## Code Markers
 
@@ -1044,6 +1087,7 @@ Start with the REST tutorials if you are new to location services.
 | `feedbackUrl` | `https://` or `mailto:` URL | none | Default [feedback link](#outro) of every tutorial; a tutorial's own `feedbackUrl` replaces it. `{slug}` and `{title}` are the tutorial's. |
 | `ask` | list of `author`, `chatgpt`, `claude`, `{ label, url }`, or `false` | `[author, chatgpt, claude]` | Default [selection toolbar](#asking-about-a-selection) actions of every tutorial; a tutorial's own `ask` replaces it. |
 | `presentationUrl` | `http://` or `https://` URL | none | Default QR code URL of every tutorial's [closing slide](presenting.md#during-the-talk), e.g. `https://owner.github.io/tutorials/{slug}/`; a tutorial's own `presentationUrl` replaces it. |
+| `outline` | boolean | `true` | Default [step outline](#step-outline) next to an intro without media; a tutorial's own `outline` replaces it. |
 
 The body is free MDX prose with three components; anything else is a build error.
 
@@ -1157,7 +1201,10 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> request "x" not found in requests/ (# @name x)` | Name the request with `# @name x` in a `.http` file under `requests/`. |
 | `<Step> maximize="preview" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
 | `<Step> duplicate id "x"` | Step ids are unique per tutorial. |
-| `<Intro> "x" is not available on <Intro> (only preview, maximize, file, images, embed)` | Move `region`, `output` or `request` to the first step. |
+| `<Intro> "x" is not available on <Intro> (only preview, maximize, file, images, embed, outline)` | Move `region`, `output` or `request` to the first step. |
+| `<Step> "outline" takes no value: write <Step outline>` | Write `outline` alone, without `="…"` or `{…}`. |
+| `<Step> "outline" and "file" cannot be combined; use one of them` | The outline replaces the code: drop `file`, `region`, `images` or `embed`, or move the outline to its own step. |
+| `"outline" must be a boolean` | Frontmatter `outline: false` (or `true`), without quotes. |
 | `<Outro> must come after the last <Step>` | Move it to the end of `tutorial.mdx`. |
 | `tutorials/x: "next" tutorial "y" is not in the series` | Use the folder name of another tutorial, or `next: false`. |
 | `<VarField> no "@var x" found in code/` | Add `// @var x` next to the literal in the code, or fix the name. |

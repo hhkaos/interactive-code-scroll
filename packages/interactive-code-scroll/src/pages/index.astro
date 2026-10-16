@@ -216,8 +216,12 @@ const clientData = JSON.stringify({
         )
       }
       <div slot="content-end" class="header-actions">
-        <span id="step-count" aria-live="polite"></span>
-        <calcite-action id="present-toggle" icon="presentation" text="Present" />
+        {/* Presentation mode only: opens the step index as a large centered list (client/step-index.ts). */}
+        <button type="button" id="step-count-button" class="step-position step-count-button" popovertarget="step-index" aria-haspopup="dialog" aria-expanded="false" aria-keyshortcuts="O">
+          <calcite-icon icon="list-number" scale="s" aria-hidden="true" />
+          <span id="step-count" aria-live="polite"></span>
+        </button>
+        <calcite-action id="present-toggle" icon="presentation" text="Present" aria-keyshortcuts="Alt+P" />
         <calcite-action id="theme-toggle" icon="moon" text="Toggle theme" />
       </div>
     </calcite-navigation>
@@ -225,9 +229,14 @@ const clientData = JSON.stringify({
     <div id="progress-bar" class="step-progress" role="progressbar" aria-label="Tutorial progress" aria-valuemin="0" aria-valuenow="0"></div>
     {/* Step index: a native popover (top layer), so it shows wherever its trigger is. Items come from client/step-index.ts. */}
     <div id="step-index" class="step-index" popover role="dialog" aria-labelledby="step-index-heading">
+      {/* The tutorial's title and the key hint show only in presentation mode, where the list is a large centered overlay. */}
+      <p class="step-index-eyebrow" aria-hidden="true">{config.title}</p>
       <p id="step-index-heading" class="step-index-heading"></p>
       <ol class="step-index-list"></ol>
+      <p class="step-index-hint">Clicker or arrows move the step · Esc or O closes</p>
     </div>
+    {/* The keys of the current mode, shown by a lone Alt (Option) press (client/presentation.ts). */}
+    <div id="shortcut-hint" class="shortcut-hint" role="status" hidden></div>
     {
       !currentSibling && (
         /* The full title when the header clips it (client/layout.ts sets the reference element only then). */

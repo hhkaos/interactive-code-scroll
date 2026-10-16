@@ -631,5 +631,21 @@ test("the closing slide's QR code points at the series presentationUrl, with {sl
   const slide = page.locator("body > .completion[data-slide]");
   await expect(slide.locator(".completion-share-url")).toHaveAttribute("href", "https://example.com/series-fixture/alpha/");
   await expect(slide.locator(".completion-share-url")).toHaveText("example.com/series-fixture/alpha/");
+  await expect(slide.locator(".completion-qr svg")).toBeVisible();
   await expect(slide.locator(".completion-next")).toBeVisible();
+});
+
+test("when the QR encoder fails to load, the slide keeps the URL without an empty box", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (message) => void (message.type() === "error" && errors.push(message.text())));
+  await page.route(/\/_astro\/qrcode\.[^/]+\.js$/, (route) => route.abort());
+  await page.goto("/alpha/#render");
+  // Entering presentation mode loads the encoder: it fails.
+  await page.locator("#present-toggle").click();
+  await expect.poll(() => errors.some((text) => text.includes("the QR code could not be drawn"))).toBe(true);
+  await page.keyboard.press("PageDown");
+  const slide = page.locator("body > .completion[data-slide]");
+  await expect(slide).toBeVisible();
+  await expect(slide.locator(".completion-qr")).toBeHidden();
+  await expect(slide.locator(".completion-share-url")).toHaveText("example.com/series-fixture/alpha/");
 });

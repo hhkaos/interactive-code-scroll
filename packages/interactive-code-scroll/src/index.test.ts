@@ -39,6 +39,14 @@ describe("interactiveCodeScroll", () => {
     expect(config.vite.plugins.map((p: { name: string }) => p.name)).toContain("interactive-code-scroll:tutorial");
   });
 
+  it("pre-bundles the browser's lazy dependencies for dev (a runtime re-optimization breaks their import)", () => {
+    const { updateConfig } = runSetup(projectWithTutorial());
+    expect(updateConfig.mock.calls[0]![0].vite.optimizeDeps.include).toEqual([
+      "interactive-code-scroll > qrcode-generator",
+      "interactive-code-scroll > fflate",
+    ]);
+  });
+
   it("supports a custom tutorial folder", () => {
     const { injectRoute } = runSetup(projectWithTutorial("docs/oauth"), { tutorial: "docs/oauth" });
     expect(injectRoute).toHaveBeenCalled();

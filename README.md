@@ -46,7 +46,7 @@ Built for people who teach developer technologies: developer advocates, trainers
 |---|---|
 | 🧭 **Scroll-synced steps** | Each step focuses a file, a code region or an image carousel. Deep links to any step. |
 | 📱 **Desktop and mobile** | Side by side on a laptop or projector; on phones the code sits on top and the explanation scrolls below. |
-| 🎤 **Presentation mode** | Clean, projector-friendly layout. Keyboard and clicker (PageUp/PageDown) navigation. |
+| 🎤 **Presentation mode** | Clean, projector-friendly layout. Keyboard and clicker (PageUp/PageDown) navigation, a large step index, and Alt+P, `O` and `E` shortcuts. |
 | 🌐 **Multi-language variants** | One tutorial, several languages (e.g. cURL / Python / JavaScript). Readers switch in place. |
 | ▶️ **Live Preview** | Web code runs in an embedded Preview, with an "open in new tab" fallback. |
 | 📡 **Request runner** | `.http` requests run from the page; captured output shows when there is no token. JSON viewer included. |

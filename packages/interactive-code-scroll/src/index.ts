@@ -62,6 +62,9 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
             plugins: [tutorialModule(sources, seriesDir, () => siteBase, () => siteUrl)],
             // pnpm does not hoist `cookie`; bundle it so Node never resolves a stray copy up the tree.
             environments: { prerender: { resolve: { noExternal: ["cookie"] } } },
+            // Loaded lazily in the browser (closing-slide QR code, code ZIP): pre-bundled at dev start. Found
+            // at runtime instead, Vite re-optimizes and the page's import fails with "504 Outdated Optimize Dep".
+            optimizeDeps: { include: ["interactive-code-scroll > qrcode-generator", "interactive-code-scroll > fflate"] },
           },
         });
         // One set of routes; in a series each is prefixed with the tutorial's slug.

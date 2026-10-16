@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, progressStates, revealScroll, stepButtons } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, isPresentChord, keyToDelta, movesStep, presentationShortcut, shortcutHints, progressStates, revealScroll, stepButtons } from "./navigation.ts";
 
 describe("navigation", () => {
   it.each([
@@ -145,5 +145,57 @@ describe("progressStates", () => {
 
   it("marks every step seen on the closing panel", () => {
     expect(progressStates(2, 3, true)).toEqual(["seen", "seen", "seen"]);
+  });
+});
+
+describe("presentationShortcut", () => {
+  const presenting = { presenting: true, editable: false, modifier: false };
+
+  it("maps O, b and . to the step index and E to the explanations, in either case", () => {
+    expect(["o", "O", "b", "B", "."].map((key) => presentationShortcut(key, presenting))).toEqual(Array(5).fill("index"));
+    expect(presentationShortcut("e", presenting)).toBe("explanations");
+    expect(presentationShortcut("E", presenting)).toBe("explanations");
+  });
+
+  it("ignores other keys", () => {
+    for (const key of ["x", ">", "Escape", "PageDown", " "]) expect(presentationShortcut(key, presenting)).toBeUndefined();
+  });
+
+  it("works only while presenting, outside fields and without Ctrl, Alt or Meta", () => {
+    expect(presentationShortcut("o", { ...presenting, presenting: false })).toBeUndefined();
+    expect(presentationShortcut("o", { ...presenting, editable: true })).toBeUndefined();
+    expect(presentationShortcut("e", { ...presenting, modifier: true })).toBeUndefined();
+  });
+});
+
+describe("isPresentChord", () => {
+  const chord = { code: "KeyP", altKey: true, ctrlKey: false, metaKey: false, shiftKey: false };
+
+  it("is Alt+P by the physical key (Option+P types π on macOS)", () => {
+    expect(isPresentChord(chord, false)).toBe(true);
+    expect(isPresentChord({ ...chord, altKey: false }, false)).toBe(false);
+    expect(isPresentChord({ ...chord, code: "KeyO" }, false)).toBe(false);
+  });
+
+  it("skips fields, AltGr (Ctrl+Alt) and other modifiers", () => {
+    expect(isPresentChord(chord, true)).toBe(false);
+    expect(isPresentChord({ ...chord, ctrlKey: true }, false)).toBe(false);
+    expect(isPresentChord({ ...chord, metaKey: true }, false)).toBe(false);
+    expect(isPresentChord({ ...chord, shiftKey: true }, false)).toBe(false);
+  });
+});
+
+describe("shortcutHints", () => {
+  it("lists Alt+P and the step keys outside presentation mode", () => {
+    expect(shortcutHints(false, false)).toEqual([
+      { keys: ["Alt", "P"], label: "Present" },
+      { keys: ["←", "→"], label: "Previous / next step" },
+    ]);
+  });
+
+  it("adds the single keys while presenting, with the Option symbol on macOS", () => {
+    const hints = shortcutHints(true, true);
+    expect(hints[0]).toEqual({ keys: ["⌥", "P"], label: "Exit presentation" });
+    expect(hints.map((h) => h.keys.join("+"))).toEqual(["⌥+P", "←+→", "O", "E", "Esc"]);
   });
 });

@@ -280,7 +280,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
     const introFile = !atIntro && intro ? fileOf(intro) : undefined;
     if (introFile) showFile(introFile);
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: null }));
-    if (progress) progress.textContent = "";
+    if (progress) progress.textContent = "Introduction";
     syncButtons();
     if (location.hash) history.replaceState(null, "", `${location.pathname}${location.search}`);
     // Once per visit: scrolling at the top calls this again, and re-expanding reloads the Preview.

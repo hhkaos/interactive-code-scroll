@@ -1,4 +1,5 @@
 import { indexEntries, indexHeading, type IndexStep } from "./step-index-values.ts";
+import { shortcutFor } from "./presentation.ts";
 import { PROGRESS_EVENT, type StepEngine, type StepProgress } from "./steps.ts";
 import type { VariantsHandle } from "./variants.ts";
 
@@ -128,6 +129,7 @@ function fitOutline(outline: HTMLElement): void {
 /**
  * The step index: a list of the reachable steps, opened from the Back / Next position (a native
  * `popover`: light dismiss and Esc). Anchored above its trigger; a bottom sheet on phones (CSS).
+ * In presentation mode the header's "Step X of N" (or `O`, `b`, `.`) opens it as a large centered list.
  * It follows the reader's place live, so step keys move the real step while it is open. The same
  * list fills the step outline that `outline` (and a media-less intro) shows in the code area.
  */
@@ -158,6 +160,7 @@ export function startStepIndex(engine: StepEngine, variants?: VariantsHandle): v
   const trigger = document.querySelector<HTMLElement>("#step-position");
   const panel = document.querySelector<HTMLElement>("#step-index");
   if (!trigger || !panel) return;
+  const triggers = document.querySelectorAll<HTMLElement>('[popovertarget="step-index"]');
   const heading = panel.querySelector<HTMLElement>(".step-index-heading")!;
   const list = panel.querySelector<HTMLOListElement>(".step-index-list")!;
 
@@ -169,8 +172,9 @@ export function startStepIndex(engine: StepEngine, variants?: VariantsHandle): v
   const currentLink = () =>
     list.querySelector<HTMLElement>('[aria-current="step"]') ?? list.querySelector<HTMLElement>("a");
 
-  /** Above the trigger, centered on it and kept inside the window. Phones ignore it (bottom sheet in CSS). */
+  /** Above the trigger, centered on it and kept inside the window. Phones and presentation mode ignore it (CSS). */
   function place(): void {
+    if (document.body.hasAttribute("data-presenting")) return;
     const box = trigger!.getBoundingClientRect();
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const width = Math.min(22 * rem, innerWidth - 2 * GAP);
@@ -185,7 +189,7 @@ export function startStepIndex(engine: StepEngine, variants?: VariantsHandle): v
   panel.addEventListener("toggle", (event) => {
     const open = (event as ToggleEvent).newState === "open";
     // `popovertarget` exposes the state to assistive technology, not as an attribute the styles can use.
-    trigger.setAttribute("aria-expanded", String(open));
+    for (const button of triggers) button.setAttribute("aria-expanded", String(open));
     if (!open) return;
     const link = currentLink();
     link?.focus({ preventScroll: true });
@@ -202,6 +206,12 @@ export function startStepIndex(engine: StepEngine, variants?: VariantsHandle): v
     },
     { capture: true },
   );
+  // Presentation mode: `O` (or a clicker's "blank screen" key, `b` / `.`) opens and closes the list.
+  addEventListener("keydown", (event) => {
+    if (shortcutFor(event) !== "index") return;
+    event.preventDefault();
+    panel.togglePopover();
+  });
   addEventListener("resize", () => {
     if (stepIndexOpen()) place();
   });

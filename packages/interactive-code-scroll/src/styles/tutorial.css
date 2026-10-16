@@ -108,14 +108,9 @@ body:has(#title-popover) #header-title[data-clipped] .page-title-heading { curso
   height: 100%;
 }
 
-/* "Step X of N" only while presenting (explanations may be hidden); the bar always shows progress. */
-#step-count {
-  padding-inline: 0.75rem;
-  font-size: var(--calcite-font-size-sm);
-  color: var(--calcite-color-text-2);
-  white-space: nowrap;
-}
-body:not([data-presenting]) #step-count { display: none; }
+/* "Step X of N" only while presenting (explanations may be hidden): it opens the large step index; the bar always shows progress. */
+.step-count-button { margin-inline: 0.5rem; }
+body:not([data-presenting]) .step-count-button { display: none; }
 
 /* Progress: one flush segment per visible step, seen / current / pending (decorative, not clickable). */
 .step-progress {
@@ -284,6 +279,55 @@ body[data-docs-hidden] {
 }
 @keyframes ics-index-item { from { opacity: 0; transform: translateY(6px); } }
 
+/* Presentation mode: a large list centered over a scrim, with the tutorial's title and the keys. */
+.step-index-eyebrow, .step-index-hint { display: none; }
+body[data-presenting] .step-index {
+  inset: 0;
+  margin: auto;
+  inline-size: min(48rem, calc(100vw - 4rem));
+  block-size: fit-content;
+  max-block-size: calc(100vh - 6rem);
+  padding: 1.75rem 2.25rem;
+  border-radius: var(--calcite-corner-radius-round, 0.5rem);
+  transform-origin: 100% 0;
+  transform: scale(0.97);
+  transition-duration: 200ms;
+  &:popover-open {
+    transform: none;
+    @starting-style { opacity: 0; transform: scale(0.97); }
+  }
+  &::backdrop { background: rgb(0 0 0 / 0.4); }
+
+  .step-index-eyebrow {
+    display: block;
+    margin: 0 0 0.75rem;
+    padding-inline: 0.875rem;
+    font-size: var(--calcite-font-size-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--calcite-color-text-3);
+  }
+  /* The header shows the position; the heading still names the list. */
+  .step-index-heading { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .step-index-list { gap: 0.25rem; }
+  .step-index-list a { font-size: var(--calcite-font-size-lg); padding: 0.625rem 0.875rem; grid-template-columns: 1.875rem minmax(0, 1fr); }
+  .step-index-mark { inline-size: 1.875rem; block-size: 1.875rem; font-size: var(--calcite-font-size-sm); }
+  /* Long tutorials: two columns, read top to bottom. */
+  .step-index-list:has(> li:nth-child(13)) {
+    display: block;
+    columns: 2;
+    column-gap: 0.5rem;
+    li { break-inside: avoid; margin-block-end: 0.25rem; }
+  }
+  .step-index-hint {
+    display: block;
+    margin: 1rem 0 0;
+    padding-inline: 0.875rem;
+    font-size: var(--calcite-font-size-xs);
+    color: var(--calcite-color-text-3);
+  }
+}
+
 .step-index-heading {
   margin: 0;
   padding: 0.125rem 0.625rem 0.5rem;
@@ -363,6 +407,56 @@ body[data-docs-hidden] {
 }
 
 body[data-presenting] .step-nav { display: none; }
+
+/* Shortcut hint (a lone Alt press): a quiet floating strip at the bottom center, over everything but dialogs. */
+.shortcut-hint {
+  position: fixed;
+  inset-block-end: 1.25rem;
+  /* Centered by margins: `left: 50%` would cap the shrink-to-fit width at half the window. */
+  inset-inline: 0;
+  inline-size: fit-content;
+  margin-inline: auto;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.375rem 1.25rem;
+  max-inline-size: calc(100vw - 2rem);
+  box-sizing: border-box;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--calcite-color-border-3);
+  border-radius: var(--calcite-corner-radius-round, 0.375rem);
+  background: color-mix(in srgb, var(--calcite-color-foreground-1) 92%, transparent);
+  box-shadow: var(--calcite-shadow-sm, 0 2px 12px rgb(0 0 0 / 0.12));
+  backdrop-filter: blur(6px);
+  color: var(--calcite-color-text-2);
+  font-size: var(--calcite-font-size-sm);
+  transition: opacity 160ms ease-out, translate 160ms ease-out;
+  @starting-style { opacity: 0; translate: 0 0.375rem; }
+
+  &[hidden] { display: none; }
+}
+.shortcut-hint-item {
+  white-space: nowrap;
+  kbd {
+    display: inline-block;
+    min-inline-size: 1.25rem;
+    margin-inline-end: 0.1875rem;
+    padding: 0 0.3125rem;
+    border: 1px solid var(--calcite-color-border-1);
+    border-block-end-width: 2px;
+    border-radius: var(--calcite-corner-radius-sharp, 0.25rem);
+    background: var(--calcite-color-foreground-2);
+    color: var(--calcite-color-text-1);
+    font: inherit;
+    font-size: var(--calcite-font-size-xs);
+    font-weight: var(--calcite-font-weight-medium);
+    text-align: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shortcut-hint { transition: none; }
+}
 
 .docs, .code {
   scrollbar-width: thin;
