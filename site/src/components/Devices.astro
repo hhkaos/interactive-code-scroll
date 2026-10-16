@@ -1,0 +1,120 @@
+---
+import { base } from "../../site-config.mjs";
+
+interface Props {
+  /** Desktop screenshot name (1440 x 860), shown in an all-in-one monitor. */
+  desktop: string;
+  /** Phone screenshot name (390 x 844 viewport), shown in a phone in front of the monitor. */
+  phone: string;
+  alt: string;
+}
+
+// Generic device frames drawn in CSS (no product logos); light and dark screenshots follow the page theme.
+const { desktop, phone, alt } = Astro.props;
+const src = (name: string, scheme: string) => `${base}screenshots/${name}-${scheme}.png`;
+---
+
+<figure class="devices" role="img" aria-label={alt}>
+  <div class="monitor" aria-hidden="true">
+    <div class="monitor-screen">
+      <img class="shot-dark" src={src(desktop, "dark")} alt="" width="1440" height="860" loading="lazy" decoding="async" />
+      <img class="shot-light" src={src(desktop, "light")} alt="" width="1440" height="860" loading="lazy" decoding="async" />
+    </div>
+    <div class="monitor-chin"></div>
+    <div class="monitor-stand"></div>
+  </div>
+  <div class="phone" aria-hidden="true">
+    <div class="phone-screen">
+      <div class="phone-status"><span class="phone-island"></span></div>
+      <img class="shot-dark" src={src(phone, "dark")} alt="" width="390" height="844" loading="lazy" decoding="async" />
+      <img class="shot-light" src={src(phone, "light")} alt="" width="390" height="844" loading="lazy" decoding="async" />
+    </div>
+  </div>
+</figure>
+
+<style>
+  .devices {
+    position: relative;
+    margin: 0;
+    /* Room on the right and below for the phone, which overlaps the monitor's corner. */
+    padding: 0 9% 0 0;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .monitor {
+    filter: drop-shadow(0 30px 40px rgba(4, 10, 22, 0.35));
+  }
+
+  .monitor-screen {
+    overflow: hidden;
+    border: clamp(6px, 1.1vw, 14px) solid #0d0f12;
+    border-bottom-width: clamp(6px, 1.1vw, 14px);
+    border-radius: clamp(8px, 1.2vw, 16px) clamp(8px, 1.2vw, 16px) 0 0;
+    background: #0d0f12;
+  }
+
+  /* The aluminum chin of an all-in-one, without a logo. */
+  .monitor-chin {
+    height: clamp(18px, 3.4vw, 44px);
+    border-radius: 0 0 clamp(8px, 1.2vw, 16px) clamp(8px, 1.2vw, 16px);
+    background: linear-gradient(180deg, #d9dde3, #b9bfc8);
+  }
+
+  .monitor-stand {
+    width: 22%;
+    height: clamp(26px, 5vw, 64px);
+    margin: 0 auto;
+    background: linear-gradient(90deg, #a9b0ba, #d4d8de 45%, #b3b9c2);
+    clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%);
+    border-radius: 0 0 4px 4px;
+  }
+
+  .phone {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 23%;
+    padding: 1.2%;
+    border-radius: 14% / 6.5%;
+    background: linear-gradient(135deg, #5b6068, #2a2d32 40%, #4a4f57);
+    box-shadow: 0 24px 50px -12px rgba(4, 10, 22, 0.55);
+  }
+
+  .phone-screen {
+    overflow: hidden;
+    border: 3px solid #0d0f12;
+    border-radius: 12.5% / 5.8%;
+    background: #0d0f12;
+  }
+
+  /* Status bar area with the camera cutout: the screenshot starts below it, as on the device. */
+  .phone-status {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 390 / 40;
+    /* The tutorial header's color (Calcite foreground-1), so the bar reads as part of the page. */
+    background: #ffffff;
+  }
+
+  :global(:root[data-theme="dark"]) .phone-status {
+    background: #2b2b2b;
+  }
+
+  .phone-island {
+    width: 32%;
+    height: 52%;
+    border-radius: 999px;
+    background: #0d0f12;
+  }
+
+  :global(:root[data-theme="dark"]) .shot-light,
+  :global(:root[data-theme="light"]) .shot-dark {
+    display: none;
+  }
+</style>

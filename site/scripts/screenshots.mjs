@@ -56,6 +56,8 @@ const shots = [
     // A small toolbar: zoomed in (same 1440 x 860 ratio as the other shots, at twice the size).
     crop: { around: ["#oauth h2", "#ask-bar", "#ask-ai-menu calcite-dropdown-group"], width: 720, height: 430 },
   },
+  // The same step as reading-oauth on a phone (portrait layout), for the landing's device composition.
+  { name: "phone-oauth", path: "showcase/oauth-pkce/#oauth", device: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 } },
   { name: "result-rest-text", path: "showcase/rest-geocode/?variant=python#results" },
   // Which part of the page a docs section is about: the rest is dimmed.
   { name: "area-explanations", path: "showcase/oauth-pkce/#config", highlight: ".docs" },
@@ -130,14 +132,17 @@ const only = process.argv.slice(2);
 const browser = await chromium.launch();
 for (const colorScheme of ["light", "dark"]) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 860 }, deviceScaleFactor: 2, colorScheme });
-  const page = await context.newPage();
-  for (const { name, path, url, action, highlight, crop } of shots.filter(({ name }) => !only.length || only.includes(name))) {
+  const desktop = await context.newPage();
+  for (const { name, path, url, action, highlight, crop, device } of shots.filter(({ name }) => !only.length || only.includes(name))) {
+    // Phone scenes get their own context (viewport, touch, pixel ratio).
+    const page = device ? await (await browser.newContext({ ...device, colorScheme })).newPage() : desktop;
     await page.goto(url ?? `${origin}${base}${path}`, { waitUntil: "networkidle" });
     await action?.(page);
     await page.waitForTimeout(2000);
     if (highlight) await page.evaluate(highlightArea, highlight);
     const clip = crop && (await page.evaluate(cropArea, crop));
     await page.screenshot({ path: join(publicDir, "screenshots", `${name}-${colorScheme}.png`), ...(clip && { clip }) });
+    if (device) await page.context().close();
   }
   await context.close();
 }

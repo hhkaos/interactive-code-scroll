@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import CopyCommand from "../components/CopyCommand.astro";
 import DemoFrame from "../components/DemoFrame.astro";
 import Shot from "../components/Shot.astro";
+import Devices from "../components/Devices.astro";
 import { base } from "../../site-config.mjs";
 import { docsPageUrl, repo } from "../../docs-config.mjs";
 import core from "../../../packages/interactive-code-scroll/package.json";
@@ -57,6 +58,13 @@ const highlights = [
     text: "Readers select a sentence or a few lines of code and ask you in a prefilled issue, or ask ChatGPT, Claude or your own assistant. The question carries the step, the selected text and a link back to that exact spot.",
     shot: "ask-oauth",
     alt: "Text selected in a tutorial step, with a small toolbar over it: Ask the author, and an Ask AI menu listing ChatGPT, Claude and Esri's Ask AI.",
+  },
+  {
+    eyebrow: "Desktop and mobile",
+    title: "Side by side on a big screen. Still readable on a phone.",
+    text: "On a laptop, a monitor or a projector, the explanation and the code sit side by side. On a phone the code moves on top, the explanation scrolls below and Back / Next stay under the reader's thumb.",
+    devices: { desktop: "reading-oauth", phone: "phone-oauth" },
+    alt: "The OAuth tutorial on a desktop monitor, explanation and code side by side, and on a phone in front of it, with the code above the explanation.",
   },
   {
     eyebrow: "Made for the stage",
@@ -251,7 +259,7 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
                 <p>{item.text}</p>
               </div>
               <div class="highlight-shot reveal">
-                <Shot name={item.shot} alt={item.alt} />
+                {item.devices ? <Devices {...item.devices} alt={item.alt} /> : <Shot name={item.shot!} alt={item.alt} />}
               </div>
             </div>
           ))
