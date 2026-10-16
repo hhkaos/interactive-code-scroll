@@ -262,7 +262,7 @@ When the intro shows nothing and there is nothing else to show next to it (no co
 
 ### `<Outro>`
 
-Every tutorial ends with a closing panel after its last step: at the last step "Next" becomes "Finish", which scrolls to the panel (scrolling there does the same), and Back returns to the last step. The panel says "You've completed <title>" and offers the next steps:
+Every tutorial ends with a closing panel after its last step: at the last step "Next" becomes "Finish", which scrolls to the panel (scrolling there does the same), and Back returns to the last step. The panel says "You've completed" and the tutorial title, and offers the next steps:
 
 - **Next tutorial** (series only): frontmatter [`next`](#series-index-and-siblings), else the next tutorial in index order; none after the last one or with `next: false`.
 - **Download code**: the ZIP of the code panel (active variant, form values applied).
