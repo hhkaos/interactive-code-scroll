@@ -16,7 +16,6 @@ import "@esri/calcite-components/components/calcite-navigation";
 import "@esri/calcite-components/components/calcite-notice";
 import "@esri/calcite-components/components/calcite-option";
 import "@esri/calcite-components/components/calcite-popover";
-import "@esri/calcite-components/components/calcite-progress";
 import "@esri/calcite-components/components/calcite-radio-button";
 import "@esri/calcite-components/components/calcite-radio-button-group";
 import "@esri/calcite-components/components/calcite-segmented-control";

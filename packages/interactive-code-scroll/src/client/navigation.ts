@@ -118,3 +118,10 @@ export function stepButtons({ current, count, hasIntro, image, images, completio
   const position = current < 0 ? `${count} ${count === 1 ? "step" : "steps"}` : `${current + 1} / ${count}`;
   return { back, next: more || finish, finish, position };
 }
+
+export type ProgressState = "seen" | "current" | "pending";
+
+/** Segment states of the progress bar: positional (steps before the current one are seen); all seen on the closing panel. */
+export function progressStates(current: number, count: number, completed = false): ProgressState[] {
+  return Array.from({ length: count }, (_, i) => (completed || i < current ? "seen" : i === current ? "current" : "pending"));
+}

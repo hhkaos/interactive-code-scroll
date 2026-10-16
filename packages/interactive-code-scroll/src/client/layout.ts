@@ -155,9 +155,7 @@ function startHeaderTitle(): void {
   const trigger = menu?.querySelector<HTMLElement>("calcite-button");
   const popover = document.querySelector<HTMLElement & { referenceElement?: HTMLElement; open: boolean }>("#title-popover");
   const phone = matchMedia(PHONE_QUERY);
-  const others = [...header.children].filter(
-    (el): el is HTMLElement => el instanceof HTMLElement && el !== title && el.slot !== "progress",
-  );
+  const others = [...header.children].filter((el): el is HTMLElement => el instanceof HTMLElement && el !== title);
   // Added only while needed: Calcite draws a separator above the next group even when this one is hidden.
   const fullTitle = document.createElement("calcite-dropdown-group");
   fullTitle.setAttribute("group-title", heading.textContent ?? "");

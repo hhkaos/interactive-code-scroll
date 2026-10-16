@@ -19,7 +19,12 @@ test("a deep link activates its step, file and region", async ({ page }) => {
   await expect(page.locator(".code:not([hidden])")).toHaveAttribute("data-file", "main.js");
   await expect(focused(page).first()).toContainText("fixtureState");
   await expect(page.locator("#step-count")).toHaveText("Step 5 of 10");
-  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 50);
+  const bar = page.locator("#progress-bar");
+  await expect(bar).toHaveAttribute("aria-valuenow", "5");
+  await expect(bar).toHaveAttribute("aria-valuetext", "Step 5 of 10");
+  await expect(bar.locator('[data-state="seen"]')).toHaveCount(4);
+  await expect(bar.locator('[data-state="current"]')).toHaveCount(1);
+  await expect(bar.locator('[data-state="pending"]')).toHaveCount(5);
   await expect(page).toHaveURL(/#oauth$/);
 });
 
@@ -202,6 +207,8 @@ test("Finish opens the closing panel; Back and scrolling up return to the last s
   await expect(page.locator("#step-position")).toHaveText("Done");
   await expect(page.locator("body")).toHaveAttribute("data-completed", "");
   await expect(next).toHaveAttribute("disabled", "");
+  // The progress bar is full on the closing panel.
+  await expect(page.locator('#progress-bar > :not([data-state="seen"])')).toHaveCount(0);
   await expect(panel).toBeInViewport();
   await expect(page.locator("#completion-heading")).toBeFocused();
   await expect(page.locator("#completion-heading")).toHaveText("You've completed Framework Fixture Tutorial");

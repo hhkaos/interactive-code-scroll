@@ -1,4 +1,4 @@
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, revealScroll, stepButtons, type RevealOptions } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, progressStates, revealScroll, stepButtons, type RevealOptions } from "./navigation.ts";
 import { forwardStepKeys, samePage } from "./embed.ts";
 import { MEDIA_EVENT } from "./image-viewer.ts";
 import { MAXIMIZE_EVENT } from "./maximize-values.ts";
@@ -74,7 +74,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
   const codePanel = document.querySelector<HTMLElement>(".code-panel")!;
   const mediaPanel = document.querySelector<HTMLElement>(".media-panel")!;
   const progress = document.querySelector<HTMLElement>("#step-count");
-  const progressBar = document.querySelector<HTMLElement & { value: number }>("#progress-bar");
+  const progressBar = document.querySelector<HTMLElement>("#progress-bar");
   const backButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-back");
   const nextButton = document.querySelector<HTMLElement & { disabled: boolean }>("#step-next");
   const position = document.querySelector<HTMLElement>("#step-position");
@@ -247,7 +247,6 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     if (introFile) showFile(introFile);
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: null }));
     if (progress) progress.textContent = "";
-    if (progressBar) progressBar.value = 0;
     syncButtons();
     if (location.hash) history.replaceState(null, "", `${location.pathname}${location.search}`);
     // Once per visit: scrolling at the top calls this again, and re-expanding reloads the Preview.
@@ -346,7 +345,6 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     allSteps.forEach((s) => s.toggleAttribute("data-active", s === step));
     history.replaceState(null, "", `#${step.id}`);
     if (progress) progress.textContent = `Step ${index + 1} of ${steps.length}`;
-    if (progressBar) progressBar.value = ((index + 1) / steps.length) * 100;
     syncButtons();
     applyPaneState(step);
     document.dispatchEvent(new CustomEvent<HTMLElement | null>(STEP_EVENT, { detail: step }));
@@ -426,8 +424,22 @@ export function startStepEngine({ variants, otherVariantSteps = "notice" }: Step
     return current < 0 ? (atIntro ? introMedia : null) : mediaOf(steps[current]);
   }
 
-  /** Back / Next: enabled where the step keys can move, and the position. */
+  /** One segment per visible step: seen, current or pending. */
+  function syncProgress(): void {
+    if (!progressBar) return;
+    const states = progressStates(current, steps.length, completed);
+    if (progressBar.childElementCount !== states.length) {
+      progressBar.replaceChildren(...states.map(() => document.createElement("span")));
+    }
+    states.forEach((state, i) => ((progressBar.children[i] as HTMLElement).dataset.state = state));
+    progressBar.setAttribute("aria-valuemax", String(steps.length));
+    progressBar.setAttribute("aria-valuenow", String(completed ? steps.length : current + 1));
+    progressBar.setAttribute("aria-valuetext", completed ? "Done" : current < 0 ? "Introduction" : `Step ${current + 1} of ${steps.length}`);
+  }
+
+  /** Back / Next: enabled where the step keys can move, and the position; also the progress bar. */
   function syncButtons(): void {
+    syncProgress();
     const images = pagedMedia() ? mediaCount() : 0;
     const state = stepButtons({ current, count: steps.length, hasIntro, image: images ? mediaIndex : 0, images, completion: !!completion, completed });
     if (backButton) backButton.disabled = !state.back;

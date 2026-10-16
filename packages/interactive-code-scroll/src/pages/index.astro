@@ -218,8 +218,9 @@ const clientData = JSON.stringify({
         <calcite-action id="present-toggle" icon="presentation" text="Present" />
         <calcite-action id="theme-toggle" icon="moon" text="Toggle theme" />
       </div>
-      <calcite-progress slot="progress" id="progress-bar" value="0" label="Tutorial progress" />
     </calcite-navigation>
+    {/* Under the header, not in its `progress` slot (a top strip sized for calcite-progress). Segments come from client/steps.ts. */}
+    <div id="progress-bar" class="step-progress" role="progressbar" aria-label="Tutorial progress" aria-valuemin="0" aria-valuenow="0"></div>
     {
       !currentSibling && (
         /* The full title when the header clips it (client/layout.ts sets the reference element only then). */

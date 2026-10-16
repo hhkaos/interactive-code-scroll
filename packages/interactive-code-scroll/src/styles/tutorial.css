@@ -117,6 +117,24 @@ body:has(#title-popover) #header-title[data-clipped] .page-title-heading { curso
 }
 body:not([data-presenting]) #step-count { display: none; }
 
+/* Progress: one flush segment per visible step, seen / current / pending (decorative, not clickable). */
+.step-progress {
+  flex: none;
+  display: flex;
+  block-size: 6px;
+  background: var(--calcite-color-foreground-1);
+  > span {
+    flex: 1;
+    background: var(--calcite-color-border-2);
+    transition: background-color 250ms ease;
+  }
+  > [data-state="seen"] { background: var(--calcite-color-brand); }
+  > [data-state="current"] { background: color-mix(in srgb, var(--calcite-color-brand) 40%, var(--calcite-color-border-2)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-progress > span { transition: none; }
+}
+
 /* Presentation mode: compact controls (progress, preview, exit stay). */
 body[data-presenting] :is(#theme-toggle, #copy-file, #download-file, .zip-action) { display: none; }
 

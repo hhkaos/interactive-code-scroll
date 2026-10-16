@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, revealScroll, stepButtons } from "./navigation.ts";
+import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, progressStates, revealScroll, stepButtons } from "./navigation.ts";
 
 describe("navigation", () => {
   it.each([
@@ -131,5 +131,19 @@ describe("stepButtons", () => {
 
   it("says step in the singular", () => {
     expect(stepButtons({ ...base, count: 1, hasIntro: true, current: -1 }).position).toBe("1 step");
+  });
+});
+
+describe("progressStates", () => {
+  it("marks the steps before the current one as seen and the rest as pending", () => {
+    expect(progressStates(2, 5)).toEqual(["seen", "seen", "current", "pending", "pending"]);
+  });
+
+  it("has nothing seen at the intro", () => {
+    expect(progressStates(-1, 3)).toEqual(["pending", "pending", "pending"]);
+  });
+
+  it("marks every step seen on the closing panel", () => {
+    expect(progressStates(2, 3, true)).toEqual(["seen", "seen", "seen"]);
   });
 });

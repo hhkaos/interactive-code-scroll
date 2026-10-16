@@ -31,7 +31,8 @@ test("renders <Intro> as non-step tutorial intro", async ({ page }) => {
   await expect(page.locator(".intro")).toContainText("stable contract for E2E tests");
   await expect(page.locator(".intro").locator("section.step")).toHaveCount(0);
   await expect(page.locator("section.step[data-active]")).toHaveCount(0);
-  await expect(page.locator("#progress-bar")).toHaveJSProperty("value", 0);
+  await expect(page.locator("#progress-bar")).toHaveAttribute("aria-valuenow", "0");
+  await expect(page.locator('#progress-bar > [data-state="pending"]')).toHaveCount(10);
   // The intro has code to show: no fallback to the media of a later step.
   await expect(page.locator(".code-panel")).toBeVisible();
   await expect(page.locator(".media-panel")).toBeHidden();

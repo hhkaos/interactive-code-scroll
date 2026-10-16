@@ -8,6 +8,7 @@ test("steps of other variants are hidden and left out of the numbering", async (
   await expect(visibleSteps(page)).toHaveCount(3);
   await expect(page.locator("section.step#flags")).toBeHidden();
   await expect(page.locator("#step-count")).toHaveText("Step 3 of 3");
+  await expect(page.locator("#progress-bar > span")).toHaveCount(3);
   await expect(page.locator("#variant-notice")).toHaveJSProperty("open", false);
 });
 

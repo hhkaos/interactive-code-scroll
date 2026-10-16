@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Progress bar: a 6px bar right under the header (it used to be Calcite's strip on the header's top edge) with one flush segment per visible step, colored seen, current or pending; full on the closing panel. It is a `role="progressbar"` with `aria-valuenow` and `aria-valuetext` ("Step 5 of 10", "Introduction", "Done") instead of a `calcite-progress` value. Not clickable.
+
 ## [0.2.0-beta.7] - 2026-10-16
 
 ### Added
