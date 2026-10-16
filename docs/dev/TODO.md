@@ -1,5 +1,10 @@
 # TODO
 
+## UI polish
+
+- Embed steps: the "Open in new tab" action (`.embed-open`) floats over the embedded page. Show it in a strip (bar) instead, so it does not cover the page.
+- Framework Fixture Tutorial, step 4 (`config`): the textarea `<VarField type="textarea">` leaves too little bottom margin.
+
 ## Step index and outline (SPEC: Step navigation, Step outline, Presentation mode; decision 2026-10-16)
 
 Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private). Remaining (manual):
