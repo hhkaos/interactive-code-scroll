@@ -91,9 +91,20 @@ export function startPresentation(): void {
     const hidden = !body.hasAttribute("data-docs-hidden");
     body.toggleAttribute("data-docs-hidden", hidden);
     setIcon("#docs-toggle", hidden ? "chevrons-right" : "chevrons-left", hidden ? "Show explanations" : "Hide explanations");
+    // The rail is as narrow as the icon: no padding around it.
+    docsToggle?.toggleAttribute("compact", hidden);
     document.dispatchEvent(new CustomEvent(DOCS_TOGGLE_EVENT, { detail: { hidden } }));
   };
   docsToggle?.addEventListener("click", toggleDocs);
+  // A pointer click leaves no focus behind: no focus ring, and the handle can fade out with the pointer
+  // (`:focus-within` keeps it shown). Keyboard activation keeps the focus on it.
+  let pointerClick = false;
+  docsToggle?.addEventListener("pointerdown", () => (pointerClick = true));
+  docsToggle?.addEventListener("keydown", () => (pointerClick = false));
+  docsToggle?.addEventListener("click", () => {
+    if (pointerClick) (document.activeElement as HTMLElement | null)?.blur();
+    pointerClick = false;
+  });
   // `E` shows/hides the explanations while presenting (client/step-index.ts handles `O`). Not `docsToggle.click()`:
   // Calcite's tooltip manager takes that click for a pointer click and leaves the action's tooltip open.
   addEventListener("keydown", (event) => {

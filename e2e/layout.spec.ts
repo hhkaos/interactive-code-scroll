@@ -80,18 +80,40 @@ test("dragging the preview splitter resizes the preview and is remembered", asyn
   await expect(page).toHaveURL(/#ui$/);
 });
 
-test("the explanations handle sits on the splitter and stays reachable when they are hidden", async ({ page }) => {
+test("the explanations handle shows on the splitter on hover or focus, and stays when they are hidden", async ({ page }) => {
   await page.goto("/#config");
   const handle = page.locator("#docs-toggle");
   const gutter = (await page.locator(".gutter").boundingBox())!;
   const box = (await handle.boundingBox())!;
   expect(box.x).toBeLessThan(gutter.x);
   expect(box.x + box.width).toBeGreaterThan(gutter.x + gutter.width);
-  await handle.click();
+  // Hidden (and not in the way of a drag) until the pointer is on the splitter; fades out after a delay.
+  await expect(handle).toBeHidden();
+  await page.locator(".layout .splitter").hover({ position: { x: 2, y: 40 } });
+  await expect(handle).toBeVisible();
+  await expect(handle).toHaveCSS("opacity", "1");
+  await page.mouse.move(gutter.x - 200, gutter.y + 40);
+  await expect(handle).toBeHidden();
+  // Keyboard: focusing the splitter shows it at once, and Tab reaches it.
+  await page.locator(".layout .splitter").focus();
+  await expect(handle).toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect(handle).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(page.locator("main.docs")).toBeHidden();
-  await expect(handle).toBeInViewport();
-  await handle.click();
+  // The only way back: a thin rail at the left edge, always shown; the whole rail is the handle.
+  await page.mouse.move(gutter.x + 400, gutter.y + 40);
+  await expect(handle).toBeVisible();
+  const rail = (await page.locator(".gutter").boundingBox())!;
+  expect(rail.x).toBe(0);
+  expect(rail.width).toBeLessThanOrEqual(17);
+  expect((await page.locator("aside.right").boundingBox())!.x).toBeGreaterThanOrEqual(rail.x + rail.width);
+  await page.mouse.click(rail.x + rail.width / 2, rail.y + 20);
   await expect(page.locator("main.docs")).toBeVisible();
+  // A pointer click leaves no focus (no ring), so the handle fades out with the pointer.
+  await expect(handle).not.toBeFocused();
+  await page.mouse.move(gutter.x + 400, gutter.y + 40);
+  await expect(handle).toBeHidden();
 });
 
 test("the splitter works with the keyboard without moving steps", async ({ page }) => {

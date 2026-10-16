@@ -21,6 +21,8 @@ test("presentation mode goes full screen with a compact toolbar; Esc exits", asy
 
 test("hiding the explanations gives code the full width; keys still move steps", async ({ page }) => {
   await page.goto("/#config");
+  // The handle shows while the pointer is on the splitter.
+  await page.locator(".layout .splitter").hover();
   await page.locator("#docs-toggle").click();
   await expect(page.locator("main.docs")).toBeHidden();
   const width = await page.locator("aside.right").evaluate((el) => el.getBoundingClientRect().width);
@@ -68,6 +70,7 @@ test("in presentation mode the clicker ends on a full-screen closing slide with 
 test("the closing slide also opens with the explanations hidden", async ({ page }) => {
   await page.goto("/#embed-next-slide");
   await page.locator("#present-toggle").click();
+  await page.locator(".layout .splitter").hover();
   await page.locator("#docs-toggle").click();
   await page.keyboard.press("PageDown");
   await expect(page.locator("body > .completion[data-slide]")).toBeVisible();

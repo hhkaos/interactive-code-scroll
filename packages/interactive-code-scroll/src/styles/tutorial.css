@@ -146,8 +146,6 @@ body[data-presenting] :is(#theme-toggle, #copy-file, #download-file, .zip-action
 body[data-docs-hidden] {
   .layout { grid-template-columns: auto minmax(0, 1fr); }
   .docs-column, .splitter { display: none; }
-  /* The gutter stays as a rail at the left edge, holding the "show" handle. */
-  .docs-toggle { left: 0; transform: translateY(-50%); }
 }
 
 /* Column between the panels: the splitter plus the explanations handle on top of it. */
@@ -182,6 +180,52 @@ body[data-docs-hidden] {
   border-radius: var(--calcite-corner-radius-pill);
   overflow: hidden;
   box-shadow: var(--calcite-shadow-sm);
+}
+
+/* Hidden explanations: the gutter becomes a thin rail at the left edge, and the whole rail is the
+   "show" handle (nothing floats over the code; the window edge is easy to hit). */
+body[data-docs-hidden] {
+  .gutter {
+    width: 1rem;
+    background: var(--calcite-color-foreground-2);
+    border-inline-end: 1px solid var(--calcite-color-border-3);
+  }
+  .docs-toggle {
+    inset: 0;
+    transform: none;
+    display: flex;
+    --calcite-action-background-color: transparent;
+    --calcite-action-background-color-hover: color-mix(in srgb, var(--calcite-color-brand) 12%, transparent);
+    --calcite-action-background-color-press: color-mix(in srgb, var(--calcite-color-brand) 20%, transparent);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* Shown while the pointer is on the gutter: a short delay in (no flash when crossing it) and a longer one
+   out, so the pointer can reach the handle. Hidden with `visibility` too, so it never blocks a drag. */
+@media (hover: hover) {
+  body:not([data-docs-hidden]) .docs-toggle {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 200ms ease 350ms, visibility 0s linear 550ms;
+  }
+  body:not([data-docs-hidden]) .gutter:hover .docs-toggle {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 150ms ease 80ms, visibility 0s linear 80ms;
+  }
+  /* Keyboard: at once, so Tab from the splitter lands on it. */
+  body:not([data-docs-hidden]) .gutter:focus-within .docs-toggle {
+    opacity: 1;
+    visibility: visible;
+    transition: none;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  body:not([data-docs-hidden]) .gutter:hover .docs-toggle { transition: visibility 0s linear 80ms; }
+  body:not([data-docs-hidden]) .docs-toggle { transition: visibility 0s linear 350ms; }
 }
 
 [data-resizing] {
