@@ -757,6 +757,13 @@ Form changes refresh the Preview after a short debounce; the Run button refreshe
 
 ### Panel and Console
 
+**Available in the next release (unreleased).** Upgrading an existing tutorial? See the [panel API migration](upgrade.md#panel-api-migration-unreleased).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/console-web-dark.png">
+  <img alt="main.js with a console.log call highlighted and its runtime object expanded in the Console tab below, including the source line." src="../site/public/screenshots/console-web-light.png" width="860" height="603">
+</picture>
+
 The embedded web pane is headed **Output** and has **Preview** and **Console** tabs. Only one is visible at a time; the app keeps running while Console is selected. The console shows what the app actually logged, including messages produced while Preview was selected. Works in dev and the built static site.
 
 `panel` on `<Step>` or `<Intro>` chooses what happens when that block becomes active:

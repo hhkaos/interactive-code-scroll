@@ -174,7 +174,7 @@ test("docs links carry the base path and resolve, anchors included; repository-o
 test("docs screenshots load under the base and follow the page theme", async ({ page, request }) => {
   await page.goto(`${BASE}docs/features/`);
   const shots = page.locator(".sl-markdown-content .docs-shot");
-  await expect(shots).toHaveCount(8);
+  await expect(shots).toHaveCount(9);
   const srcs = await shots.locator("img").evaluateAll((images) => images.map((image) => image.getAttribute("src")!));
   for (const src of srcs) {
     expect(src).toMatch(new RegExp(`^${BASE}screenshots/[a-z-]+-(dark|light)\\.png$`));
@@ -214,4 +214,19 @@ test("the docs table of contents opens subsections only under the section being 
   await page.locator("#step").scrollIntoViewIfNeeded();
   await expect(toc.getByRole("link", { name: "<Step>", exact: true })).toBeVisible();
   await expect(toc.getByRole("link", { name: "Regions", exact: true })).toBeHidden();
+});
+
+
+test("authors can discover Live Console, see its screenshots and find the authoring syntax", async ({ page }) => {
+  await page.goto(`${BASE}docs/features/#live-browser-console`);
+  await expect(page.locator("#live-browser-console")).toBeVisible();
+  await expect(page.locator(".sl-markdown-content")).toContainText('panel="console"');
+  const image = page.locator('.sl-markdown-content img[src$="console-web-dark.png"]');
+  await expect(image).toBeVisible();
+  await image.scrollIntoViewIfNeeded();
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+  await page.goto(`${BASE}docs/authoring/#panel-and-console`);
+  await expect(page.locator("#panel-and-console")).toBeVisible();
+  await expect(page.locator(".sl-markdown-content")).toContainText("Available in the next release");
+  await expect(page.locator(".sl-markdown-content")).toContainText("Objects are snapshots taken when logged");
 });

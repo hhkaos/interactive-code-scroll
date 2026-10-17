@@ -1,6 +1,7 @@
 // Regenerates the light/dark screenshots in public/screenshots/ (used by the landing page, the root README and docs/*.md)
 // from the built showcase tutorials. Run `pnpm build:showcase` first.
 // series-index-*.png are manual captures of a published series site (no series in the showcase): not regenerated here.
+import { execFileSync } from "node:child_process";
 import { chromium } from "@playwright/test";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
@@ -8,11 +9,31 @@ import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { base } from "../site-config.mjs";
 
+const repoDir = join(dirname(fileURLToPath(import.meta.url)), "../..");
+const consoleBuild = join(repoDir, "screenshots", "console-source-build");
+const only = process.argv.slice(2);
+// A real fixture interaction produces the log. No credentials, remote API or injected console messages.
+if (!only.length || only.includes("console-web")) {
+  execFileSync("pnpm", ["--filter", "example-framework-fixture", "build", "--", "--base", `${base}__console-shot__/`, "--outDir", consoleBuild], { cwd: repoDir, stdio: "inherit", env: { ...process.env, CI: "true" } });
+}
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
 const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2" };
 
 /** name → page (or absolute `url`), step hash and optional action before the shot. */
 const shots = [
+  {
+    name: "console-web",
+    path: "__console-shot__/#sign-in",
+    element: ".right",
+    end: ".console-entry",
+    action: async (page) => {
+      await page.getByRole("tab", { name: "Preview", exact: true }).click();
+      await page.frameLocator(".preview iframe").locator("#sign-in").click();
+      await page.getByRole("tab", { name: /^Console/ }).click();
+      await page.locator(".console-entry .console-source").waitFor();
+      await page.locator(".console-entry").first().getByRole("treeitem").first().click();
+    },
+  },
   { name: "hero-rest-python", path: "showcase/rest-geocode/?variant=python#request" },
   // A published tutorial outside this repository (second tab of the landing demo).
   { name: "summit-user-auth", url: "https://www.rauljimenez.info/arcgis-tutorials/arcgis-js-sdk-user-auth/#oauth" },
@@ -119,7 +140,10 @@ function cropArea({ around, width, height }) {
 
 const server = createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://localhost");
-  let file = join(publicDir, decodeURIComponent(url.pathname.slice(base.length - 1)));
+  const consolePrefix = `${base}__console-shot__/`;
+  let file = url.pathname.startsWith(consolePrefix)
+    ? join(consoleBuild, decodeURIComponent(url.pathname.slice(consolePrefix.length)))
+    : join(publicDir, decodeURIComponent(url.pathname.slice(base.length - 1)));
   if (existsSync(file) && statSync(file).isDirectory()) file = join(file, "index.html");
   if (!url.pathname.startsWith(base) || !existsSync(file)) return res.writeHead(404).end();
   res.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
@@ -128,19 +152,21 @@ const server = createServer((req, res) => {
 const origin = `http://localhost:${server.address().port}`;
 
 // `node scripts/screenshots.mjs <name>…` regenerates only those scenes.
-const only = process.argv.slice(2);
 const browser = await chromium.launch();
 for (const colorScheme of ["light", "dark"]) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 860 }, deviceScaleFactor: 2, colorScheme });
   const desktop = await context.newPage();
-  for (const { name, path, url, action, highlight, crop, device } of shots.filter(({ name }) => !only.length || only.includes(name))) {
+  for (const { name, path, url, action, highlight, crop, device, element, end } of shots.filter(({ name }) => !only.length || only.includes(name))) {
     // Phone scenes get their own context (viewport, touch, pixel ratio).
     const page = device ? await (await browser.newContext({ ...device, colorScheme })).newPage() : desktop;
     await page.goto(url ?? `${origin}${base}${path}`, { waitUntil: "networkidle" });
     await action?.(page);
     await page.waitForTimeout(2000);
     if (highlight) await page.evaluate(highlightArea, highlight);
-    const clip = crop && (await page.evaluate(cropArea, crop));
+    const bounds = element && await page.locator(element).boundingBox();
+    const bottom = end && await page.locator(end).last().boundingBox();
+    if (bounds && bottom) bounds.height = Math.ceil(bottom.y + bottom.height - bounds.y + 8);
+    const clip = bounds || (crop && (await page.evaluate(cropArea, crop)));
     await page.screenshot({ path: join(publicDir, "screenshots", `${name}-${colorScheme}.png`), ...(clip && { clip }) });
     if (device) await page.context().close();
   }

@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Live Console has a dedicated Features section, light/dark screenshots captured from a real Preview interaction, a screenshot scene that regenerates them without credentials, a landing page highlight, and links to the authoring reference and migration guide. Unreleased availability is explicit for authors.
 - Console entries show a source file and line when available; inlined scripts and substituted modules preserve source names and cleaned-code line numbers. Collapsed summaries now color keys and scalar types like DevTools. A collapsible help explains selecting the Preview iframe context in browser DevTools and filtering to that context.
 - Embedded Preview / Console tabs capture real `console.log/info/warn/error` calls as bounded, in-memory snapshots with labeled entries, severity, collapsible colored JSON trees and compact property previews. Tabs, collapse and maximize preserve the running iframe and its logs; Run resets the log. Capture works in dev and static builds, without adding code to the tutorial app.
 

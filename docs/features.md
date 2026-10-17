@@ -81,7 +81,33 @@ See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables
 - OAuth sign-in works from the embedded Preview through a popup, and in the new tab through a normal redirect.
 - Form values reach every file the app loads: imported modules (a shared `config.js`), fetched files and other pages such as an OAuth callback.
 
-The embedded pane is headed **Output**, with **Preview** and **Console** tabs: real `console.log/info/warn/error` output with labeled, collapsible JSON snapshots, DevTools-style colors in collapsed and expanded objects, source file/line when available, native DevTools help, chronological order and bounded in-memory retention. Steps and intros select and open a view with `panel="preview|console|result"` or fold it with `panel="collapsed"`; `maximize="panel"` enlarges the selected view. Switching tabs preserves the running app. See [Preview](authoring.md#preview) and [Panel and Console](authoring.md#panel-and-console).
+The embedded pane is headed **Output**, with **Preview** and **Console** tabs. See [Preview](authoring.md#preview).
+
+## Live browser console
+
+**Coming in the next release.** Explain the response your code actually received, without leaving the tutorial or adding a debug panel to the sample app.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/console-web-dark.png">
+  <img alt="A highlighted console.log call in main.js above the Output panel's Console tab, showing the captured object as a colored, expandable tree and its main.js source line." src="../site/public/screenshots/console-web-light.png" width="860" height="603">
+</picture>
+
+The screenshot uses demo data produced by an interaction in the running Preview. Console captures the actual arguments passed to `console.log`, `info`, `warn` and `error` at runtime.
+
+- **From interaction to explanation**: use Preview to run the app, then select Console to explore its output. Switching tabs preserves the app and its messages.
+- **Objects you can explore**: collapsible trees, compact property previews, type colors, message levels and source file/line when the browser provides them.
+- **Directed by your steps**: `panel="console"` opens Console alongside the highlighted code; `panel="preview"` returns to the app. `maximize="panel"` gives the selected view the window.
+- **Live messages, stable objects**: messages arrive as the app runs; each object preserves its values at log time. Selecting a step does not execute code or make a request. Nothing needs to be exported to a static result file.
+- **No debug UI or extra service**: keep ordinary `console.log` calls in the sample. The framework captures them in dev and the built static site; the browser's DevTools still receives the original messages.
+
+```mdx
+<Step id="inspect-response" file="main.js" region="response" panel="console">
+  ## Explore the response
+  Run the example in Preview, then expand the logged object here.
+</Step>
+```
+
+For configuration, a complete step sequence, snapshot behavior and capture limits, see [Panel and Console](authoring.md#panel-and-console). Existing authors should also read the [panel API migration](upgrade.md#panel-api-migration-unreleased).
 
 ## Result pane
 
