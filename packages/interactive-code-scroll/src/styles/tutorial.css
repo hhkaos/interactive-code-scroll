@@ -1523,7 +1523,7 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
 }
 
 /* JSON viewer: text-only tree; token colors follow the GitHub themes used for code. */
-.result-json {
+:is(.result-json, .console-entry .json-tree) {
   flex: 1;
   padding: 0.75rem 1rem 0.75rem 0.5rem;
   font: var(--calcite-font-size-sm) / 1.6 var(--calcite-font-family-code);
@@ -1624,9 +1624,76 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
   flex: 1;
   min-height: 0;
   display: flex;
+  flex-direction: column;
 
   &[hidden] { display: none; }
-  iframe { flex: 1; border: 0; background: #fff; }
+  iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+}
+
+.preview-tabs {
+  display: flex;
+  flex: none;
+  border-bottom: 1px solid var(--calcite-color-border-3);
+  background: var(--calcite-color-foreground-1);
+
+  button {
+    padding: 0.5rem 1rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--calcite-color-text-2);
+    font: inherit;
+    cursor: pointer;
+    &[aria-selected="true"] { color: var(--calcite-color-brand); border-bottom-color: currentColor; }
+    &:focus-visible { outline: 2px solid var(--calcite-color-brand); outline-offset: -2px; }
+  }
+}
+
+#preview-app, #preview-console {
+  flex: 1;
+  min-height: 0;
+  &[hidden] { display: none; }
+}
+#preview-app { display: flex; }
+#preview-console {
+  overflow: auto;
+  background: var(--calcite-color-foreground-1);
+  font-size: var(--calcite-font-size-sm);
+}
+.console-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid var(--calcite-color-border-3);
+  color: var(--calcite-color-text-3);
+  button {
+    background: transparent;
+    color: var(--calcite-color-text-1);
+    border: 1px solid var(--calcite-color-border-2);
+    padding: 0.2rem 0.6rem;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+#preview-console-empty { padding: 1rem; color: var(--calcite-color-text-3); }
+.console-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--calcite-color-border-3);
+  font-family: var(--calcite-font-family-code);
+  overflow-wrap: anywhere;
+  &[data-level="warn"] { background: color-mix(in srgb, var(--calcite-color-status-warning) 10%, transparent); }
+  &[data-level="error"] { background: color-mix(in srgb, var(--calcite-color-status-danger) 10%, transparent); }
+  .console-level { font-size: 0.75em; color: var(--calcite-color-text-3); }
+  &[data-level="warn"] .console-level { color: var(--calcite-color-status-warning); }
+  &[data-level="error"] .console-level { color: var(--calcite-color-status-danger); }
+  .json-tree { margin: 0; padding: 0; max-width: 100%; }
+  .jt-when-closed { overflow-wrap: anywhere; }
 }
 
 /* Carousel image viewer: as large as the screen allows. */

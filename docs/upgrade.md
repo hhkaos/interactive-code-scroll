@@ -2,6 +2,20 @@
 
 InteractiveCodeScroll is still pre-v1. Keep upgrades deliberate and test each tutorial after changing versions.
 
+## Panel API migration (unreleased)
+
+Step and intro `preview=` has been replaced by `panel=`. Frontmatter `preview: off|iframe|tab|both` is unchanged.
+
+| Before | After |
+|---|---|
+| `preview="expanded"` on a web step/intro | `panel="preview"` |
+| `preview="expanded"` on a non-web step/intro | `panel="result"` |
+| `preview="collapsed"` | `panel="collapsed"` |
+| `preview="keep"` | Omit `panel`. |
+| `maximize="preview"` | `maximize="panel"` |
+
+To inspect live logs from embedded web code, use `panel="console"`. In mixed-variant tutorials, omit `panel` to preserve the reader's current state, or select a pane for the variants that have it. Old step/intro attributes fail validation with migration guidance. See [Panel and Console](authoring.md#panel-and-console).
+
 ## Recommended Upgrade Flow
 
 1. Read `CHANGELOG.md`.

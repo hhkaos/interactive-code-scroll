@@ -15,9 +15,9 @@ interface Props {
   images?: string[];
   /** Page shown instead of code: an `https://` URL or a path under `embeds/` (e.g. `slides/#/3`). */
   embed?: string;
-  preview?: "expanded" | "collapsed" | "keep";
+  panel?: "preview" | "console" | "result" | "collapsed";
   /** Maximizes the code area or the pane under it (Preview or Result) when the step becomes active; `none` restores. */
-  maximize?: "code" | "preview" | "none";
+  maximize?: "code" | "panel" | "none";
   /** Space-separated variant ids the step applies to. */
   only?: string;
   /** Captured output under `output/` shown in the Result pane (per-variant override in `output/<variant>/`). */
@@ -28,7 +28,7 @@ interface Props {
   outline?: boolean;
 }
 
-const { id, file, region, images, embed, preview, maximize, only, output, request, outline } = Astro.props;
+const { id, file, region, images, embed, panel, maximize, only, output, request, outline } = Astro.props;
 const { files, frontmatter, outputs } = currentTutorial(Astro.locals);
 const { variants } = readTutorialConfig(frontmatter);
 // With variants, `file` is relative to each variant folder and a lone `region` names a file per variant.
@@ -47,7 +47,7 @@ const requestVariants = variants && requests && resultVariants(variants, webDirs
   data-files={variantFiles && Object.keys(variantFiles).length > 0 ? JSON.stringify(variantFiles) : undefined}
   data-only={variants ? only : undefined}
   data-region={region !== undefined && isJsonRegion(region) ? jsonRegionId(region) : region}
-  data-preview={preview}
+  data-panel={panel}
   data-maximize={maximize}
   data-output={variants ? undefined : output}
   data-outputs={variantOutputs && Object.keys(variantOutputs).length > 0 ? JSON.stringify(variantOutputs) : undefined}

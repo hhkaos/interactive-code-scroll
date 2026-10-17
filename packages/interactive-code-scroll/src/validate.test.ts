@@ -22,20 +22,20 @@ describe("validateTutorial", () => {
       validate(
         use("Step", { id: "config", file: "main.js", region: "config" }),
         use("Step", { id: "shots", images: { expression: '["a.png", "shots/b.png"]' } }),
-        use("Step", { id: "text-only", preview: "collapsed" }),
+        use("Step", { id: "text-only", panel: "collapsed" }),
         use("Step", { id: "slides", embed: "slides/#/3" }),
         use("Step", { id: "app", embed: "https://example.com/app" }),
         use("Step", { id: "big-code", maximize: "code" }),
-        use("Step", { id: "big-preview", maximize: "preview", preview: "expanded" }),
-        use("Step", { id: "restore", maximize: "none", preview: "collapsed" }),
+        use("Step", { id: "big-preview", maximize: "panel", panel: "preview" }),
+        use("Step", { id: "restore", maximize: "none", panel: "collapsed" }),
         use("Hint", { id: "redirect-uri", label: "redirect URI" }),
         use("VarField", { name: "clientId", label: "Client ID", secret: true }),
         use("Intro", {}),
-        use("Intro", { preview: "collapsed", maximize: "code" }),
+        use("Intro", { panel: "collapsed", maximize: "code" }),
         use("Intro", { images: { expression: '["a.png", "shots/b.png"]' } }),
         use("Intro", { embed: "slides/#/1", maximize: "code" }),
         use("Intro", { embed: "https://example.com/app" }),
-        use("Intro", { file: "main.js", preview: "collapsed" }),
+        use("Intro", { file: "main.js", panel: "collapsed" }),
       ),
     ).toEqual([]);
   });
@@ -58,13 +58,13 @@ describe("validateTutorial", () => {
     [use("Step", { id: "a", embed: "http://example.com" }), 'embed "http://example.com" must be an https:// URL or a path in embeds/'],
     [use("Step", { id: "a", embed: { expression: "url" } }), '"embed" must be a string'],
     [use("Step", { id: "a", embed: "slides/", images: { expression: '["a.png"]' } }), '"embed" and "images" cannot be combined'],
-    [use("Step", { id: "a", preview: "closed" }), '"preview" must be one of expanded, collapsed, keep'],
-    [use("Step", { id: "a", maximize: "result" }), '"maximize" must be one of code, preview, none'],
-    [use("Step", { id: "a", maximize: "preview", preview: "collapsed" }), 'maximize="preview" conflicts with preview="collapsed"'],
-    [use("Intro", { preview: "closed" }), '<Intro> "preview" must be one of expanded, collapsed, keep'],
-    [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, preview, none'],
-    [use("Intro", { maximize: "preview", preview: "collapsed" }), '<Intro> maximize="preview" conflicts with preview="collapsed"'],
-    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only preview, maximize, file, images, embed, outline)'],
+    [use("Step", { id: "a", panel: "closed" }), '"panel" must be one of preview, console, result, collapsed'],
+    [use("Step", { id: "a", maximize: "result" }), '"maximize" must be one of code, panel, none'],
+    [use("Step", { id: "a", maximize: "panel", panel: "collapsed" }), 'maximize="panel" conflicts with panel="collapsed"'],
+    [use("Intro", { panel: "closed" }), '<Intro> "panel" must be one of preview, console, result, collapsed'],
+    [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, panel, none'],
+    [use("Intro", { maximize: "panel", panel: "collapsed" }), '<Intro> maximize="panel" conflicts with panel="collapsed"'],
+    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only panel, maximize, file, images, embed, outline)'],
     [use("Intro", { file: "main.js", region: "config" }), '<Intro> "region" is not available on <Intro>'],
     [use("Intro", { file: "nope.js" }), '<Intro> file "nope.js" not found in code/'],
     [use("Intro", { file: "main.js", images: { expression: '["a.png"]' } }), '<Intro> "file" and "images" cannot be combined; use one of them'],
@@ -100,7 +100,7 @@ describe("validateTutorial", () => {
   });
 
   it("accepts outline on <Intro> and <Step>", () => {
-    expect(validate(use("Intro", { outline: true, preview: "collapsed" }, 1), use("Step", { id: "recap", outline: true }, 5))).toEqual([]);
+    expect(validate(use("Intro", { outline: true, panel: "collapsed" }, 1), use("Step", { id: "recap", outline: true }, 5))).toEqual([]);
   });
 
   it("accepts one <Outro> after the last step", () => {
@@ -421,22 +421,22 @@ describe("validateTutorial frontmatter", () => {
     ]);
   });
 
-  it('reports maximize="preview" when there is no pane to maximize', () => {
-    const step = use("Step", { id: "big", maximize: "preview" });
+  it('reports maximize="panel" when there is no pane to maximize', () => {
+    const step = use("Step", { id: "big", maximize: "panel" });
     const check = (preview: string, uses: ComponentUse[] = [step]) =>
       validateTutorial({ mdxFile: "tutorial.mdx", uses, files, images, frontmatter: { preview } });
     expect(check("tab")).toEqual([
-      'tutorial.mdx:3:1 <Step> maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
+      'tutorial.mdx:3:1 <Step> maximize="panel" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
     ]);
     expect(check("off")).toHaveLength(1);
     expect(check("iframe")).toEqual([]);
     expect(check("both")).toEqual([]);
-    expect(check("tab", [use("Intro", { maximize: "preview" })])).toEqual([
-      'tutorial.mdx:3:1 <Intro> maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
+    expect(check("tab", [use("Intro", { maximize: "panel" })])).toEqual([
+      'tutorial.mdx:3:1 <Intro> maximize="panel" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
     ]);
     // Intro media shows in the code area: maximize="code" is the one that fits it.
-    expect(check("off", [use("Intro", { images: { expression: '["a.png"]' }, maximize: "preview" })])).toEqual([
-      'tutorial.mdx:3:1 <Intro> maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
+    expect(check("off", [use("Intro", { images: { expression: '["a.png"]' }, maximize: "panel" })])).toEqual([
+      'tutorial.mdx:3:1 <Intro> maximize="panel" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result',
     ]);
   });
 
@@ -473,6 +473,15 @@ describe("validateTutorial variants", () => {
       frontmatter: options.frontmatter ?? { variants, preview: "both" },
       frontmatterLines: { variants: 2, files: 9 },
     });
+
+  it("validates panel selection against the variants covered by a step", () => {
+    expect(run({}, use("Step", { id: "console", panel: "console", only: "web" }))).toEqual([]);
+    expect(run({}, use("Step", { id: "console", panel: "console", only: "python" })).join()).toContain("requires web code");
+    expect(run({ outputs: ["run.txt"] }, use("Step", { id: "result", panel: "result", only: "python", output: "run.txt" }))).toEqual([]);
+    expect(run({ outputs: ["run.txt"] }, use("Step", { id: "result", panel: "result", only: "web", output: "run.txt" })).join()).toContain("requires non-web code");
+    // A shared step can select Console for web variants while non-web variants keep their Result state.
+    expect(run({}, use("Step", { id: "shared", panel: "console" }))).toEqual([]);
+  });
 
   it("checks variant logos like the tutorial logo, at the variants line", () => {
     const withLogos = (logos: (string | undefined)[]) => ({
@@ -820,5 +829,26 @@ describe("validateTutorial gitignored code", () => {
     ).toEqual([
       'tutorial.mdx:3:1 <Step> file "state.json" is gitignored in variant "py" (code/py/state.json by .gitignore) and not published; add it to frontmatter "include" to publish it',
     ]);
+  });
+});
+
+describe("panel authoring", () => {
+  it("accepts Preview and Console on web steps and the intro", () => {
+    expect(validate(use("Step", { id: "logs", panel: "console" }), use("Intro", { panel: "preview" }))).toEqual([]);
+  });
+  it("reports the migration for old step props", () => {
+    expect(validate(use("Step", { id: "old", preview: "expanded" }))[0]).toContain('"preview" was replaced by "panel"');
+  });
+  it("rejects console with preview off or tab, and with non-web code", () => {
+    for (const preview of ["off", "tab"]) {
+      expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files, uses: [use("Step", { id: "logs", panel: "console" })], frontmatter: { preview } }).join()).toContain("requires an embedded Preview");
+    }
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files: [files[0]!], uses: [use("Step", { id: "logs", panel: "console" })], frontmatter: { preview: "off" } }).join()).toContain("requires web code");
+  });
+  it("rejects result on web-only tutorials", () => {
+    expect(validate(use("Step", { id: "bad", panel: "result" }))[0]).toContain('panel="result" requires non-web code');
+  });
+  it("accepts Result on non-web tutorials with output", () => {
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files: [files[0]!], outputs: ["result.json"], uses: [use("Step", { id: "result", panel: "result", output: "result.json" })], frontmatter: { preview: "off" } })).toEqual([]);
   });
 });

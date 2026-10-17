@@ -7,10 +7,10 @@ import StepMedia from "./StepMedia.astro";
 
 // Props are validated at MDX compile time (mdx-validation.ts).
 interface Props {
-  /** Preview / Result pane state while the intro is shown (on load and when the reader returns to it). */
-  preview?: "expanded" | "collapsed" | "keep";
+  /** Selects and opens the lower pane, or folds it, while the intro is shown (on load and when the reader returns to it). */
+  panel?: "preview" | "console" | "result" | "collapsed";
   /** Maximizes the code area or the pane under it while the intro is shown; `none` restores. */
-  maximize?: "code" | "preview" | "none";
+  maximize?: "code" | "panel" | "none";
   /** File tab shown, with no focus, while the intro is shown (relative to each variant folder with variants). */
   file?: string;
   /** Images shown instead of code while the intro is shown (same as on <Step>). */
@@ -21,7 +21,7 @@ interface Props {
   outline?: boolean;
 }
 
-const { preview, maximize, file, images, embed, outline } = Astro.props;
+const { panel, maximize, file, images, embed, outline } = Astro.props;
 // No file or media of its own: the browser shows the outline unless `outline: false` (client/steps.ts).
 const autoOutline = !outline && file === undefined && !images?.length && embed === undefined;
 const { files, frontmatter } = currentTutorial(Astro.locals);
@@ -31,7 +31,7 @@ const variantFiles = variants && file !== undefined ? stepFiles(variants, parsed
 
 <section
   class="intro"
-  data-preview={preview}
+  data-panel={panel}
   data-maximize={maximize}
   data-file={variants ? undefined : file}
   data-files={variantFiles ? JSON.stringify(variantFiles) : undefined}

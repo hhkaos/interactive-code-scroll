@@ -6,7 +6,8 @@ export const MAXIMIZE_EVENT = "ics:maximize";
 
 /** A step's `maximize`: a pane, or `none` to restore; omitted (or unknown) keeps the current state. */
 export function stepMaximize(current: Maximized | undefined, attr: string | undefined): Maximized | undefined {
-  if (attr === "code" || attr === "preview") return attr;
+  if (attr === "code") return "code";
+  if (attr === "panel") return "preview";
   if (attr === "none") return undefined;
   return current;
 }

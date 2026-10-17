@@ -51,10 +51,10 @@ export interface ValidationInput {
 
 const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
 const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
-const PREVIEW_STATES = new Set(["expanded", "collapsed", "keep"]);
-const MAXIMIZE_STATES = new Set(["code", "preview", "none"]);
+const PANEL_STATES = new Set(["preview", "console", "result", "collapsed"]);
+const MAXIMIZE_STATES = new Set(["code", "panel", "none"]);
 /** The intro comes before any step: the pane state, a file or media, no code focus or result. */
-const INTRO_PROPS = ["preview", "maximize", "file", "images", "embed", "outline"];
+const INTRO_PROPS = ["panel", "maximize", "file", "images", "embed", "outline"];
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -373,7 +373,7 @@ export function validateTutorial({
   errors.push(...inconsistentDefaults(new Map([...[...parsed].map(([path, source]) => [`code/${path}`, source] as const), ...requestSources])));
   const stepIds = new Set<string>();
   const hintIds = new Set<string>();
-  // `maximize="preview"` needs a pane under the code: the iframe Preview or the Result pane (a step with a result).
+  // `maximize="panel"` needs a pane under the code: the iframe Preview or the Result pane (a step with a result).
   const hasPane =
     config?.preview === "iframe" ||
     config?.preview === "both" ||
@@ -399,7 +399,7 @@ export function validateTutorial({
 
       const file = text("file");
       const region = text("region");
-      checkPaneState(text, report);
+      checkPaneState(text, report, use);
       const only = text("only");
       const output = text("output");
       if (output !== undefined && !skipFileChecks) checkOutput(output, only, report);
@@ -423,7 +423,7 @@ export function validateTutorial({
     }
 
     if (use.name === "Intro") {
-      checkPaneState(text, report);
+      checkPaneState(text, report, use);
       checkMedia(use, text, report);
       // The file tab shown while the intro is, with no focus (a region would be code focus).
       const file = text("file");
@@ -549,19 +549,30 @@ export function validateTutorial({
     }
   }
 
-  /** `preview=` and `maximize=`, shared by <Step> and <Intro>. */
-  function checkPaneState(text: (attr: string) => string | undefined, report: (message: string) => void): void {
-    const preview = text("preview");
-    if (preview !== undefined && !PREVIEW_STATES.has(preview)) {
-      report('"preview" must be one of expanded, collapsed, keep');
+  /** `panel=` and `maximize=`, shared by <Step> and <Intro>. */
+  function checkPaneState(text: (attr: string) => string | undefined, report: (message: string) => void, use: ComponentUse): void {
+    if (use.attributes.preview !== undefined) report('"preview" was replaced by "panel": use panel="preview", panel="console", panel="result" or panel="collapsed"; omit it to keep the current state');
+    const panel = text("panel");
+    if (panel !== undefined && !PANEL_STATES.has(panel)) {
+      report('"panel" must be one of preview, console, result, collapsed');
+    }
+    const covered = variants?.filter((v) => typeof use.attributes.only !== "string" || use.attributes.only.split(/\s+/).includes(v.id));
+    const web = covered ? covered.some((v) => files.some((f) => f.path === `${v.dir}/${PREVIEW_ENTRY}`)) : files.some((f) => f.path === PREVIEW_ENTRY);
+    if (panel === "preview" || panel === "console") {
+      if (config && !["iframe", "both"].includes(config.preview)) report(`panel="${panel}" requires an embedded Preview (frontmatter preview: iframe or both)`);
+      if (!skipFileChecks && !web) report(`panel="${panel}" requires web code with index.html in a covered variant`);
+    }
+    if (panel === "result" && !skipFileChecks) {
+      const nonWeb = covered ? covered.some((v) => !files.some((f) => f.path === `${v.dir}/${PREVIEW_ENTRY}`)) : !web;
+      if (!nonWeb || !uses.some((u) => u.name === "Step" && (u.attributes.output !== undefined || u.attributes.request !== undefined))) report('panel="result" requires non-web code and a step with output= or request=');
     }
     const maximize = text("maximize");
     if (maximize !== undefined && !MAXIMIZE_STATES.has(maximize)) {
-      report('"maximize" must be one of code, preview, none');
-    } else if (maximize === "preview" && preview === "collapsed") {
-      report('maximize="preview" conflicts with preview="collapsed"');
-    } else if (maximize === "preview" && config && !hasPane) {
-      report('maximize="preview" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result');
+      report('"maximize" must be one of code, panel, none' + (maximize === "preview" ? '; maximize="preview" was renamed to maximize="panel"' : ""));
+    } else if (maximize === "panel" && panel === "collapsed") {
+      report('maximize="panel" conflicts with panel="collapsed"');
+    } else if (maximize === "panel" && config && !hasPane) {
+      report('maximize="panel" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result');
     }
   }
 

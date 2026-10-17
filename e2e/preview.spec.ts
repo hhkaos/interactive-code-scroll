@@ -62,7 +62,7 @@ test("the preview collapses to its header and reopens", async ({ page }) => {
 test("a step can collapse the preview", async ({ page }) => {
   await page.goto("/#ui");
   await expect(page.locator(".preview iframe")).toBeVisible();
-  await page.locator("section.step#config").evaluate((step) => (step as HTMLElement).dataset.preview = "collapsed");
+  await page.locator("section.step#config").evaluate((step) => (step as HTMLElement).dataset.panel = "collapsed");
   await page.evaluate(() => (location.hash = "#config"));
   await expect(page).toHaveURL(/#config$/);
   await expect(page.locator(".preview iframe")).toBeHidden();

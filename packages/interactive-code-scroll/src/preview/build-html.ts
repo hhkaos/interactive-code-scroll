@@ -1,3 +1,4 @@
+import { consoleCaptureScript } from "./console.ts";
 import { contentType } from "./content-type.ts";
 
 export const PREVIEW_ENTRY = "index.html";
@@ -166,5 +167,9 @@ export function buildPreviewHtml(files: Readonly<Record<string, string>>, entry 
       const content = path === undefined ? undefined : files[path];
       return content === undefined ? tag : `<style>\n${content}\n</style>`;
     });
-  return (options ? changedFiles(inlined, files, entry, options) : inlined).replace(/<head([^>]*)>/i, `<head$1>\n${KEY_FORWARDER}`);
+  const assembled = options ? changedFiles(inlined, files, entry, options) : inlined;
+  const hooks = `${KEY_FORWARDER}\n${consoleCaptureScript()}`;
+  return /<head[^>]*>/i.test(assembled)
+    ? assembled.replace(/<head[^>]*>/i, (head) => `${head}\n${hooks}`)
+    : `${hooks}\n${assembled}`;
 }

@@ -239,8 +239,8 @@ Install the prerequisites and keep this page open.
 
 | Prop | Values | Default | Description |
 |---|---|---|---|
-| [`preview`](#preview) | `expanded`, `collapsed`, `keep` | `keep` | Expands or collapses the Preview (or the Result pane) while the intro is shown: on load without a step in the URL, and each time the reader scrolls or steps back to it. |
-| [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Same as on `<Step>`, applied when the intro is shown. |
+| [`panel`](#panel-and-console) | `preview`, `console`, `result`, `collapsed` | keeps the current state | Selects and opens the lower pane, or collapses it, while the intro is shown. |
+| [`maximize`](#maximize-from-a-step) | `code`, `panel`, `none` | keeps the current state | Same as on `<Step>`, applied when the intro is shown. |
 | [`file`](#step) | path in `code/` (relative to each variant folder with [variants](#code-variants)) | the first tab | File tab shown while the intro is shown, with no focused lines: on load and each time the reader returns to it. Comes first in the tabs when frontmatter `files` does not set their order. Cannot be combined with `images` or `embed`. |
 | [`images`](#show-images-instead-of-code) | array of paths in `images/` | none | Images shown instead of code while the intro is shown, as on `<Step>`. |
 | [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown instead of code while the intro is shown, as on `<Step>`. Cannot be combined with `images`. |
@@ -248,7 +248,7 @@ Install the prerequisites and keep this page open.
 
 An intro with no `file`, `images` or `embed` shows the [step outline](#step-outline) next to it: the reader sees the plan of the tutorial before starting. Set frontmatter `outline: false` to keep the code panel there instead.
 
-For a calm first screen, `<Intro preview="collapsed">` starts with the pane collapsed; the first step that sets `preview="expanded"` opens it. To open on a file that no early step shows (a README, the finished app), use `<Intro file="README.md">`; with variants, every variant needs that file. Other `<Step>` props (`region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
+For a calm first screen, `<Intro panel="collapsed">` starts with the pane collapsed; the first step that sets `panel="preview"`, `panel="console"` or `panel="result"` opens it. To open on a file that no early step shows (a README, the finished app), use `<Intro file="README.md">`; with variants, every variant needs that file. Other `<Step>` props (`region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
 
 A tutorial without code (no `code/`, `preview: off`, every step with `images` or `embed`) can open on a picture or a title slide instead of an empty pane:
 
@@ -316,7 +316,7 @@ ask: [author, chatgpt, claude, { label: "Esri's Ask AI", url: "https://developer
 The main tutorial block: a heading, the explanation, and what the code panel and the pane under it show while the step is active.
 
 ```mdx title="tutorial/tutorial.mdx"
-<Step id="configure" file="main.js" region="config" preview="collapsed">
+<Step id="configure" file="main.js" region="config" panel="collapsed">
 
 ## Configure the app
 
@@ -334,8 +334,8 @@ Explain the change here.
 | [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown in an iframe instead of code, e.g. `embed="oauth-slides/#/3"`. Cannot be combined with `images`. |
 | [`output`](#result-pane) | file name in `output/` | none | Captured result shown in the Result pane, e.g. `output="geocode.json"`. |
 | [`request`](#http-requests) | request names | none | Space-separated `# @name`s from `requests/`, e.g. `request="geocode-get geocode-post"`; the first is the default. |
-| [`preview`](#preview) | `expanded`, `collapsed`, `keep` | `keep` | Expands or collapses the Preview (or the Result pane) when the step activates. |
-| [`maximize`](#maximize-from-a-step) | `code`, `preview`, `none` | keeps the current state | Maximizes the code area (code, images or embedded page) or the pane under it (Preview or Result pane); `none` restores the layout. |
+| [`panel`](#panel-and-console) | `preview`, `console`, `result`, `collapsed` | keeps the current state | Selects and opens the lower pane, or collapses it, when the step activates. |
+| [`maximize`](#maximize-from-a-step) | `code`, `panel`, `none` | keeps the current state | Maximizes the code area (code, images or embedded page) or the pane under it (Preview or Result pane); `none` restores the layout. |
 | [`only`](#steps-across-variants) | variant ids | all variants | With `variants`: space-separated ids the step applies to, e.g. `only="python curl"`. |
 | [`outline`](#step-outline) | no value | none | The list of steps instead of code, e.g. for a recap halfway through. Cannot be combined with `file`, `region`, `images` or `embed`. |
 
@@ -403,7 +403,7 @@ Adds a **Run request** button that sends `# @name geocode-get` from `requests/`.
 ##### Make a result fill the screen
 
 ```mdx title="tutorial/tutorial.mdx"
-<Step id="run-it" output="geocode.json" maximize="preview">…</Step>
+<Step id="run-it" output="geocode.json" maximize="panel">…</Step>
 <Step id="back" maximize="none">…</Step>
 ```
 
@@ -753,18 +753,75 @@ The [`preview`](#frontmatter) frontmatter field picks the mode:
 | `tab` | The open-in-tab button only |
 | `off` | No Preview; `code/index.html` is not required |
 
-Form changes refresh the Preview after a short debounce; the Run button refreshes it manually. A step's [`preview`](#step) prop expands or collapses it, and so does the intro's ([`<Intro preview>`](#intro)), for example to start with the pane collapsed.
+Form changes refresh the Preview after a short debounce; the Run button refreshes it manually. A step's or intro's [`panel`](#panel-and-console) prop selects the content and opens or collapses the pane.
+
+### Panel and Console
+
+The embedded web pane has **Preview** and **Console** tabs. Only one is visible at a time; the app keeps running while Console is selected. The console shows what the app actually logged, including messages produced while Preview was selected. Works in dev and the built static site.
+
+`panel` on `<Step>` or `<Intro>` chooses what happens when that block becomes active:
+
+| Value | Behavior |
+|---|---|
+| `preview` | Expand the pane and select the running app. |
+| `console` | Expand the pane and select its console output. |
+| `result` | Expand the Result pane for non-web code with captured output or HTTP requests. |
+| `collapsed` | Fold the whole pane to its header, keeping the selected tab. |
+| omitted | Keep the reader's selected tab and expanded/collapsed state. |
+
+The initial web view is Preview, expanded. Use `<Intro panel="collapsed">` to start folded. Preview and Console need frontmatter `preview: iframe` or `both`; standalone tabs (`preview: tab`) use the browser's native console. In a tutorial mixing web and non-web variants, the selection applies to variants that have that pane; use `only=` for a step that belongs to one kind only.
+
+```mdx
+<Intro panel="collapsed">
+  ## Explore an API response
+</Intro>
+
+<Step id="run" file="main.js" region="sign-in" panel="preview">
+  ## Run the example
+  Interact with the Preview to make the request.
+</Step>
+
+<Step id="inspect" file="main.js" region="get-self" panel="console">
+  ## Inspect the response
+  Expand the object logged by the app.
+</Step>
+
+<Step id="continue" file="main.js" region="search" panel="preview">
+  ## Continue in the app
+</Step>
+```
+
+For example, the app's `console.log("getSelf()", self)` produces a labeled entry with a collapsed one-line preview such as `{user: {…}, name: "Example"}`. Click its arrow to explore nested objects; arrow keys navigate the tree. Console captures `log`, `info`, `warn` and `error` in chronological order, with severity indicators and colors for JSON values. Original messages still appear in browser DevTools.
+
+Selecting a step **does not execute its code region**. If the interaction has not happened yet, its log will not exist. The iframe first starts when the pane opens or Run is pressed. After that, switching tabs, steps, collapsing or maximizing preserves the running app and the log. Clear removes the displayed messages; Run, reload and variant changes reset them. Form changes still reload the app after the usual debounce.
+
+Objects are **snapshots taken when logged**, rather than live references. Getters are not invoked. Cycles and values outside JSON (functions, undefined, BigInt and non-finite numbers) get readable markers; errors include their message and stack. This is a JSON-oriented inspector, not a complete DevTools replacement. Logs stay in memory, never localStorage. As with DevTools, avoid logging credentials or private data you do not want to display.
+
+To bound memory and rendering, Console retains the latest 200 entries, with at most 20 arguments, depth 8, 100 properties per container, 1,500 visited values and 64,000 content characters per call (4,000 per string/key). Clipped data has truncation markers; `(200+)` indicates discarded older messages. Capture covers the direct Preview iframe, including libraries running there; it does not capture other windows, embeds or workers. There is no command prompt or automatic filter by code region.
+
+`maximize="panel"` fills the window with the selected view, keeping the tabs available. `maximize="none"` restores the layout:
+
+```mdx
+<Step id="inspect-large" file="main.js" region="get-self"
+      panel="console" maximize="panel">
+  ## Explore the full response
+</Step>
+
+<Step id="back-to-app" file="main.js" panel="preview" maximize="none">
+  ## Return to the app
+</Step>
+```
 
 ### Maximize from a step
 
 Readers can maximize the code panel, the iframe Preview or the Result pane from their headers (see [Maximized panes](presenting.md#maximized-panes)). A step can do it for a talk, for example to show a big result and restore the layout on the next step. [`<Intro>`](#intro) takes the same `maximize` prop, applied while the intro is shown:
 
 ```mdx title="tutorial/tutorial.mdx"
-<Step id="run-it" maximize="preview">…</Step>
+<Step id="run-it" maximize="panel">…</Step>
 <Step id="back" maximize="none">…</Step>
 ```
 
-Build errors (on `<Step>` and `<Intro>`): `maximize="preview"` together with `preview="collapsed"`, and `maximize="preview"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
+Build errors (on `<Step>` and `<Intro>`): `maximize="panel"` together with `panel="collapsed"`, and `maximize="panel"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
 
 To show a tutorial in a talk or workshop (presentation mode, clickers, zoom, offline fallback), see [Presenting a Tutorial](presenting.md).
 
@@ -775,7 +832,7 @@ To show a tutorial in a talk or workshop (presentation mode, clickers, zoom, off
   <img alt="The Result pane under the code panel is highlighted: the captured terminal output of a Python script." src="../site/public/screenshots/area-result-light.png" width="900">
 </picture>
 
-Code that cannot run in the browser (scripts, native apps, [HTTP requests](#http-requests)) shows its result in the Result pane, which takes the Preview's place under the code. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`. Like the Preview, a step's or the intro's [`preview`](#step) prop expands or collapses it.
+Code that cannot run in the browser (scripts, native apps, [HTTP requests](#http-requests)) shows its result in the Result pane, which takes the Preview's place under the code. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`. Use `panel="result"` to open it or `panel="collapsed"` to fold it, on a step or the intro.
 
 ```mdx title="tutorial/tutorial.mdx"
 <Step id="request" region="request" output="geocode.json">
@@ -1216,9 +1273,9 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> output "x" not found in output/` | Add the file to `output/` (or `output/<variant id>/`). |
 | `<Step> output "x" has no effect: code/index.html makes the tutorial web code, which shows the Preview` | Web code has no Result pane: remove `output` or `index.html`. |
 | `<Step> request "x" not found in requests/ (# @name x)` | Name the request with `# @name x` in a `.http` file under `requests/`. |
-| `<Step> maximize="preview" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
+| `<Step> maximize="panel" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
 | `<Step> duplicate id "x"` | Step ids are unique per tutorial. |
-| `<Intro> "x" is not available on <Intro> (only preview, maximize, file, images, embed, outline)` | Move `region`, `output` or `request` to the first step. |
+| `<Intro> "x" is not available on <Intro> (only panel, maximize, file, images, embed, outline)` | Move `region`, `output` or `request` to the first step. |
 | `<Step> "outline" takes no value: write <Step outline>` | Write `outline` alone, without `="…"` or `{…}`. |
 | `<Step> "outline" and "file" cannot be combined; use one of them` | The outline replaces the code: drop `file`, `region`, `images` or `embed`, or move the outline to its own step. |
 | `"outline" must be a boolean` | Frontmatter `outline: false` (or `true`), without quotes. |

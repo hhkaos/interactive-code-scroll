@@ -440,7 +440,7 @@ const clientData = JSON.stringify({
         <calcite-action id="embed-open" class="embed-open" icon="launch" text="Open in new tab" />
         {
           preview !== "off" && (
-            <section class="preview" aria-label="Preview" hidden={!firstIsWeb || undefined}>
+            <section class="preview" aria-label="Preview and Console" data-web-variants={variants && JSON.stringify(variants.filter((v) => previewEntries.includes(`${v.dir}/${PREVIEW_ENTRY}`)).map((v) => v.id))} hidden={!firstIsWeb || undefined}>
               {withIframe && (
                 <div
                   class="preview-splitter"
@@ -461,12 +461,23 @@ const clientData = JSON.stringify({
                 )}
                 {withIframe && <calcite-action id="preview-run" icon="refresh" text="Run" text-enabled />}
                 {withTab && <calcite-action id="preview-open" icon="launch" text="Open in new tab" text-enabled />}
-                {withIframe && <calcite-action id="preview-maximize" data-maximize="preview" icon="maximize" text="Maximize preview" />}
+                {withIframe && <calcite-action id="preview-maximize" data-maximize="preview" icon="maximize" text="Maximize panel" />}
               </div>
               {withIframe && (
                 <div class="preview-frame">
-                  {/* Same origin is required: the SDK's OAuth callback talks to window.opener. */}
-                  <iframe title="Preview" sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" />
+                  <div class="preview-tabs" role="tablist" aria-label="Preview views" data-own-keys>
+                    <button id="preview-tab-app" type="button" role="tab" aria-selected="true" aria-controls="preview-app" tabindex="0">Preview</button>
+                    <button id="preview-tab-console" type="button" role="tab" aria-selected="false" aria-controls="preview-console" tabindex="-1">Console <span id="preview-console-count"></span></button>
+                  </div>
+                  <div id="preview-app" role="tabpanel" aria-labelledby="preview-tab-app">
+                    {/* Same origin is required: the SDK's OAuth callback talks to window.opener. */}
+                    <iframe title="Preview" sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" />
+                  </div>
+                  <div id="preview-console" role="tabpanel" aria-labelledby="preview-tab-console" tabindex="0" hidden>
+                    <div class="console-toolbar"><span>Snapshot at log time</span><button id="preview-console-clear" type="button">Clear</button></div>
+                    <p id="preview-console-empty">No messages yet. Interact with the Preview to produce console output.</p>
+                    <div id="preview-console-entries" role="list" aria-label="Console messages"></div>
+                  </div>
                 </div>
               )}
             </section>

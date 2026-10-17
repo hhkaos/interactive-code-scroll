@@ -1,5 +1,6 @@
 import { inFolder, projectFiles, publishedUrl, type ParsedFile } from "../downloads.ts";
 import { buildPreviewHtml, PREVIEW_ENTRY, previewPageKey, previewPagesOf, previewStorageKey, type PreviewTarget } from "../preview/build-html.ts";
+import { startConsole } from "./console.ts";
 import { setAction } from "./actions.ts";
 import { VARIANT_EVENT, type VariantsHandle } from "./variants.ts";
 
@@ -35,6 +36,8 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
   const section = document.querySelector<HTMLElement>("section.preview");
   const frame = document.querySelector<HTMLElement>(".preview-frame");
   const iframe = frame?.querySelector("iframe");
+  const consoleView = iframe ? startConsole(iframe) : undefined;
+  let started = false;
 
   /** Project (with values and with code defaults), page, folder URL and storage slot of the code the Preview runs; `undefined` for a variant without web code. */
   const target = () => {
@@ -63,9 +66,11 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
   };
 
   const run = () => {
-    if (!iframe || frame!.hidden) return;
+    if (!iframe) return;
     const url = open("iframe");
     if (!url) return;
+    consoleView?.clear();
+    started = true;
     if (iframe.src === url) iframe.contentWindow?.location.reload();
     else iframe.src = url;
   };
@@ -74,7 +79,7 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
     if (!frame) return;
     frame.hidden = collapsed;
     setAction(document.querySelector("#preview-toggle"), collapsed ? "chevron-right" : "chevron-down", "Preview");
-    run();
+    if (!collapsed && !started) run();
   };
 
   document.querySelector("#preview-run")?.addEventListener("click", run);
@@ -97,10 +102,13 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
   };
   document.addEventListener(VARIANT_EVENT, () => {
     showSection();
-    if (mode !== "tab") run();
+    consoleView?.clear();
+    started = false;
+    if (mode !== "tab" && target()) run();
+    else if (iframe) iframe.src = "about:blank";
   });
   showSection();
-  if (mode !== "tab") run();
+  if (mode !== "tab" && !frame?.hidden) run();
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   return {

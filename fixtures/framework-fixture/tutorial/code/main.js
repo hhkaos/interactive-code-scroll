@@ -27,6 +27,7 @@ const userStatus = document.querySelector("#user-status");
 
 signInButton.addEventListener("click", () => {
   fixtureState.runs += 1;
+  console.log("getSelf()", { user: { username: "demo", fullName: "Demo User" }, name: "Example organization", runs: fixtureState.runs });
   signInButton.textContent = `Run ${fixtureState.runs}`;
   userStatus.textContent = formatStatus();
 });

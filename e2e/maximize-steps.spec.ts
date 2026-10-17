@@ -20,7 +20,7 @@ test("a step's maximize= maximizes the Result pane or the code, and none restore
   await expect.poll(() => maximized(page)).toBeNull();
 });
 
-test('maximize="preview" maximizes the Preview for web code', async ({ page }) => {
+test('maximize="panel" maximizes the Preview for web code', async ({ page }) => {
   await page.goto("/?variant=web#present-result");
   await expect.poll(() => maximized(page)).toBe("preview");
   await expect(page.locator("section.result")).toBeHidden();

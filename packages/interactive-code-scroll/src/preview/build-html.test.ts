@@ -34,6 +34,7 @@ describe("buildPreviewHtml", () => {
 
   it("injects the clicker key forwarder first in <head>", () => {
     expect(html).toMatch(/<head>\n<script>addEventListener\("keydown"/);
+    expect(html.indexOf("ics:console-reset")).toBeLessThan(html.indexOf('<script type="module"'));
     expect(html).toContain('"ics:step-key"');
     expect(html).toContain('e.key==="Escape"&&!e.defaultPrevented');
   });
@@ -91,7 +92,16 @@ describe("files changed by form values", () => {
 
   it("puts the forwarder, the import map and the fetch override first in <head>", () => {
     const html = buildPreviewHtml(files, "index.html", { baseUrl, defaults });
-    expect(html).toMatch(/<head>\n<script>addEventListener\("keydown".*\n<script type="importmap">.*<\/script>\n<script>\(function\(m\)\{var f=window\.fetch/);
+    const forwarder = html.indexOf('addEventListener("keydown"');
+    const capture = html.indexOf('ics:console-reset');
+    const importMapIndex = html.indexOf('<script type="importmap">');
+    const fetchOverride = html.indexOf('var f=window.fetch');
+    const authorScript = html.indexOf('<script type="module">');
+    expect(forwarder).toBeGreaterThan(html.indexOf("<head>"));
+    expect(capture).toBeGreaterThan(forwarder);
+    expect(importMapIndex).toBeGreaterThan(capture);
+    expect(fetchOverride).toBeGreaterThan(importMapIndex);
+    expect(authorScript).toBeGreaterThan(fetchOverride);
     expect(html).toContain(`"${baseUrl}config.js":["text/javascript; charset=utf-8",`);
   });
 
@@ -135,4 +145,9 @@ describe("other preview pages", () => {
     expect(page).toContain('"\\u003cp>default\\u003c/script>"');
     expect(page).not.toContain("</script>\"");
   });
+});
+
+it("installs the capture before author scripts when the page omits an explicit head", () => {
+  const html = buildPreviewHtml({ "index.html": '<script>console.log("early")</script>' });
+  expect(html.indexOf("ics:console-reset")).toBeLessThan(html.indexOf('console.log("early")'));
 });

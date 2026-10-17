@@ -26,7 +26,7 @@ console.log(`Fixture mode: ${fixtureMode}`);
 
 </Intro>
 
-<Step id="load-sdk" file="index.html" region="cdn" preview="collapsed">
+<Step id="load-sdk" file="index.html" region="cdn" panel="collapsed">
 
 ## Load the runtime
 
@@ -34,7 +34,7 @@ This step focuses a short HTML region and collapses the Preview.
 
 </Step>
 
-<Step id="ui" file="index.html" region="ui" preview="expanded">
+<Step id="ui" file="index.html" region="ui" panel="preview">
 
 ## Build the UI
 
@@ -42,7 +42,7 @@ This step focuses the UI region and expands the Preview.
 
 </Step>
 
-<Step id="register-app" images={["fixture-one.svg", "fixture-two.svg", "fixture-three.svg"]} preview="collapsed">
+<Step id="register-app" images={["fixture-one.svg", "fixture-two.svg", "fixture-three.svg"]} panel="collapsed">
 
 ## Show images
 
@@ -50,7 +50,7 @@ This step switches the right panel from code to a carousel.
 
 </Step>
 
-<Step id="config" file="main.js" region="config" preview="collapsed">
+<Step id="config" file="main.js" region="config" panel="collapsed">
 
 ## Configure values
 
@@ -68,7 +68,7 @@ These fields exercise persisted values, secret masking, and runtime code replace
 
 </Step>
 
-<Step id="oauth" file="main.js" region="oauth" preview="collapsed">
+<Step id="oauth" file="main.js" region="oauth" panel="collapsed">
 
 ## Register behavior
 
@@ -83,7 +83,7 @@ This step focuses a multi-line JavaScript region and mentions <Hint id="fixture-
 
 </Step>
 
-<Step id="callback" file="oauth-callback.html" region="handler" preview="collapsed">
+<Step id="callback" file="oauth-callback.html" region="handler" panel="collapsed">
 
 ## Publish another file
 
@@ -98,7 +98,7 @@ This step verifies that non-entry files are published next to the Preview.
 
 </Step>
 
-<Step id="sign-in" file="main.js" region="sign-in" preview="collapsed">
+<Step id="sign-in" file="main.js" region="sign-in" panel="console">
 
 ## Run the action
 
@@ -106,7 +106,7 @@ This step focuses the click handler used by the Preview tests.
 
 </Step>
 
-<Step id="styles" file="style.css" preview="collapsed">
+<Step id="styles" file="style.css" panel="collapsed">
 
 ## Show a file without focus
 
@@ -114,7 +114,7 @@ This step switches to a file without focusing a region.
 
 </Step>
 
-<Step id="embed-slides" embed="demo-slides/#/2" preview="collapsed">
+<Step id="embed-slides" embed="demo-slides/#/2" panel="collapsed">
 
 ## Show an embedded page
 
@@ -122,7 +122,7 @@ This step shows a slide deck from `embeds/` instead of code.
 
 </Step>
 
-<Step id="embed-next-slide" embed="demo-slides/#/3" preview="collapsed">
+<Step id="embed-next-slide" embed="demo-slides/#/3" panel="collapsed">
 
 ## Move to another slide
 

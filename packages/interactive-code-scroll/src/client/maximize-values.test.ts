@@ -4,7 +4,7 @@ import { stepMaximize, toggleMaximize } from "./maximize-values.ts";
 describe("stepMaximize", () => {
   it("maximizes the step's pane, replacing another", () => {
     expect(stepMaximize(undefined, "code")).toBe("code");
-    expect(stepMaximize("code", "preview")).toBe("preview");
+    expect(stepMaximize("code", "panel")).toBe("preview");
   });
 
   it("restores the layout with none", () => {

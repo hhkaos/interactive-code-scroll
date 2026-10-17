@@ -140,10 +140,18 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
     document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
   }
 
-  /** Pane state (`preview=`, `maximize=`) of a step or the intro, applied each time it becomes active. */
+  /** Pane state (`panel=`, `maximize=`) of a step or the intro, applied each time it becomes active. */
   function applyPaneState(block: HTMLElement | null): void {
     if (!block) return;
-    setPreviewState(block.dataset.preview);
+    const panel = block.dataset.panel;
+    const preview = document.querySelector<HTMLElement>("section.preview");
+    const web = !!preview?.querySelector("iframe") && (!variants || (JSON.parse(preview.dataset.webVariants ?? "[]") as string[]).includes(variants.active().id));
+    const applicable = panel === "collapsed" || (panel === "result" ? !web : web);
+    if (panel && applicable) {
+      if (panel === "preview" || panel === "console") preview?.setAttribute("data-view", panel);
+      setPreviewState(panel === "collapsed" ? "collapsed" : "expanded");
+      document.dispatchEvent(new CustomEvent("ics:panel-view", { detail: panel }));
+    }
     // After the Preview state: maximizing the pane expands it; `none` restores the layout.
     if (block.dataset.maximize) document.dispatchEvent(new CustomEvent<string>(MAXIMIZE_EVENT, { detail: block.dataset.maximize }));
   }

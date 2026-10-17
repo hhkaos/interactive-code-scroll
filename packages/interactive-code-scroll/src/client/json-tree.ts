@@ -10,6 +10,12 @@ import {
   type JsonValue,
 } from "./json-tree-values.ts";
 
+interface TreeOptions {
+  /** Console entries start collapsed; captured output keeps the existing depth rule. */
+  collapsed?: boolean;
+  summary?: (value: JsonContainer) => string;
+}
+
 const ITEM = '[role="treeitem"]';
 
 function token(className: string, text: string): HTMLSpanElement {
@@ -38,7 +44,7 @@ function label(key: string | undefined): Node[] {
   return key === undefined ? [] : [token("jt-key", JSON.stringify(key)), token("jt-p", ": ")];
 }
 
-function item(depth: number, key: string | undefined, value: JsonValue, last: boolean): HTMLLIElement {
+function item(depth: number, key: string | undefined, value: JsonValue, last: boolean, options: TreeOptions): HTMLLIElement {
   const li = document.createElement("li");
   li.setAttribute("role", "treeitem");
   li.setAttribute("aria-level", String(depth + 1));
@@ -63,32 +69,32 @@ function item(depth: number, key: string | undefined, value: JsonValue, last: bo
       caret,
       ...label(key),
       token("jt-p jt-when-open", open),
-      token("jt-p jt-when-closed", `${open} … ${close}`),
+      token("jt-p jt-when-closed", options.summary ? options.summary(value) : `${open} … ${close}`),
       ...(last ? [] : [token("jt-p jt-when-closed", ",")]),
-      token("jt-dim jt-when-closed", summary(value)),
+      token("jt-dim jt-when-closed", options.summary ? "" : summary(value)),
     ),
   );
   li.dataset.close = close + (last ? "" : ",");
-  setExpanded(li, value, depth, startsExpanded(depth));
+  setExpanded(li, value, depth, !options.collapsed && startsExpanded(depth), options);
   return li;
 }
 
-const containers = new WeakMap<HTMLLIElement, { value: JsonContainer; depth: number }>();
+const containers = new WeakMap<HTMLLIElement, { value: JsonContainer; depth: number; options: TreeOptions }>();
 
-function setExpanded(li: HTMLLIElement, value: JsonContainer, depth: number, expanded: boolean): void {
-  containers.set(li, { value, depth });
+function setExpanded(li: HTMLLIElement, value: JsonContainer, depth: number, expanded: boolean, options: TreeOptions): void {
+  containers.set(li, { value, depth, options });
   li.setAttribute("aria-expanded", String(expanded));
-  if (expanded && !li.querySelector(':scope > [role="group"]')) buildChildren(li, value, depth);
+  if (expanded && !li.querySelector(':scope > [role="group"]')) buildChildren(li, value, depth, options);
 }
 
-function buildChildren(li: HTMLLIElement, value: JsonContainer, depth: number): void {
+function buildChildren(li: HTMLLIElement, value: JsonContainer, depth: number, options: TreeOptions): void {
   const all = entries(value);
   const group = document.createElement("ul");
   group.setAttribute("role", "group");
   let shown = 0;
   const page = () => {
     const end = nextShown(all.length, shown);
-    const items = all.slice(shown, end).map(([key, child], i) => item(depth + 1, key, child, shown + i === all.length - 1));
+    const items = all.slice(shown, end).map(([key, child], i) => item(depth + 1, key, child, shown + i === all.length - 1, options));
     shown = end;
     return items;
   };
@@ -129,7 +135,7 @@ function visibleItems(tree: HTMLElement): HTMLElement[] {
 
 function toggle(li: HTMLLIElement, expanded: boolean): void {
   const container = containers.get(li);
-  if (container) setExpanded(li, container.value, container.depth, expanded);
+  if (container) setExpanded(li, container.value, container.depth, expanded, container.options);
 }
 
 /**
@@ -137,14 +143,14 @@ function toggle(li: HTMLLIElement, expanded: boolean): void {
  * Containers deeper than `EXPANDED_DEPTH` start collapsed; long ones show `PAGE` entries at a time
  * (see json-tree-values.ts).
  */
-export function renderJsonTree(value: JsonValue, ariaLabel: string): HTMLUListElement {
+export function renderJsonTree(value: JsonValue, ariaLabel: string, options: TreeOptions = {}): HTMLUListElement {
   const tree = document.createElement("ul");
   tree.className = "json-tree";
   tree.setAttribute("role", "tree");
   tree.setAttribute("aria-label", ariaLabel);
   // Arrow keys move in the tree, not between steps (clicker keys still do).
   tree.dataset.ownKeys = "";
-  const root = item(0, undefined, value, true);
+  const root = item(0, undefined, value, true, options);
   root.tabIndex = 0;
   tree.append(root);
 
