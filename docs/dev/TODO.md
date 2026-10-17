@@ -2,8 +2,6 @@
 
 ## UI polish
 
-- [ ] Visually review author-sized Preview / Console / Result panes (`panelHeight`) on desktop before publishing; compact phones keep their header / maximized layout.
-
 - Embed steps: the "Open in new tab" action (`.embed-open`) floats over the embedded page. Show it in a strip (bar) instead, so it does not cover the page.
 - Framework Fixture Tutorial, step 4 (`config`): the textarea `<VarField type="textarea">` leaves too little bottom margin.
 

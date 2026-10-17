@@ -85,7 +85,7 @@ By default, the embedded pane shows the app under a **Preview** header. Set `con
 
 ## Live browser console
 
-**Coming in the next release.** Explain the response your code actually received, without leaving the tutorial or adding a debug panel to the sample app.
+**Available since 0.2.0-beta.10.** Explain the response your code actually received, without leaving the tutorial or adding a debug panel to the sample app.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/console-web-dark.png">
@@ -115,7 +115,7 @@ console: true
 </Step>
 ```
 
-For configuration, a complete step sequence, snapshot behavior and capture limits, see [Panel and Console](authoring.md#panel-and-console). Existing authors should also read the [panel API migration](upgrade.md#panel-api-migration-unreleased).
+For configuration, a complete step sequence, snapshot behavior and capture limits, see [Panel and Console](authoring.md#panel-and-console). Existing authors should also read the [panel API migration](upgrade.md#panel-api-migration-020-beta10).
 
 ## Result pane
 

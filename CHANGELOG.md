@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.10] - 2026-10-17
+
 ### Fixed
 
 - Opening or resizing the lower pane reveals the active code region after the code viewport changes; regions that fit stay fully visible, and taller regions show their start.
@@ -16,12 +18,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `<Step panelHeight={30}>` and `<Intro panelHeight={30}>` set Preview / Console / Result to a percentage of the right column height (15–85), without overwriting the reader's saved size. Readers can still resize; compact phones and maximized panes keep their full-screen behavior.
 
-- Live Console has a dedicated Features section, light/dark screenshots captured from a real Preview interaction, a screenshot scene that regenerates them without credentials, a landing page highlight, and links to the authoring reference and migration guide. Unreleased availability is explicit for authors.
+- Live Console has a dedicated Features section, light/dark screenshots captured from a real Preview interaction, a screenshot scene that regenerates them without credentials, a landing page highlight, and links to the authoring reference and migration guide. Available since 0.2.0-beta.10.
 - Console entries show a source file and line when available; inlined scripts and substituted modules preserve source names and cleaned-code line numbers. Collapsed summaries now color keys and scalar types like DevTools. A collapsible help explains selecting the Preview iframe context in browser DevTools and filtering to that context.
 - Embedded Preview / Console tabs capture real `console.log/info/warn/error` calls as bounded, in-memory snapshots with labeled entries, severity, collapsible colored JSON trees and compact property previews. Tabs, collapse and maximize preserve the running iframe and its logs; Run resets the log. Capture works in dev and static builds, without adding code to the tutorial app.
 
 ### Changed
 
+- Desktop and phone pane-height screenshots reviewed and approved before publication.
 - Project architecture documents the optional Console capture pipeline, message handling, the `view` / `collapsed` state flow, and author-controlled pane heights with shared splitter state and code visibility after resizing.
 - Console is opt-in with frontmatter `console: true` (default false). Preview-only tutorials show no tabs and do not install console capture. The authoring reference and Features explain the separate tutorial setting and step actions.
 - With Console enabled, the embedded web pane is headed "Output", with "Preview" and "Console" as its tabs; the heading stays consistent when collapsed or selected by a step.

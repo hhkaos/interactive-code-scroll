@@ -763,7 +763,7 @@ Form changes refresh the Preview after a short debounce; the Run button refreshe
 
 ### Panel and Console
 
-**Available in the next release (unreleased).** Upgrading an existing tutorial? See the [panel API migration](upgrade.md#panel-api-migration-unreleased).
+**Available since 0.2.0-beta.10.** Upgrading an existing tutorial? See the [panel API migration](upgrade.md#panel-api-migration-020-beta10).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/console-web-dark.png">

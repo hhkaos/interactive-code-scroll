@@ -227,6 +227,8 @@ test("authors can discover Live Console, see its screenshots and find the author
   await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
   await page.goto(`${BASE}docs/authoring/#panel-and-console`);
   await expect(page.locator("#panel-and-console")).toBeVisible();
-  await expect(page.locator(".sl-markdown-content")).toContainText("Available in the next release");
+  await expect(page.locator(".sl-markdown-content")).toContainText("Available since 0.2.0-beta.10.");
   await expect(page.locator(".sl-markdown-content")).toContainText("Objects are snapshots taken when logged");
+  await page.getByRole("link", { name: "panel API migration", exact: true }).click();
+  await expect(page.locator("#panel-api-migration-020-beta10")).toBeVisible();
 });

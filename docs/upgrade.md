@@ -2,7 +2,7 @@
 
 InteractiveCodeScroll is still pre-v1. Keep upgrades deliberate and test each tutorial after changing versions.
 
-## Panel API migration (unreleased)
+## Panel API migration (0.2.0-beta.10)
 
 Step and intro `preview=` has been replaced by `view` (select and open) and `collapsed` (visibility). Frontmatter `preview: off|iframe|tab|both` is unchanged: `both` still means iframe plus a new-tab button.
 
