@@ -82,6 +82,9 @@ Before a screenshot or a DOM read with the Playwright MCP, wait past any input d
 ### Node version for the pack smoke test
 `pnpm test:pack` builds a scaffolded project in a temp folder outside the repo, where Volta's default Node may be older than Astro accepts (22.21.1 < 22.22.0). If it fails with "Node.js vX is not supported by Astro", rerun it with a newer Node first on `PATH` (e.g. `PATH=~/.volta/tools/image/node/22.22.0/bin:$PATH npx -y pnpm@11.13.1 test:pack`); it is not a package failure.
 
+### Presentation E2E: wait for full screen
+After clicking Present in an E2E test, wait for `document.fullscreenElement` before opening any popover (step index, hints): entering full screen hides open popovers, and the request resolves after the click. (A step index test once failed CI under load: the index closed itself and the next key reopened it.)
+
 ### Ask before destructive actions
 Confirm before: deleting files, force-pushing, resetting git state, dropping packages.
 
