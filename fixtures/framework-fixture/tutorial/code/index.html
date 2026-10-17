@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Framework fixture app</title>
     <!-- #region cdn -->
-    <script type="module">window.fixtureRuntime = true;</script>
+    <script type="module">
+      window.fixtureRuntime = true;
+      document.addEventListener("fixture:inline-log", () => console.log("Inline script", true));
+    </script>
     <!-- #endregion -->
     <link rel="stylesheet" href="./style.css" />
     <script type="module" src="./main.js"></script>

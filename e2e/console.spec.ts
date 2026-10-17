@@ -1,12 +1,23 @@
 import { expect, test } from "./fixtures.ts";
 
 test("Preview interactions produce expandable snapshots, retained across tabs, steps and collapse", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/#ui");
   const app = page.frameLocator(".preview iframe");
   await app.locator("#sign-in").click();
   await page.getByRole("tab", { name: /^Console/ }).click();
   const entry = page.locator(".console-entry").filter({ hasText: "getSelf()" });
   await expect(entry).toHaveCount(1);
+  const line = await page.locator('.code[data-file="main.js"] .line').filter({ hasText: 'console.log("getSelf()"' }).getAttribute("data-line");
+  await expect(entry.locator(".console-source")).toHaveText(`main.js:${line}`);
+  await expect(entry.locator(".console-label")).toHaveText("getSelf()");
+  expect(await entry.locator(".json-tree").evaluate((tree) => getComputedStyle(tree).listStyleType)).toBe("none");
+  const colors = await entry.evaluate((row) => ({
+    key: getComputedStyle(row.querySelector(".jt-key")!).color,
+    string: getComputedStyle(row.querySelector(".jt-str")!).color,
+    number: getComputedStyle(row.querySelector(".jt-num")!).color,
+  }));
+  expect(colors).toEqual({ key: "rgb(136, 19, 145)", string: "rgb(196, 26, 22)", number: "rgb(28, 0, 207)" });
   await expect(entry).toContainText('user: {…}, name: "Example organization"');
   const root = entry.getByRole("treeitem").first();
   await expect(root).toHaveAttribute("aria-expanded", "false");
@@ -107,4 +118,23 @@ test("a step can select and maximize Console with the public panel API", async (
   await expect(page.locator("body")).toHaveAttribute("data-maximized", "preview");
   await expect(page.getByRole("tab", { name: /^Console/ })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".console-entry")).toContainText("getSelf()");
+});
+
+
+test("the Console explains how to inspect native messages in browser DevTools", async ({ page }) => {
+  await page.goto("/#sign-in");
+  await page.getByText("Use browser DevTools", { exact: true }).click();
+  await expect(page.locator(".console-devtools")).toContainText("Selected context only");
+  await expect(page.getByRole("link", { name: "Chrome Console guide" })).toHaveAttribute("href", "https://developer.chrome.com/docs/devtools/console/reference#context");
+});
+
+
+test("inline HTML logs keep the line numbers of the displayed HTML code", async ({ page }) => {
+  await page.goto("/#sign-in");
+  await expect(page.frameLocator(".preview iframe").locator("#sign-in")).toBeAttached();
+  await page.locator(".preview iframe").evaluate((element) => {
+    (element as HTMLIFrameElement).contentDocument!.dispatchEvent(new Event("fixture:inline-log"));
+  });
+  const line = await page.locator('.code[data-file="index.html"] .line').filter({ hasText: 'console.log("Inline script"' }).getAttribute("data-line");
+  await expect(page.locator(".console-entry .console-source")).toHaveText(`index.html:${line}`);
 });

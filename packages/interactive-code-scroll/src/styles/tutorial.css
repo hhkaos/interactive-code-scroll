@@ -1677,6 +1677,15 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
     cursor: pointer;
   }
 }
+.console-devtools {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--calcite-color-border-3);
+  color: var(--calcite-color-text-2);
+  font-size: 0.85em;
+  summary { cursor: pointer; }
+  p { margin: 0.5rem 0 0; }
+  a { color: var(--calcite-color-text-link); }
+}
 #preview-console-empty { padding: 1rem; color: var(--calcite-color-text-3); }
 .console-entry {
   display: flex;
@@ -1692,7 +1701,17 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
   .console-level { font-size: 0.75em; color: var(--calcite-color-text-3); }
   &[data-level="warn"] .console-level { color: var(--calcite-color-status-warning); }
   &[data-level="error"] .console-level { color: var(--calcite-color-status-danger); }
-  .json-tree { margin: 0; padding: 0; max-width: 100%; }
+  .json-tree { margin: 0; padding: 0; max-width: 100%; list-style: none; }
+  .jt-key, .json-tree .jt-key { color: light-dark(#881391, #e8eaed); }
+  .jt-str, .json-tree .jt-str { color: light-dark(#c41a16, #e9938f); }
+  :is(.jt-num, .jt-lit), .json-tree :is(.jt-num, .jt-lit) { color: light-dark(#1c00cf, #9980ff); }
+  .console-source {
+    margin-inline-start: auto;
+    align-self: flex-start;
+    color: var(--calcite-color-text-3);
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
   .jt-when-closed { overflow-wrap: anywhere; }
 }
 

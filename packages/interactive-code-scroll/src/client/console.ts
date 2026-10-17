@@ -1,6 +1,18 @@
-import { consoleSummary } from "./console-values.ts";
+import { consoleSummaryTokens } from "./console-values.ts";
 import { renderJsonTree } from "./json-tree.ts";
 import { parseJson } from "./json-tree-values.ts";
+
+/** Colored summary built only from text nodes (logged values are untrusted). */
+const coloredSummary = (value: Parameters<typeof consoleSummaryTokens>[0]) => {
+  const fragment = document.createDocumentFragment();
+  for (const { kind, text } of consoleSummaryTokens(value)) {
+    const span = document.createElement("span");
+    span.className = kind;
+    span.textContent = text;
+    fragment.append(span);
+  }
+  return fragment;
+};
 
 /** Tabs share one live iframe: hiding the app never reloads or detaches it. */
 export function startConsole(iframe: HTMLIFrameElement): { clear(): void; select(view: string): void } {
@@ -70,7 +82,22 @@ export function startConsole(iframe: HTMLIFrameElement): { clear(): void; select
         text.className = index === 0 ? "console-label" : "jt-str";
         text.textContent = value;
         row.append(text);
-      } else row.append(renderJsonTree(value, `${data.level} argument ${index + 1}`, { collapsed: true, summary: consoleSummary }));
+      } else row.append(renderJsonTree(value, `${data.level} argument ${index + 1}`, { collapsed: true, summary: coloredSummary }));
+    }
+    if (data.source && typeof data.source.url === "string" && Number.isSafeInteger(data.source.line) && data.source.line > 0) {
+      try {
+        const url = new URL(data.source.url);
+        if (["http:", "https:", "file:", "ics-preview:"].includes(url.protocol)) {
+          const source = document.createElement("span");
+          source.className = "console-source";
+          const path = decodeURIComponent(url.pathname);
+          source.textContent = `${path.split("/").at(-1) || "index.html"}:${data.source.line}`;
+          source.title = `${path}:${data.source.line}:${data.source.column ?? 0}`;
+          row.append(source);
+        }
+      } catch {
+        // A browser may supply an unparseable stack location; the log still renders.
+      }
     }
     const atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 40;
     list.append(row);

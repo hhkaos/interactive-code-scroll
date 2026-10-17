@@ -83,6 +83,10 @@ const RELATIVE_IMPORT = /((?:\bimport|\bfrom)\s*\(?\s*)(["'])(\.{1,2}\/[^"'\r\n]
 const absoluteImports = (code: string, url: string) =>
   code.replace(RELATIVE_IMPORT, (_, lead: string, quote: string, specifier: string) => `${lead}${quote}${new URL(specifier, url).href}${quote}`);
 
+/** Name a generated script after its project file; line numbers match the cleaned code pane. */
+const namedScript = (code: string, url: string) => `${code}\n//# sourceURL=${url}\n`;
+const scriptUrl = (path: string, options?: PreviewHtmlOptions) => new URL(path, options?.baseUrl ?? "ics-preview:///").href;
+
 const isScript = (path: string) => /\.m?js$/i.test(path);
 const textType = (path: string) => contentType(path).replace(/;.*/, "");
 const inlineJson = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
@@ -116,7 +120,7 @@ function changedFiles(html: string, files: Readonly<Record<string, string>>, pag
   if (changed.length === 0) return html;
   const urls = new Map(changed.map((path) => [new URL(path, baseUrl).href, path]));
   const dataUrl = (url: string, path: string) =>
-    `data:${textType(path)};charset=utf-8,${encodeURIComponent(isScript(path) ? absoluteImports(files[path]!, url) : files[path]!)}`;
+    `data:${textType(path)};charset=utf-8,${encodeURIComponent(isScript(path) ? namedScript(absoluteImports(files[path]!, url), url) : files[path]!)}`;
   const modules = Object.fromEntries([...urls].map(([url, path]) => [url, dataUrl(url, path)]));
 
   // One import map per page in older browsers: the author's, with mappings to changed files redirected, plus these.
@@ -153,13 +157,24 @@ export function buildPreviewHtml(files: Readonly<Record<string, string>>, entry 
   if (html === undefined) throw new Error(`Preview entry ${entry} not found in code/`);
 
   const inlined = html
-    .replace(/<script\b([^>]*?)\ssrc="([^"]+)"([^>]*)>\s*<\/script>/gi, (tag, before: string, src: string, after: string) => {
-      const path = localPath(src, entry);
-      const content = path === undefined ? undefined : files[path];
-      if (content === undefined) return tag;
-      const code = options ? absoluteImports(content, new URL(path!, options.baseUrl).href) : content;
-      // `</script` inside inlined code would close the tag early.
-      return `<script${before}${after}>\n${code.replace(/<\/script/gi, "<\\/script")}\n</script>`;
+    .replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi, (tag, attributes: string, body: string, offset: number) => {
+      const srcAttribute = /(?:^|\s)src\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s]+))/i.exec(attributes);
+      const src = srcAttribute?.[1] ?? srcAttribute?.[2] ?? srcAttribute?.[3];
+      if (src !== undefined) {
+        const path = localPath(src, entry);
+        const content = path === undefined ? undefined : files[path];
+        if (content === undefined) return tag;
+        const code = options ? absoluteImports(content, new URL(path!, options.baseUrl).href) : content;
+        const attrs = attributes.slice(0, srcAttribute!.index) + attributes.slice(srcAttribute!.index + srcAttribute![0].length);
+        return `<script${attrs}>${namedScript(code, scriptUrl(path!, options)).replace(/<\/script/gi, "<\\/script")}</script>`;
+      }
+      const typeAttribute = /(?:^|\s)type\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s]+))/i.exec(attributes);
+      const type = typeAttribute?.[1] ?? typeAttribute?.[2] ?? typeAttribute?.[3];
+      if (type && !/^(?:module|(?:text|application)\/(?:java|ecma)script)$/i.test(type)) return tag;
+      // Each inline script gets its original HTML line offset, before framework injection expands the page.
+      const opening = tag.indexOf(">") + 1;
+      const padding = "\n".repeat(html.slice(0, offset + opening).split("\n").length - 1);
+      return `<script${attributes}>${namedScript(padding + body, scriptUrl(entry, options))}</script>`;
     })
     .replace(/<link\b[^>]*\brel="stylesheet"[^>]*>/gi, (tag) => {
       const href = /\bhref="([^"]+)"/i.exec(tag)?.[1];

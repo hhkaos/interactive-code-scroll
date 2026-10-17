@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { consoleCaptureScript, snapshotConsoleArgs } from "./console.ts";
+import { consoleCaptureScript, consoleSource, snapshotConsoleArgs } from "./console.ts";
 
 const snapshot = (...args: unknown[]) => JSON.parse(snapshotConsoleArgs(args));
 
@@ -56,4 +56,18 @@ it("the injected script runs without module closures, forwards all levels and pr
   expect(parent.postMessage).toHaveBeenCalledTimes(5);
   expect(parent.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ type: "ics:console", level: "error", args: '["label",{"value":1}]' }), "https://example.test");
   expect(originalLog).toHaveBeenCalledWith("label", object);
+});
+
+
+describe("console source locations", () => {
+  it("skips the wrapper in Chromium stacks", () => {
+    expect(consoleSource("Error\n    at console.log (https://example.test/preview/:100:1)\n    at click (https://example.test/preview/main.js:27:9)")).toEqual({ url: "https://example.test/preview/main.js", line: 27, column: 9 });
+  });
+  it("supports Firefox and WebKit stacks with no heading", () => {
+    expect(consoleSource("console[level]@https://example.test/preview/:100:1\nclick@https://example.test/preview/main.js:27:9")).toEqual({ url: "https://example.test/preview/main.js", line: 27, column: 9 });
+  });
+  it("does not invent source locations when the browser provides none", () => {
+    expect(consoleSource(undefined)).toBeUndefined();
+    expect(consoleSource("Error\n at hook (native)\n at anonymous")).toBeUndefined();
+  });
 });

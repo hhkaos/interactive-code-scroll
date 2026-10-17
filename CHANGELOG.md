@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Console object trees no longer draw a native list bullet over the preceding log label.
+
 ### Added
 
+- Console entries show a source file and line when available; inlined scripts and substituted modules preserve source names and cleaned-code line numbers. Collapsed summaries now color keys and scalar types like DevTools. A collapsible help explains selecting the Preview iframe context in browser DevTools and filtering to that context.
 - Embedded Preview / Console tabs capture real `console.log/info/warn/error` calls as bounded, in-memory snapshots with labeled entries, severity, collapsible colored JSON trees and compact property previews. Tabs, collapse and maximize preserve the running iframe and its logs; Clear and Run reset the log. Capture works in dev and static builds, without adding code to the tutorial app.
 
 ### Changed

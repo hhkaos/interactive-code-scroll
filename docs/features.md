@@ -81,7 +81,7 @@ See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables
 - OAuth sign-in works from the embedded Preview through a popup, and in the new tab through a normal redirect.
 - Form values reach every file the app loads: imported modules (a shared `config.js`), fetched files and other pages such as an OAuth callback.
 
-The embedded pane also has a **Console** tab: real `console.log/info/warn/error` output with labeled, collapsible JSON snapshots, chronological order and bounded in-memory retention. Steps and intros select and open a view with `panel="preview|console|result"` or fold it with `panel="collapsed"`; `maximize="panel"` enlarges the selected view. Switching tabs preserves the running app. See [Preview](authoring.md#preview) and [Panel and Console](authoring.md#panel-and-console).
+The embedded pane also has a **Console** tab: real `console.log/info/warn/error` output with labeled, collapsible JSON snapshots, DevTools-style colors in collapsed and expanded objects, source file/line when available, native DevTools help, chronological order and bounded in-memory retention. Steps and intros select and open a view with `panel="preview|console|result"` or fold it with `panel="collapsed"`; `maximize="panel"` enlarges the selected view. Switching tabs preserves the running app. See [Preview](authoring.md#preview) and [Panel and Console](authoring.md#panel-and-console).
 
 ## Result pane
 

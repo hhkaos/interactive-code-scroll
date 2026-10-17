@@ -13,7 +13,7 @@ import {
 interface TreeOptions {
   /** Console entries start collapsed; captured output keeps the existing depth rule. */
   collapsed?: boolean;
-  summary?: (value: JsonContainer) => string;
+  summary?: (value: JsonContainer) => string | Node;
 }
 
 const ITEM = '[role="treeitem"]';
@@ -63,13 +63,16 @@ function item(depth: number, key: string | undefined, value: JsonValue, last: bo
     li.append(row(caret, ...label(key), token("jt-p", `${open} ${close}`), ...comma));
     return li;
   }
+  const compact = options.summary?.(value);
+  const closed = token("jt-p jt-when-closed", typeof compact === "string" ? compact : compact ? "" : `${open} … ${close}`);
+  if (compact instanceof Node) closed.append(compact);
   // Both headers exist; CSS shows one per aria-expanded. Children are built on first expand.
   li.append(
     row(
       caret,
       ...label(key),
       token("jt-p jt-when-open", open),
-      token("jt-p jt-when-closed", options.summary ? options.summary(value) : `${open} … ${close}`),
+      closed,
       ...(last ? [] : [token("jt-p jt-when-closed", ",")]),
       token("jt-dim jt-when-closed", options.summary ? "" : summary(value)),
     ),

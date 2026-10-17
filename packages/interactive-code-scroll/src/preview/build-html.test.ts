@@ -19,7 +19,7 @@ describe("buildPreviewHtml", () => {
   const html = buildPreviewHtml(files);
 
   it("inlines local scripts and stylesheets, keeping attributes", () => {
-    expect(html).toContain('<script type="module">\nconsole.log("hi");');
+    expect(html).toContain('<script type="module">console.log("hi");');
     expect(html).toContain("<style>\nbody { margin: 0; }\n</style>");
     expect(html).not.toContain('href="./style.css"');
   });
@@ -85,7 +85,7 @@ describe("files changed by form values", () => {
     const { imports } = importMap(html);
     expect(Object.keys(imports)).toEqual([`${baseUrl}config.js`]);
     expect(imports[`${baseUrl}config.js`]).toMatch(/^data:text\/javascript;charset=utf-8,/);
-    expect(dataSource(imports[`${baseUrl}config.js`]!)).toBe(`import { helper } from "${baseUrl}lib/util.js";\nexport const clientId = "abc";`);
+    expect(dataSource(imports[`${baseUrl}config.js`]!)).toBe(`import { helper } from "${baseUrl}lib/util.js";\nexport const clientId = "abc";\n//# sourceURL=${baseUrl}config.js\n`);
     // The inlined entry module keeps importing by URL: the map redirects it.
     expect(html).toContain(`import { clientId } from "${baseUrl}config.js";`);
   });
@@ -150,4 +150,25 @@ describe("other preview pages", () => {
 it("installs the capture before author scripts when the page omits an explicit head", () => {
   const html = buildPreviewHtml({ "index.html": '<script>console.log("early")</script>' });
   expect(html.indexOf("ics:console-reset")).toBeLessThan(html.indexOf('console.log("early")'));
+});
+
+
+it("names inlined scripts after their project file without adding a source line", () => {
+  const html = buildPreviewHtml({ "index.html": '<head><script src="./main.js"></script></head>', "main.js": 'console.log("line one");' });
+  expect(html).toContain('<script>console.log("line one");\n//# sourceURL=ics-preview:///main.js\n</script>');
+});
+
+it("keeps the original HTML line offsets of inline author scripts and leaves JSON scripts intact", () => {
+  const html = buildPreviewHtml({ "index.html": '<head>\n<script type="application/json">{"x":1}</script>\n<script>console.log("line three");</script></head>' });
+  expect(html).toContain('<script>\n\nconsole.log("line three");\n//# sourceURL=ics-preview:///index.html\n</script>');
+  expect(html).toContain('<script type="application/json">{"x":1}</script>');
+});
+
+
+it("does not rewrite unquoted import maps or mistake data-src for a script source", () => {
+  const map = '<script type=importmap>{"imports":{}}</script>';
+  const html = buildPreviewHtml({ "index.html": `<head>${map}<script data-src="./not-a-source.js">console.log(1);</script><script src = './main.js'></script></head>`, "main.js": "console.log(2);" });
+  expect(html).toContain(map);
+  expect(html).toContain('<script data-src="./not-a-source.js">console.log(1);');
+  expect(html).toContain('<script>console.log(2);');
 });

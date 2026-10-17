@@ -57,8 +57,22 @@ export function snapshotConsoleArgs(args: unknown[]): string {
   return JSON.stringify(values);
 }
 
+/** Best-effort caller location for Chromium and Firefox/WebKit Error.stack formats. Self-contained. */
+export function consoleSource(stack: string | undefined): { url: string; line: number; column: number } | undefined {
+  if (!stack) return undefined;
+  const frames = stack.split("\n");
+  // V8 has an Error heading; Firefox and WebKit begin directly with the hook's frame.
+  if (!/(?:@|\bat\s)/.test(frames[0] ?? "")) frames.shift();
+  frames.shift(); // The console wrapper itself.
+  for (const frame of frames) {
+    const match = /(?:\(|@|\s)((?:https?|file|ics-preview):\/\/.+):(\d+):(\d+)\)?$/.exec(frame.trim());
+    if (match) return { url: match[1]!, line: Number(match[2]), column: Number(match[3]) };
+  }
+  return undefined;
+}
+
 /** Self-contained hook; the original console still receives the original arguments. */
-function installPreviewConsole(snapshot: typeof snapshotConsoleArgs): void {
+function installPreviewConsole(snapshot: typeof snapshotConsoleArgs, source: typeof consoleSource): void {
   if (parent === window || new URLSearchParams(location.search).get("target") !== "iframe") return;
   parent.postMessage({ type: "ics:console-reset" }, location.origin);
   for (const level of ["log", "info", "warn", "error"] as const) {
@@ -66,7 +80,7 @@ function installPreviewConsole(snapshot: typeof snapshotConsoleArgs): void {
     console[level] = function (...args: unknown[]) {
       original.apply(console, args);
       try {
-        parent.postMessage({ type: "ics:console", level, args: snapshot(args), time: Date.now() }, location.origin);
+        parent.postMessage({ type: "ics:console", level, args: snapshot(args), time: Date.now(), source: source(new Error().stack) }, location.origin);
       } catch {
         // Inspection must never interrupt tutorial code.
       }
@@ -74,5 +88,5 @@ function installPreviewConsole(snapshot: typeof snapshotConsoleArgs): void {
   }
 }
 
-/** Both functions deliberately contain no module references: they run in the iframe's realm. */
-export const consoleCaptureScript = () => `<script>(${installPreviewConsole.toString()})(${snapshotConsoleArgs.toString()})</script>`;
+/** Capture functions deliberately contain no module references: they run in the iframe's realm. */
+export const consoleCaptureScript = () => `<script>(${installPreviewConsole.toString()})(${snapshotConsoleArgs.toString()}, ${consoleSource.toString()})</script>`;
