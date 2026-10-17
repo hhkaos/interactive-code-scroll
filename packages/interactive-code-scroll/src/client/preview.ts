@@ -78,7 +78,7 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
   const setCollapsed = (collapsed: boolean) => {
     if (!frame) return;
     frame.hidden = collapsed;
-    setAction(document.querySelector("#preview-toggle"), collapsed ? "chevron-right" : "chevron-down", "Preview");
+    setAction(document.querySelector("#preview-toggle"), collapsed ? "chevron-right" : "chevron-down", "Output");
     if (!collapsed && !started) run();
   };
 

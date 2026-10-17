@@ -3,6 +3,7 @@ import { expect, test } from "./fixtures.ts";
 test("Preview interactions produce expandable snapshots, retained across tabs, steps and collapse", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/#ui");
+  await expect(page.locator("#preview-toggle")).toHaveAttribute("text", "Output");
   const app = page.frameLocator(".preview iframe");
   await app.locator("#sign-in").click();
   await page.getByRole("tab", { name: /^Console/ }).click();
@@ -37,6 +38,7 @@ test("Preview interactions produce expandable snapshots, retained across tabs, s
   await expect(page.locator(".preview-frame")).toBeHidden();
   await page.locator("#preview-toggle").click();
   await expect(entry).toBeVisible();
+  await expect(page.locator("#preview-toggle")).toHaveAttribute("text", "Output");
   await page.getByRole("tab", { name: "Preview", exact: true }).click();
   await expect(app.locator("#sign-in")).toHaveText("Run 1");
 });

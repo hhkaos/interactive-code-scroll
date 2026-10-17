@@ -55,6 +55,7 @@ test("the preview collapses to its header and reopens", async ({ page }) => {
   await expect(page.locator(".preview iframe")).toBeHidden();
   await expect(page.locator("#preview-run")).toBeVisible();
   await expect(page.locator("#preview-toggle")).toHaveAttribute("icon", "chevron-right");
+  await expect(page.locator("#preview-toggle")).toHaveAttribute("text", "Output");
   await page.locator("#preview-toggle").click();
   await expect(page.locator(".preview iframe")).toBeVisible();
 });
@@ -68,6 +69,7 @@ test("a step can collapse the preview", async ({ page }) => {
   await expect(page.locator(".preview iframe")).toBeHidden();
   await expect(page.locator("#preview-run")).toBeVisible();
   await expect(page.locator("#preview-toggle")).toHaveAttribute("icon", "chevron-right");
+  await expect(page.locator("#preview-toggle")).toHaveAttribute("text", "Output");
 });
 
 test("open in new tab shows the current code as a standalone page", async ({ page, context, baseURL }) => {

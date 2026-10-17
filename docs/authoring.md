@@ -757,7 +757,7 @@ Form changes refresh the Preview after a short debounce; the Run button refreshe
 
 ### Panel and Console
 
-The embedded web pane has **Preview** and **Console** tabs. Only one is visible at a time; the app keeps running while Console is selected. The console shows what the app actually logged, including messages produced while Preview was selected. Works in dev and the built static site.
+The embedded web pane is headed **Output** and has **Preview** and **Console** tabs. Only one is visible at a time; the app keeps running while Console is selected. The console shows what the app actually logged, including messages produced while Preview was selected. Works in dev and the built static site.
 
 `panel` on `<Step>` or `<Intro>` chooses what happens when that block becomes active:
 

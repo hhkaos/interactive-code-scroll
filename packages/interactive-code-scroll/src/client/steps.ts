@@ -129,7 +129,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
   function setPreviewState(state: string | undefined): void {
     if (state !== "expanded" && state !== "collapsed") return;
     for (const [selector, toggle, label] of [
-      [".preview-frame", "#preview-toggle", "Preview"],
+      [".preview-frame", "#preview-toggle", "Output"],
       [".result-frame", "#result-toggle", "Result"],
     ] as const) {
       const frame = document.querySelector<HTMLElement>(selector);
