@@ -68,6 +68,8 @@ For every changelog bullet from 0.2.0-beta.10 onward, add one record to `docs/de
 
 After reviewing the code, changelog and linked sections, run `pnpm docs:review` to refresh the package and document fingerprints, then `pnpm docs:check`. Refreshing does not create review records or fix missing links. Package input changes also require a changed changelog review; do not refresh fingerprints without reviewing their meaning. Tests and fixtures are excluded from package fingerprints. Commit the manifest with the change. The initial coverage boundary is beta.10; older releases are not retroactively certified.
 
+Document fingerprints cover every top-level `docs/*.md` file, the root README and both published package READMEs, including documents no changelog record cites. New or removed public pages also require review; errors name the affected paths. Internal `docs/dev/` context is excluded. When establishing or expanding coverage, review the existing text against the current code and changelog before refreshing: unchanged text can already be wrong. Fingerprints detect later drift, not whether a statement is true.
+
 Before tagging, move Unreleased bullets into a dated release matching both package versions, retain their review records, and run `CI=true pnpm preflight:release`. The npm workflow runs the release check before publishing either package; it rejects pending Unreleased entries. CI and website deployment run the normal check. These checks enforce review completeness and detect drift; humans still verify that the documentation accurately describes the behavior. They guard repository workflows, not a maintainer publishing manually outside them.
 
 ## Working with AI coding agents

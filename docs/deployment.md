@@ -166,6 +166,8 @@ In a series site, every tutorial is published under the base: `tutorials/auth/` 
 
 `.github/workflows/publish-site.yml` publishes the project website (`site/`: landing page plus the showcase tutorials under `showcase/<name>/`) with the same `configure-pages` defaults and the same `ICS_SITE` / `ICS_BASE` overrides. `.github/workflows/ci.yml` runs unit tests, `astro check` and the E2E suite on every push to `main`.
 
+Both workflows also run the repository's documentation review check. Package publication runs that check before either npm package is published, additionally requiring release notes that match both package versions and no pending Unreleased entries. See the [contributor review procedure](../CONTRIBUTING.md#documentation-review-before-release). These repository checks are separate from the tutorial deployment workflows above.
+
 ## Manual Build
 
 From this repository:

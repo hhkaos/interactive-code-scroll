@@ -23,11 +23,15 @@ function fixture() {
   execFileSync("git", ["init", "--quiet", root]);
   for (const name of ["interactive-code-scroll", "create-interactive-code-scroll"]) {
     json(root, `packages/${name}/package.json`, { version });
+    write(root, `packages/${name}/README.md`, `# ${name}\n`);
   }
+  write(root, "README.md", "# InteractiveCodeScroll\n");
   write(root, "packages/interactive-code-scroll/src/example.ts", "export const example = true;\n");
   write(root, "CHANGELOG.md", `# Changelog\n\n## [Unreleased]\n\n## [${version}] - 2026-10-17\n\n### Added\n\n- Optional setting.\n`);
   write(root, "docs/authoring.md", "# Authoring\n\n## Settings\n\nUse the optional setting.\n");
   write(root, "docs/upgrade.md", "# Upgrade\n\n## Migration\n");
+  write(root, "docs/features.md", "# Features\n\nNarration works in reading and presentation modes.\n");
+  write(root, "docs/presenting.md", "# Presenting\n");
   json(root, manifestPath, { changes: [{ change: "Optional setting.", docs: ["docs/authoring.md#settings"] }] });
   checkDocs(root, { refresh: true });
   return root;
@@ -110,6 +114,54 @@ it("detects document drift but excludes test-only changes from package fingerpri
   write(root, "docs/authoring.md", read(root, "docs/authoring.md") + "\nMore usage guidance.\n");
   expect(() => checkDocs(root)).toThrow("Reviewed documents changed");
   expect(checkDocs(root, { refresh: true })).toContain("1 changelog");
+});
+
+it.each(["docs/features.md", "docs/presenting.md", "README.md", "packages/interactive-code-scroll/README.md", "packages/create-interactive-code-scroll/README.md"])(
+  "blocks drift in uncited public documentation: %s", (path) => {
+    const root = fixture();
+    write(root, path, read(root, path) + "\nChanged usage guidance.\n");
+    expect(() => checkDocs(root)).toThrow(path);
+    expect(() => checkDocs(root, { release: true })).toThrow("Reviewed documents changed");
+    // Package READMEs also belong to package inputs, so record their change before review.
+    write(root, "CHANGELOG.md", read(root, "CHANGELOG.md") + "\n- Clarify usage guidance.\n");
+    update(root, (m) => { m.changes.push({ change: "Clarify usage guidance.", docs: ["docs/authoring.md#settings"] }); });
+    expect(checkDocs(root, { refresh: true })).toContain("2 changelog");
+    expect(checkDocs(root)).toContain("2 changelog");
+  },
+);
+
+it("requires review when a public page is added, even without a changelog citation", () => {
+  const root = fixture();
+  write(root, "docs/new-guide.md", "# New guide\n");
+  expect(() => checkDocs(root)).toThrow("Reviewed documents changed");
+  checkDocs(root, { refresh: true });
+  expect(Object.keys(JSON.parse(read(root, manifestPath)).documents)).toContain("docs/new-guide.md");
+  write(root, "docs/new-guide.md", "# New guide\n\nChanged guidance.\n");
+  expect(() => checkDocs(root)).toThrow("Reviewed documents changed");
+});
+
+it("detects removed pages, incomplete review coverage and missing package READMEs", () => {
+  const root = fixture();
+  update(root, (m) => { delete m.documents["docs/features.md"]; });
+  expect(() => checkDocs(root)).toThrow("Reviewed documents changed");
+  checkDocs(root, { refresh: true });
+  rmSync(join(root, "docs/features.md"));
+  expect(() => checkDocs(root)).toThrow("Reviewed documents changed");
+  checkDocs(root, { refresh: true });
+  rmSync(join(root, "packages/create-interactive-code-scroll/README.md"));
+  expect(() => checkDocs(root, { refresh: true })).toThrow("Missing public documentation file");
+});
+
+it("keeps internal context files outside the public documentation fingerprints", () => {
+  const root = fixture();
+  write(root, "docs/dev/PROJECT.md", "# Internal architecture notes\n");
+  expect(checkDocs(root)).toContain("1 changelog");
+});
+
+it("compares document fingerprints by path rather than JSON property order", () => {
+  const root = fixture();
+  update(root, (m) => { m.documents = Object.fromEntries(Object.entries(m.documents).reverse()); });
+  expect(checkDocs(root)).toContain("1 changelog");
 });
 
 it("rejects duplicate and obsolete review records", () => {

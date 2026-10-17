@@ -49,7 +49,7 @@ Built for people who teach developer technologies: developer advocates, trainers
 | 🎤 **Presentation mode** | Clean, projector-friendly layout. Keyboard and clicker (PageUp/PageDown) navigation, a large step index, and Alt+P, `O` and `E` shortcuts. |
 | 🌐 **Multi-language variants** | One tutorial, several languages (e.g. cURL / Python / JavaScript). Readers switch in place. |
 | ▶️ **Live Preview** | Web code runs in an embedded Preview, with an "open in new tab" fallback. |
-| 📡 **Request runner** | `.http` requests run from the page; captured output shows when there is no token. JSON viewer included. |
+| 📡 **Request runner** | Readers run `.http` requests from the page; captured output shows before Run and on network failures. JSON viewer included. |
 | ✏️ **Fields → code variables** | Readers type their own API key or title; code, Preview and downloads update. |
 | 📦 **Copy & ZIP downloads** | Readers leave with a runnable project, markers stripped. |
 | 💬 **Ask about a selection** | Readers select a sentence or a line of code and ask the author (a prefilled issue) or an AI assistant, with a link back to that spot. |
@@ -103,7 +103,7 @@ On the website, with search. The source is [`docs/`](docs/).
 - [Features](https://www.rauljimenez.info/interactive-code-scroll/docs/features/) — everything the tool can do, in one page
 - [Authoring reference](https://www.rauljimenez.info/interactive-code-scroll/docs/authoring/) — how a tutorial works, folder structure, frontmatter, components, code markers, build errors
 - [Presenting a tutorial](https://www.rauljimenez.info/interactive-code-scroll/docs/presenting/) — presentation mode, clickers, zoom and offline fallback for talks
-- [CLI reference](https://www.rauljimenez.info/interactive-code-scroll/docs/cli/) — `create`, `dev`, `build`, `serve`, `doctor`
+- [CLI reference](https://www.rauljimenez.info/interactive-code-scroll/docs/cli/) — the project wizard, `dev`, `build`, `serve`, `doctor` and `init-scripts`
 - [Deployment](https://www.rauljimenez.info/interactive-code-scroll/docs/deployment/) — GitHub Pages and other static hosts
 - [Upgrade guide](https://www.rauljimenez.info/interactive-code-scroll/docs/upgrade/)
 

@@ -1,6 +1,18 @@
 {
   "changes": [
     {
+      "change": "Public documentation review now fingerprints every top-level `docs/*.md` file and the root/package READMEs, reports affected paths and detects added or removed pages even without changelog citations. The initial usage audit corrects narration in presentation mode, intro outline/media fallback, request-only Result panes, series card links and README CLI/request-runner descriptions.",
+      "docs": [
+        "docs/features.md#reading-a-tutorial",
+        "docs/authoring.md#intro",
+        "docs/authoring.md#preview-and-downloads",
+        "docs/authoring.md#index-page",
+        "docs/presenting.md#during-the-talk",
+        "docs/deployment.md#this-repository",
+        "docs/cli.md#commands"
+      ]
+    },
+    {
       "change": "Project architecture summarizes the documentation review records, fingerprint checks, publication gates and website Markdown source links.",
       "reason": "Internal architecture summary of the existing documentation release gate; no library usage or runtime behavior changes."
     },
@@ -86,9 +98,17 @@
     }
   ],
   "sourceDigest": "946a918b7fd75fb87684df4b7df3cc6170766263bf30f7c1a798d9d0eaa4c92f",
-  "changelogDigest": "1c0ad76d8bdc29d232ed7af09349e7568258cdb4d79f6244a5a86223f89d1a07",
+  "changelogDigest": "ae2d59f3ea373649e3f0c8ddc0a7367d79e25ef4ac4124b52ff15480d3c26473",
   "documents": {
-    "docs/authoring.md": "326d3494dde48bb8dd59fa6d7bf276b771fe9bba0d5c88cdf41f4941f4478421",
-    "docs/upgrade.md": "6d4d27c6f60428a4cf755d9db789750eccf46a0b04aec83a4871c2c0d1dea985"
+    "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
+    "docs/authoring.md": "62a534cfceaae43af6afa4f542bdba36474ac4fe3d085d9d188aa05a5bb85e74",
+    "docs/cli.md": "3ce991ef73edbad6e6e01016e13499a7e7472cb4773114c9138e6fc1e2fbbf17",
+    "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
+    "docs/features.md": "c05f10245ca5ce70a28bf799309e2efe9f16ed8fc154f3bba3ed412cc7dea161",
+    "docs/presenting.md": "6bcec56d164a7bf23857514ab14fd883160afe490ec1543fd6f9e8a9f04f2893",
+    "docs/quick-start.md": "4bd4733f9f3fc9da91fd6d76dda6f3b941b70b65c8d39128e25e25d43134b24d",
+    "docs/upgrade.md": "6d4d27c6f60428a4cf755d9db789750eccf46a0b04aec83a4871c2c0d1dea985",
+    "packages/create-interactive-code-scroll/README.md": "c21428a5cc2239488c1837d5b3b73f2466edd40060aa13cc7d80f36e8607488b",
+    "packages/interactive-code-scroll/README.md": "fd71b4e637bf629fc9f4ab8f96154a0ea1dfb712bc54f7fcdb416531dcd4714e"
   }
 }

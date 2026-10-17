@@ -57,7 +57,7 @@ From there, a tutorial grows with more steps and files, and with:
 Terms used on this page:
 
 - **Web code**: a tutorial, or a [code variant](#code-variants), whose folder has an `index.html`. It gets the Preview; anything else gets the Result pane.
-- **Text-only step**: a step with no `file`, `region` or `images`. It keeps the file on screen and clears the highlight.
+- **Text-only step**: a step with no `file`, `region`, `images`, `embed` or `outline`. It keeps the file on screen and clears the highlight.
 - **Captured output**: a file under `output/` with the result the code produces (JSON, terminal text or an image), shown instead of running it.
 - **Code variant**: the same steps in another programming language, picked with a switcher in the code header.
 
@@ -268,7 +268,7 @@ A tutorial without code (no `code/`, `preview: off`, every step with `images` or
 
 Moving from the intro to a step swaps the media as between steps: the same embedded page with another fragment (`oauth-slides/#/1` on the intro, `oauth-slides/#/2` on the first step) moves in place, without reloading.
 
-When the intro shows nothing and there is nothing else to show next to it (no code tabs, no Preview and no step with `output` or `request`), it shows the media of the first step that has `images` or `embed`, so the page never opens on an empty pane. Entering that step keeps the media as it is. Tutorials with code, a Preview or a Result pane keep showing them next to the intro.
+With frontmatter `outline: false`, an intro without its own media borrows the first step's `images` or `embed` when there is nothing else to show next to it (no code tabs, no Preview and no step with `output` or `request`). Entering that step keeps the media as it is. With the default `outline: true`, a media-less intro shows the step outline instead. An intro with `file`, `images` or `embed` keeps its explicitly chosen content.
 
 ### `<Outro>`
 
@@ -1119,7 +1119,7 @@ variants:
 
 ### Preview and downloads
 
-- A variant is web code when its folder has `index.html`. Only web variants show the Preview; other variants show the [Result pane](#result-pane) instead when the tutorial has captured outputs. `preview` in the frontmatter applies to the web variants, and a tutorial without any web variant needs no `index.html`.
+- A variant is web code when its folder has `index.html`. Only web variants show the Preview; other variants show the [Result pane](#result-pane) instead when a step has `output=` or `request=`. `preview` in the frontmatter applies to the web variants, and a tutorial without any web variant needs no `index.html`.
 - A web variant's Preview runs from its own page, `preview/<dir>/index.html`, with every file of the variant published next to it, so relative references such as `./main.js` or an OAuth callback page resolve inside the variant folder.
 - The ZIP holds only the active variant: its folder becomes the root of the archive, named `<tutorial>-<variant id>.zip`, plus `requests/` when the tutorial has it. The ZIP badge and tooltip count those files.
 
@@ -1152,7 +1152,7 @@ interactiveCodeScroll({ tutorials: "tutorials" })
 
 ### Index page
 
-`/` lists every tutorial as a card: title, `description`, `level`, `duration`, `updated`, technologies and `tags` from each tutorial's [frontmatter](#frontmatter) (plus its [variant](#code-variants) labels as tags), ordered by `order` (lower first; tutorials without it follow, by title). Card tags are plain labels: the whole card is one link.
+`/` lists every tutorial as a card: title, `description`, `level`, `duration`, `updated`, technologies and `tags` from each tutorial's [frontmatter](#frontmatter) (plus its [variant](#code-variants) labels as tags), ordered by `order` (lower first; tutorials without it follow, by title). Card tags are plain labels. The title link covers the card, with separate variant links and, when enabled, a favorite button.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../site/public/screenshots/series-index-dark.png">

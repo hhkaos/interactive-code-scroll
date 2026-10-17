@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Public documentation review now fingerprints every top-level `docs/*.md` file and the root/package READMEs, reports affected paths and detects added or removed pages even without changelog citations. The initial usage audit corrects narration in presentation mode, intro outline/media fallback, request-only Result panes, series card links and README CLI/request-runner descriptions.
+
 - Project architecture summarizes the documentation review records, fingerprint checks, publication gates and website Markdown source links.
 
 - Documentation review now covers every changelog entry from 0.2.0-beta.10 onward, with public section links or a specific no-docs reason, reviewed package/document fingerprints, and blocking checks in CI, website deployment and npm publication. The upgrade guide includes narration and pane-height usage notes; website docs link to their Markdown source.

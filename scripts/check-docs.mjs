@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,7 +47,8 @@ export function checkDocs(root, { refresh = false, release = false } = {}) {
   const manifestPath = "docs/dev/documentation-review.json";
   const manifest = JSON.parse(read(manifestPath));
   const errors = [];
-  const versions = ["interactive-code-scroll", "create-interactive-code-scroll"].map((name) =>
+  const packages = ["interactive-code-scroll", "create-interactive-code-scroll"];
+  const versions = packages.map((name) =>
     JSON.parse(read(`packages/${name}/package.json`)).version);
   if (versions[0] !== versions[1]) errors.push("Package versions must match.");
   const changelog = read("CHANGELOG.md");
@@ -60,6 +61,21 @@ export function checkDocs(root, { refresh = false, release = false } = {}) {
   const records = manifest.changes;
   if (!Array.isArray(records)) throw new Error(`${manifestPath}: changes must be an array.`);
   const documents = {};
+  // Discover the whole public documentation set, including pages no release record cites yet.
+  const documentPaths = [
+    "README.md",
+    ...packages.map((name) => `packages/${name}/README.md`),
+    ...readdirSync(resolve(root, "docs"), { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+      .map((entry) => `docs/${entry.name}`),
+  ].sort();
+  for (const path of documentPaths) {
+    try {
+      documents[path] = digest(read(path));
+    } catch {
+      errors.push(`Missing public documentation file: ${path}`);
+    }
+  }
   for (const { version, change } of entries) {
     const matches = records.filter((record) => record.change === change);
     if (matches.length !== 1) {
@@ -103,7 +119,10 @@ export function checkDocs(root, { refresh = false, release = false } = {}) {
   }
   if (!refresh) {
     if (manifest.sourceDigest !== sourceDigest) errors.push("Package inputs changed since documentation review. Review usage changes, then run pnpm docs:review.");
-    if (JSON.stringify(manifest.documents) !== JSON.stringify(documents)) errors.push("Reviewed documents changed. Review the affected entries, then run pnpm docs:review.");
+    const previousDocuments = manifest.documents ?? {};
+    const changedDocuments = [...new Set([...Object.keys(previousDocuments), ...Object.keys(documents)])]
+      .filter((path) => previousDocuments[path] !== documents[path]).sort();
+    if (changedDocuments.length) errors.push(`Reviewed documents changed: ${changedDocuments.join(", ")}. Review the affected pages, then run pnpm docs:review.`);
   }
   if (errors.length) throw new Error(errors.join("\n"));
   if (refresh) writeFileSync(resolve(root, manifestPath), `${JSON.stringify({ ...manifest, sourceDigest, changelogDigest, documents }, null, 2)}\n`);
