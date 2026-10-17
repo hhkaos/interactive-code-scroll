@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Read aloud keeps playing in presentation mode, with the audio row shown while active; Alt+Shift+L starts it there. Hiding the explanations pauses it, and starting while they are hidden announces "Show the explanations to listen".
+- Read aloud reads collapsed `<details>`: the summary, then a short pause, then the section opens and its content is read. `data-speech="skip"` keeps any element (e.g. a solution) out of narration.
+
+### Fixed
+
+- Read aloud and `<Hint>`: the hinted term was skipped and the hint text was mixed into the sentence, splitting it; the reveal scroll then jumped to the hidden popover's position and could activate an earlier step. The term is now read in its sentence, and the hint text follows it as an aside between short pauses, with its popover open next to the term.
+
 ## [0.2.0-beta.8] - 2026-10-17
 
 ### Added

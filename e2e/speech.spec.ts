@@ -40,9 +40,15 @@ async function playPause(page: Page) {
 }
 const spoken = (page: Page) => page.evaluate(() => (window as any).speechMock.text as string | undefined);
 
+/** Waits out the short silence before an aside or a collapsed section. */
+async function nextSpoken(page: Page) {
+  await expect(page.locator("#speech-bar")).not.toHaveAttribute("data-gap", "");
+  return spoken(page);
+}
+
 async function finishStep(page: Page) {
   for (let i = 0; i < 30; i++) {
-    if (!(await spoken(page))) return;
+    if (!(await nextSpoken(page))) return;
     await mock(page, "end");
   }
   throw new Error("Narration did not finish within 30 sentences");
@@ -115,7 +121,7 @@ test("automatic advance is optional, skips carousel paging and reads the closing
   await expect(page.locator("#step-position-text")).toHaveText("Done");
 });
 
-test("fields pause narration; presentation hides it and preserves manual resume", async ({ page }) => {
+test("fields pause narration; presenting keeps it; hidden explanations pause it", async ({ page }) => {
   await mockSpeech(page);
   await page.goto("/#load-sdk");
   await playPause(page);
@@ -125,12 +131,78 @@ test("fields pause narration; presentation hides it and preserves manual resume"
   });
   await expect(page.locator("#speech-toggle")).toHaveText("Resume");
   await playPause(page);
+  const reading = await spoken(page);
   await page.locator("#present-toggle").click();
-  await expect(page.locator("#speech-bar")).toBeHidden();
+  await expect(page.locator("body")).toHaveAttribute("data-presenting", "");
+  await expect(page.locator("#speech-bar")).toBeVisible();
+  await expect(page.locator("#speech-toggle")).toHaveText("Pause");
+  expect(await spoken(page)).toBe(reading);
+  await page.keyboard.press("e");
+  await expect(page.locator("body")).toHaveAttribute("data-docs-hidden", "");
   expect(await spoken(page)).toBeUndefined();
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBeUndefined();
+  await expect(page.locator("#speech-status")).toHaveText("Show the explanations to listen");
+  await page.keyboard.press("e");
+  await page.keyboard.press("Alt+Shift+L");
+  await expect(page.locator("#speech-toggle")).toHaveText("Pause");
+  expect(await spoken(page)).toBeTruthy();
+  await page.keyboard.press("Alt+Shift+L");
+  await expect(page.locator("#speech-toggle")).toHaveText("Resume");
   await page.keyboard.press("Escape");
+  await expect(page.locator("body")).not.toHaveAttribute("data-presenting", "");
   await expect(page.locator("#speech-toggle")).toHaveText("Resume");
   expect(await spoken(page)).toBeUndefined();
+});
+
+test("hints are read as asides with their popover open; collapsed sections open when read", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#oauth");
+  const hint = page.locator("#oauth .hint");
+  const details = page.locator("#oauth details");
+  await expect(details).not.toHaveAttribute("open", "");
+  await playPause(page);
+  expect(await spoken(page)).toBe("Register behavior");
+  await mock(page, "end");
+  // The term is part of the sentence; the hint text is not mixed into it.
+  expect(await spoken(page)).toBe("This step focuses a multi-line JavaScript region and mentions fixtureState inline.");
+  await expect(hint).not.toHaveAttribute("data-open", "");
+  await mock(page, "end");
+  await expect(hint).toHaveAttribute("data-open", "");
+  await expect(page.locator("#speech-bar")).toHaveAttribute("data-gap", "");
+  expect(await nextSpoken(page)).toBe("The shared object that stores fixture values. ");
+  expect(await page.evaluate(() => [...CSS.highlights.get("ics-speech")!][0]!.toString())).toContain("The shared object");
+  await page.screenshot({ path: "screenshots/speech-hint.png" });
+  const scroll = await page.locator(".docs").evaluate((docs) => docs.scrollTop);
+  await mock(page, "end");
+  expect(await spoken(page)).toBe("See the example docs.");
+  expect(await page.locator(".docs").evaluate((docs) => docs.scrollTop)).toBe(scroll);
+  await expect(page).toHaveURL(/#oauth$/);
+  // Pausing closes the popover; resuming reopens it.
+  await page.keyboard.press("Alt+Shift+L");
+  await expect(hint).not.toHaveAttribute("data-open", "");
+  await page.keyboard.press("Alt+Shift+L");
+  await expect(hint).toHaveAttribute("data-open", "");
+  await mock(page, "end");
+  await expect(hint).not.toHaveAttribute("data-open", "");
+  expect(await nextSpoken(page)).toBe("Why register more than one behavior?");
+  await expect(details).not.toHaveAttribute("open", "");
+  await mock(page, "end");
+  await expect(details).toHaveAttribute("open", "");
+  expect(await nextSpoken(page)).toContain("registerOAuthInfos() accepts an array");
+  await finishStep(page);
+  await expect(details).toHaveAttribute("open", "");
+});
+
+test("authors can keep a collapsed section out of narration", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#oauth");
+  await page.locator("#oauth details").evaluate((details) => details.setAttribute("data-speech", "skip"));
+  await playPause(page);
+  await finishStep(page);
+  const calls = await page.evaluate(() => (window as any).speechMock.calls.join(" ") as string);
+  expect(calls).not.toMatch(/Why register|registerOAuthInfos/);
+  await expect(page.locator("#oauth details")).not.toHaveAttribute("open", "");
 });
 
 test("voices can arrive late; mismatched voices hide controls; errors allow retry", async ({ page }) => {

@@ -1,30 +1,61 @@
+import { closeHint, openHint } from "./hints.ts";
+import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
 import { PROGRESS_EVENT, type StepEngine } from "./steps.ts";
 import { SPEECH_STORAGE_KEY, speechPreferences, speechSentences, speechVoices, speechWord } from "./speech-text.ts";
 
-interface Sentence { text: string; range(start?: number, end?: number): Range; block: HTMLElement }
-const SKIP = "pre, script, style, template, button, input, textarea, select, [contenteditable], [hidden], [aria-hidden=true], calcite-button, calcite-action, .var-field, .var-fields, .step-file, .completion-actions, .completion-next, .completion-share";
+interface Sentence {
+  text: string;
+  range(start?: number, end?: number): Range;
+  block: HTMLElement;
+  /** A hint read as an aside: its popover is open while it is read. */
+  hint?: HTMLElement;
+  /** A collapsed section, opened when its content is read. */
+  details?: HTMLDetailsElement;
+  /** Silence before the sentence, in ms (around asides and collapsed sections). */
+  delay?: number;
+}
+const SKIP = "pre, script, style, template, button:not(.hint-label), input, textarea, select, [contenteditable], [hidden], [aria-hidden=true], [data-speech=skip], calcite-button, calcite-action, .var-field, .var-fields, .step-file, .completion-actions, .completion-next, .completion-share";
+const BLOCK = "h1,h2,h3,h4,h5,h6,p,li,td,th,blockquote,summary,details";
+export const ASIDE_PAUSE_MS = 400;
+
+/** The closed <details> whose collapsed content (not its summary) holds this element. */
+function collapsedIn(element: Element): HTMLDetailsElement | undefined {
+  const details = element.closest("details:not([open])");
+  if (!(details instanceof HTMLDetailsElement)) return;
+  return details.querySelector(":scope > summary")?.contains(element) ? undefined : details;
+}
 
 /** Read prose only, preserving text nodes and the reader's selection. */
-function sentences(root: HTMLElement, lang: string): Sentence[] {
-  const groups: { block: HTMLElement; nodes: Text[] }[] = [];
+function sentences(root: HTMLElement, lang: string, aside?: HTMLElement): Sentence[] {
+  const groups: { block: HTMLElement; nodes: Text[]; details?: HTMLDetailsElement }[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const parent = node.parentElement;
-      return parent && !parent.closest(SKIP) && parent.checkVisibility() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      // Hint popovers are read separately, after the sentence that names their term.
+      const popover = parent?.closest(".hint-popover");
+      if (!parent || parent.closest(SKIP) || (popover && popover !== (aside && root))) return NodeFilter.FILTER_REJECT;
+      // Collapsed content is hidden until narration opens it, so the section must be visible instead.
+      return (collapsedIn(parent) ?? parent).checkVisibility() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
     },
   });
   while (walker.nextNode()) {
     const node = walker.currentNode as Text;
-    const block = node.parentElement!.closest<HTMLElement>("h1,h2,h3,h4,h5,h6,p,li,td,th,blockquote") ?? root;
+    const closest = node.parentElement!.closest<HTMLElement>(BLOCK);
+    const block = closest && root.contains(closest) ? closest : root;
     let group = groups.at(-1);
-    if (group?.block !== block) groups.push(group = { block, nodes: [] });
+    if (group?.block !== block) groups.push(group = { block, nodes: [], details: collapsedIn(node.parentElement!) });
     group.nodes.push(node);
   }
-  return groups.flatMap(({ block, nodes }) => {
+  const queue: Sentence[] = [];
+  for (const { block, nodes, details } of groups) {
     const text = nodes.map((node) => node.data).join("");
-    return speechSentences(text, lang).map((sentence) => ({
+    const items = speechSentences(text, lang).map((sentence) => ({
       text: sentence.text,
       block,
+      details,
+      hint: aside,
+      start: sentence.start,
+      end: sentence.end,
       range(start = 0, end = sentence.text.length) {
         const range = document.createRange();
         let offset = 0;
@@ -36,7 +67,35 @@ function sentences(root: HTMLElement, lang: string): Sentence[] {
         return range;
       },
     }));
+    // Each hint follows the sentence where its term ends, framed by short pauses.
+    const asides = new Map<number, HTMLElement[]>();
+    if (!aside) {
+      let offset = 0;
+      const ends = new Map<HTMLElement, number>();
+      for (const node of nodes) {
+        offset += node.length;
+        const hint = node.parentElement!.closest<HTMLElement>(".hint-label")?.closest<HTMLElement>(".hint");
+        if (hint) ends.set(hint, offset);
+      }
+      for (const [hint, end] of ends) {
+        const at = items.findIndex((item) => end > item.start && end <= item.end);
+        if (at >= 0) asides.set(at, [...(asides.get(at) ?? []), hint]);
+      }
+    }
+    items.forEach((item, i) => {
+      queue.push(item);
+      for (const hint of asides.get(i) ?? []) {
+        const popover = hint.querySelector<HTMLElement>(".hint-popover");
+        if (popover) queue.push(...sentences(popover, lang, hint).map((sentence) => ({ ...sentence, details })));
+      }
+    });
+  }
+  // Pause on entering and leaving an aside or a collapsed section.
+  queue.forEach((sentence, i) => {
+    const previous = queue[i - 1];
+    if (previous && (previous.hint !== sentence.hint || previous.details !== sentence.details)) sentence.delay = ASIDE_PAUSE_MS;
   });
+  return queue;
 }
 
 /** Optional native narration; no audio starts until the reader asks. */
@@ -72,6 +131,15 @@ export function startSpeech(engine: StepEngine): void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let root: HTMLElement | undefined;
   let advancing = false;
+  let waited = -1;
+  let openHintElement: HTMLElement | undefined;
+  /** Show what the next sentence reads: its hint popover, or its collapsed section. */
+  function stage(sentence?: Sentence): void {
+    if (openHintElement && openHintElement !== sentence?.hint) closeHint(openHintElement);
+    openHintElement = sentence?.hint;
+    if (openHintElement) openHint(openHintElement);
+    if (sentence?.details) sentence.details.open = true;
+  }
   // Custom Highlights paint ranges without altering links, text nodes, or selections.
   const canHighlight = typeof CSS !== "undefined" && "highlights" in CSS && typeof Highlight !== "undefined";
   const clearHighlight = () => {
@@ -82,6 +150,8 @@ export function startSpeech(engine: StepEngine): void {
     clearHighlight();
     if (canHighlight) CSS.highlights.set("ics-speech", new Highlight(sentence.range(start, end)));
     else sentence.block.setAttribute("data-speaking", "");
+    // The hint popover sits next to its term, which the previous sentence revealed.
+    if (sentence.hint) return;
     const docs = document.querySelector<HTMLElement>(".docs")!;
     const box = sentence.range(start, end).getBoundingClientRect();
     const view = docs.getBoundingClientRect();
@@ -108,9 +178,11 @@ export function startSpeech(engine: StepEngine): void {
   function cancel(): void {
     generation++;
     clearTimeout(timer);
+    bar.removeAttribute("data-gap");
     utterance = undefined;
     synth.cancel();
     clearHighlight();
+    stage();
   }
   function stop(message?: string): void {
     cancel();
@@ -148,9 +220,18 @@ export function startSpeech(engine: StepEngine): void {
     const sentence = queue[index];
     if (!sentence) {
       clearHighlight();
+      stage();
       if (engine.progress().completed) stop("Narration finished");
       else if (auto.checked) timer = setTimeout(advance, 700);
       else { state = "paused"; render("Step finished. Resume to read it again, or choose the next step."); }
+      return;
+    }
+    stage(sentence);
+    if (sentence.delay && offset === 0 && waited !== index) {
+      waited = index;
+      clearHighlight();
+      bar.toggleAttribute("data-gap", true);
+      timer = setTimeout(() => { bar.removeAttribute("data-gap"); speak(); }, sentence.delay);
       return;
     }
     const token = ++generation;
@@ -185,13 +266,15 @@ export function startSpeech(engine: StepEngine): void {
     queue = root ? sentences(root, lang) : [];
     index = 0;
     offset = 0;
+    waited = -1;
     state = "playing";
     render();
     if (!root) { stop("Choose a step to listen to"); return; }
     speak();
   }
   function playPause(): void {
-    if (document.body.hasAttribute("data-presenting") || !voices.length) return;
+    if (!voices.length) return;
+    if (document.body.hasAttribute("data-docs-hidden")) { render("Show the explanations to listen"); return; }
     if (state === "playing") pause();
     else if (state === "paused" && root === currentRoot() && index < queue.length) {
       state = "playing";
@@ -239,13 +322,14 @@ export function startSpeech(engine: StepEngine): void {
     const target = event.composedPath()[0];
     if (event.repeat || event.code !== "KeyL" || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey ||
       (target instanceof HTMLElement && (target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(target.tagName)))) return;
-    if (launch.hidden || document.body.hasAttribute("data-presenting")) return;
+    if (launch.hidden) return;
     event.preventDefault();
     playPause();
   });
-  new MutationObserver(() => {
-    if (document.body.hasAttribute("data-presenting") && state !== "idle") pause();
-  }).observe(document.body, { attributes: true, attributeFilter: ["data-presenting"] });
+  // Narration follows the explanations panel: it keeps playing while presenting, and pauses while hidden.
+  document.addEventListener(DOCS_TOGGLE_EVENT, (event) => {
+    if ((event as CustomEvent<{ hidden: boolean }>).detail.hidden) pause();
+  });
   addEventListener("pagehide", () => stop());
   synth.addEventListener("voiceschanged", updateVoices);
   updateVoices();

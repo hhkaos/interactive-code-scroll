@@ -76,6 +76,12 @@ Before a screenshot or a DOM read with the Playwright MCP, wait past any input d
 ### E2E under heavy machine load
 `playwright.config.ts` starts every fixture server at once, each with a 60 s timeout. When the machine is loaded (other sessions), they time out before any test runs. Run only the affected spec with a temporary config in the scratchpad that starts that one fixture server (`webServer` with a longer `timeout`), and say so in the report. (A favorites E2E run once failed twice this way with load average ~22.) The fixture ports (4400–4407) can also be taken by the user's other projects: check with `lsof -iTCP:<port> -sTCP:LISTEN`, never kill those, and use free ports in the temporary config. Give its `webServer` a `cwd` instead of `cd … &&` in `command`, or the preview servers outlive the run.
 
+### Hidden text and `checkVisibility()`
+`element.checkVisibility()` without options only checks `display` and `content-visibility`: text hidden with `visibility: hidden` or `opacity: 0` (the `<Hint>` popover) counts as visible. Pass `{ visibilityProperty: true, opacityProperty: true }` or exclude the element explicitly, and never measure a hidden element to scroll to it. (Narration once read hint text mid-sentence and scrolled to the hidden popover at `top: 0`, activating an earlier step.)
+
+### Node version for the pack smoke test
+`pnpm test:pack` builds a scaffolded project in a temp folder outside the repo, where Volta's default Node may be older than Astro accepts (22.21.1 < 22.22.0). If it fails with "Node.js vX is not supported by Astro", rerun it with a newer Node first on `PATH` (e.g. `PATH=~/.volta/tools/image/node/22.22.0/bin:$PATH npx -y pnpm@11.13.1 test:pack`); it is not a package failure.
+
 ### Ask before destructive actions
 Confirm before: deleting files, force-pushing, resetting git state, dropping packages.
 

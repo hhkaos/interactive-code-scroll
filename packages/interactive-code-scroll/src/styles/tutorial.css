@@ -1786,7 +1786,7 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
   font-size: var(--calcite-font-size-sm);
   position: relative;
 }
-.speech-bar[hidden], .speech-controls[hidden], body[data-presenting] .speech-bar { display: none; }
+.speech-bar[hidden], .speech-controls[hidden] { display: none; }
 .speech-row, .speech-controls { display: flex; align-items: center; gap: 0.75rem; }
 .speech-controls { flex: 1; justify-content: space-between; min-width: 0; }
 .speech-bar button, .speech-settings summary {

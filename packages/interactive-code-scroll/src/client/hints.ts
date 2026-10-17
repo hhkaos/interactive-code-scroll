@@ -8,6 +8,7 @@ const VIEWPORT_GAP = 8;
 const CLOSE_DELAY_MS = 180;
 let active: HintState | undefined;
 let closeTimer: number | undefined;
+const states = new WeakMap<HTMLElement, HintState>();
 
 function place({ label, popover }: HintState): void {
   const labelRect = label.getBoundingClientRect();
@@ -40,6 +41,17 @@ function closeSoon(state: HintState): void {
   closeTimer = window.setTimeout(() => closeNow(state), CLOSE_DELAY_MS);
 }
 
+/** Shows a hint's popover from code (narration reads it as an aside). */
+export function openHint(hint: HTMLElement): void {
+  const state = states.get(hint);
+  if (state) open(state);
+}
+
+export function closeHint(hint: HTMLElement): void {
+  const state = states.get(hint);
+  if (state) closeNow(state);
+}
+
 /** Positions rich inline hint popovers so scroll containers cannot clip them. */
 export function startHints(): void {
   for (const hint of document.querySelectorAll<HTMLElement>(".hint")) {
@@ -47,6 +59,7 @@ export function startHints(): void {
     const popover = hint.querySelector<HTMLElement>(".hint-popover");
     if (!label || !popover) continue;
     const state = { hint, label, popover };
+    states.set(hint, state);
 
     hint.addEventListener("pointerenter", () => open(state));
     hint.addEventListener("pointerleave", () => closeSoon(state));
