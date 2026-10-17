@@ -18,6 +18,8 @@ interface Props {
   view?: "preview" | "console" | "result";
   /** Fold the lower pane; false opens it without selecting a different view. */
   collapsed?: boolean;
+  /** Lower pane height as a percentage of the right column (15–85); compact layouts keep their full-screen behavior. */
+  panelHeight?: number;
   /** Maximizes the code area or the pane under it (Preview or Result) when the step becomes active; `none` restores. */
   maximize?: "code" | "panel" | "none";
   /** Space-separated variant ids the step applies to. */
@@ -30,7 +32,7 @@ interface Props {
   outline?: boolean;
 }
 
-const { id, file, region, images, embed, view, collapsed, maximize, only, output, request, outline } = Astro.props;
+const { id, file, region, images, embed, view, collapsed, panelHeight, maximize, only, output, request, outline } = Astro.props;
 const { files, frontmatter, outputs } = currentTutorial(Astro.locals);
 const { variants } = readTutorialConfig(frontmatter);
 // With variants, `file` is relative to each variant folder and a lone `region` names a file per variant.
@@ -51,6 +53,7 @@ const requestVariants = variants && requests && resultVariants(variants, webDirs
   data-region={region !== undefined && isJsonRegion(region) ? jsonRegionId(region) : region}
   data-view={view}
   data-collapsed={collapsed === undefined ? undefined : String(collapsed)}
+  data-panel-height={panelHeight}
   data-maximize={maximize}
   data-output={variants ? undefined : output}
   data-outputs={variantOutputs && Object.keys(variantOutputs).length > 0 ? JSON.stringify(variantOutputs) : undefined}

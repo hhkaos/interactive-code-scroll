@@ -184,3 +184,60 @@ test("the layout keeps its hydrated geometry before Calcite loads", async ({ pag
   expect(await boxes(unhydrated)).toEqual(hydrated);
   await context.close();
 });
+
+test("author heights apply on entry, preserve manual preferences and keep the splitter in sync", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("ics:preview-split", "60"));
+  const height = () => page.locator(".right").evaluate((el) => el.style.getPropertyValue("--preview-split"));
+  await page.goto("/");
+  await expect.poll(height).toBe("40%");
+  await page.evaluate(() => { location.hash = "#sign-in"; });
+  await expect.poll(height).toBe("30%");
+  const ratio = await page.locator(".preview").evaluate((el) => el.getBoundingClientRect().height / el.parentElement!.getBoundingClientRect().height);
+  expect(ratio).toBeCloseTo(0.3, 2);
+  const splitter = page.locator(".preview-splitter");
+  await expect(splitter).toHaveAttribute("aria-valuenow", "30");
+  expect(await page.evaluate(() => localStorage.getItem("ics:preview-split"))).toBe("60");
+
+  // The first keyboard adjustment starts at the author's size, and only reader changes are saved.
+  await splitter.focus();
+  await page.keyboard.press("ArrowUp");
+  await expect.poll(height).toBe("32%");
+  expect(await page.evaluate(() => localStorage.getItem("ics:preview-split"))).toBe("32");
+  await page.evaluate(() => { location.hash = "#ui"; });
+  await expect.poll(height).toBe("32%");
+  await page.evaluate(() => { location.hash = "#sign-in"; });
+  await expect.poll(height).toBe("30%");
+  expect(await page.evaluate(() => localStorage.getItem("ics:preview-split"))).toBe("32");
+  await page.locator("#preview-maximize").click();
+  await expect(page.locator("body")).toHaveAttribute("data-maximized", "preview");
+  await expect.poll(() => page.locator(".preview").evaluate((el) => el.getBoundingClientRect().height)).toBe(900);
+  await page.keyboard.press("Escape");
+  await expect.poll(height).toBe("30%");
+});
+
+test("opening and resizing the lower pane reveals the active region when it fits", async ({ page }) => {
+  await page.goto("/#oauth");
+  const regionVisible = () => page.locator('.code[data-file="main.js"]').evaluate((pane) => {
+    const box = pane.getBoundingClientRect();
+    const lines = pane.querySelectorAll(".line[data-focus]");
+    if (!lines.length) return false;
+    return lines[0]!.getBoundingClientRect().top >= box.top - 1 && lines[lines.length - 1]!.getBoundingClientRect().bottom <= box.bottom + 1;
+  });
+  await expect.poll(regionVisible).toBe(true);
+  await page.locator("#preview-toggle").click();
+  await expect(page.locator(".preview-frame")).toBeVisible();
+  await expect.poll(regionVisible).toBe(true);
+  await page.locator(".preview-splitter").focus();
+  await page.keyboard.press("Shift+ArrowUp");
+  await expect.poll(regionVisible).toBe(true);
+  await page.keyboard.press("Shift+ArrowDown");
+  await expect.poll(regionVisible).toBe(true);
+  await expect(page).toHaveURL(/#oauth$/);
+
+  // A region taller than the viewport reveals its start rather than its middle or end.
+  await page.keyboard.press("Shift+ArrowUp");
+  await page.keyboard.press("Shift+ArrowUp");
+  await page.keyboard.press("Shift+ArrowUp");
+  const first = page.locator('.code[data-file="main.js"] .line[data-focus]').first();
+  await expect(first).toBeInViewport();
+});

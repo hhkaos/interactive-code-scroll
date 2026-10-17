@@ -1,3 +1,4 @@
+import { PREVIEW_SPLIT } from "./client/layout-values.ts";
 import { resolveEmbed } from "./embed.ts";
 import { ERROR_RULE_FILE, readErrorRule } from "./error-rule.ts";
 import { FrontmatterError, isRemoteLogo, readIndexConfig, readTutorialConfig, type TutorialConfig, type Variant } from "./frontmatter.ts";
@@ -54,7 +55,7 @@ const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
 const VIEWS = new Set(["preview", "console", "result"]);
 const MAXIMIZE_STATES = new Set(["code", "panel", "none"]);
 /** The intro comes before any step: the pane state, a file or media, no code focus or result. */
-const INTRO_PROPS = ["view", "collapsed", "maximize", "file", "images", "embed", "outline"];
+const INTRO_PROPS = ["view", "collapsed", "panelHeight", "maximize", "file", "images", "embed", "outline"];
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -560,6 +561,14 @@ export function validateTutorial({
   function checkPaneState(text: (attr: string) => string | undefined, report: (message: string) => void, use: ComponentUse): void {
     for (const old of ["preview", "panel"]) {
       if (use.attributes[old] !== undefined) report(`"${old}" was replaced by "view" and "collapsed": use view="preview", view="console", view="result" or the collapsed prop; omit them to keep the current state`);
+    }
+    const height = use.attributes.panelHeight;
+    if (height !== undefined) {
+      const value = typeof height === "object" ? parseStaticLiteral(height.expression) : undefined;
+      if (typeof value !== "number" || !Number.isFinite(value) || value < PREVIEW_SPLIT.min || value > PREVIEW_SPLIT.max) {
+        report(`"panelHeight" must be a static number from ${PREVIEW_SPLIT.min} to ${PREVIEW_SPLIT.max}: write panelHeight={30} (percent of the right column height)`);
+      }
+      if (config && !hasPane) report('"panelHeight" needs an embedded Preview or a step with a result');
     }
     const view = text("view");
     if (view !== undefined && !VIEWS.has(view)) report('"view" must be one of preview, console, result');

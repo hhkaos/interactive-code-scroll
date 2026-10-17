@@ -1,5 +1,8 @@
 export type Mode = "light" | "dark";
 
+/** A step or intro requests a lower pane height; manual preferences are not overwritten. */
+export const PANEL_HEIGHT_EVENT = "ics:panel-height";
+
 export const THEME_KEY = "ics:theme";
 
 export interface SplitRange {

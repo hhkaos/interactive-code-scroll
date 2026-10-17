@@ -11,6 +11,8 @@ interface Props {
   view?: "preview" | "console" | "result";
   /** Fold the lower pane; false opens it without selecting a different view. */
   collapsed?: boolean;
+  /** Lower pane height as a percentage of the right column (15–85); compact layouts keep their full-screen behavior. */
+  panelHeight?: number;
   /** Maximizes the code area or the pane under it while the intro is shown; `none` restores. */
   maximize?: "code" | "panel" | "none";
   /** File tab shown, with no focus, while the intro is shown (relative to each variant folder with variants). */
@@ -23,7 +25,7 @@ interface Props {
   outline?: boolean;
 }
 
-const { view, collapsed, maximize, file, images, embed, outline } = Astro.props;
+const { view, collapsed, panelHeight, maximize, file, images, embed, outline } = Astro.props;
 // No file or media of its own: the browser shows the outline unless `outline: false` (client/steps.ts).
 const autoOutline = !outline && file === undefined && !images?.length && embed === undefined;
 const { files, frontmatter } = currentTutorial(Astro.locals);
@@ -35,6 +37,7 @@ const variantFiles = variants && file !== undefined ? stepFiles(variants, parsed
   class="intro"
   data-view={view}
   data-collapsed={collapsed === undefined ? undefined : String(collapsed)}
+  data-panel-height={panelHeight}
   data-maximize={maximize}
   data-file={variants ? undefined : file}
   data-files={variantFiles ? JSON.stringify(variantFiles) : undefined}

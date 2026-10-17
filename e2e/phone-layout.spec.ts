@@ -70,3 +70,23 @@ test.describe("landscape phone", () => {
     await expect(page.locator("#copy-file")).toBeHidden();
   });
 });
+
+for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
+  test.describe(`author panel height on a ${viewport.width}×${viewport.height} phone`, () => {
+    test.use({ viewport, hasTouch: true });
+    test("keeps the compact header and opens full screen instead of using the author height", async ({ page }) => {
+      await page.goto("/#sign-in");
+      await expect(page.locator("#sign-in")).toHaveAttribute("data-panel-height", "30");
+      await expect(page.locator(".preview-frame")).toBeHidden();
+      await expect(page.locator(".preview-splitter")).toBeHidden();
+      await page.locator("#preview-toggle").click();
+      await expect(page.locator("body")).toHaveAttribute("data-maximized", "preview");
+      await expect(page.locator(".preview-frame")).toBeVisible();
+      const pane = await box(page, ".preview");
+      expect(pane.height).toBe(viewport.height);
+      expect(pane.width).toBe(viewport.width);
+      await page.locator("#preview-toggle").click();
+      await expect(page.locator(".preview-frame")).toBeHidden();
+    });
+  });
+}

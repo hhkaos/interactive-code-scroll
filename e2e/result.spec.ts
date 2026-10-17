@@ -355,3 +355,15 @@ test("image responses are shown as images; long text is cut until Show all", asy
   expect(await pre.evaluate((el) => el.textContent!.endsWith("END"))).toBe(true);
   await expect(body(page).locator(".result-more")).toHaveCount(0);
 });
+
+test("the Result pane shares author heights with Preview across variant changes", async ({ page }) => {
+  await page.goto("/#request");
+  await expect(page.locator(".intro")).not.toHaveAttribute("data-panel-height");
+  await expect(page.locator("section.result .preview-splitter")).toHaveAttribute("aria-valuenow", "35");
+  const ratio = () => page.locator(".right > section:not([hidden])").evaluate((el) => el.getBoundingClientRect().height / el.parentElement!.getBoundingClientRect().height);
+  expect(await ratio()).toBeCloseTo(0.35, 2);
+  await pick(page, "web");
+  await expect(page.locator("section.preview")).toBeVisible();
+  await expect(page.locator("section.preview .preview-splitter")).toHaveAttribute("aria-valuenow", "35");
+  expect(await ratio()).toBeCloseTo(0.35, 2);
+});

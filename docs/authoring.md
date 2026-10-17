@@ -243,6 +243,7 @@ Install the prerequisites and keep this page open.
 |---|---|---|---|
 | [`view`](#panel-and-console) | `preview`, `console`, `result` | keeps the current view | Selects a view and opens the lower pane while the intro is shown. Console requires frontmatter `console: true`. |
 | [`collapsed`](#panel-and-console) | boolean | keeps the current state | `collapsed` folds the lower pane; `collapsed={false}` opens it without changing views. |
+| [`panelHeight`](#panel-and-console) | number (15–85) | keeps the current size | Lower pane height as a percentage of the right column; applied on each entry. |
 | [`maximize`](#maximize-from-a-step) | `code`, `panel`, `none` | keeps the current state | Same as on `<Step>`, applied when the intro is shown. |
 | [`file`](#step) | path in `code/` (relative to each variant folder with [variants](#code-variants)) | the first tab | File tab shown while the intro is shown, with no focused lines: on load and each time the reader returns to it. Comes first in the tabs when frontmatter `files` does not set their order. Cannot be combined with `images` or `embed`. |
 | [`images`](#show-images-instead-of-code) | array of paths in `images/` | none | Images shown instead of code while the intro is shown, as on `<Step>`. |
@@ -339,6 +340,7 @@ Explain the change here.
 | [`request`](#http-requests) | request names | none | Space-separated `# @name`s from `requests/`, e.g. `request="geocode-get geocode-post"`; the first is the default. |
 | [`view`](#panel-and-console) | `preview`, `console`, `result` | keeps the current view | Selects a view and opens the lower pane when the step activates. Console requires frontmatter `console: true`. |
 | [`collapsed`](#panel-and-console) | boolean | keeps the current state | `collapsed` folds the lower pane; `collapsed={false}` opens it without changing views. |
+| [`panelHeight`](#panel-and-console) | number (15–85) | keeps the current size | Lower pane height as a percentage of the right column; applied on each entry. |
 | [`maximize`](#maximize-from-a-step) | `code`, `panel`, `none` | keeps the current state | Maximizes the code area (code, images or embedded page) or the pane under it (Preview or Result pane); `none` restores the layout. |
 | [`only`](#steps-across-variants) | variant ids | all variants | With `variants`: space-separated ids the step applies to, e.g. `only="python curl"`. |
 | [`outline`](#step-outline) | no value | none | The list of steps instead of code, e.g. for a recap halfway through. Cannot be combined with `file`, `region`, `images` or `embed`. |
@@ -796,6 +798,21 @@ console: true
 | omitted | Keep the reader's selected view and expanded/collapsed state. |
 
 Visibility is separate: `collapsed` (or `collapsed={true}`) folds the whole pane to its header, keeping the selected view. `collapsed={false}` opens it without switching views. Omit both props to preserve the current state. Do not combine `view` with `collapsed` set to true: one opens the pane and the other folds it.
+
+Use `panelHeight={30}` on a `<Step>` or `<Intro>` to reserve 30% of the right column's height for the lower pane (its header and splitter included). This is a share of the space the code and pane occupy together, below the page header, rather than `vh` of the whole browser window. The remainder holds the code and its header. Static numbers from 15 to 85 are accepted, matching the splitter's limits; quoted strings, expressions such as `height + 5`, and out-of-range values are build errors. A tutorial must have an embedded Preview or a step with a result.
+
+The height applies each time that block becomes active. It does not open the pane or select a view by itself: combine it with `view="console"`, `view="preview"`, `view="result"` or `collapsed={false}` as needed. Omitted keeps the current size. Readers can still drag the splitter or use its arrow keys; only their manual adjustments update the remembered size. Author heights never overwrite that preference. Opening or resizing the pane reveals the active code region when it fits; a taller region shows its start. Between size changes, readers can scroll the code freely.
+
+```mdx
+<Intro view="preview" panelHeight={40}>…</Intro>
+
+<Step id="inspect-output" file="main.js" region="response"
+      view="console" panelHeight={30}>
+  Inspect the response alongside the code.
+</Step>
+```
+
+On phones (portrait and compact touch landscape), the pane keeps its header and opens maximized; `panelHeight` does not change that behavior. Maximized panes also fill the window regardless of this height; restoring the desktop layout uses the requested size.
 
 The initial web view is Preview, expanded. Use `<Intro collapsed>` to start folded. Readers can always change tabs themselves; the next block with `view` selects its view again. In a tutorial mixing web and non-web variants, a view applies to variants that have that pane; use `only=` for a step that belongs to one kind only.
 
@@ -1307,7 +1324,7 @@ Errors start with the location, for example `tutorial/tutorial.mdx:12:1 <Step> �
 | `<Step> request "x" not found in requests/ (# @name x)` | Name the request with `# @name x` in a `.http` file under `requests/`. |
 | `<Step> maximize="panel" has no pane to maximize: …` | Enable the iframe [Preview](#preview) or give some step a result. |
 | `<Step> duplicate id "x"` | Step ids are unique per tutorial. |
-| `<Intro> "x" is not available on <Intro> (only panel, maximize, file, images, embed, outline)` | Move `region`, `output` or `request` to the first step. |
+| `<Intro> "x" is not available on <Intro> (only view, collapsed, panelHeight, maximize, file, images, embed, outline)` | Move `region`, `output` or `request` to the first step. |
 | `<Step> "outline" takes no value: write <Step outline>` | Write `outline` alone, without `="…"` or `{…}`. |
 | `<Step> "outline" and "file" cannot be combined; use one of them` | The outline replaces the code: drop `file`, `region`, `images` or `embed`, or move the outline to its own step. |
 | `"outline" must be a boolean` | Frontmatter `outline: false` (or `true`), without quotes. |

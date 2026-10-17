@@ -64,7 +64,7 @@ describe("validateTutorial", () => {
     [use("Intro", { view: "closed" }), '<Intro> "view" must be one of preview, console, result'],
     [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, panel, none'],
     [use("Intro", { maximize: "panel", collapsed: true }), '<Intro> maximize="panel" conflicts with collapsed'],
-    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only view, collapsed, maximize, file, images, embed, outline)'],
+    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only view, collapsed, panelHeight, maximize, file, images, embed, outline)'],
     [use("Intro", { file: "main.js", region: "config" }), '<Intro> "region" is not available on <Intro>'],
     [use("Intro", { file: "nope.js" }), '<Intro> file "nope.js" not found in code/'],
     [use("Intro", { file: "main.js", images: { expression: '["a.png"]' } }), '<Intro> "file" and "images" cannot be combined; use one of them'],
@@ -878,4 +878,26 @@ describe("optional console and independent collapse state", () => {
   it("provides migration guidance for the interim panel prop", () => {
     expect(validate(use("Step", { id: "old", panel: "console" })).join()).toContain('"panel" was replaced by "view" and "collapsed"');
   });
+});
+
+
+describe("panelHeight authoring", () => {
+  for (const name of ["Step", "Intro"]) {
+    const attrs: ComponentUse["attributes"] = name === "Step" ? { id: "sized" } : {};
+    it(`${name} accepts static heights within the splitter range, independently of visibility`, () => {
+      for (const expression of ["15", "30", "37.5", "85"]) {
+        expect(validate(use(name, { ...attrs, panelHeight: { expression } }))).toEqual([]);
+      }
+      expect(validate(use(name, { ...attrs, panelHeight: { expression: "30" }, collapsed: true }))).toEqual([]);
+    });
+    it(`${name} rejects strings, dynamic expressions and heights outside the range`, () => {
+      for (const panelHeight of [true as const, "30", ...["0", "14.9", "85.1", "100", "-30", "NaN", "Infinity", "size", "30 + 5", "null", "true", '"30"'].map((expression) => ({ expression }))]) {
+        expect(validate(use(name, { ...attrs, panelHeight }))).toContainEqual(expect.stringContaining('"panelHeight" must be a static number from 15 to 85'));
+      }
+    });
+    it(`${name} requires a lower pane`, () => {
+      const errors = validateTutorial({ mdxFile: "tutorial.mdx", files, images, frontmatter: { title: "No pane", preview: "off" }, uses: [use(name, { ...attrs, panelHeight: { expression: "30" } })] });
+      expect(errors).toContainEqual(expect.stringContaining('"panelHeight" needs an embedded Preview or a step with a result'));
+    });
+  }
 });

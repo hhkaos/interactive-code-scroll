@@ -97,6 +97,7 @@ The screenshot uses demo data produced by an interaction in the running Preview.
 - **Optional per tutorial**: set frontmatter `console: true` to add Console; leave it out for a plain Preview without tabs. Requires `preview: iframe` or `both`.
 - **From interaction to explanation**: use Preview to run the app, then select Console to explore its output. Switching tabs preserves the app and its messages.
 - **Objects you can explore**: collapsible trees, compact property previews, type colors, message levels and source file/line when the browser provides them.
+- **Size alongside the code**: `<Step panelHeight={30}>` and `<Intro panelHeight={30}>` reserve 30% of the right column for Preview, Console or Result. Readers can adjust it; phones keep the maximized view. Opening or resizing reveals the active code region when it fits. See [pane controls](authoring.md#panel-and-console).
 - **Directed by your steps**: `view="console"` opens Console alongside the highlighted code; `view="preview"` returns to the app. `maximize="panel"` gives the selected view the window.
 - **Live messages, stable objects**: messages arrive as the app runs; each object preserves its values at log time. Selecting a step does not execute code or make a request. Nothing needs to be exported to a static result file.
 - **No debug UI or extra service**: keep ordinary `console.log` calls in the sample. The framework captures them in dev and the built static site; the browser's DevTools still receives the original messages.

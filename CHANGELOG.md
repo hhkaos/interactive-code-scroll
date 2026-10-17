@@ -8,9 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Opening or resizing the lower pane reveals the active code region after the code viewport changes; regions that fit stay fully visible, and taller regions show their start.
+
 - Console object trees no longer draw a native list bullet over the preceding log label.
 
 ### Added
+
+- `<Step panelHeight={30}>` and `<Intro panelHeight={30}>` set Preview / Console / Result to a percentage of the right column height (15–85), without overwriting the reader's saved size. Readers can still resize; compact phones and maximized panes keep their full-screen behavior.
 
 - Live Console has a dedicated Features section, light/dark screenshots captured from a real Preview interaction, a screenshot scene that regenerates them without credentials, a landing page highlight, and links to the authoring reference and migration guide. Unreleased availability is explicit for authors.
 - Console entries show a source file and line when available; inlined scripts and substituted modules preserve source names and cleaned-code line numbers. Collapsed summaries now color keys and scalar types like DevTools. A collapsible help explains selecting the Preview iframe context in browser DevTools and filtering to that context.

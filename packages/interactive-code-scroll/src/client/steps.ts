@@ -1,6 +1,7 @@
 import { carouselTarget, clampIndex, indexFromHash, isEditableTag, isMultilineTag, keyToDelta, movesStep, progressStates, revealScroll, stepButtons, type RevealOptions } from "./navigation.ts";
 import { forwardStepKeys, samePage } from "./embed.ts";
 import { MEDIA_EVENT } from "./image-viewer.ts";
+import { PANEL_HEIGHT_EVENT } from "./layout-values.ts";
 import { MAXIMIZE_EVENT } from "./maximize-values.ts";
 import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
@@ -140,9 +141,12 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
     document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
   }
 
-  /** Pane state (`view=`, `collapsed`, `maximize=`) of a step or the intro, applied each time it becomes active. */
+  /** Pane state (`view=`, `collapsed`, `panelHeight=`, `maximize=`) of a step or the intro, applied each time it becomes active. */
   function applyPaneState(block: HTMLElement | null): void {
     if (!block) return;
+    if (block.dataset.panelHeight !== undefined) {
+      document.dispatchEvent(new CustomEvent<number>(PANEL_HEIGHT_EVENT, { detail: Number(block.dataset.panelHeight) }));
+    }
     const view = block.dataset.view;
     const preview = document.querySelector<HTMLElement>("section.preview");
     const web = !!preview?.querySelector("iframe") && (!variants || (JSON.parse(preview.dataset.webVariants ?? "[]") as string[]).includes(variants.active().id));
@@ -636,6 +640,18 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
     docsHeight = docs.clientHeight;
     if (!restoring && docsWidth > 0 && docsHeight > 0) keepActiveCentered();
   }).observe(docs);
+
+  // Opening/resizing the lower pane changes the code viewport without activating another step.
+  // Reveal only the visible file's focus, and leave manual code scrolling alone between resizes.
+  const codeResize = new ResizeObserver((entries) => {
+    for (const { target } of entries) {
+      const pane = target as HTMLElement;
+      if (!pane.clientHeight || pane.hasAttribute("data-entering")) continue;
+      const lines = $$(".line[data-focus]", pane);
+      if (lines.length) reveal(pane, lines[0]!, lines.at(-1)!);
+    }
+  });
+  for (const pane of $$(".code")) codeResize.observe(pane);
 
   // Clicking a step activates it (short steps and the first ones may never cross the center line).
   docs.addEventListener("click", (event) => {

@@ -3,6 +3,7 @@ import {
   clampSplit,
   DOCS_SPLIT,
   parseStoredSplit,
+  PANEL_HEIGHT_EVENT,
   PHONE_QUERY,
   PREVIEW_SPLIT,
   resolveMode,
@@ -51,7 +52,7 @@ interface SplitterOptions {
 }
 
 /** Pointer and keyboard resizing (Shift for bigger steps), remembered in localStorage. */
-function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = false }: SplitterOptions): void {
+function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = false }: SplitterOptions): (percent: number) => void {
   let value = 0;
   const set = (percent: number, persist: boolean) => {
     value = clampSplit(percent, range);
@@ -61,6 +62,7 @@ function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = fa
   };
   set(parseStoredSplit(read(range.key), range), false);
   for (const splitter of splitters) listen(splitter);
+  return (percent) => set(percent, false);
 
   function listen(splitter: HTMLElement): void {
     splitter.addEventListener("pointerdown", (event) => {
@@ -116,7 +118,7 @@ export function startLayout(): void {
   const right = document.querySelector<HTMLElement>(".right");
   const previewSplitters = [...document.querySelectorAll<HTMLElement>(".preview-splitter")];
   if (right && previewSplitters.length > 0) {
-    startSplitter({
+    const setHeight = startSplitter({
       splitters: previewSplitters,
       container: right,
       cssVar: "--preview-split",
@@ -124,6 +126,8 @@ export function startLayout(): void {
       axis: "y",
       fromEnd: true,
     });
+    // CSS uses this size only in the shared desktop layout; compact and maximized panes keep their geometry.
+    document.addEventListener(PANEL_HEIGHT_EVENT, (event) => setHeight((event as CustomEvent<number>).detail));
   }
 }
 
