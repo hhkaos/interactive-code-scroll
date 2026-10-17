@@ -51,10 +51,10 @@ export interface ValidationInput {
 
 const STEP_ID = /^[a-z0-9][a-z0-9-]*$/;
 const HINT_ID = /^[a-z0-9][a-z0-9-]*$/;
-const PANEL_STATES = new Set(["preview", "console", "result", "collapsed"]);
+const VIEWS = new Set(["preview", "console", "result"]);
 const MAXIMIZE_STATES = new Set(["code", "panel", "none"]);
 /** The intro comes before any step: the pane state, a file or media, no code focus or result. */
-const INTRO_PROPS = ["panel", "maximize", "file", "images", "embed", "outline"];
+const INTRO_PROPS = ["view", "collapsed", "maximize", "file", "images", "embed", "outline"];
 const STRING_ARRAY = /^\s*\[\s*(?:(?:"[^"\\]*"|'[^'\\]*')\s*(?:,\s*(?:"[^"\\]*"|'[^'\\]*')\s*)*,?\s*)?\]\s*$/;
 
 /** Reads `images={["a.png", 'b.png']}`: only static string arrays are allowed. */
@@ -280,6 +280,13 @@ export function validateTutorial({
   // With variants, the Preview applies to web variants only, so no variant is required to have it.
   if (config && !config.variants && config.preview !== "off" && !files.some((f) => f.path === PREVIEW_ENTRY)) {
     reportFrontmatter("preview", `preview "${config.preview}" needs code/${PREVIEW_ENTRY} (or set preview: off)`);
+  }
+
+  if (config?.console) {
+    const web = config.variants
+      ? config.variants.some((v) => files.some((f) => f.path === `${v.dir}/${PREVIEW_ENTRY}`))
+      : files.some((f) => f.path === PREVIEW_ENTRY);
+    if (!web) reportFrontmatter("console", '"console: true" requires web code with index.html in at least one variant');
   }
 
   // Gitignored paths that `include` does not publish: references to them get a specific message.
@@ -549,28 +556,35 @@ export function validateTutorial({
     }
   }
 
-  /** `panel=` and `maximize=`, shared by <Step> and <Intro>. */
+  /** View selection, visibility and maximize are shared by <Step> and <Intro>. */
   function checkPaneState(text: (attr: string) => string | undefined, report: (message: string) => void, use: ComponentUse): void {
-    if (use.attributes.preview !== undefined) report('"preview" was replaced by "panel": use panel="preview", panel="console", panel="result" or panel="collapsed"; omit it to keep the current state');
-    const panel = text("panel");
-    if (panel !== undefined && !PANEL_STATES.has(panel)) {
-      report('"panel" must be one of preview, console, result, collapsed');
+    for (const old of ["preview", "panel"]) {
+      if (use.attributes[old] !== undefined) report(`"${old}" was replaced by "view" and "collapsed": use view="preview", view="console", view="result" or the collapsed prop; omit them to keep the current state`);
     }
+    const view = text("view");
+    if (view !== undefined && !VIEWS.has(view)) report('"view" must be one of preview, console, result');
+    const attr = use.attributes.collapsed;
+    const collapsed = attr === true || (typeof attr === "object" && attr.expression.trim() === "true");
+    if (attr !== undefined && attr !== true && !(typeof attr === "object" && /^(true|false)$/.test(attr.expression.trim()))) {
+      report('"collapsed" must be a boolean: write collapsed, collapsed={true} or collapsed={false}');
+    }
+    if (collapsed && view !== undefined) report('"view" opens the pane and cannot be combined with collapsed; omit view to fold it');
     const covered = variants?.filter((v) => typeof use.attributes.only !== "string" || use.attributes.only.split(/\s+/).includes(v.id));
     const web = covered ? covered.some((v) => files.some((f) => f.path === `${v.dir}/${PREVIEW_ENTRY}`)) : files.some((f) => f.path === PREVIEW_ENTRY);
-    if (panel === "preview" || panel === "console") {
-      if (config && !["iframe", "both"].includes(config.preview)) report(`panel="${panel}" requires an embedded Preview (frontmatter preview: iframe or both)`);
-      if (!skipFileChecks && !web) report(`panel="${panel}" requires web code with index.html in a covered variant`);
+    if (view === "preview" || view === "console") {
+      if (config && !["iframe", "both"].includes(config.preview)) report(`view="${view}" requires an embedded Preview (frontmatter preview: iframe or both)`);
+      if (!skipFileChecks && !web) report(`view="${view}" requires web code with index.html in a covered variant`);
+      if (view === "console" && config && !config.console) report('view="console" requires frontmatter console: true');
     }
-    if (panel === "result" && !skipFileChecks) {
+    if (view === "result" && !skipFileChecks) {
       const nonWeb = covered ? covered.some((v) => !files.some((f) => f.path === `${v.dir}/${PREVIEW_ENTRY}`)) : !web;
-      if (!nonWeb || !uses.some((u) => u.name === "Step" && (u.attributes.output !== undefined || u.attributes.request !== undefined))) report('panel="result" requires non-web code and a step with output= or request=');
+      if (!nonWeb || !uses.some((u) => u.name === "Step" && (u.attributes.output !== undefined || u.attributes.request !== undefined))) report('view="result" requires non-web code and a step with output= or request=');
     }
     const maximize = text("maximize");
     if (maximize !== undefined && !MAXIMIZE_STATES.has(maximize)) {
       report('"maximize" must be one of code, panel, none' + (maximize === "preview" ? '; maximize="preview" was renamed to maximize="panel"' : ""));
-    } else if (maximize === "panel" && panel === "collapsed") {
-      report('maximize="panel" conflicts with panel="collapsed"');
+    } else if (maximize === "panel" && collapsed) {
+      report('maximize="panel" conflicts with collapsed');
     } else if (maximize === "panel" && config && !hasPane) {
       report('maximize="panel" has no pane to maximize: no iframe Preview (frontmatter "preview") and no step with a result');
     }

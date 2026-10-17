@@ -6,6 +6,7 @@ describe("readTutorialConfig", () => {
     expect(readTutorialConfig({})).toEqual({
       title: "Tutorial",
       preview: "both",
+      console: false,
       theme: "auto",
       codeWrap: false,
       languages: {},
@@ -19,6 +20,7 @@ describe("readTutorialConfig", () => {
     expect(readTutorialConfig({ title: "OAuth", preview: "iframe", theme: "dark", codeWrap: true })).toEqual({
       title: "OAuth",
       preview: "iframe",
+      console: false,
       theme: "dark",
       codeWrap: true,
       languages: {},
@@ -26,6 +28,12 @@ describe("readTutorialConfig", () => {
       tags: [],
       completion: true,
     });
+  });
+
+  it("opts into Console only with an embedded Preview", () => {
+    for (const preview of ["iframe", "both"]) expect(readTutorialConfig({ preview, console: true }).console).toBe(true);
+    for (const preview of ["off", "tab"]) expect(() => readTutorialConfig({ preview, console: true })).toThrow(/requires an embedded Preview/);
+    for (const console of ["true", 1, null]) expect(() => readTutorialConfig({ console })).toThrow(/"console" must be a boolean/);
   });
 
   it("accepts an optional logo from images/", () => {

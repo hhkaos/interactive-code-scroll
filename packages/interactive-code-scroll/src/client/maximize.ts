@@ -60,7 +60,7 @@ export function startMaximize(): void {
     { capture: true },
   );
 
-  // Collapsing the maximized pane (its header or a step's panel="collapsed") restores the layout first.
+  // Collapsing the maximized pane (its header or a step's collapsed prop) restores the layout first.
   for (const toggle of document.querySelectorAll("#preview-toggle, #result-toggle")) {
     toggle.addEventListener("click", () => {
       if (state === "preview") set(undefined);

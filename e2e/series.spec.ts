@@ -657,3 +657,19 @@ test("when the QR encoder fails to load, the slide keeps the URL without an empt
   await expect(slide.locator(".completion-qr")).toBeHidden();
   await expect(slide.locator(".completion-share-url")).toHaveText("example.com/series-fixture/alpha/");
 });
+
+
+test("web tutorials without console opt-in offer a plain Preview with native logging", async ({ page }) => {
+  await page.goto("/alpha/#config");
+  await expect(page.locator("#preview-toggle")).toHaveAttribute("text", "Preview");
+  await expect(page.locator(".preview-tabs")).toHaveCount(0);
+  await expect(page.locator("#preview-console")).toHaveCount(0);
+  const iframe = page.locator(".preview iframe");
+  await expect(page.frameLocator(".preview iframe").locator("#output")).toBeVisible();
+  expect(await iframe.evaluate((element) => (element as HTMLIFrameElement).contentDocument!.documentElement.innerHTML)).not.toContain("ics:console");
+  await page.locator("#preview-toggle").click();
+  await expect(iframe).toBeHidden();
+  await page.locator("#preview-toggle").click();
+  await expect(iframe).toBeVisible();
+  await expect(page.locator("#preview-toggle")).toHaveAttribute("text", "Preview");
+});

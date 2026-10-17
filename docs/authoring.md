@@ -130,6 +130,7 @@ theme: auto
 logo: logo.svg
 # Code and Preview
 preview: both
+console: false
 codeWrap: false
 # Series index and siblings
 tags: [JavaScript, Payments]
@@ -162,6 +163,7 @@ order: 1
 | `codeWrap` | boolean | `false` | Wraps long code lines when `true`; preserves horizontal scrolling when `false`. |
 | [`languages`](#syntax-highlighting) | map | none | Extension (no dot) → Shiki language id or `text`, e.g. `languages: { qmd: markdown }`. Overrides the built-in highlighting for that extension. |
 | [`preview`](#preview) | `off`, `iframe`, `tab`, `both` | `both` | Controls the Preview panel and the open-in-tab button. |
+| [`console`](#panel-and-console) | boolean | `false` | Adds Preview / Console tabs and captures live logs from the embedded app. Requires `preview: iframe` or `both` and web code. |
 | [`variants`](#code-variants) | list | none | Code variants: the same steps in several languages. |
 | [`otherVariantSteps`](#steps-across-variants) | `notice`, `hide` | `notice` | How steps limited with `only=` look to readers of another variant. |
 
@@ -239,7 +241,8 @@ Install the prerequisites and keep this page open.
 
 | Prop | Values | Default | Description |
 |---|---|---|---|
-| [`panel`](#panel-and-console) | `preview`, `console`, `result`, `collapsed` | keeps the current state | Selects and opens the lower pane, or collapses it, while the intro is shown. |
+| [`view`](#panel-and-console) | `preview`, `console`, `result` | keeps the current view | Selects a view and opens the lower pane while the intro is shown. Console requires frontmatter `console: true`. |
+| [`collapsed`](#panel-and-console) | boolean | keeps the current state | `collapsed` folds the lower pane; `collapsed={false}` opens it without changing views. |
 | [`maximize`](#maximize-from-a-step) | `code`, `panel`, `none` | keeps the current state | Same as on `<Step>`, applied when the intro is shown. |
 | [`file`](#step) | path in `code/` (relative to each variant folder with [variants](#code-variants)) | the first tab | File tab shown while the intro is shown, with no focused lines: on load and each time the reader returns to it. Comes first in the tabs when frontmatter `files` does not set their order. Cannot be combined with `images` or `embed`. |
 | [`images`](#show-images-instead-of-code) | array of paths in `images/` | none | Images shown instead of code while the intro is shown, as on `<Step>`. |
@@ -248,7 +251,7 @@ Install the prerequisites and keep this page open.
 
 An intro with no `file`, `images` or `embed` shows the [step outline](#step-outline) next to it: the reader sees the plan of the tutorial before starting. Set frontmatter `outline: false` to keep the code panel there instead.
 
-For a calm first screen, `<Intro panel="collapsed">` starts with the pane collapsed; the first step that sets `panel="preview"`, `panel="console"` or `panel="result"` opens it. To open on a file that no early step shows (a README, the finished app), use `<Intro file="README.md">`; with variants, every variant needs that file. Other `<Step>` props (`region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
+For a calm first screen, `<Intro collapsed>` starts with the pane collapsed; the first step that sets `view="preview"`, `view="console"` or `view="result"` opens it. To open on a file that no early step shows (a README, the finished app), use `<Intro file="README.md">`; with variants, every variant needs that file. Other `<Step>` props (`region`, `output`, `request`, `only`) are build errors on `<Intro>`: the intro comes before any code focus or result.
 
 A tutorial without code (no `code/`, `preview: off`, every step with `images` or `embed`) can open on a picture or a title slide instead of an empty pane:
 
@@ -316,7 +319,7 @@ ask: [author, chatgpt, claude, { label: "Esri's Ask AI", url: "https://developer
 The main tutorial block: a heading, the explanation, and what the code panel and the pane under it show while the step is active.
 
 ```mdx title="tutorial/tutorial.mdx"
-<Step id="configure" file="main.js" region="config" panel="collapsed">
+<Step id="configure" file="main.js" region="config" collapsed>
 
 ## Configure the app
 
@@ -334,7 +337,8 @@ Explain the change here.
 | [`embed`](#show-an-embedded-page-instead-of-code) | path in `embeds/` or `https://` URL | none | Page shown in an iframe instead of code, e.g. `embed="oauth-slides/#/3"`. Cannot be combined with `images`. |
 | [`output`](#result-pane) | file name in `output/` | none | Captured result shown in the Result pane, e.g. `output="geocode.json"`. |
 | [`request`](#http-requests) | request names | none | Space-separated `# @name`s from `requests/`, e.g. `request="geocode-get geocode-post"`; the first is the default. |
-| [`panel`](#panel-and-console) | `preview`, `console`, `result`, `collapsed` | keeps the current state | Selects and opens the lower pane, or collapses it, when the step activates. |
+| [`view`](#panel-and-console) | `preview`, `console`, `result` | keeps the current view | Selects a view and opens the lower pane when the step activates. Console requires frontmatter `console: true`. |
+| [`collapsed`](#panel-and-console) | boolean | keeps the current state | `collapsed` folds the lower pane; `collapsed={false}` opens it without changing views. |
 | [`maximize`](#maximize-from-a-step) | `code`, `panel`, `none` | keeps the current state | Maximizes the code area (code, images or embedded page) or the pane under it (Preview or Result pane); `none` restores the layout. |
 | [`only`](#steps-across-variants) | variant ids | all variants | With `variants`: space-separated ids the step applies to, e.g. `only="python curl"`. |
 | [`outline`](#step-outline) | no value | none | The list of steps instead of code, e.g. for a recap halfway through. Cannot be combined with `file`, `region`, `images` or `embed`. |
@@ -753,7 +757,7 @@ The [`preview`](#frontmatter) frontmatter field picks the mode:
 | `tab` | The open-in-tab button only |
 | `off` | No Preview; `code/index.html` is not required |
 
-Form changes refresh the Preview after a short debounce; the Run button refreshes it manually. A step's or intro's [`panel`](#panel-and-console) prop selects the content and opens or collapses the pane.
+Form changes refresh the Preview after a short debounce; the Run button refreshes it manually. A step's or intro's [`view`](#panel-and-console) selects content and opens the pane; `collapsed` folds it. The `both` mode means iframe plus new tab, not Preview plus Console.
 
 ### Panel and Console
 
@@ -764,36 +768,55 @@ Form changes refresh the Preview after a short debounce; the Run button refreshe
   <img alt="main.js with a console.log call highlighted and its runtime object expanded in the Console tab below, including the source line." src="../site/public/screenshots/console-web-light.png" width="860" height="603">
 </picture>
 
-The embedded web pane is headed **Output** and has **Preview** and **Console** tabs. Only one is visible at a time; the app keeps running while Console is selected. The console shows what the app actually logged, including messages produced while Preview was selected. Works in dev and the built static site.
+Choose what the tutorial offers in its frontmatter, then choose what each step shows.
 
-`panel` on `<Step>` or `<Intro>` chooses what happens when that block becomes active:
+**Preview only (the default):** the running app appears under a **Preview** header, without tabs or console capture.
+
+```yaml
+preview: iframe
+console: false
+```
+
+**Preview and Console:** opt in to live capture. The header becomes **Output**, with **Preview** and **Console** tabs. Only one is visible at a time; the app keeps running while Console is selected. This works in dev and the built static site.
+
+```yaml
+preview: iframe
+console: true
+```
+
+`console` defaults to `false`. Set it to `true` with `preview: iframe` or `both` and web code (`index.html` in at least one variant). Standalone tabs (`preview: tab`) use the browser's native console.
+
+`view` on `<Step>` or `<Intro>` selects content and opens the pane when that block becomes active:
 
 | Value | Behavior |
 |---|---|
-| `preview` | Expand the pane and select the running app. |
-| `console` | Expand the pane and select its console output. |
-| `result` | Expand the Result pane for non-web code with captured output or HTTP requests. |
-| `collapsed` | Fold the whole pane to its header, keeping the selected tab. |
-| omitted | Keep the reader's selected tab and expanded/collapsed state. |
+| `preview` | Show the running app. Works with or without Console enabled. |
+| `console` | Show the app's captured logs. Requires frontmatter `console: true`. |
+| `result` | Show the Result pane for non-web code with captured output or HTTP requests. |
+| omitted | Keep the reader's selected view and expanded/collapsed state. |
 
-The initial web view is Preview, expanded. Use `<Intro panel="collapsed">` to start folded. Preview and Console need frontmatter `preview: iframe` or `both`; standalone tabs (`preview: tab`) use the browser's native console. In a tutorial mixing web and non-web variants, the selection applies to variants that have that pane; use `only=` for a step that belongs to one kind only.
+Visibility is separate: `collapsed` (or `collapsed={true}`) folds the whole pane to its header, keeping the selected view. `collapsed={false}` opens it without switching views. Omit both props to preserve the current state. Do not combine `view` with `collapsed` set to true: one opens the pane and the other folds it.
+
+The initial web view is Preview, expanded. Use `<Intro collapsed>` to start folded. Readers can always change tabs themselves; the next block with `view` selects its view again. In a tutorial mixing web and non-web variants, a view applies to variants that have that pane; use `only=` for a step that belongs to one kind only.
+
+For a tutorial with `console: true`:
 
 ```mdx
-<Intro panel="collapsed">
+<Intro collapsed>
   ## Explore an API response
 </Intro>
 
-<Step id="run" file="main.js" region="sign-in" panel="preview">
+<Step id="run" file="main.js" region="sign-in" view="preview">
   ## Run the example
   Interact with the Preview to make the request.
 </Step>
 
-<Step id="inspect" file="main.js" region="get-self" panel="console">
+<Step id="inspect" file="main.js" region="get-self" view="console">
   ## Inspect the response
   Expand the object logged by the app.
 </Step>
 
-<Step id="continue" file="main.js" region="search" panel="preview">
+<Step id="continue" file="main.js" region="search" view="preview">
   ## Continue in the app
 </Step>
 ```
@@ -812,11 +835,11 @@ To bound memory and rendering, Console retains the latest 200 entries, with at m
 
 ```mdx
 <Step id="inspect-large" file="main.js" region="get-self"
-      panel="console" maximize="panel">
+      view="console" maximize="panel">
   ## Explore the full response
 </Step>
 
-<Step id="back-to-app" file="main.js" panel="preview" maximize="none">
+<Step id="back-to-app" file="main.js" view="preview" maximize="none">
   ## Return to the app
 </Step>
 ```
@@ -830,7 +853,7 @@ Readers can maximize the code panel, the iframe Preview or the Result pane from 
 <Step id="back" maximize="none">…</Step>
 ```
 
-Build errors (on `<Step>` and `<Intro>`): `maximize="panel"` together with `panel="collapsed"`, and `maximize="panel"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
+Build errors (on `<Step>` and `<Intro>`): `maximize="panel"` together with `collapsed`, and `maximize="panel"` in a tutorial with no pane to maximize (`preview: off` or `tab` and no step with `output=` or `request=`).
 
 To show a tutorial in a talk or workshop (presentation mode, clickers, zoom, offline fallback), see [Presenting a Tutorial](presenting.md).
 
@@ -841,7 +864,7 @@ To show a tutorial in a talk or workshop (presentation mode, clickers, zoom, off
   <img alt="The Result pane under the code panel is highlighted: the captured terminal output of a Python script." src="../site/public/screenshots/area-result-light.png" width="900">
 </picture>
 
-Code that cannot run in the browser (scripts, native apps, [HTTP requests](#http-requests)) shows its result in the Result pane, which takes the Preview's place under the code. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`. Use `panel="result"` to open it or `panel="collapsed"` to fold it, on a step or the intro.
+Code that cannot run in the browser (scripts, native apps, [HTTP requests](#http-requests)) shows its result in the Result pane, which takes the Preview's place under the code. A tutorial without variants is web code when `code/` has `index.html`; with variants, each variant with `index.html` shows the Preview and every other variant shows the Result pane. The pane appears only when some step has `output=` or `request=`. Use `view="result"` to open it or `collapsed` to fold it, on a step or the intro.
 
 ```mdx title="tutorial/tutorial.mdx"
 <Step id="request" region="request" output="geocode.json">

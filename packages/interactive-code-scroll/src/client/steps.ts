@@ -129,7 +129,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
   function setPreviewState(state: string | undefined): void {
     if (state !== "expanded" && state !== "collapsed") return;
     for (const [selector, toggle, label] of [
-      [".preview-frame", "#preview-toggle", "Output"],
+      [".preview-frame", "#preview-toggle", document.querySelector("#preview-tab-console") ? "Output" : "Preview"],
       [".result-frame", "#result-toggle", "Result"],
     ] as const) {
       const frame = document.querySelector<HTMLElement>(selector);
@@ -140,18 +140,19 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
     document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
   }
 
-  /** Pane state (`panel=`, `maximize=`) of a step or the intro, applied each time it becomes active. */
+  /** Pane state (`view=`, `collapsed`, `maximize=`) of a step or the intro, applied each time it becomes active. */
   function applyPaneState(block: HTMLElement | null): void {
     if (!block) return;
-    const panel = block.dataset.panel;
+    const view = block.dataset.view;
     const preview = document.querySelector<HTMLElement>("section.preview");
     const web = !!preview?.querySelector("iframe") && (!variants || (JSON.parse(preview.dataset.webVariants ?? "[]") as string[]).includes(variants.active().id));
-    const applicable = panel === "collapsed" || (panel === "result" ? !web : web);
-    if (panel && applicable) {
-      if (panel === "preview" || panel === "console") preview?.setAttribute("data-view", panel);
-      setPreviewState(panel === "collapsed" ? "collapsed" : "expanded");
-      document.dispatchEvent(new CustomEvent("ics:panel-view", { detail: panel }));
+    const applicable = view === "result" ? !web : web;
+    if (view && applicable) {
+      if (view === "preview" || view === "console") preview?.setAttribute("data-view", view);
+      setPreviewState("expanded");
+      document.dispatchEvent(new CustomEvent("ics:panel-view", { detail: view }));
     }
+    if (block.dataset.collapsed !== undefined) setPreviewState(block.dataset.collapsed === "true" ? "collapsed" : "expanded");
     // After the Preview state: maximizing the pane expands it; `none` restores the layout.
     if (block.dataset.maximize) document.dispatchEvent(new CustomEvent<string>(MAXIMIZE_EVENT, { detail: block.dataset.maximize }));
   }

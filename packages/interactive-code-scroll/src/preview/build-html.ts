@@ -104,6 +104,8 @@ const fetchOverride = (contents: Record<string, [string, string]>) =>
   `<script>(function(m){var f=window.fetch;window.fetch=function(i,o){var r=i instanceof Request?i:null;var u=new URL(r?r.url:String(i),document.baseURI);u.hash="";var e=m[u.href];var g=String((o&&o.method)||(r&&r.method)||"GET").toUpperCase()==="GET";return e&&g?Promise.resolve(new Response(e[1],{headers:{"Content-Type":e[0]}})):f.apply(this,arguments)}})(${inlineJson(contents)})</script>`;
 
 export interface PreviewHtmlOptions {
+  /** Opt-in capture for the embedded entry page only; omitted disables capture. */
+  console?: boolean;
   /** Absolute URL of the folder the project is published in (`preview/`, `preview/<dir>/`). */
   baseUrl: string;
   /** The files with code defaults: files whose content differs (form values) are served from the page. */
@@ -183,7 +185,7 @@ export function buildPreviewHtml(files: Readonly<Record<string, string>>, entry 
       return content === undefined ? tag : `<style>\n${content}\n</style>`;
     });
   const assembled = options ? changedFiles(inlined, files, entry, options) : inlined;
-  const hooks = `${KEY_FORWARDER}\n${consoleCaptureScript()}`;
+  const hooks = `${KEY_FORWARDER}${options?.console ? `\n${consoleCaptureScript()}` : ""}`;
   return /<head[^>]*>/i.test(assembled)
     ? assembled.replace(/<head[^>]*>/i, (head) => `${head}\n${hooks}`)
     : `${hooks}\n${assembled}`;

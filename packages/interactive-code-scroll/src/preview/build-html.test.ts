@@ -91,7 +91,7 @@ describe("files changed by form values", () => {
   });
 
   it("puts the forwarder, the import map and the fetch override first in <head>", () => {
-    const html = buildPreviewHtml(files, "index.html", { baseUrl, defaults });
+    const html = buildPreviewHtml(files, "index.html", { baseUrl, defaults, console: true });
     const forwarder = html.indexOf('addEventListener("keydown"');
     const capture = html.indexOf('ics:console-reset');
     const importMapIndex = html.indexOf('<script type="importmap">');
@@ -148,7 +148,7 @@ describe("other preview pages", () => {
 });
 
 it("installs the capture before author scripts when the page omits an explicit head", () => {
-  const html = buildPreviewHtml({ "index.html": '<script>console.log("early")</script>' });
+  const html = buildPreviewHtml({ "index.html": '<script>console.log("early")</script>' }, "index.html", { baseUrl: "https://example.test/preview/", defaults: {}, console: true });
   expect(html.indexOf("ics:console-reset")).toBeLessThan(html.indexOf('console.log("early")'));
 });
 
@@ -171,4 +171,15 @@ it("does not rewrite unquoted import maps or mistake data-src for a script sourc
   expect(html).toContain(map);
   expect(html).toContain('<script data-src="./not-a-source.js">console.log(1);');
   expect(html).toContain('<script>console.log(2);');
+});
+
+
+it("leaves native console untouched unless capture is explicitly enabled", () => {
+  const files = { "index.html": '<head></head><script>console.log("native")</script>' };
+  for (const options of [undefined, { baseUrl: "https://example.test/preview/", defaults: {}, console: false }]) {
+    const html = buildPreviewHtml(files, "index.html", options);
+    expect(html).not.toContain("ics:console");
+    expect(html).toContain('console.log("native")');
+    expect(html).toContain('addEventListener("keydown"');
+  }
 });

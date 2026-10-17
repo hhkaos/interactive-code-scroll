@@ -20,7 +20,7 @@ A tutorial is a folder with `tutorial.mdx` (the explanations), `code/` (the fina
 - **Step outline**: the same list as an agenda in the code area, next to an intro without media and on any step with `outline` (a recap halfway through). See [Step outline](authoring.md#step-outline).
 - **A closing panel**: at the last step "Next" becomes "Finish", which opens a short "You've completed …" panel with the next tutorial of the series, the code download, the Preview, the index and an optional feedback link, plus the author's own closing text (`<Outro>`). In presentation mode it is a full-screen closing slide with a large QR code of the tutorial's URL.
 - **Numbered steps, progress bar and deep links**: every step heading carries its number; a thin bar under the header shows the steps seen, the current one and those left; `#step-id` links open the tutorial at that step.
-- **Optional introduction**: content before the first step that is not numbered and does not focus any code. It can start with the Preview or Result pane collapsed or maximized (`<Intro panel="collapsed">`), open on a given file (`<Intro file="README.md">`), and show images or an embedded page instead of code (`<Intro images={["overview.png"]}>`); a tutorial with nothing else to show opens on the first step's media.
+- **Optional introduction**: content before the first step that is not numbered and does not focus any code. It can start with the Preview or Result pane collapsed or maximized (`<Intro collapsed>`), open on a given file (`<Intro file="README.md">`), and show images or an embedded page instead of code (`<Intro images={["overview.png"]}>`); a tutorial with nothing else to show opens on the first step's media.
 - **What to expect, before starting**: a small line above the explanations shows the last update, the duration and the level (with the same difficulty bars as the series cards), when the frontmatter sets them; hidden in presentation mode.
 - **Light and dark**: follows the OS by default; the author can set a default and the reader's toggle wins. The code panel and the Preview follow the page.
 - **Readable at high zoom**, with line numbers and optional wrapping of long lines. The Result pane header turns long labels into icons instead of clipping them, and a short pane scrolls as a whole.
@@ -81,7 +81,7 @@ See [`<VarField>`](authoring.md#varfield) and [Variables](authoring.md#variables
 - OAuth sign-in works from the embedded Preview through a popup, and in the new tab through a normal redirect.
 - Form values reach every file the app loads: imported modules (a shared `config.js`), fetched files and other pages such as an OAuth callback.
 
-The embedded pane is headed **Output**, with **Preview** and **Console** tabs. See [Preview](authoring.md#preview).
+By default, the embedded pane shows the app under a **Preview** header. Set `console: true` to add **Preview** and **Console** tabs under an **Output** header. See [Preview](authoring.md#preview).
 
 ## Live browser console
 
@@ -94,14 +94,21 @@ The embedded pane is headed **Output**, with **Preview** and **Console** tabs. S
 
 The screenshot uses demo data produced by an interaction in the running Preview. Console captures the actual arguments passed to `console.log`, `info`, `warn` and `error` at runtime.
 
+- **Optional per tutorial**: set frontmatter `console: true` to add Console; leave it out for a plain Preview without tabs. Requires `preview: iframe` or `both`.
 - **From interaction to explanation**: use Preview to run the app, then select Console to explore its output. Switching tabs preserves the app and its messages.
 - **Objects you can explore**: collapsible trees, compact property previews, type colors, message levels and source file/line when the browser provides them.
-- **Directed by your steps**: `panel="console"` opens Console alongside the highlighted code; `panel="preview"` returns to the app. `maximize="panel"` gives the selected view the window.
+- **Directed by your steps**: `view="console"` opens Console alongside the highlighted code; `view="preview"` returns to the app. `maximize="panel"` gives the selected view the window.
 - **Live messages, stable objects**: messages arrive as the app runs; each object preserves its values at log time. Selecting a step does not execute code or make a request. Nothing needs to be exported to a static result file.
 - **No debug UI or extra service**: keep ordinary `console.log` calls in the sample. The framework captures them in dev and the built static site; the browser's DevTools still receives the original messages.
 
 ```mdx
-<Step id="inspect-response" file="main.js" region="response" panel="console">
+---
+title: Explore an API response
+preview: iframe
+console: true
+---
+
+<Step id="inspect-response" file="main.js" region="response" view="console">
   ## Explore the response
   Run the example in Preview, then expand the logged object here.
 </Step>

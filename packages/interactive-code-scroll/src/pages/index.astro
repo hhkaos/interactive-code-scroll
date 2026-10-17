@@ -136,6 +136,7 @@ const clientData = JSON.stringify({
   base: tutorialBase(base, slug),
   tutorial: slug,
   preview,
+  console: config.console,
   files: parsed,
   fetched,
   requests: requestFiles,
@@ -440,7 +441,7 @@ const clientData = JSON.stringify({
         <calcite-action id="embed-open" class="embed-open" icon="launch" text="Open in new tab" />
         {
           preview !== "off" && (
-            <section class="preview" aria-label={withIframe ? "Output" : "Preview"} data-web-variants={variants && JSON.stringify(variants.filter((v) => previewEntries.includes(`${v.dir}/${PREVIEW_ENTRY}`)).map((v) => v.id))} hidden={!firstIsWeb || undefined}>
+            <section class="preview" aria-label={withIframe && config.console ? "Output" : "Preview"} data-web-variants={variants && JSON.stringify(variants.filter((v) => previewEntries.includes(`${v.dir}/${PREVIEW_ENTRY}`)).map((v) => v.id))} hidden={!firstIsWeb || undefined}>
               {withIframe && (
                 <div
                   class="preview-splitter"
@@ -455,7 +456,7 @@ const clientData = JSON.stringify({
               )}
               <div class="panel-header">
                 {withIframe ? (
-                  <calcite-action id="preview-toggle" icon="chevron-down" text="Output" text-enabled />
+                  <calcite-action id="preview-toggle" icon="chevron-down" text={config.console ? "Output" : "Preview"} text-enabled />
                 ) : (
                   <span class="panel-title">Preview</span>
                 )}
@@ -465,15 +466,15 @@ const clientData = JSON.stringify({
               </div>
               {withIframe && (
                 <div class="preview-frame">
-                  <div class="preview-tabs" role="tablist" aria-label="Output views" data-own-keys>
+                  {config.console && <div class="preview-tabs" role="tablist" aria-label="Output views" data-own-keys>
                     <button id="preview-tab-app" type="button" role="tab" aria-selected="true" aria-controls="preview-app" tabindex="0">Preview</button>
                     <button id="preview-tab-console" type="button" role="tab" aria-selected="false" aria-controls="preview-console" tabindex="-1">Console <span id="preview-console-count"></span></button>
-                  </div>
-                  <div id="preview-app" role="tabpanel" aria-labelledby="preview-tab-app">
+                  </div>}
+                  <div id="preview-app" role={config.console ? "tabpanel" : undefined} aria-labelledby={config.console ? "preview-tab-app" : undefined}>
                     {/* Same origin is required: the SDK's OAuth callback talks to window.opener. */}
                     <iframe title="Preview" sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-modals" />
                   </div>
-                  <div id="preview-console" role="tabpanel" aria-labelledby="preview-tab-console" tabindex="0" hidden>
+                  {config.console && <div id="preview-console" role="tabpanel" aria-labelledby="preview-tab-console" tabindex="0" hidden>
                     <div class="console-messages">
                       <p id="preview-console-empty">No messages yet. Interact with the Preview to produce console output.</p>
                       <div id="preview-console-entries" role="list" aria-label="Console messages"></div>
@@ -483,7 +484,7 @@ const clientData = JSON.stringify({
                       <p>Messages arrive live from the running Preview. Each object is captured when logged; later changes do not update earlier entries. Selecting a step does not execute its code.</p>
                       <p>Open DevTools → Console. In the JavaScript context menu (usually “top”), select the Preview iframe (look for “preview/”). Enable “Selected context only” in Console settings to show only its messages. The context label varies by browser. <a href="https://developer.chrome.com/docs/devtools/console/reference#context" target="_blank" rel="noopener noreferrer">Chrome Console guide</a></p>
                     </details>
-                  </div>
+                  </div>}
                 </div>
               )}
             </section>
@@ -675,7 +676,7 @@ const clientData = JSON.stringify({
         zipCounts: data.zipCounts,
       });
       if (data.preview !== "off") {
-        refreshPreview = startPreview({ mode: data.preview, files: data.files, values: vars.values, pageUrl, variants, tutorial: data.tutorial }).refresh;
+        refreshPreview = startPreview({ mode: data.preview, console: data.console, files: data.files, values: vars.values, pageUrl, variants, tutorial: data.tutorial }).refresh;
       }
       refreshRequest = startResult({ files: data.files, outputUrl: `${base}output/`, variants, requests: data.runner, errorRule: data.errorRule, vars }).refreshRequest;
 

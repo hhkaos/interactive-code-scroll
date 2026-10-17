@@ -112,7 +112,7 @@ test("Console retention is bounded and background logs continue while the panel 
 });
 
 
-test("a step can select and maximize Console with the public panel API", async ({ page }) => {
+test("a step can select and maximize Console with the public view API", async ({ page }) => {
   await page.goto("/#ui");
   await page.frameLocator(".preview iframe").locator("#sign-in").click();
   await page.locator("section.step#sign-in").evaluate((step) => { (step as HTMLElement).dataset.maximize = "panel"; });
@@ -147,4 +147,23 @@ test("inline HTML logs keep the line numbers of the displayed HTML code", async 
   });
   const line = await page.locator('.code[data-file="index.html"] .line').filter({ hasText: 'console.log("Inline script"' }).getAttribute("data-line");
   await expect(page.locator(".console-entry .console-source")).toHaveText(`index.html:${line}`);
+});
+
+
+test("authored collapse preserves Console and reopening without a view keeps its selection", async ({ page }) => {
+  await page.goto("/#ui");
+  await page.frameLocator(".preview iframe").locator("#sign-in").click();
+  await page.evaluate(() => { location.hash = "#sign-in"; });
+  await expect(page.locator("#preview-console")).toBeVisible();
+  await page.evaluate(() => { location.hash = "#styles"; });
+  await expect(page.locator(".preview-frame")).toBeHidden();
+  await expect(page.locator("#styles")).toHaveAttribute("data-collapsed", "true");
+  await page.locator("#styles").evaluate((step) => { (step as HTMLElement).dataset.collapsed = "false"; });
+  await page.evaluate(() => { location.hash = "#embed-slides"; });
+  await page.evaluate(() => { location.hash = "#styles"; });
+  await expect(page.locator("#preview-console")).toBeVisible();
+  await expect(page.locator(".console-entry")).toContainText("getSelf()");
+  await page.evaluate(() => { location.hash = "#ui"; });
+  await expect(page.locator("#preview-app")).toBeVisible();
+  await expect(page.frameLocator(".preview iframe").locator("#sign-in")).toHaveText("Run 1");
 });

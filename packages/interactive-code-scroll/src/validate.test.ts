@@ -22,20 +22,20 @@ describe("validateTutorial", () => {
       validate(
         use("Step", { id: "config", file: "main.js", region: "config" }),
         use("Step", { id: "shots", images: { expression: '["a.png", "shots/b.png"]' } }),
-        use("Step", { id: "text-only", panel: "collapsed" }),
+        use("Step", { id: "text-only", collapsed: true }),
         use("Step", { id: "slides", embed: "slides/#/3" }),
         use("Step", { id: "app", embed: "https://example.com/app" }),
         use("Step", { id: "big-code", maximize: "code" }),
-        use("Step", { id: "big-preview", maximize: "panel", panel: "preview" }),
-        use("Step", { id: "restore", maximize: "none", panel: "collapsed" }),
+        use("Step", { id: "big-preview", maximize: "panel", view: "preview" }),
+        use("Step", { id: "restore", maximize: "none", collapsed: true }),
         use("Hint", { id: "redirect-uri", label: "redirect URI" }),
         use("VarField", { name: "clientId", label: "Client ID", secret: true }),
         use("Intro", {}),
-        use("Intro", { panel: "collapsed", maximize: "code" }),
+        use("Intro", { collapsed: true, maximize: "code" }),
         use("Intro", { images: { expression: '["a.png", "shots/b.png"]' } }),
         use("Intro", { embed: "slides/#/1", maximize: "code" }),
         use("Intro", { embed: "https://example.com/app" }),
-        use("Intro", { file: "main.js", panel: "collapsed" }),
+        use("Intro", { file: "main.js", collapsed: true }),
       ),
     ).toEqual([]);
   });
@@ -58,13 +58,13 @@ describe("validateTutorial", () => {
     [use("Step", { id: "a", embed: "http://example.com" }), 'embed "http://example.com" must be an https:// URL or a path in embeds/'],
     [use("Step", { id: "a", embed: { expression: "url" } }), '"embed" must be a string'],
     [use("Step", { id: "a", embed: "slides/", images: { expression: '["a.png"]' } }), '"embed" and "images" cannot be combined'],
-    [use("Step", { id: "a", panel: "closed" }), '"panel" must be one of preview, console, result, collapsed'],
+    [use("Step", { id: "a", view: "closed" }), '"view" must be one of preview, console, result'],
     [use("Step", { id: "a", maximize: "result" }), '"maximize" must be one of code, panel, none'],
-    [use("Step", { id: "a", maximize: "panel", panel: "collapsed" }), 'maximize="panel" conflicts with panel="collapsed"'],
-    [use("Intro", { panel: "closed" }), '<Intro> "panel" must be one of preview, console, result, collapsed'],
+    [use("Step", { id: "a", maximize: "panel", collapsed: true }), 'maximize="panel" conflicts with collapsed'],
+    [use("Intro", { view: "closed" }), '<Intro> "view" must be one of preview, console, result'],
     [use("Intro", { maximize: "result" }), '<Intro> "maximize" must be one of code, panel, none'],
-    [use("Intro", { maximize: "panel", panel: "collapsed" }), '<Intro> maximize="panel" conflicts with panel="collapsed"'],
-    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only panel, maximize, file, images, embed, outline)'],
+    [use("Intro", { maximize: "panel", collapsed: true }), '<Intro> maximize="panel" conflicts with collapsed'],
+    [use("Intro", { output: "result.json" }), '<Intro> "output" is not available on <Intro> (only view, collapsed, maximize, file, images, embed, outline)'],
     [use("Intro", { file: "main.js", region: "config" }), '<Intro> "region" is not available on <Intro>'],
     [use("Intro", { file: "nope.js" }), '<Intro> file "nope.js" not found in code/'],
     [use("Intro", { file: "main.js", images: { expression: '["a.png"]' } }), '<Intro> "file" and "images" cannot be combined; use one of them'],
@@ -100,7 +100,7 @@ describe("validateTutorial", () => {
   });
 
   it("accepts outline on <Intro> and <Step>", () => {
-    expect(validate(use("Intro", { outline: true, panel: "collapsed" }, 1), use("Step", { id: "recap", outline: true }, 5))).toEqual([]);
+    expect(validate(use("Intro", { outline: true, collapsed: true }, 1), use("Step", { id: "recap", outline: true }, 5))).toEqual([]);
   });
 
   it("accepts one <Outro> after the last step", () => {
@@ -470,17 +470,17 @@ describe("validateTutorial variants", () => {
       binaries: options.binaries ?? [],
       images,
       outputs: options.outputs,
-      frontmatter: options.frontmatter ?? { variants, preview: "both" },
+      frontmatter: options.frontmatter ?? { variants, preview: "both", console: true },
       frontmatterLines: { variants: 2, files: 9 },
     });
 
-  it("validates panel selection against the variants covered by a step", () => {
-    expect(run({}, use("Step", { id: "console", panel: "console", only: "web" }))).toEqual([]);
-    expect(run({}, use("Step", { id: "console", panel: "console", only: "python" })).join()).toContain("requires web code");
-    expect(run({ outputs: ["run.txt"] }, use("Step", { id: "result", panel: "result", only: "python", output: "run.txt" }))).toEqual([]);
-    expect(run({ outputs: ["run.txt"] }, use("Step", { id: "result", panel: "result", only: "web", output: "run.txt" })).join()).toContain("requires non-web code");
+  it("validates view selection against the variants covered by a step", () => {
+    expect(run({}, use("Step", { id: "console", view: "console", only: "web" }))).toEqual([]);
+    expect(run({}, use("Step", { id: "console", view: "console", only: "python" })).join()).toContain("requires web code");
+    expect(run({ outputs: ["run.txt"] }, use("Step", { id: "result", view: "result", only: "python", output: "run.txt" }))).toEqual([]);
+    expect(run({ outputs: ["run.txt"] }, use("Step", { id: "result", view: "result", only: "web", output: "run.txt" })).join()).toContain("requires non-web code");
     // A shared step can select Console for web variants while non-web variants keep their Result state.
-    expect(run({}, use("Step", { id: "shared", panel: "console" }))).toEqual([]);
+    expect(run({}, use("Step", { id: "shared", view: "console" }))).toEqual([]);
   });
 
   it("checks variant logos like the tutorial logo, at the variants line", () => {
@@ -832,23 +832,50 @@ describe("validateTutorial gitignored code", () => {
   });
 });
 
-describe("panel authoring", () => {
+describe("view and collapsed authoring", () => {
   it("accepts Preview and Console on web steps and the intro", () => {
-    expect(validate(use("Step", { id: "logs", panel: "console" }), use("Intro", { panel: "preview" }))).toEqual([]);
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", files, images, uses: [use("Step", { id: "logs", view: "console" }), use("Intro", { view: "console" })], frontmatter: { console: true } })).toEqual([]);
   });
   it("reports the migration for old step props", () => {
-    expect(validate(use("Step", { id: "old", preview: "expanded" }))[0]).toContain('"preview" was replaced by "panel"');
+    expect(validate(use("Step", { id: "old", preview: "expanded" }))[0]).toContain('"preview" was replaced by "view"');
   });
   it("rejects console with preview off or tab, and with non-web code", () => {
     for (const preview of ["off", "tab"]) {
-      expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files, uses: [use("Step", { id: "logs", panel: "console" })], frontmatter: { preview } }).join()).toContain("requires an embedded Preview");
+      expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files, uses: [use("Step", { id: "logs", view: "console" })], frontmatter: { preview } }).join()).toContain("requires an embedded Preview");
     }
-    expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files: [files[0]!], uses: [use("Step", { id: "logs", panel: "console" })], frontmatter: { preview: "off" } }).join()).toContain("requires web code");
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files: [files[0]!], uses: [use("Step", { id: "logs", view: "console" })], frontmatter: { preview: "off" } }).join()).toContain("requires web code");
   });
   it("rejects result on web-only tutorials", () => {
-    expect(validate(use("Step", { id: "bad", panel: "result" }))[0]).toContain('panel="result" requires non-web code');
+    expect(validate(use("Step", { id: "bad", view: "result" }))[0]).toContain('view="result" requires non-web code');
   });
   it("accepts Result on non-web tutorials with output", () => {
-    expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files: [files[0]!], outputs: ["result.json"], uses: [use("Step", { id: "result", panel: "result", output: "result.json" })], frontmatter: { preview: "off" } })).toEqual([]);
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", images: [], files: [files[0]!], outputs: ["result.json"], uses: [use("Step", { id: "result", view: "result", output: "result.json" })], frontmatter: { preview: "off" } })).toEqual([]);
+  });
+});
+
+
+describe("optional console and independent collapse state", () => {
+  it("rejects selecting Console unless explicitly enabled", () => {
+    for (const frontmatter of [{}, { console: false }]) {
+      for (const name of ["Intro", "Step"]) {
+        expect(validateTutorial({ mdxFile: "tutorial.mdx", files, images, frontmatter, uses: [use(name, { id: "logs", view: "console" })] }).join()).toContain('view="console" requires frontmatter console: true');
+      }
+    }
+  });
+  it("requires a web variant when capture is enabled", () => {
+    expect(validateTutorial({ mdxFile: "tutorial.mdx", files: [files[0]!], images, uses: [], frontmatter: { console: true } }).join()).toContain('"console: true" requires web code');
+  });
+  it("accepts static boolean collapse states on steps and intros", () => {
+    for (const name of ["Step", "Intro"]) {
+      for (const collapsed of [true, { expression: "true" }, { expression: "false" }] as const) {
+        expect(validate(use(name, { ...(name === "Step" ? { id: "a" } : {}), collapsed }))).toEqual([]);
+      }
+      expect(validate(use(name, { collapsed: "false" })).join()).toContain('"collapsed" must be a boolean');
+      expect(validate(use(name, { collapsed: { expression: "state" } })).join()).toContain('"collapsed" must be a boolean');
+      expect(validate(use(name, { view: "preview", collapsed: true })).join()).toContain('"view" opens the pane and cannot be combined with collapsed');
+    }
+  });
+  it("provides migration guidance for the interim panel prop", () => {
+    expect(validate(use("Step", { id: "old", panel: "console" })).join()).toContain('"panel" was replaced by "view" and "collapsed"');
   });
 });

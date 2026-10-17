@@ -11,6 +11,7 @@ export const PREVIEW_STATE_EVENT = "ics:preview-state";
 export interface PreviewOptions {
   mode: "iframe" | "tab" | "both";
   files: ParsedFile[];
+  console?: boolean;
   /** Current form values (vars without a field fall back to the code default). */
   values: () => Record<string, string>;
   /** URL of the standalone preview page (`<base>preview/`). */
@@ -32,11 +33,11 @@ function store(html: string, target: PreviewTarget, pageUrl: string, variant: st
   return url.href;
 }
 
-export function startPreview({ mode, files, values, pageUrl, variants, tutorial = "" }: PreviewOptions): { refresh(): void } {
+export function startPreview({ mode, files, values, pageUrl, variants, console: captureConsole = false, tutorial = "" }: PreviewOptions): { refresh(): void } {
   const section = document.querySelector<HTMLElement>("section.preview");
   const frame = document.querySelector<HTMLElement>(".preview-frame");
   const iframe = frame?.querySelector("iframe");
-  const consoleView = iframe ? startConsole(iframe) : undefined;
+  const consoleView = iframe && captureConsole ? startConsole(iframe) : undefined;
   let started = false;
 
   /** Project (with values and with code defaults), page, folder URL and storage slot of the code the Preview runs; `undefined` for a variant without web code. */
@@ -62,7 +63,7 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
     for (const path of previewPagesOf(Object.keys(current.files))) {
       localStorage.setItem(previewPageKey(path, current.variant, tutorial), buildPreviewHtml(current.files, path, options));
     }
-    return store(buildPreviewHtml(current.files, PREVIEW_ENTRY, options), kind, current.page, current.variant, tutorial);
+    return store(buildPreviewHtml(current.files, PREVIEW_ENTRY, { ...options, console: captureConsole && kind === "iframe" }), kind, current.page, current.variant, tutorial);
   };
 
   const run = () => {
@@ -78,7 +79,7 @@ export function startPreview({ mode, files, values, pageUrl, variants, tutorial 
   const setCollapsed = (collapsed: boolean) => {
     if (!frame) return;
     frame.hidden = collapsed;
-    setAction(document.querySelector("#preview-toggle"), collapsed ? "chevron-right" : "chevron-down", "Output");
+    setAction(document.querySelector("#preview-toggle"), collapsed ? "chevron-right" : "chevron-down", captureConsole ? "Output" : "Preview");
     if (!collapsed && !started) run();
   };
 

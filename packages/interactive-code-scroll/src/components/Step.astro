@@ -15,7 +15,9 @@ interface Props {
   images?: string[];
   /** Page shown instead of code: an `https://` URL or a path under `embeds/` (e.g. `slides/#/3`). */
   embed?: string;
-  panel?: "preview" | "console" | "result" | "collapsed";
+  view?: "preview" | "console" | "result";
+  /** Fold the lower pane; false opens it without selecting a different view. */
+  collapsed?: boolean;
   /** Maximizes the code area or the pane under it (Preview or Result) when the step becomes active; `none` restores. */
   maximize?: "code" | "panel" | "none";
   /** Space-separated variant ids the step applies to. */
@@ -28,7 +30,7 @@ interface Props {
   outline?: boolean;
 }
 
-const { id, file, region, images, embed, panel, maximize, only, output, request, outline } = Astro.props;
+const { id, file, region, images, embed, view, collapsed, maximize, only, output, request, outline } = Astro.props;
 const { files, frontmatter, outputs } = currentTutorial(Astro.locals);
 const { variants } = readTutorialConfig(frontmatter);
 // With variants, `file` is relative to each variant folder and a lone `region` names a file per variant.
@@ -47,7 +49,8 @@ const requestVariants = variants && requests && resultVariants(variants, webDirs
   data-files={variantFiles && Object.keys(variantFiles).length > 0 ? JSON.stringify(variantFiles) : undefined}
   data-only={variants ? only : undefined}
   data-region={region !== undefined && isJsonRegion(region) ? jsonRegionId(region) : region}
-  data-panel={panel}
+  data-view={view}
+  data-collapsed={collapsed === undefined ? undefined : String(collapsed)}
   data-maximize={maximize}
   data-output={variants ? undefined : output}
   data-outputs={variantOutputs && Object.keys(variantOutputs).length > 0 ? JSON.stringify(variantOutputs) : undefined}

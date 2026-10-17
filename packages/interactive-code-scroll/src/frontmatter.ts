@@ -29,6 +29,8 @@ export interface Variant {
 export interface TutorialConfig {
   title: string;
   preview: PreviewMode;
+  /** Capture embedded Preview logs and show Preview / Console tabs; default false. */
+  console: boolean;
   theme: Theme;
   codeWrap: boolean;
   /** Image in `images/` (or an `https://` URL) shown in the header and used as favicon. */
@@ -209,6 +211,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
   const {
     title = "Tutorial",
     preview = "both",
+    console: captureConsole = false,
     theme = "auto",
     codeWrap = false,
     logo,
@@ -233,6 +236,8 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     outline,
   } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
+  if (typeof captureConsole !== "boolean") throw new FrontmatterError("console", '"console" must be a boolean');
+  if (captureConsole && !["iframe", "both"].includes(String(preview))) throw new FrontmatterError("console", '"console: true" requires an embedded Preview (preview: iframe or both)');
   if (typeof codeWrap !== "boolean") throw new FrontmatterError("codeWrap", '"codeWrap" must be a boolean');
   if (logo !== undefined && typeof logo !== "string") throw new FrontmatterError("logo", '"logo" must be a string');
   if (order !== undefined && (typeof order !== "number" || !Number.isFinite(order))) throw new FrontmatterError("order", '"order" must be a number');
@@ -248,6 +253,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
   return {
     title,
     preview: oneOf("preview", preview, PREVIEW_MODES),
+    console: captureConsole,
     theme: oneOf("theme", theme, THEMES),
     codeWrap,
     languages: readLanguages(languages),

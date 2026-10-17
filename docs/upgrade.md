@@ -4,17 +4,21 @@ InteractiveCodeScroll is still pre-v1. Keep upgrades deliberate and test each tu
 
 ## Panel API migration (unreleased)
 
-Step and intro `preview=` has been replaced by `panel=`. Frontmatter `preview: off|iframe|tab|both` is unchanged.
+Step and intro `preview=` has been replaced by `view` (select and open) and `collapsed` (visibility). Frontmatter `preview: off|iframe|tab|both` is unchanged: `both` still means iframe plus a new-tab button.
 
 | Before | After |
 |---|---|
-| `preview="expanded"` on a web step/intro | `panel="preview"` |
-| `preview="expanded"` on a non-web step/intro | `panel="result"` |
-| `preview="collapsed"` | `panel="collapsed"` |
-| `preview="keep"` | Omit `panel`. |
+| `preview="expanded"` on a web step/intro | `view="preview"` |
+| `preview="expanded"` on a non-web step/intro | `view="result"` |
+| `preview="collapsed"` | `collapsed` |
+| `preview="keep"` | Omit `view` and `collapsed`. |
 | `maximize="preview"` | `maximize="panel"` |
 
-To inspect live logs from embedded web code, use `panel="console"`. In mixed-variant tutorials, omit `panel` to preserve the reader's current state, or select a pane for the variants that have it. Old step/intro attributes fail validation with migration guidance. See [Panel and Console](authoring.md#panel-and-console).
+If you tried the unreleased `panel` API, replace `panel="preview|console|result"` with the corresponding `view` and `panel="collapsed"` with `collapsed`.
+
+Console is **optional and off by default**. Set frontmatter `console: true` with `preview: iframe` or `both` to add Preview / Console tabs and capture live messages; then use `view="console"` on a step to open Console. Without that opt-in, only Preview is shown, without tabs or capture. Existing console demonstrations need the new frontmatter opt-in.
+
+`view` selects and opens a view; `collapsed` folds the whole pane; `collapsed={false}` opens it without switching views. Do not combine `view` with `collapsed` set to true. In mixed-variant tutorials, a view applies to variants that have that pane. Omit both props to preserve the reader's current state. Old step/intro attributes fail validation with migration guidance. See [Panel and Console](authoring.md#panel-and-console).
 
 ## Recommended Upgrade Flow
 

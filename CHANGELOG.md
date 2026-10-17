@@ -18,9 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- The embedded web pane is headed "Output", with "Preview" and "Console" as its tabs; the heading stays consistent when collapsed or selected by a step.
+- Console is opt-in with frontmatter `console: true` (default false). Preview-only tutorials show no tabs and do not install console capture. The authoring reference and Features explain the separate tutorial setting and step actions.
+- With Console enabled, the embedded web pane is headed "Output", with "Preview" and "Console" as its tabs; the heading stays consistent when collapsed or selected by a step.
 - Console snapshot and DevTools guidance now share one collapsible footer below the scrolling messages, labeled "Live output · Objects captured at log time · DevTools" The help clarifies that messages are live and objects preserve their values when logged; selecting a step does not run code. The separate toolbar and manual Clear button have been removed.
-- **Breaking authoring change:** `<Step>` and `<Intro>` now use `panel="preview|console|result|collapsed"` to select and open the lower pane or fold it. Omitted keeps the reader's state. This replaces their `preview="expanded|collapsed|keep"` prop; `maximize="preview"` becomes `maximize="panel"`. Frontmatter `preview` is unchanged. Validation includes migration guidance; examples, fixtures and authoring/upgrade docs use the new API.
+- **Breaking authoring change:** `<Step>` and `<Intro>` now use `view="preview|console|result"` to select and open the lower pane, and `collapsed` to fold it. Omitted keeps the reader's state. This replaces their `preview="expanded|collapsed|keep"` prop and the unreleased `panel` prop; `collapsed={false}` opens without changing views; `maximize="preview"` becomes `maximize="panel"`. Frontmatter `preview` is unchanged. Validation includes migration guidance; examples, fixtures and authoring/upgrade docs use the new API.
 
 ## [0.2.0-beta.9] - 2026-10-17
 

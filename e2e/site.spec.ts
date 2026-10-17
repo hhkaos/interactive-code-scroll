@@ -220,7 +220,7 @@ test("the docs table of contents opens subsections only under the section being 
 test("authors can discover Live Console, see its screenshots and find the authoring syntax", async ({ page }) => {
   await page.goto(`${BASE}docs/features/#live-browser-console`);
   await expect(page.locator("#live-browser-console")).toBeVisible();
-  await expect(page.locator(".sl-markdown-content")).toContainText('panel="console"');
+  await expect(page.locator(".sl-markdown-content")).toContainText('view="console"');
   const image = page.locator('.sl-markdown-content img[src$="console-web-dark.png"]');
   await expect(image).toBeVisible();
   await image.scrollIntoViewIfNeeded();
