@@ -44,6 +44,7 @@ export default defineConfig({
       sidebar: docsPages.map(({ file, label }) => ({ label, slug: `docs/${file}` })),
       customCss: ["./src/styles/tokens.css", "./src/styles/docs.css"],
       components: {
+        EditLink: "./src/components/docs/SourceLink.astro",
         SiteTitle: "./src/components/docs/SiteTitle.astro",
         ThemeProvider: "./src/components/docs/ThemeProvider.astro",
         ThemeSelect: "./src/components/docs/ThemeSelect.astro",

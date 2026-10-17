@@ -20,9 +20,17 @@ Console is **optional and off by default**. Set frontmatter `console: true` with
 
 `view` selects and opens a view; `collapsed` folds the whole pane; `collapsed={false}` opens it without switching views. Do not combine `view` with `collapsed` set to true. In mixed-variant tutorials, a view applies to variants that have that pane. Omit both props to preserve the reader's current state. Old step/intro attributes fail validation with migration guidance. See [Panel and Console](authoring.md#panel-and-console).
 
+## Other usage changes in 0.2.0-beta.10
+
+`panelHeight={30}` on `<Step>` or `<Intro>` reserves 30% of the right column for the lower pane (allowed range: 15–85). It does not overwrite the reader's saved height. Omit it to keep the current size. Opening or resizing the pane now keeps the active code region visible. See [Panel and Console](authoring.md#panel-and-console).
+
+## Read aloud changes (0.2.0-beta.9)
+
+Read aloud now continues in presentation mode; Alt+Shift+L can start it there. Hiding the explanations pauses playback. Collapsed `<details>` sections open as their content is read, and hints are read as asides after their terms. No migration is required. To exclude an element, such as a solution, from narration, add `data-speech="skip"`. See [Listen to a tutorial](authoring.md#listen-to-a-tutorial).
+
 ## Recommended Upgrade Flow
 
-1. Read `CHANGELOG.md`.
+1. Read the [changelog](../CHANGELOG.md) for all changes, including additions, fixes and defaults that affect how you use the library.
 2. Update `interactive-code-scroll` and `astro` together when the release notes ask for it.
 3. Run `interactive-code-scroll doctor`.
 4. Run the tutorial in dev mode and fix validation errors.
@@ -43,6 +51,10 @@ npm exec -- interactive-code-scroll build
 - Markers: malformed regions and duplicate variables fail the build.
 - Preview: `code/index.html` is required when Preview is enabled.
 - CLI arguments: package scripts must forward options after `--`.
+
+## Release notes and compatibility
+
+The changelog records all changes. This guide highlights migration steps and changes to authoring or reader behavior; new optional features belong in the authoring reference and feature guide even when no migration is needed.
 
 ## Breaking Changes
 

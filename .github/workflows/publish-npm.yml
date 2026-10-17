@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify documentation review
+        run: node scripts/check-docs.mjs --release
+
       - name: Verify tag matches package versions
         run: |
           tag_version="${GITHUB_REF_NAME#v}"

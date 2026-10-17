@@ -22,6 +22,12 @@ export const docsPages = [
 /** URL of a published docs page, with an optional `#hash`. */
 export const docsPageUrl = (file, hash = "") => `${base}docs/${file}/${hash}`;
 
+/** Source URL from the content ID, independent of Astro's cached Markdown metadata. */
+export function docsSourceUrl(id) {
+  const page = docsPages.find(({ file }) => id === `docs/${file}`);
+  return page ? `${repo}/blob/main/docs/${page.file}.md` : undefined;
+}
+
 /**
  * Title and description of a docs file: its leading `# Heading` and the first paragraph after it.
  * The files have no frontmatter so they read well on GitHub.

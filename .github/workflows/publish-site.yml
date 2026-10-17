@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify documentation review
+        run: node scripts/check-docs.mjs
+
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v6

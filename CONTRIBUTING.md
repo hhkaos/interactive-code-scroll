@@ -60,6 +60,16 @@ pnpm test:pack       # pack both packages, install them in temporary projects an
 6. **Behavior changes follow the spec.** If your change alters requirements, update `docs/dev/SPEC.md` in the same PR.
 7. **New dependencies** need a short justification (why this package, why this version).
 
+## Documentation review before release
+
+All changes that affect library use need documentation: additions, fixes, defaults, CLI commands, scaffolding, configuration and reader behavior, as well as breaking changes. `CHANGELOG.md` remains the release history; `docs/*.md` remain the public documentation source rendered directly by the website.
+
+For every changelog bullet from 0.2.0-beta.10 onward, add one record to `docs/dev/documentation-review.json`. Copy the complete bullet text into `change` and set either `docs` (an array of `docs/name.md#heading` links) or `reason` (a specific explanation of why public documentation is unnecessary). Breaking changes also set `breaking: true` and must link to a migration section in `docs/upgrade.md`. Internal maintenance can use a reason; a change being compatible is not a reason to omit usage documentation.
+
+After reviewing the code, changelog and linked sections, run `pnpm docs:review` to refresh the package and document fingerprints, then `pnpm docs:check`. Refreshing does not create review records or fix missing links. Package input changes also require a changed changelog review; do not refresh fingerprints without reviewing their meaning. Tests and fixtures are excluded from package fingerprints. Commit the manifest with the change. The initial coverage boundary is beta.10; older releases are not retroactively certified.
+
+Before tagging, move Unreleased bullets into a dated release matching both package versions, retain their review records, and run `CI=true pnpm preflight:release`. The npm workflow runs the release check before publishing either package; it rejects pending Unreleased entries. CI and website deployment run the normal check. These checks enforce review completeness and detect drift; humans still verify that the documentation accurately describes the behavior. They guard repository workflows, not a maintainer publishing manually outside them.
+
 ## Working with AI coding agents
 
 This project is built with AI coding agents, and you are welcome to use them too. [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) at the root give Claude Code, Codex and similar tools the project rules; they point to `docs/dev/` for the full context. You remain responsible for every line you submit: review it, test it and be ready to explain it.

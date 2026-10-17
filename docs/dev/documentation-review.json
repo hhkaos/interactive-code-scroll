@@ -1,0 +1,90 @@
+{
+  "changes": [
+    {
+      "change": "Documentation review now covers every changelog entry from 0.2.0-beta.10 onward, with public section links or a specific no-docs reason, reviewed package/document fingerprints, and blocking checks in CI, website deployment and npm publication. The upgrade guide includes narration and pane-height usage notes; website docs link to their Markdown source.",
+      "reason": "Repository release safeguards and source links do not change the library API; the contributor workflow is documented in CONTRIBUTING.md."
+    },
+    {
+      "change": "Codex instructions require sequential validation commands when they rebuild the shared core package output, including site E2E web server builds.",
+      "reason": "Agent-only build sequencing instruction; no authoring API, runtime, CLI or installation behavior changed."
+    },
+    {
+      "change": "Opening or resizing the lower pane reveals the active code region after the code viewport changes; regions that fit stay fully visible, and taller regions show their start.",
+      "docs": [
+        "docs/authoring.md#panel-and-console",
+        "docs/upgrade.md#other-usage-changes-in-020-beta10"
+      ]
+    },
+    {
+      "change": "Console object trees no longer draw a native list bullet over the preceding log label.",
+      "docs": [
+        "docs/authoring.md#panel-and-console"
+      ]
+    },
+    {
+      "change": "`<Step panelHeight={30}>` and `<Intro panelHeight={30}>` set Preview / Console / Result to a percentage of the right column height (15–85), without overwriting the reader's saved size. Readers can still resize; compact phones and maximized panes keep their full-screen behavior.",
+      "docs": [
+        "docs/authoring.md#panel-and-console",
+        "docs/upgrade.md#other-usage-changes-in-020-beta10"
+      ]
+    },
+    {
+      "change": "Live Console has a dedicated Features section, light/dark screenshots captured from a real Preview interaction, a screenshot scene that regenerates them without credentials, a landing page highlight, and links to the authoring reference and migration guide. Available since 0.2.0-beta.10.",
+      "docs": [
+        "docs/authoring.md#panel-and-console"
+      ]
+    },
+    {
+      "change": "Console entries show a source file and line when available; inlined scripts and substituted modules preserve source names and cleaned-code line numbers. Collapsed summaries now color keys and scalar types like DevTools. A collapsible help explains selecting the Preview iframe context in browser DevTools and filtering to that context.",
+      "docs": [
+        "docs/authoring.md#panel-and-console"
+      ]
+    },
+    {
+      "change": "Embedded Preview / Console tabs capture real `console.log/info/warn/error` calls as bounded, in-memory snapshots with labeled entries, severity, collapsible colored JSON trees and compact property previews. Tabs, collapse and maximize preserve the running iframe and its logs; Run resets the log. Capture works in dev and static builds, without adding code to the tutorial app.",
+      "docs": [
+        "docs/authoring.md#panel-and-console"
+      ]
+    },
+    {
+      "change": "Desktop and phone pane-height screenshots reviewed and approved before publication.",
+      "reason": "Records visual approval of existing pane-height behavior; no additional library behavior is introduced."
+    },
+    {
+      "change": "Project architecture documents the optional Console capture pipeline, message handling, the `view` / `collapsed` state flow, and author-controlled pane heights with shared splitter state and code visibility after resizing.",
+      "reason": "Internal architecture documentation of the already documented panel and console behavior; no separate public API change."
+    },
+    {
+      "change": "Console is opt-in with frontmatter `console: true` (default false). Preview-only tutorials show no tabs and do not install console capture. The authoring reference and Features explain the separate tutorial setting and step actions.",
+      "docs": [
+        "docs/authoring.md#panel-and-console"
+      ]
+    },
+    {
+      "change": "With Console enabled, the embedded web pane is headed \"Output\", with \"Preview\" and \"Console\" as its tabs; the heading stays consistent when collapsed or selected by a step.",
+      "docs": [
+        "docs/authoring.md#panel-and-console"
+      ]
+    },
+    {
+      "change": "Console snapshot and DevTools guidance now share one collapsible footer below the scrolling messages, labeled \"Live output · Objects captured at log time · DevTools\" The help clarifies that messages are live and objects preserve their values when logged; selecting a step does not run code. The separate toolbar and manual Clear button have been removed.",
+      "docs": [
+        "docs/authoring.md#panel-and-console"
+      ]
+    },
+    {
+      "change": "**Breaking authoring change:** `<Step>` and `<Intro>` now use `view=\"preview|console|result\"` to select and open the lower pane, and `collapsed` to fold it. Omitted keeps the reader's state. This replaces their `preview=\"expanded|collapsed|keep\"` prop and the unreleased `panel` prop; `collapsed={false}` opens without changing views; `maximize=\"preview\"` becomes `maximize=\"panel\"`. Frontmatter `preview` is unchanged. Validation includes migration guidance; examples, fixtures and authoring/upgrade docs use the new API.",
+      "docs": [
+        "docs/upgrade.md#panel-api-migration-020-beta10",
+        "docs/authoring.md#panel-and-console"
+      ],
+      "breaking": true
+    }
+  ],
+  "sourceDigest": "946a918b7fd75fb87684df4b7df3cc6170766263bf30f7c1a798d9d0eaa4c92f",
+  "changelogDigest": "a3017b0f1e144ae848a7feb7451cf690389a2f38173500e95667ae3ba3952500",
+  "documents": {
+    "docs/authoring.md": "326d3494dde48bb8dd59fa6d7bf276b771fe9bba0d5c88cdf41f4941f4478421",
+    "docs/upgrade.md": "6d4d27c6f60428a4cf755d9db789750eccf46a0b04aec83a4871c2c0d1dea985"
+  }
+}

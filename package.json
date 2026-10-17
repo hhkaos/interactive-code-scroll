@@ -12,14 +12,16 @@
     "variants": "pnpm --filter example-framework-fixture-variants dev",
     "variants:hide": "pnpm --filter example-framework-fixture-variants-hide dev",
     "check": "pnpm --filter interactive-code-scroll build && pnpm -r check",
-    "preflight:docs": "git diff --check",
+    "preflight:docs": "pnpm docs:check && git diff --check",
     "preflight:ui": "pnpm check",
     "preflight:package": "pnpm test && pnpm check && pnpm test:pack",
-    "preflight:release": "pnpm test && pnpm check && pnpm test:pack",
+    "preflight:release": "node scripts/check-docs.mjs --release && pnpm test && pnpm check && pnpm test:pack",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:pack": "node scripts/smoke-pack.mjs",
-    "record": "vhs site/recordings/start.tape"
+    "record": "vhs site/recordings/start.tape",
+    "docs:check": "node scripts/check-docs.mjs",
+    "docs:review": "node scripts/check-docs.mjs --refresh"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",

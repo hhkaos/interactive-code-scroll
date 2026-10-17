@@ -1,0 +1,7 @@
+---
+import { docsSourceUrl } from "../../../docs-config.mjs";
+
+const sourceUrl = docsSourceUrl(Astro.locals.starlightRoute.entry.id);
+---
+
+{sourceUrl && <a href={sourceUrl}>View Markdown source on GitHub</a>}

@@ -131,6 +131,7 @@ test("docs open on the quick start and list the pages in order", async ({ page }
   await page.goto(`${BASE}docs/`);
   await expect(page).toHaveURL(`${BASE}docs/quick-start/`);
   await expect(page.locator("h1")).toHaveText(["Quick Start"]);
+  await expect(page.getByRole("link", { name: "View Markdown source on GitHub" })).toHaveAttribute("href", "https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/quick-start.md");
   const sidebar = page.locator("#starlight__sidebar ul.top-level a");
   await expect(sidebar).toHaveText(["Quick start", "Features", "Authoring reference", "Presenting", "CLI", "Deployment", "Upgrade guide"]);
   expect(await sidebar.evaluateAll((links) => links.map((link) => link.getAttribute("href")))).toEqual(
