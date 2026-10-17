@@ -125,7 +125,9 @@ test("a step can select and maximize Console with the public panel API", async (
 
 test("the Console explains how to inspect native messages in browser DevTools", async ({ page }) => {
   await page.goto("/#sign-in");
-  await page.getByText("This is a snapshot. View the output in browser DevTools.", { exact: true }).click();
+  await page.getByText("Live output · Objects captured at log time · DevTools", { exact: true }).click();
+  await expect(page.locator(".console-devtools")).toContainText("Messages arrive live from the running Preview.");
+  await expect(page.locator(".console-devtools")).toContainText("later changes do not update earlier entries");
   await expect(page.locator(".console-devtools")).toContainText("Selected context only");
   await expect(page.locator(".console-devtools button")).toHaveCount(0);
   const position = await page.locator("#preview-console").evaluate((panel) => ({

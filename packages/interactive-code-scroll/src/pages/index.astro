@@ -479,7 +479,8 @@ const clientData = JSON.stringify({
                       <div id="preview-console-entries" role="list" aria-label="Console messages"></div>
                     </div>
                     <details class="console-devtools">
-                      <summary>This is a snapshot. View the output in browser DevTools.</summary>
+                      <summary>Live output · Objects captured at log time · DevTools</summary>
+                      <p>Messages arrive live from the running Preview. Each object is captured when logged; later changes do not update earlier entries. Selecting a step does not execute its code.</p>
                       <p>Open DevTools → Console. In the JavaScript context menu (usually “top”), select the Preview iframe (look for “preview/”). Enable “Selected context only” in Console settings to show only its messages. The context label varies by browser. <a href="https://developer.chrome.com/docs/devtools/console/reference#context" target="_blank" rel="noopener noreferrer">Chrome Console guide</a></p>
                     </details>
                   </div>
