@@ -32,6 +32,8 @@ Prefer risk-based preflight over broad validation:
 
 In non-interactive agent runs, prefix pnpm preflight commands with `CI=true` to avoid pnpm prompts while checking dependency state.
 
+Run commands that rebuild the core package sequentially. `pnpm check`, package/release preflights, `pnpm test:pack`, and the site's showcase build share `packages/interactive-code-scroll/dist/`; wait for each command to exit before starting another, including E2E commands whose web server builds the site. Concurrent builds can remove files another command is reading, causing `ENOTEMPTY` or package resolution failures.
+
 When the user wants to save tokens, prepare exact `git add`, `git commit`, `git push` and tag commands for them to run instead of executing those commands yourself. Still state which files should be staged and which preflight applies.
 
 ### UI/UX review

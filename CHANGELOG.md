@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Codex instructions require sequential validation commands when they rebuild the shared core package output, including site E2E web server builds.
+
 ## [0.2.0-beta.10] - 2026-10-17
 
 ### Fixed
