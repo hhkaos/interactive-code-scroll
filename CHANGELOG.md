@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Project architecture documents the optional Console capture pipeline, message handling, and the `view` / `collapsed` state flow.
 - Console is opt-in with frontmatter `console: true` (default false). Preview-only tutorials show no tabs and do not install console capture. The authoring reference and Features explain the separate tutorial setting and step actions.
 - With Console enabled, the embedded web pane is headed "Output", with "Preview" and "Console" as its tabs; the heading stays consistent when collapsed or selected by a step.
 - Console snapshot and DevTools guidance now share one collapsible footer below the scrolling messages, labeled "Live output · Objects captured at log time · DevTools" The help clarifies that messages are live and objects preserve their values when logged; selecting a step does not run code. The separate toolbar and manual Clear button have been removed.
