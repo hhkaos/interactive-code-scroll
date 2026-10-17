@@ -19,6 +19,7 @@ export function startConsole(iframe: HTMLIFrameElement): { clear(): void; select
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tabs [role="tab"]')];
   const app = document.querySelector<HTMLElement>("#preview-app")!;
   const panel = document.querySelector<HTMLElement>("#preview-console")!;
+  const scroll = panel.querySelector<HTMLElement>(".console-messages")!;
   const list = document.querySelector<HTMLElement>("#preview-console-entries")!;
   const empty = document.querySelector<HTMLElement>("#preview-console-empty")!;
   const count = document.querySelector<HTMLElement>("#preview-console-count")!;
@@ -99,14 +100,14 @@ export function startConsole(iframe: HTMLIFrameElement): { clear(): void; select
         // A browser may supply an unparseable stack location; the log still renders.
       }
     }
-    const atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 40;
+    const atBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 40;
     list.append(row);
     while (list.childElementCount > 200) {
       list.firstElementChild?.remove();
       discarded++;
     }
     update();
-    if (atBottom) panel.scrollTop = panel.scrollHeight;
+    if (atBottom) scroll.scrollTop = scroll.scrollHeight;
   });
   return { clear, select };
 }

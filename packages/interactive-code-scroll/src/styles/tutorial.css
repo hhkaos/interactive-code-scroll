@@ -1656,19 +1656,24 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
 }
 #preview-app { display: flex; }
 #preview-console {
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--calcite-color-foreground-1);
   font-size: var(--calcite-font-size-sm);
 }
-.console-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.35rem 0.75rem;
-  border-bottom: 1px solid var(--calcite-color-border-3);
-  color: var(--calcite-color-text-3);
+.console-messages { flex: 1; min-height: 0; overflow: auto; }
+.console-devtools {
+  flex: none;
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid var(--calcite-color-border-3);
+  color: var(--calcite-color-text-2);
+  font-size: 0.85em;
+  summary { cursor: pointer; }
+  p { margin: 0.5rem 0 0; }
+  a { color: var(--calcite-color-text-link); }
   button {
+    margin-block-start: 0.5rem;
     background: transparent;
     color: var(--calcite-color-text-1);
     border: 1px solid var(--calcite-color-border-2);
@@ -1676,15 +1681,6 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
     font: inherit;
     cursor: pointer;
   }
-}
-.console-devtools {
-  padding: 0.4rem 0.75rem;
-  border-bottom: 1px solid var(--calcite-color-border-3);
-  color: var(--calcite-color-text-2);
-  font-size: 0.85em;
-  summary { cursor: pointer; }
-  p { margin: 0.5rem 0 0; }
-  a { color: var(--calcite-color-text-link); }
 }
 #preview-console-empty { padding: 1rem; color: var(--calcite-color-text-3); }
 .console-entry {

@@ -63,6 +63,7 @@ test("Console handles all levels safely, ignores foreign messages, clears and re
   await rows.nth(0).getByRole("treeitem").first().click();
   await expect(rows.nth(0)).toContainText("[Circular]");
   await expect(rows.nth(0)).toContainText("<img");
+  await page.locator(".console-devtools summary").click();
   await page.locator("#preview-console-clear").click();
   await expect(rows).toHaveCount(0);
   await expect(page.locator("#preview-console-empty")).toBeVisible();
@@ -123,8 +124,14 @@ test("a step can select and maximize Console with the public panel API", async (
 
 test("the Console explains how to inspect native messages in browser DevTools", async ({ page }) => {
   await page.goto("/#sign-in");
-  await page.getByText("Use browser DevTools", { exact: true }).click();
+  await expect(page.locator("#preview-console-clear")).toBeHidden();
+  await page.getByText("This is a snapshot. View the output in browser DevTools.", { exact: true }).click();
   await expect(page.locator(".console-devtools")).toContainText("Selected context only");
+  const position = await page.locator("#preview-console").evaluate((panel) => ({
+    help: panel.querySelector(".console-devtools")!.getBoundingClientRect().top,
+    messages: panel.querySelector(".console-messages")!.getBoundingClientRect().bottom,
+  }));
+  expect(position.help).toBeGreaterThanOrEqual(position.messages - 1);
   await expect(page.getByRole("link", { name: "Chrome Console guide" })).toHaveAttribute("href", "https://developer.chrome.com/docs/devtools/console/reference#context");
 });
 
