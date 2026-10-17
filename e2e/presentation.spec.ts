@@ -104,6 +104,8 @@ test.describe("step index in presentation mode", () => {
     await page.goto("/#oauth");
     await expect(headerButton(page)).toBeHidden();
     await page.locator("#present-toggle").click();
+    // Entering full screen closes open popovers: wait for it before opening the index.
+    await expect.poll(() => page.evaluate(() => document.fullscreenElement?.tagName)).toBe("HTML");
     await expect(headerButton(page)).toBeVisible();
     await expect(headerButton(page)).toHaveAttribute("aria-keyshortcuts", "O");
     await headerButton(page).click();
@@ -132,6 +134,8 @@ test.describe("step index in presentation mode", () => {
   test("O, b and . open and close the index; E shows and hides the explanations", async ({ page }) => {
     await page.goto("/#oauth");
     await page.locator("#present-toggle").click();
+    // Entering full screen closes open popovers: wait for it before opening the index.
+    await expect.poll(() => page.evaluate(() => document.fullscreenElement?.tagName)).toBe("HTML");
     for (const key of ["o", "O", "b", "."]) {
       await page.keyboard.press(key);
       await expect(index(page)).toBeVisible();
