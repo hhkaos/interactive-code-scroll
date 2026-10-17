@@ -230,6 +230,12 @@ Public author-facing docs live in `README.md` and `docs/`. `docs/features.md` is
 
 `docs/quick-start.md` takes first-time authors from `npm create` to a published tutorial. It replaced the getting-started tutorial built with the tool (2026-09-30): a tutorial about writing tutorials was too recursive. Dogfooding happens through real-topic tutorials (`examples/rest-geocode`, `examples/oauth-pkce`).
 
+### Documentation release gate
+
+`scripts/check-docs.mjs` connects `CHANGELOG.md` to `docs/dev/documentation-review.json`: each bullet from beta.10 onward has public section links or a specific justification for requiring no public documentation. Breaking changes also require an upgrade-guide link. The checker validates sections and compares SHA-256 fingerprints of package inputs and reviewed documents; `pnpm docs:review` refreshes them after manual review. Tests and fixtures are excluded from package fingerprints. Human review verifies that the text accurately describes the behavior.
+
+CI and website deployment run the same checker as `pnpm docs:check`. The release preflight and npm workflow additionally reject pending Unreleased notes and a latest changelog version that does not match both packages, before either is published. The website renders `docs/*.md` directly; `SourceLink.astro` uses `docsSourceUrl()` in `site/docs-config.mjs` to link each page to its repository Markdown from its content ID. Record format and contributor steps: [CONTRIBUTING.md](../../CONTRIBUTING.md#documentation-review-before-release).
+
 ---
 
 ## Coding style

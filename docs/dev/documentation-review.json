@@ -1,6 +1,10 @@
 {
   "changes": [
     {
+      "change": "Project architecture summarizes the documentation review records, fingerprint checks, publication gates and website Markdown source links.",
+      "reason": "Internal architecture summary of the existing documentation release gate; no library usage or runtime behavior changes."
+    },
+    {
       "change": "Documentation review now covers every changelog entry from 0.2.0-beta.10 onward, with public section links or a specific no-docs reason, reviewed package/document fingerprints, and blocking checks in CI, website deployment and npm publication. The upgrade guide includes narration and pane-height usage notes; website docs link to their Markdown source.",
       "reason": "Repository release safeguards and source links do not change the library API; the contributor workflow is documented in CONTRIBUTING.md."
     },
@@ -82,7 +86,7 @@
     }
   ],
   "sourceDigest": "946a918b7fd75fb87684df4b7df3cc6170766263bf30f7c1a798d9d0eaa4c92f",
-  "changelogDigest": "a3017b0f1e144ae848a7feb7451cf690389a2f38173500e95667ae3ba3952500",
+  "changelogDigest": "1c0ad76d8bdc29d232ed7af09349e7568258cdb4d79f6244a5a86223f89d1a07",
   "documents": {
     "docs/authoring.md": "326d3494dde48bb8dd59fa6d7bf276b771fe9bba0d5c88cdf41f4941f4478421",
     "docs/upgrade.md": "6d4d27c6f60428a4cf755d9db789750eccf46a0b04aec83a4871c2c0d1dea985"
