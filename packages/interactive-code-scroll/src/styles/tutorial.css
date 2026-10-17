@@ -1672,15 +1672,6 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
   summary { cursor: pointer; }
   p { margin: 0.5rem 0 0; }
   a { color: var(--calcite-color-text-link); }
-  button {
-    margin-block-start: 0.5rem;
-    background: transparent;
-    color: var(--calcite-color-text-1);
-    border: 1px solid var(--calcite-color-border-2);
-    padding: 0.2rem 0.6rem;
-    font: inherit;
-    cursor: pointer;
-  }
 }
 #preview-console-empty { padding: 1rem; color: var(--calcite-color-text-3); }
 .console-entry {

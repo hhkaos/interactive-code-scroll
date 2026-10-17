@@ -13,11 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Console entries show a source file and line when available; inlined scripts and substituted modules preserve source names and cleaned-code line numbers. Collapsed summaries now color keys and scalar types like DevTools. A collapsible help explains selecting the Preview iframe context in browser DevTools and filtering to that context.
-- Embedded Preview / Console tabs capture real `console.log/info/warn/error` calls as bounded, in-memory snapshots with labeled entries, severity, collapsible colored JSON trees and compact property previews. Tabs, collapse and maximize preserve the running iframe and its logs; Clear and Run reset the log. Capture works in dev and static builds, without adding code to the tutorial app.
+- Embedded Preview / Console tabs capture real `console.log/info/warn/error` calls as bounded, in-memory snapshots with labeled entries, severity, collapsible colored JSON trees and compact property previews. Tabs, collapse and maximize preserve the running iframe and its logs; Run resets the log. Capture works in dev and static builds, without adding code to the tutorial app.
 
 ### Changed
 
-- Console snapshot and DevTools guidance now share one collapsible footer below the scrolling messages, labeled "This is a snapshot. View the output in browser DevTools." Clear messages is inside the expanded help, removing the separate toolbar.
+- Console snapshot and DevTools guidance now share one collapsible footer below the scrolling messages, labeled "This is a snapshot. View the output in browser DevTools." The separate toolbar and manual Clear button have been removed.
 - **Breaking authoring change:** `<Step>` and `<Intro>` now use `panel="preview|console|result|collapsed"` to select and open the lower pane or fold it. Omitted keeps the reader's state. This replaces their `preview="expanded|collapsed|keep"` prop; `maximize="preview"` becomes `maximize="panel"`. Frontmatter `preview` is unchanged. Validation includes migration guidance; examples, fixtures and authoring/upgrade docs use the new API.
 
 ## [0.2.0-beta.9] - 2026-10-17

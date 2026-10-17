@@ -41,7 +41,7 @@ test("Preview interactions produce expandable snapshots, retained across tabs, s
   await expect(app.locator("#sign-in")).toHaveText("Run 1");
 });
 
-test("Console handles all levels safely, ignores foreign messages, clears and resets on Run", async ({ page }) => {
+test("Console handles all levels safely, ignores foreign messages and resets on Run", async ({ page }) => {
   await page.goto("/#sign-in");
   await expect(page.frameLocator(".preview iframe").locator("#sign-in")).toBeAttached();
   await page.locator(".preview iframe").evaluate((element) => {
@@ -63,8 +63,7 @@ test("Console handles all levels safely, ignores foreign messages, clears and re
   await rows.nth(0).getByRole("treeitem").first().click();
   await expect(rows.nth(0)).toContainText("[Circular]");
   await expect(rows.nth(0)).toContainText("<img");
-  await page.locator(".console-devtools summary").click();
-  await page.locator("#preview-console-clear").click();
+  await page.locator("#preview-run").click();
   await expect(rows).toHaveCount(0);
   await expect(page.locator("#preview-console-empty")).toBeVisible();
   await page.getByRole("tab", { name: "Preview", exact: true }).click();
@@ -124,9 +123,9 @@ test("a step can select and maximize Console with the public panel API", async (
 
 test("the Console explains how to inspect native messages in browser DevTools", async ({ page }) => {
   await page.goto("/#sign-in");
-  await expect(page.locator("#preview-console-clear")).toBeHidden();
   await page.getByText("This is a snapshot. View the output in browser DevTools.", { exact: true }).click();
   await expect(page.locator(".console-devtools")).toContainText("Selected context only");
+  await expect(page.locator(".console-devtools button")).toHaveCount(0);
   const position = await page.locator("#preview-console").evaluate((panel) => ({
     help: panel.querySelector(".console-devtools")!.getBoundingClientRect().top,
     messages: panel.querySelector(".console-messages")!.getBoundingClientRect().bottom,

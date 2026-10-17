@@ -57,7 +57,6 @@ export function startConsole(iframe: HTMLIFrameElement): { clear(): void; select
     select(index === 0 ? "preview" : "console");
     tabs[index]?.focus();
   });
-  document.querySelector("#preview-console-clear")?.addEventListener("click", clear);
   document.addEventListener("ics:panel-view", (event) => select((event as CustomEvent<string>).detail));
   // The step engine has already selected the initial step (including deep links).
   select(section.dataset.view ?? "preview");
