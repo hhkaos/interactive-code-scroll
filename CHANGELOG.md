@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.9] - 2026-10-17
+
 ### Changed
 
 - Read aloud keeps playing in presentation mode, with the audio row shown while active; Alt+Shift+L starts it there. Hiding the explanations pauses it, and starting while they are hidden announces "Show the explanations to listen".
