@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.11] - 2026-10-18
+
 ### Added
 
 - Read aloud offers equally prominent Step by step and Continuous modes, remembered without autoplay, compact controls with a shared height, matching flat settings, a single presentation audio button beside Keyboard shortcuts to show/hide controls without stopping playback, a visible mode selector and playback state, Continue at step boundaries, labeled hint asides, independent hint/collapsed-section preferences, sentence seeking by click or keyboard selection, and settings dismissal with safe focus handling.
