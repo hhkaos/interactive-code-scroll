@@ -227,6 +227,9 @@ const clientData = JSON.stringify({
         </button>
         <calcite-action id="present-toggle" icon="presentation" text="Present" aria-keyshortcuts="Alt+P" />
         <calcite-action id="shortcut-help-toggle" icon="keyboard" text="Keyboard shortcuts" aria-haspopup="dialog" aria-controls="shortcut-help" aria-expanded="false" />
+        <div id="speech-dock" class="speech-dock" hidden>
+          <button type="button" id="speech-expand" aria-label="Show narration controls" aria-controls="speech-bar" aria-expanded="false" title="Show narration controls"><calcite-icon icon="sound" scale="s" aria-hidden="true" /></button>
+        </div>
         <calcite-action id="theme-toggle" icon="moon" text="Toggle theme" />
       </div>
     </calcite-navigation>
@@ -325,26 +328,43 @@ const clientData = JSON.stringify({
         </main>
         {/* Same moves as the step keys (client/steps.ts); stays while presenting (start with Alt+Shift+L). */}
         <section id="speech-bar" class="speech-bar" aria-label="Read aloud" hidden>
+          <div class="speech-heading">
+            <strong id="speech-state">Read aloud</strong>
+            <div class="speech-heading-actions">
+              <button type="button" id="speech-minimize" aria-label="Hide narration controls" title="Hide controls without stopping narration" hidden><calcite-icon icon="chevrons-up" scale="s" aria-hidden="true" />Hide</button>
+              <button type="button" id="speech-stop" aria-label="Stop narration and close controls"><calcite-icon icon="x" scale="s" aria-hidden="true" />Close</button>
+            </div>
+          </div>
+          <div id="speech-choice" class="speech-choice" hidden>
+            <p>How would you like to listen?</p>
+            <button type="button" data-speech-mode="step"><strong>Step by step</strong><span>Pause after each step to practice.</span></button>
+            <button type="button" data-speech-mode="continuous"><strong>Continuous</strong><span>Keep listening through the tutorial.</span></button>
+          </div>
           <div class="speech-row">
             <button type="button" id="speech-toggle" aria-keyshortcuts="Alt+Shift+L" title="Listen / pause / resume (Alt+Shift+L)">
               <calcite-icon icon="sound" scale="s" aria-hidden="true" /><span>Listen</span>
             </button>
             <div id="speech-controls" class="speech-controls" hidden>
-              <button type="button" id="speech-stop"><calcite-icon icon="stop-square" scale="s" aria-hidden="true" />Stop</button>
-              <label class="speech-speed">Speed <select id="speech-rate" aria-label="Narration speed">
+              <label class="speech-mode"><span>Mode</span> <select id="speech-mode" aria-label="Listening mode"><option value="step">Step by step</option><option value="continuous">Continuous</option></select></label>
+              <label class="speech-speed"><span>Speed</span> <select id="speech-rate" aria-label="Narration speed">
                 <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option>
               </select></label>
               <details class="speech-settings">
                 <summary aria-label="Narration settings" title="Narration settings"><calcite-icon icon="gear" scale="s" aria-hidden="true" /></summary>
                 <div class="speech-settings-panel">
                   <label>Voice<select id="speech-voice"></select></label>
-                  <label class="speech-auto"><input id="speech-auto" type="checkbox" />Advance automatically</label>
-                  <small>Pauses when you use a field or run a request. Some voices require a connection.</small>
-                  <small>Shortcut: Alt+Shift+L. Resume may repeat the current word or sentence.</small>
+                  <label class="speech-check"><input id="speech-hints" type="checkbox" checked />Read hint explanations</label>
+                  <label class="speech-check"><input id="speech-collapsed" type="checkbox" />Read collapsed sections</label>
+                  <div class="speech-settings-help">
+                    <small>Closed sections are expanded only when this option is enabled. Open sections are always read.</small>
+                    <small>Pauses when you use a field or run a request. Some voices require a connection.</small>
+                    <small>Shortcut: Alt+Shift+L. Resume may repeat the current word or sentence.</small>
+                  </div>
                 </div>
               </details>
             </div>
           </div>
+          <div id="speech-seek" class="speech-seek" hidden><small>Click a sentence to jump.</small><button type="button" id="speech-selection" disabled>Read from selection</button></div>
         </section>
         <span id="speech-status" role="status"></span>
         <nav class="step-nav" aria-label="Steps">

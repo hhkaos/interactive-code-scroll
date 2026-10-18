@@ -8,11 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Read aloud offers equally prominent Step by step and Continuous modes, remembered without autoplay, compact controls with a shared height, matching flat settings, a single presentation audio button beside Keyboard shortcuts to show/hide controls without stopping playback, a visible mode selector and playback state, Continue at step boundaries, labeled hint asides, independent hint/collapsed-section preferences, sentence seeking by click or keyboard selection, and settings dismissal with safe focus handling.
+
 - Presentation-only panel shortcuts add collapse/restore (`1`), animated 35% / 50% / 75% presets (`2`–`4`), lower-panel/code maximization (`5` / `0`) and temporary region emphasis (`H`). Alt lists all active commands including narration, with persistent grouped help available from the hint or header. Help also lists Esc outside presentation and explains narration availability.
 
 - Optional `subtitle` frontmatter displays a smaller, muted line beneath the tutorial navigation title, with ellipsis for long text and space for the sibling selector on phones.
 
 ### Fixed
+
+- Seeking to the exact start of a sentence selects that sentence instead of replaying the preceding one.
+
+- Clicking narration settings descriptions or padding keeps the panel open; moving focus no longer dismisses it. Outside presses, Escape and the settings toggle still close it.
 
 - Quickly moving or tabbing between inline hints closes the previous popover instead of leaving it stuck open.
 

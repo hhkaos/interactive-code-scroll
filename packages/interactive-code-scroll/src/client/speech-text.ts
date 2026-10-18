@@ -19,18 +19,22 @@ export function speechVoices(voices: SpeechSynthesisVoice[], lang: string): Spee
 }
 
 export const SPEECH_STORAGE_KEY = "ics:speech";
-export interface SpeechPreferences { voice: string; rate: number; auto: boolean }
+export type SpeechMode = "step" | "continuous";
+export interface SpeechPreferences { voice: string; rate: number; mode?: SpeechMode; hints: boolean; collapsed: boolean }
 
 /** Treat stored settings as untrusted; older or edited values must remain usable. */
 export function speechPreferences(value: string | null): SpeechPreferences {
-  const defaults = { voice: "", rate: 1, auto: false };
+  const defaults: SpeechPreferences = { voice: "", rate: 1, hints: true, collapsed: false };
   try {
     const data = JSON.parse(value ?? "null");
     if (!data || typeof data !== "object") return defaults;
     return {
       voice: typeof data.voice === "string" ? data.voice : "",
       rate: [0.75, 1, 1.25, 1.5, 2].includes(data.rate) ? data.rate : 1,
-      auto: data.auto === true,
+      // Migrate the old explicit advance preference; new readers choose a mode.
+      mode: data.mode === "step" || data.mode === "continuous" ? data.mode : typeof data.auto === "boolean" ? (data.auto ? "continuous" : "step") : undefined,
+      hints: typeof data.hints === "boolean" ? data.hints : true,
+      collapsed: data.collapsed === true,
     };
   } catch { return defaults; }
 }

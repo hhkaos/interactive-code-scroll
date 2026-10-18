@@ -12,12 +12,13 @@ async function mockSpeech(page: Page, mode: "ready" | "late" | "missing" = "read
     const scope = window as any;
     let current: any;
     let last: any;
+    let cancelled: any;
     const calls: string[] = [];
     const synth = new EventTarget() as any;
     let voices = mode === "ready" ? [{ name: "Test English", lang: "en-US", voiceURI: "test-en", default: true, localService: true }, { name: "Other English", lang: "en-GB", voiceURI: "test-en-other", default: false, localService: false }] : [];
     synth.getVoices = () => voices;
     synth.speak = (utterance: any) => { current = last = utterance; calls.push(utterance.text); utterance.onstart?.({}); };
-    synth.cancel = () => { current = undefined; };
+    synth.cancel = () => { cancelled = current ?? cancelled; current = undefined; };
     Object.defineProperty(scope, "speechSynthesis", { value: synth, configurable: true });
     scope.SpeechSynthesisUtterance = class { constructor(public text: string) {} };
     scope.speechMock = {
@@ -25,7 +26,7 @@ async function mockSpeech(page: Page, mode: "ready" | "late" | "missing" = "read
       get text() { return current?.text; },
       end() { const u = current; current = undefined; u?.onend?.({}); },
       boundary(charIndex: number) { current?.onboundary?.({ name: "word", charIndex }); },
-      staleEnd() { last?.onend?.({}); },
+      staleEnd() { (cancelled ?? last)?.onend?.({}); },
       error() { current?.onerror?.({ error: "synthesis-failed" }); },
       ready() { voices = [{ name: "Test English", lang: "en-US", voiceURI: "test-en", default: true, localService: true }]; synth.dispatchEvent(new Event("voiceschanged")); },
       wrongLanguage() { voices = [{ name: "Spanish", lang: "es", voiceURI: "test-es", default: true, localService: true }]; synth.dispatchEvent(new Event("voiceschanged")); },
@@ -36,7 +37,9 @@ async function mockSpeech(page: Page, mode: "ready" | "late" | "missing" = "read
 const mock = (page: Page, action: "end" | "staleEnd" | "error" | "ready" | "wrongLanguage") => page.evaluate((action) => (window as any).speechMock[action](), action);
 async function playPause(page: Page) {
   if (await page.locator("#speech-bar").isVisible()) await page.locator("#speech-toggle").click();
+  else if (await page.locator("#speech-dock").isVisible()) await page.keyboard.press("Alt+Shift+L");
   else await page.locator("#speech-launch").click();
+  if (await page.locator("#speech-choice").isVisible()) await page.locator('[data-speech-mode="step"]').click();
 }
 const spoken = (page: Page) => page.evaluate(() => (window as any).speechMock.text as string | undefined);
 
@@ -59,7 +62,7 @@ test("Listen is opt-in; word highlights preserve selection; pause/resume rejects
   await page.goto("/#load-sdk");
   await expect(page.locator("#speech-launch")).toBeVisible();
   await expect(page.locator("#speech-bar")).toBeHidden();
-  await page.screenshot({ path: "screenshots/speech-idle.png" });
+  await page.screenshot({ path: "screenshots/speech-idle-refined.png" });
   await expect(page.locator("#speech-controls")).toBeHidden();
   expect(await spoken(page)).toBeUndefined();
   await playPause(page);
@@ -74,7 +77,10 @@ test("Listen is opt-in; word highlights preserve selection; pause/resume rejects
   expect(await page.evaluate(() => [...CSS.highlights.get("ics-speech")!][0]!.toString())).toBe("the");
   expect(await page.evaluate(() => getSelection()!.toString())).toContain("This step focuses");
   await page.evaluate(() => getSelection()!.removeAllRanges());
-  await page.screenshot({ path: "screenshots/speech-desktop.png" });
+  await page.screenshot({ path: "screenshots/speech-desktop-refined.png" });
+  await page.locator("#theme-toggle").click();
+  await expect(page.locator("body")).toHaveClass(/calcite-mode-dark/);
+  await page.screenshot({ path: "screenshots/speech-desktop-dark-refined.png", animations: "disabled" });
   await page.keyboard.press("Alt+Shift+L");
   await expect(page.locator("#speech-toggle")).toHaveText("Resume");
   await mock(page, "staleEnd");
@@ -91,13 +97,10 @@ test("automatic advance is optional, skips carousel paging and reads the closing
   await page.goto("/#load-sdk");
   await playPause(page);
   await finishStep(page);
-  await expect(page.locator("#speech-toggle")).toHaveText("Resume");
+  await expect(page.locator("#speech-toggle")).toHaveText("Continue");
   await expect(page).toHaveURL(/#load-sdk$/);
-  await page.locator(".speech-settings summary").click();
-  await page.locator("#speech-auto").check();
-  await page.locator(".speech-settings summary").click();
+  await page.locator("#speech-mode").selectOption("continuous");
   await playPause(page);
-  await finishStep(page);
   await expect(page).toHaveURL(/#ui$/);
   await page.locator("#step-next").click();
   await expect(page).toHaveURL(/#register-app$/);
@@ -134,8 +137,9 @@ test("fields pause narration; presenting and hidden explanations keep it", async
   const reading = await spoken(page);
   await page.locator("#present-toggle").click();
   await expect(page.locator("body")).toHaveAttribute("data-presenting", "");
-  await expect(page.locator("#speech-bar")).toBeVisible();
-  await expect(page.locator("#speech-toggle")).toHaveText("Pause");
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  await expect(page.locator("#speech-dock")).toBeVisible();
+  await expect(page.locator("#speech-expand")).toHaveAttribute("aria-label", /reading aloud/);
   expect(await spoken(page)).toBe(reading);
   await page.keyboard.press("e");
   await expect(page.locator("body")).toHaveAttribute("data-docs-hidden", "");
@@ -157,16 +161,17 @@ test("fields pause narration; presenting and hidden explanations keep it", async
 
 test("starting with hidden explanations reads prose, hints and collapsed sections without revealing them", async ({ page }) => {
   await mockSpeech(page);
+  await page.addInitScript(() => localStorage.setItem("ics:speech", JSON.stringify({ mode: "step", collapsed: true })));
   await page.goto("/#oauth");
   const expected = [
     "Register behavior",
     "This step focuses a multi-line JavaScript region and mentions fixtureState inline.",
-    "The shared object that stores fixture values.",
+    "About fixtureState: The shared object that stores fixture values.",
     "See the example docs.",
     "Why register more than one behavior?",
     "registerOAuthInfos() accepts an array so one app can register more than one configuration.",
     "Use registered behaviors to respond to changes.",
-    "Callbacks registered for the fixture’s interactions.",
+    "About registered behaviors: Callbacks registered for the fixture’s interactions.",
   ];
   await page.locator("#oauth").evaluate((step) => {
     for (const [attribute, value] of [["hidden", ""], ["style", "display: none"], ["data-speech", "skip"], ["aria-hidden", "true"]]) {
@@ -196,6 +201,7 @@ test("hidden narration reads the intro and closing prose", async ({ page }) => {
   await page.locator(".gutter").hover();
   await page.locator("#docs-toggle").click();
   await page.keyboard.press("Alt+Shift+L");
+  if (await page.locator("#speech-choice").isVisible()) await page.locator('[data-speech-mode="step"]').click();
   expect(await spoken(page)).toBeTruthy();
   await page.keyboard.press("Alt+Shift+L");
   await page.locator(".gutter").hover();
@@ -219,8 +225,7 @@ test("automatic and manual step navigation keep narrating with explanations hidd
   await mockSpeech(page);
   await page.goto("/#load-sdk");
   await playPause(page);
-  await page.locator(".speech-settings summary").click();
-  await page.locator("#speech-auto").check();
+  await page.locator("#speech-mode").selectOption("continuous");
   await page.locator(".gutter").hover();
   await page.locator("#docs-toggle").click();
   await finishStep(page);
@@ -238,6 +243,7 @@ test("automatic and manual step navigation keep narrating with explanations hidd
 
 test("hints are read as asides with their popover open; collapsed sections open when read", async ({ page }) => {
   await mockSpeech(page);
+  await page.addInitScript(() => localStorage.setItem("ics:speech", JSON.stringify({ mode: "step", collapsed: true })));
   await page.goto("/#oauth");
   const hint = page.locator("#oauth .hint").first();
   const details = page.locator("#oauth details");
@@ -251,9 +257,11 @@ test("hints are read as asides with their popover open; collapsed sections open 
   await mock(page, "end");
   await expect(hint).toHaveAttribute("data-open", "");
   await expect(page.locator("#speech-bar")).toHaveAttribute("data-gap", "");
-  expect(await nextSpoken(page)).toBe("The shared object that stores fixture values. ");
+  expect(await nextSpoken(page)).toBe("About fixtureState: The shared object that stores fixture values. ");
   expect(await page.evaluate(() => [...CSS.highlights.get("ics-speech")!][0]!.toString())).toContain("The shared object");
-  await page.screenshot({ path: "screenshots/speech-hint.png" });
+  await page.evaluate(() => (window as any).speechMock.boundary("About fixtureState: The ".length));
+  expect(await page.evaluate(() => [...CSS.highlights.get("ics-speech")!][0]!.toString())).toBe("shared");
+  await page.screenshot({ path: "screenshots/speech-hint-refined.png" });
   const scroll = await page.locator(".docs").evaluate((docs) => docs.scrollTop);
   await mock(page, "end");
   expect(await spoken(page)).toBe("See the example docs.");
@@ -277,6 +285,7 @@ test("hints are read as asides with their popover open; collapsed sections open 
 
 test("authors can keep a collapsed section out of narration", async ({ page }) => {
   await mockSpeech(page);
+  await page.addInitScript(() => localStorage.setItem("ics:speech", JSON.stringify({ mode: "step", collapsed: true })));
   await page.goto("/#oauth");
   await page.locator("#oauth details").evaluate((details) => details.setAttribute("data-speech", "skip"));
   await playPause(page);
@@ -311,9 +320,16 @@ test("sentence highlighting works without word events and the controls fit phone
   expect(await spoken(page)).toBe("Before you start");
   await mock(page, "end");
   expect(await page.evaluate(() => [...CSS.highlights.get("ics-speech")!][0]!.toString())).toContain("This fixture");
+  expect((await page.locator(".docs").boundingBox())!.height).toBeGreaterThan(120);
+  expect((await page.locator(".speech-row").boundingBox())!.height).toBeLessThanOrEqual(64);
+  expect(await page.locator("#speech-bar").evaluate((bar) => bar.scrollWidth <= bar.clientWidth)).toBe(true);
+  await page.screenshot({ path: "screenshots/speech-phone-player-refined.png" });
+  await page.locator("#theme-toggle").click();
+  await expect(page.locator("body")).toHaveClass(/calcite-mode-dark/);
+  await page.screenshot({ path: "screenshots/speech-phone-dark-refined.png", animations: "disabled" });
   await page.locator(".speech-settings summary").click();
   await expect(page.locator("#speech-voice")).toBeVisible();
-  await page.screenshot({ path: "screenshots/speech-phone.png" });
+  await page.screenshot({ path: "screenshots/speech-phone-refined.png" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -365,7 +381,7 @@ test("long-step narration keeps the step active when revealing its last sentence
   });
   await playPause(page);
   await finishStep(page);
-  await expect(page.locator("#speech-toggle")).toHaveText("Resume");
+  await expect(page.locator("#speech-toggle")).toHaveText("Continue");
   await expect(page).toHaveURL(/#load-sdk$/);
 });
 
@@ -376,11 +392,11 @@ test("narration preferences survive reload without starting audio", async ({ pag
   await expect(page.locator("#speech-bar")).toBeHidden();
   await playPause(page);
   await page.locator("#speech-rate").selectOption("1.5");
+  await page.locator("#speech-mode").selectOption("continuous");
   await page.locator(".speech-settings summary").click();
-  await page.locator("#speech-auto").check();
   await page.locator("#speech-voice").selectOption("test-en-other");
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("ics:speech")!));
-  expect(saved).toEqual({ voice: "test-en-other", rate: 1.5, auto: true });
+  expect(saved).toEqual({ voice: "test-en-other", rate: 1.5, mode: "continuous", hints: true, collapsed: false });
   await page.reload();
   await expect(page.locator("#speech-launch")).toBeVisible();
   await expect(page.locator("#speech-bar")).toBeHidden();
@@ -388,7 +404,7 @@ test("narration preferences survive reload without starting audio", async ({ pag
   await playPause(page);
   await expect(page.locator("#speech-rate")).toHaveValue("1.5");
   await page.locator(".speech-settings summary").click();
-  await expect(page.locator("#speech-auto")).toBeChecked();
+  await expect(page.locator("#speech-mode")).toHaveValue("continuous");
   await expect(page.locator("#speech-voice")).toHaveValue("test-en-other");
   await page.locator("#speech-launch").click();
   await expect(page.locator("#speech-bar")).toBeHidden();
@@ -453,9 +469,340 @@ test("without a closing panel automatic narration stops after the final step", a
   });
   await page.goto("/#embed-next-slide");
   await playPause(page);
-  await page.locator(".speech-settings summary").click();
-  await page.locator("#speech-auto").check();
+  await page.locator("#speech-mode").selectOption("continuous");
   await finishStep(page);
   await expect(page.locator("#speech-bar")).toBeHidden();
   await expect(page.locator("body")).not.toHaveAttribute("data-completed", "");
+});
+
+test("first Listen gives both modes equal choice; switching modes preserves playback and pause", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await page.locator("#speech-launch").click();
+  await expect(page.locator("#speech-choice")).toBeVisible();
+  expect(await spoken(page)).toBeUndefined();
+  const step = page.locator('[data-speech-mode="step"]');
+  const continuous = page.locator('[data-speech-mode="continuous"]');
+  expect((await step.boundingBox())!.width).toBe((await continuous.boundingBox())!.width);
+  await page.screenshot({ path: "screenshots/speech-mode-choice-refined.png" });
+  await continuous.click();
+  expect(await spoken(page)).toBe("Load the runtime");
+  const count = await page.evaluate(() => (window as any).speechMock.calls.length);
+  await page.locator("#speech-mode").selectOption("step");
+  expect(await page.evaluate(() => (window as any).speechMock.calls.length)).toBe(count);
+  await page.keyboard.press("Alt+Shift+L");
+  await page.locator("#speech-mode").selectOption("continuous");
+  expect(await spoken(page)).toBeUndefined();
+  await expect(page.locator("#speech-state")).toHaveText("Paused");
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe("Load the runtime");
+});
+
+test("step-by-step finishes with Continue; changing mode cancels a pending automatic advance", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await playPause(page);
+  await page.locator("#speech-mode").selectOption("continuous");
+  await finishStep(page);
+  await page.locator("#speech-mode").selectOption("step");
+  await expect(page.locator("#speech-toggle")).toHaveText("Continue");
+  await page.waitForTimeout(800);
+  await expect(page).toHaveURL(/#load-sdk$/);
+  await page.locator("#speech-toggle").click();
+  await expect(page).toHaveURL(/#ui$/);
+  expect(await spoken(page)).toBe("Build the UI");
+});
+
+test("hint and collapsed-section preferences are independent; open sections remain readable", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#oauth");
+  await playPause(page);
+  await page.locator(".speech-settings summary").click();
+  await expect(page.locator("#speech-hints")).toBeChecked();
+  await expect(page.locator("#speech-collapsed")).not.toBeChecked();
+  await page.locator("#speech-hints").uncheck();
+  await page.keyboard.press("Escape");
+  await finishStep(page);
+  let calls = await page.evaluate(() => (window as any).speechMock.calls.join(" "));
+  expect(calls).toContain("fixtureState inline");
+  expect(calls).toContain("Why register more than one behavior?");
+  expect(calls).not.toMatch(/About fixtureState|The shared object|accepts an array/);
+  await expect(page.locator("#oauth details")).not.toHaveAttribute("open", "");
+  await page.locator("#speech-stop").click();
+  await page.locator("#oauth details summary").click();
+  await playPause(page);
+  await finishStep(page);
+  calls = await page.evaluate(() => (window as any).speechMock.calls.join(" "));
+  expect(calls).toContain("accepts an array");
+});
+
+test("settings stay open for interior clicks and focus changes, dismiss outside and with Escape, and protect presentation", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await playPause(page);
+  const settings = page.locator(".speech-settings");
+  const opener = settings.locator("summary");
+  await opener.click();
+  await page.locator("#speech-voice").focus();
+  await expect(settings).toHaveAttribute("open", "");
+  await page.locator("#speech-hints").focus();
+  await expect(settings).toHaveAttribute("open", "");
+  await page.locator(".speech-settings-panel").click({ position: { x: 4, y: 4 } });
+  await expect(settings).toHaveAttribute("open", "");
+  await page.locator(".speech-settings-help small").first().click();
+  await expect(settings).toHaveAttribute("open", "");
+  await page.locator("#speech-rate").focus();
+  await expect(settings).toHaveAttribute("open", "");
+  await page.locator("#speech-state").click();
+  await expect(settings).not.toHaveAttribute("open", "");
+  await page.locator("#present-toggle").click();
+  await page.locator("#speech-expand").click();
+  await opener.click();
+  await page.keyboard.press("Escape");
+  await expect(settings).not.toHaveAttribute("open", "");
+  await expect(opener).toBeFocused();
+  await expect(page.locator("body")).toHaveAttribute("data-presenting", "");
+  await opener.click();
+  await page.locator("#speech-state").click();
+  await expect(settings).not.toHaveAttribute("open", "");
+  await page.keyboard.press("e");
+  await page.locator("#code-maximize").click();
+  await opener.click();
+  await page.keyboard.press("Escape");
+  await expect(settings).not.toHaveAttribute("open", "");
+  await expect(page.locator("body")).toHaveAttribute("data-maximized", "code");
+});
+
+test("click and selection seek to a sentence while preserving links, selections and paused state", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await page.locator("#load-sdk").evaluate((step) => {
+    const p = document.createElement("p");
+    p.id = "seek-prose";
+    p.innerHTML = 'First sentence. <em>Second sentence.</em> <a href="#load-sdk">Keep this link.</a>';
+    step.prepend(p);
+  });
+  await playPause(page);
+  expect(await spoken(page)).toBe("First sentence. ");
+  await page.locator("#seek-prose em").click();
+  expect(await spoken(page)).toBe("Second sentence. ");
+  await mock(page, "staleEnd");
+  expect(await spoken(page)).toBe("Second sentence. ");
+  await page.keyboard.press("Alt+Shift+L");
+  await page.locator("#seek-prose").evaluate((p) => {
+    const range = document.createRange(); range.selectNodeContents(p.firstChild!);
+    getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+  });
+  await expect(page.locator("#speech-selection")).toBeEnabled();
+  await page.locator("#speech-selection").focus();
+  await page.keyboard.press("Enter");
+  expect(await spoken(page)).toBeUndefined();
+  expect(await page.evaluate(() => getSelection()!.toString())).toContain("First sentence");
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe("First sentence. ");
+  await page.evaluate(() => {
+    getSelection()!.removeAllRanges();
+    Object.defineProperty(document, "caretPositionFromPoint", { value: undefined, configurable: true });
+  });
+  await page.locator("#seek-prose em").click();
+  expect(await spoken(page)).toBe("Second sentence. ");
+  const count = await page.evaluate(() => (window as any).speechMock.calls.length);
+  await page.locator("#seek-prose a").click();
+  expect(await page.evaluate(() => (window as any).speechMock.calls.length)).toBe(count);
+});
+
+
+test("legacy automatic advance migrates and collapsed settings persist independently", async ({ page }) => {
+  await mockSpeech(page);
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("ics:speech")) localStorage.setItem("ics:speech", JSON.stringify({ auto: true }));
+  });
+  await page.goto("/#load-sdk");
+  await page.locator("#speech-launch").click();
+  await expect(page.locator("#speech-choice")).toBeHidden();
+  await expect(page.locator("#speech-mode")).toHaveValue("continuous");
+  expect(await spoken(page)).toBe("Load the runtime");
+  await page.locator(".speech-settings summary").click();
+  await page.locator("#speech-hints").uncheck();
+  await page.locator("#speech-collapsed").check();
+  await page.reload();
+  expect(await spoken(page)).toBeUndefined();
+  await playPause(page);
+  await page.locator(".speech-settings summary").click();
+  await expect(page.locator("#speech-hints")).not.toBeChecked();
+  await expect(page.locator("#speech-collapsed")).toBeChecked();
+});
+
+
+test("speech controls align at one height and settings share the compact player surface", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await playPause(page);
+  await page.locator("#speech-toggle").click();
+  await page.locator("#speech-rate").selectOption("1.25");
+  const opener = page.locator(".speech-settings summary");
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ["light", "dark"]) {
+      if (!(await page.locator("body").getAttribute("class"))!.includes(`calcite-mode-${theme}`)) await page.locator("#theme-toggle").click();
+      if (!(await page.locator(".speech-settings").evaluate((details) => (details as HTMLDetailsElement).open))) await opener.click();
+      const geometry = await page.locator("#speech-bar").evaluate((bar) => {
+        const height = (selector: string) => bar.querySelector(selector)!.getBoundingClientRect().height;
+        const panel = bar.querySelector(".speech-settings-panel")!;
+        const rows = [".speech-heading", ".speech-row", ".speech-seek"].map(selector => bar.querySelector(selector)!.getBoundingClientRect());
+        return {
+          heights: ["#speech-toggle", "#speech-mode", "#speech-rate", ".speech-settings summary", "#speech-stop", "#speech-selection"].map(height),
+          gaps: [rows[1]!.top - rows[0]!.bottom, rows[2]!.top - rows[1]!.bottom],
+          background: getComputedStyle(bar).backgroundColor,
+          panelBackground: getComputedStyle(panel).backgroundColor,
+          shadow: getComputedStyle(panel).boxShadow,
+          height: bar.getBoundingClientRect().height,
+          overflow: bar.scrollWidth > bar.clientWidth,
+        };
+      });
+      expect(new Set(geometry.heights).size).toBe(1);
+      expect(geometry.heights[0]).toBeGreaterThanOrEqual(24);
+      expect(geometry.heights[0]).toBeLessThanOrEqual(40);
+      expect(geometry.gaps.every(gap => gap >= 0 && gap <= 4)).toBe(true);
+      expect(geometry.height).toBeLessThanOrEqual(124);
+      expect(geometry.overflow).toBe(false);
+      expect(geometry.panelBackground).toBe(geometry.background);
+      expect(geometry.shadow).toBe("none");
+      // Include the settings above the player, without cropping them to the bar element.
+      const bar = (await page.locator("#speech-bar").boundingBox())!;
+      const panel = (await page.locator(".speech-settings-panel").boundingBox())!;
+      await page.screenshot({ path: `screenshots/speech-refined-${width}-${theme}.png`, animations: "disabled", clip: { x: bar.x, y: panel.y, width: bar.width, height: bar.y + bar.height - panel.y } });
+    }
+  }
+});
+
+
+test("Hide preserves narration and exposes one audio toggle beside keyboard shortcuts", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await playPause(page);
+  const initial = await spoken(page);
+  const count = await page.evaluate(() => (window as any).speechMock.calls.length);
+  await page.locator("#present-toggle").click();
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  const audio = page.locator("#speech-expand");
+  await expect(audio).toBeVisible();
+  await expect(page.locator("#speech-dock button")).toHaveCount(1);
+  const audioBox = (await audio.boundingBox())!;
+  const shortcutBox = (await page.locator("#shortcut-help-toggle").boundingBox())!;
+  const headerBox = (await page.locator(".app-header").boundingBox())!;
+  expect(audioBox.y).toBeGreaterThanOrEqual(headerBox.y);
+  expect(audioBox.y + audioBox.height).toBeLessThanOrEqual(headerBox.y + headerBox.height);
+  expect(audioBox.x).toBeGreaterThanOrEqual(shortcutBox.x + shortcutBox.width);
+  expect(audioBox.x - shortcutBox.x - shortcutBox.width).toBeLessThanOrEqual(4);
+  expect(audioBox.width).toBeLessThanOrEqual(36);
+  expect(audioBox.height).toBeLessThanOrEqual(36);
+  await page.locator('.app-header > [slot="content-end"]').screenshot({ path: "screenshots/speech-hide-header.png", animations: "disabled" });
+  await audio.click();
+  await expect(page.locator("#speech-bar")).toBeVisible();
+  await expect(audio).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#speech-toggle")).toBeFocused();
+  await expect(page.locator("#speech-minimize")).toHaveText("Hide");
+  await page.locator("#speech-bar").screenshot({ path: "screenshots/speech-hide-expanded.png", animations: "disabled" });
+  await page.locator(".speech-settings summary").click();
+  await page.locator("#speech-minimize").click();
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  await expect(page.locator(".speech-settings")).not.toHaveAttribute("open", "");
+  await expect(audio).toBeFocused();
+  await expect(audio).toHaveAttribute("aria-expanded", "false");
+  expect(await spoken(page)).toBe(initial);
+  expect(await page.evaluate(() => (window as any).speechMock.calls.length)).toBe(count);
+  await page.keyboard.press("Alt+Shift+L");
+  await expect(audio).toHaveAttribute("aria-label", /paused/);
+  expect(await spoken(page)).toBeUndefined();
+  await audio.click();
+  await expect(page.locator("#speech-toggle")).toHaveText("Resume");
+  await page.locator("#speech-minimize").click();
+  expect(await spoken(page)).toBeUndefined();
+  await page.keyboard.press("e");
+  await expect(page.locator("body")).toHaveAttribute("data-docs-hidden", "");
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  await page.screenshot({ path: "screenshots/speech-hide-presenting.png", animations: "disabled" });
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe(initial);
+  await audio.click();
+  await page.locator("#speech-mode").selectOption("continuous");
+  await page.locator("#speech-minimize").click();
+  await finishStep(page);
+  await expect(page).toHaveURL(/#ui$/);
+  await expect.poll(() => spoken(page)).toBe("Build the UI");
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  await expect(audio).toHaveAttribute("aria-label", /reading aloud/);
+  // The same header button can hide an expanded player without affecting playback.
+  await audio.click();
+  await expect(page.locator("#speech-bar")).toBeVisible();
+  await audio.click();
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  expect(await spoken(page)).toBe("Build the UI");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("body")).not.toHaveAttribute("data-presenting", "");
+  await expect(audio).toBeHidden();
+  await expect(page.locator("#speech-bar")).toBeVisible();
+  expect(await spoken(page)).toBe("Build the UI");
+});
+
+test("presentation audio button starts Listen, restores step-by-step Continue, and remains available after Close", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await page.locator("#present-toggle").click();
+  const audio = page.locator("#speech-expand");
+  await expect(audio).toHaveAttribute("aria-label", "Listen to this tutorial");
+  expect(await spoken(page)).toBeUndefined();
+  await audio.click();
+  await expect(page.locator("#speech-choice")).toBeVisible();
+  await expect(audio).toBeHidden();
+  expect(await spoken(page)).toBeUndefined();
+  await page.locator('[data-speech-mode="step"]').click();
+  await expect(page.locator("#speech-bar")).toBeHidden();
+  await expect(audio).toBeFocused();
+  await finishStep(page);
+  await expect(audio).toHaveAttribute("aria-label", /step finished/);
+  await audio.click();
+  await expect(page.locator("#speech-toggle")).toHaveText("Continue");
+  await page.locator("#speech-toggle").click();
+  await expect(page).toHaveURL(/#ui$/);
+  expect(await spoken(page)).toBe("Build the UI");
+  await page.locator("#speech-stop").click();
+  await expect(audio).toHaveAttribute("aria-label", "Listen to this tutorial");
+  await expect(audio).toBeFocused();
+  expect(await spoken(page)).toBeUndefined();
+  await audio.click();
+  await expect(page.locator("#speech-choice")).toBeHidden();
+  expect(await spoken(page)).toBe("Build the UI");
+  await mock(page, "wrongLanguage");
+  await expect(audio).toBeHidden();
+  expect(await spoken(page)).toBeUndefined();
+  await mock(page, "ready");
+  await expect(audio).toBeVisible();
+  await expect(audio).toHaveAttribute("aria-label", "Listen to this tutorial");
+  expect(await spoken(page)).toBeUndefined();
+});
+
+test("seeking at the exact start of a sentence does not select the preceding sentence", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await page.locator("#load-sdk").evaluate((step) => {
+    const p = document.createElement("p");
+    p.id = "adjacent-sentences";
+    p.textContent = "First sentence. Second sentence.";
+    step.prepend(p);
+  });
+  await playPause(page);
+  await page.keyboard.press("Alt+Shift+L");
+  await page.locator("#adjacent-sentences").evaluate((p) => {
+    const text = p.firstChild!;
+    const range = document.createRange();
+    range.setStart(text, "First sentence. ".length);
+    range.setEnd(text, text.textContent!.length);
+    getSelection()!.removeAllRanges(); getSelection()!.addRange(range);
+  });
+  await expect(page.locator("#speech-selection")).toBeEnabled();
+  await page.locator("#speech-selection").click();
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe("Second sentence.");
 });

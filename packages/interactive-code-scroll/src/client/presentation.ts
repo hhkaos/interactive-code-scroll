@@ -8,6 +8,9 @@ import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 /** Fired on `document` when the explanations panel is shown or hidden. */
 export const DOCS_TOGGLE_EVENT = "ics:docs-toggle";
 
+/** Fired on document when entering or leaving presentation mode. */
+export const PRESENTATION_EVENT = "ics:presentation";
+
 const setIcon = (selector: string, icon: string, text: string) => setAction(document.querySelector(selector), icon, text);
 
 /** Whether a key press comes from a field (the innermost element: a Calcite field's own <input> or <textarea>). */
@@ -38,12 +41,14 @@ export function startPresentation(): void {
   const body = document.body;
 
   const setPresenting = (on: boolean) => {
+    const changed = body.hasAttribute("data-presenting") !== on;
     body.toggleAttribute("data-presenting", on);
     document.querySelector<HTMLElement>("#shortcut-help:popover-open")?.hidePopover();
     if (!on) body.removeAttribute("data-highlight-hidden");
     setIcon("#present-toggle", on ? "presentation-x" : "presentation", on ? "Exit presentation" : "Present");
     // The large step index belongs to presentation mode (the browser may take the Esc that leaves it).
     if (!on) document.querySelector<HTMLElement>("#step-index:popover-open")?.hidePopover();
+    if (changed) document.dispatchEvent(new CustomEvent(PRESENTATION_EVENT));
   };
 
   // Shared by the toolbar action and Alt+P (not `click()`: it would leave the action's tooltip open).
@@ -85,7 +90,7 @@ export function startPresentation(): void {
     (event) => {
       if (event.key !== "Escape" || !body.hasAttribute("data-presenting")) return;
       // An open dialog or the step index, then a maximized pane (maximize.ts), take Esc first.
-      if (document.querySelector("calcite-dialog[open], #step-index:popover-open, #shortcut-help:popover-open") || body.hasAttribute("data-maximized")) return;
+      if (document.querySelector("calcite-dialog[open], #step-index:popover-open, #shortcut-help:popover-open, .speech-settings[open]") || body.hasAttribute("data-maximized")) return;
       setPresenting(false);
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     },

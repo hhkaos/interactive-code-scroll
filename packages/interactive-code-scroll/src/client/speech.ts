@@ -1,10 +1,12 @@
 import { closeHint, openHint } from "./hints.ts";
-import { DOCS_TOGGLE_EVENT } from "./presentation.ts";
+import { DOCS_TOGGLE_EVENT, PRESENTATION_EVENT } from "./presentation.ts";
 import { PROGRESS_EVENT, type StepEngine } from "./steps.ts";
-import { SPEECH_STORAGE_KEY, speechPreferences, speechSentences, speechVoices, speechWord } from "./speech-text.ts";
+import { SPEECH_STORAGE_KEY, speechPreferences, speechSentences, speechVoices, speechWord, type SpeechPreferences, type SpeechMode } from "./speech-text.ts";
 
 interface Sentence {
   text: string;
+  /** Spoken context is separate from DOM offsets used by highlights and seeking. */
+  prefix?: string;
   range(start?: number, end?: number): Range;
   block: HTMLElement;
   /** A hint read as an aside: its popover is open while it is read. */
@@ -40,7 +42,7 @@ function collapsedIn(element: Element): HTMLDetailsElement | undefined {
 }
 
 /** Read prose only, preserving text nodes and the reader's selection. */
-function sentences(root: HTMLElement, lang: string, aside?: HTMLElement): Sentence[] {
+function sentences(root: HTMLElement, lang: string, preferences: SpeechPreferences, aside?: HTMLElement): Sentence[] {
   const groups: { block: HTMLElement; nodes: Text[]; details?: HTMLDetailsElement }[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
@@ -49,7 +51,9 @@ function sentences(root: HTMLElement, lang: string, aside?: HTMLElement): Senten
       const popover = parent?.closest(".hint-popover");
       if (!parent || parent.closest(SKIP) || (popover && popover !== (aside && root))) return NodeFilter.FILTER_REJECT;
       // Collapsed content is hidden until narration opens it, so the section must be visible instead.
-      return readable(collapsedIn(parent) ?? parent) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      const closed = collapsedIn(parent);
+      if (closed && !preferences.collapsed) return NodeFilter.FILTER_REJECT;
+      return readable(closed ?? parent) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
     },
   });
   while (walker.nextNode()) {
@@ -83,7 +87,7 @@ function sentences(root: HTMLElement, lang: string, aside?: HTMLElement): Senten
     }));
     // Each hint follows the sentence where its term ends, framed by short pauses.
     const asides = new Map<number, HTMLElement[]>();
-    if (!aside) {
+    if (!aside && preferences.hints) {
       let offset = 0;
       const ends = new Map<HTMLElement, number>();
       for (const node of nodes) {
@@ -100,7 +104,12 @@ function sentences(root: HTMLElement, lang: string, aside?: HTMLElement): Senten
       queue.push(item);
       for (const hint of asides.get(i) ?? []) {
         const popover = hint.querySelector<HTMLElement>(".hint-popover");
-        if (popover) queue.push(...sentences(popover, lang, hint).map((sentence) => ({ ...sentence, details })));
+        if (popover) {
+          const label = hint.querySelector(".hint-label")?.textContent?.trim();
+          queue.push(...sentences(popover, lang, preferences, hint).map((sentence, i) => ({
+            ...sentence, details, prefix: i === 0 && label ? `About ${label}: ` : undefined,
+          })));
+        }
       }
     });
   }
@@ -124,19 +133,31 @@ export function startSpeech(engine: StepEngine): void {
   const status = document.querySelector<HTMLElement>("#speech-status")!;
   const rate = bar.querySelector<HTMLSelectElement>("#speech-rate")!;
   const voiceSelect = bar.querySelector<HTMLSelectElement>("#speech-voice")!;
-  const auto = bar.querySelector<HTMLInputElement>("#speech-auto")!;
+  const mode = bar.querySelector<HTMLSelectElement>("#speech-mode")!;
+  const hints = bar.querySelector<HTMLInputElement>("#speech-hints")!;
+  const collapsed = bar.querySelector<HTMLInputElement>("#speech-collapsed")!;
+  const choice = bar.querySelector<HTMLElement>("#speech-choice")!;
+  const settings = bar.querySelector<HTMLDetailsElement>(".speech-settings")!;
+  const selectionButton = bar.querySelector<HTMLButtonElement>("#speech-selection")!;
+  const stateLabel = bar.querySelector<HTMLElement>("#speech-state")!;
   const launch = document.querySelector<HTMLButtonElement>("#speech-launch")!;
+  const dock = document.querySelector<HTMLElement>("#speech-dock")!;
+  const expand = document.querySelector<HTMLButtonElement>("#speech-expand")!;
+  const minimize = bar.querySelector<HTMLButtonElement>("#speech-minimize")!;
+  let minimized = true;
   let preferences = speechPreferences(null);
   try { preferences = speechPreferences(localStorage.getItem(SPEECH_STORAGE_KEY)); } catch { /* Storage may be blocked. */ }
   rate.value = String(preferences.rate);
-  auto.checked = preferences.auto;
+  mode.value = preferences.mode ?? "step";
+  hints.checked = preferences.hints;
+  collapsed.checked = preferences.collapsed;
   function savePreferences(): void {
-    preferences = { voice: voiceSelect.value, rate: Number(rate.value), auto: auto.checked };
+    preferences = { voice: voiceSelect.value, rate: Number(rate.value), mode: preferences.mode, hints: hints.checked, collapsed: collapsed.checked };
     try { localStorage.setItem(SPEECH_STORAGE_KEY, JSON.stringify(preferences)); } catch { /* Keep in-memory preferences. */ }
   }
   const lang = document.documentElement.lang || "en";
   let voices: SpeechSynthesisVoice[] = [];
-  let state: "idle" | "playing" | "paused" = "idle";
+  let state: "idle" | "choosing" | "playing" | "paused" = "idle";
   let queue: Sentence[] = [];
   let index = 0;
   let offset = 0;
@@ -146,6 +167,7 @@ export function startSpeech(engine: StepEngine): void {
   let root: HTMLElement | undefined;
   let advancing = false;
   let waited = -1;
+  let selectedRange: Range | undefined;
   let openHintElement: HTMLElement | undefined;
   /** Show what the next sentence reads: its hint popover, or its collapsed section. */
   function stage(sentence?: Sentence): void {
@@ -180,15 +202,31 @@ export function startSpeech(engine: StepEngine): void {
     }
   }
   function render(message?: string): void {
-    bar.hidden = !voices.length || state === "idle";
+    const presenting = document.body.hasAttribute("data-presenting");
+    const compact = presenting && minimized && state !== "choosing";
+    bar.hidden = !voices.length || state === "idle" || compact;
+    dock.hidden = !presenting || !voices.length || state === "choosing";
+    dock.dataset.state = state;
+    expand.setAttribute("aria-expanded", String(!bar.hidden));
+    minimize.hidden = !presenting || state === "choosing";
     launch.setAttribute("aria-expanded", String(!bar.hidden));
     launch.setAttribute("aria-label", bar.hidden ? "Listen to this tutorial" : "Listen: stop narration and close controls");
     launch.title = message ?? "Listen / pause / resume (Alt+Shift+L)";
     bar.dataset.state = state;
-    controls.hidden = state === "idle";
-    toggle.querySelector("span")!.textContent = state === "playing" ? "Pause" : state === "paused" ? "Resume" : "Listen";
+    choice.hidden = state !== "choosing";
+    controls.hidden = state === "idle" || state === "choosing";
+    toggle.hidden = controls.hidden;
+    bar.querySelector<HTMLElement>("#speech-seek")!.hidden = controls.hidden;
+    const finished = state === "paused" && root === currentRoot() && index >= queue.length;
+    stateLabel.textContent = message ?? (state === "playing" ? "Reading aloud" : finished ? "Step finished" : state === "paused" ? "Paused" : "Read aloud");
+    selectionButton.disabled = !selectedRange || controls.hidden;
+    toggle.querySelector("span")!.textContent = state === "playing" ? "Pause" : finished ? "Continue" : state === "paused" ? "Resume" : "Listen";
     toggle.querySelector("calcite-icon")!.setAttribute("icon", state === "playing" ? "pause" : state === "paused" ? "play" : "sound");
-    toggle.setAttribute("aria-label", `${state === "playing" ? "Pause" : state === "paused" ? "Resume" : "Start"} narration (Alt+Shift+L)`);
+    toggle.setAttribute("aria-label", `${state === "playing" ? "Pause" : finished ? "Continue" : state === "paused" ? "Resume" : "Start"} narration (Alt+Shift+L)`);
+    const visibilityAction = bar.hidden ? "Show" : "Hide";
+    const playbackState = state === "playing" ? "reading aloud" : finished ? "step finished" : "paused";
+    expand.title = state === "idle" ? "Listen to this tutorial" : `${visibilityAction} narration controls (${playbackState})`;
+    expand.setAttribute("aria-label", expand.title);
     status.textContent = message ?? (state === "playing" ? "Reading aloud" : state === "paused" ? "Narration paused" : "");
   }
   function cancel(): void {
@@ -204,6 +242,8 @@ export function startSpeech(engine: StepEngine): void {
     cancel();
     state = "idle";
     root = undefined;
+    settings.open = false;
+    selectedRange = undefined;
     render(message);
   }
   function pause(): void {
@@ -221,7 +261,6 @@ export function startSpeech(engine: StepEngine): void {
   }
   function advance(): void {
     if (state !== "playing") return;
-    if (!auto.checked) { pause(); return; }
     const progress = engine.progress();
     if (progress.completed) { stop("Narration finished"); return; }
     advancing = true;
@@ -238,8 +277,8 @@ export function startSpeech(engine: StepEngine): void {
       clearHighlight();
       stage();
       if (engine.progress().completed) stop("Narration finished");
-      else if (auto.checked) timer = setTimeout(advance, 700);
-      else { state = "paused"; render("Step finished. Resume to read it again, or choose the next step."); }
+      else if (preferences.mode === "continuous") timer = setTimeout(advance, 700);
+      else { state = "paused"; render(); status.textContent = "Step finished. Continue to the next step when ready."; }
       return;
     }
     stage(sentence);
@@ -252,7 +291,8 @@ export function startSpeech(engine: StepEngine): void {
     }
     const token = ++generation;
     const startOffset = offset;
-    const text = sentence.text.slice(startOffset);
+    const prefix = startOffset === 0 ? sentence.prefix ?? "" : "";
+    const text = prefix + sentence.text.slice(startOffset);
     const next = new SpeechSynthesisUtterance(text);
     utterance = next; // Keep alive until end; some engines otherwise drop callbacks.
     next.lang = lang;
@@ -261,7 +301,7 @@ export function startSpeech(engine: StepEngine): void {
     next.onstart = () => { if (token === generation) highlight(sentence, startOffset); };
     next.onboundary = (event) => {
       if (token !== generation || event.name !== "word") return;
-      const word = speechWord(sentence.text, startOffset + event.charIndex, lang);
+      const word = speechWord(sentence.text, startOffset + event.charIndex - prefix.length, lang);
       if (word) { offset = word.start; highlight(sentence, word.start, word.end); }
     };
     next.onend = () => {
@@ -279,7 +319,8 @@ export function startSpeech(engine: StepEngine): void {
   function start(): void {
     cancel();
     root = currentRoot();
-    queue = root ? sentences(root, lang) : [];
+    selectedRange = undefined;
+    queue = root ? sentences(root, lang, preferences) : [];
     index = 0;
     offset = 0;
     waited = -1;
@@ -290,11 +331,19 @@ export function startSpeech(engine: StepEngine): void {
   }
   function playPause(): void {
     if (!voices.length) return;
-    if (state === "playing") pause();
+    if (state === "idle" && !preferences.mode) {
+      state = "choosing";
+      render();
+      choice.querySelector<HTMLButtonElement>("button")!.focus();
+    } else if (state === "choosing") return;
+    else if (state === "playing") pause();
     else if (state === "paused" && root === currentRoot() && index < queue.length) {
       state = "playing";
       render();
       speak();
+    } else if (state === "paused" && root === currentRoot() && index >= queue.length) {
+      state = "playing";
+      advance();
     } else start();
   }
   function updateVoices(): void {
@@ -303,22 +352,124 @@ export function startSpeech(engine: StepEngine): void {
     voiceSelect.replaceChildren(...voices.map((voice) => new Option(`${voice.name}${voice.localService ? "" : " (online)"}`, voice.voiceURI)));
     voiceSelect.value = voices.find((voice) => voice.voiceURI === selected)?.voiceURI ?? voices.find((voice) => voice.default)?.voiceURI ?? voices[0]?.voiceURI ?? "";
     launch.hidden = !voices.length;
-    bar.hidden = !voices.length || state === "idle";
     if (!voices.length && state !== "idle") stop("No voice available for this tutorial's language");
+    else render();
   }
+  function focusPlayback(): void {
+    (bar.hidden ? expand : toggle).focus();
+  }
+  function minimizeControls(): void {
+    minimized = true;
+    settings.open = false;
+    render();
+    expand.focus();
+  }
+  minimize.addEventListener("click", minimizeControls);
+  expand.addEventListener("click", () => {
+    if (state === "idle") { playPause(); if (choice.hidden) focusPlayback(); return; }
+    if (!bar.hidden) { minimizeControls(); return; }
+    minimized = false;
+    render();
+    focusPlayback();
+  });
+  document.addEventListener(PRESENTATION_EVENT, () => {
+    const focused = bar.contains(document.activeElement) || dock.contains(document.activeElement);
+    minimized = true;
+    settings.open = false;
+    render();
+    if (focused) {
+      if (state === "idle") (dock.hidden ? launch : expand).focus();
+      else if (state !== "choosing") focusPlayback();
+    }
+  });
   toggle.addEventListener("click", playPause);
   launch.addEventListener("click", () => {
-    if (state === "idle") { playPause(); toggle.focus(); }
+    if (state === "idle") { playPause(); if (choice.hidden) focusPlayback(); }
     else stop();
   });
-  bar.querySelector("#speech-stop")!.addEventListener("click", () => { stop(); launch.focus(); });
-  auto.addEventListener("change", savePreferences);
+  bar.querySelector("#speech-stop")!.addEventListener("click", () => { stop(); (dock.hidden ? launch : expand).focus(); });
+  function chooseMode(value: SpeechMode): void {
+    preferences.mode = value;
+    mode.value = value;
+    savePreferences();
+    if (state === "choosing") { start(); focusPlayback(); }
+    // A pending advance must respect a switch back to step-by-step.
+    else if (state === "playing" && index >= queue.length) {
+      cancel();
+      speak();
+    }
+  }
+  choice.querySelectorAll<HTMLButtonElement>("[data-speech-mode]").forEach((button) => {
+    button.addEventListener("click", () => chooseMode(button.dataset.speechMode as SpeechMode));
+  });
+  mode.addEventListener("change", () => chooseMode(mode.value as SpeechMode));
+  for (const input of [hints, collapsed]) input.addEventListener("change", () => {
+    savePreferences();
+    if (!root) return;
+    const remaining = queue.slice(index);
+    const current = remaining[0];
+    const previousOffset = offset;
+    cancel();
+    queue = sentences(root, lang, preferences);
+    // Keep the current sentence, or the next surviving one when an aside is disabled.
+    const next = remaining.find((candidate) => queue.some((sentence) => sentence.block === candidate.block && sentence.text === candidate.text));
+    index = next ? queue.findIndex((sentence) => sentence.block === next.block && sentence.text === next.text) : queue.length;
+    offset = next === current ? previousOffset : 0;
+    waited = -1;
+    render();
+    speak();
+  });
+  function closeSettings(restoreFocus = false): void {
+    settings.open = false;
+    if (restoreFocus) settings.querySelector<HTMLElement>("summary")!.focus();
+  }
+  document.addEventListener("pointerdown", (event) => {
+    if (!event.composedPath().includes(settings)) closeSettings();
+  });
+  // Handle Escape before page-level presentation and maximization shortcuts.
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && settings.open) {
+      event.preventDefault(); event.stopImmediatePropagation(); closeSettings(true);
+    }
+  }, true);
+  function seek(range: Range): void {
+    if (!root || root !== currentRoot() || (state !== "playing" && state !== "paused")) return;
+    // Ranges include both ends: a shared boundary belongs to the following sentence.
+    let at = queue.length - 1;
+    for (; at >= 0; at--) {
+      if (queue[at]!.range().isPointInRange(range.startContainer, range.startOffset)) break;
+    }
+    if (at < 0) return;
+    cancel();
+    index = at; offset = 0; waited = -1;
+    render();
+    if (state === "playing") speak();
+    else highlight(queue[index]!);
+  }
+  document.addEventListener("selectionchange", () => {
+    const selection = getSelection();
+    const range = selection?.rangeCount && !selection.isCollapsed ? selection.getRangeAt(0) : undefined;
+    if (range && root?.contains(range.startContainer) && root.contains(range.endContainer)) selectedRange = range.cloneRange();
+    else if (!bar.contains(document.activeElement)) selectedRange = undefined;
+    selectionButton.disabled = !selectedRange;
+  });
+  selectionButton.addEventListener("click", () => { if (selectedRange) seek(selectedRange); });
+  document.querySelector(".docs")?.addEventListener("click", (event) => {
+    if (!(event instanceof MouseEvent) || event.detail !== 1 || !getSelection()?.isCollapsed) return;
+    const target = event.target;
+    if (!(target instanceof Element) || target.closest("a,button,summary,input,textarea,select,[contenteditable],.hint,calcite-button,calcite-action")) return;
+    const caret = document.caretPositionFromPoint?.(event.clientX, event.clientY);
+    const range = caret ? document.createRange() : document.caretRangeFromPoint?.(event.clientX, event.clientY);
+    if (!range) return;
+    if (caret) { range.setStart(caret.offsetNode, caret.offset); range.collapse(true); }
+    if (root?.contains(range.startContainer)) seek(range);
+  });
   for (const select of [rate, voiceSelect]) select.addEventListener("change", () => {
     savePreferences();
     if (state === "playing") { cancel(); speak(); }
   });
   document.addEventListener(PROGRESS_EVENT, () => {
-    if (advancing || state === "idle") return;
+    if (advancing || state === "idle" || state === "choosing") return;
     if (root !== currentRoot()) {
       const playing = state === "playing";
       cancel();

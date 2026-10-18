@@ -27,9 +27,15 @@ describe("narration offsets", () => {
 
 describe("narration preferences", () => {
   it("restores supported preferences and rejects invalid storage", () => {
-    expect(speechPreferences('{"voice":"local-en","rate":1.5,"auto":true}')).toEqual({ voice: "local-en", rate: 1.5, auto: true });
+    expect(speechPreferences('{"voice":"local-en","rate":1.5,"auto":true}')).toEqual({ voice: "local-en", rate: 1.5, mode: "continuous", hints: true, collapsed: false });
     for (const value of [null, "bad JSON", "null", "42", '{"voice":1,"rate":99,"auto":"yes"}']) {
-      expect(speechPreferences(value)).toEqual({ voice: "", rate: 1, auto: false });
+      expect(speechPreferences(value)).toEqual({ voice: "", rate: 1, hints: true, collapsed: false });
     }
   });
+});
+
+it("migrates explicit old choices and validates independent narration settings", () => {
+  expect(speechPreferences('{"auto":false}').mode).toBe("step");
+  expect(speechPreferences('{"mode":"continuous","auto":false,"hints":false,"collapsed":true}')).toEqual({ voice: "", rate: 1, mode: "continuous", hints: false, collapsed: true });
+  expect(speechPreferences('{"mode":"unknown","hints":"false","collapsed":"true"}')).toEqual({ voice: "", rate: 1, hints: true, collapsed: false });
 });
