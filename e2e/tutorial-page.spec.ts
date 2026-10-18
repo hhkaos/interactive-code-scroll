@@ -340,6 +340,10 @@ test("shows the file tab focus ring for keyboard focus only", async ({ page }) =
   await expect(page.locator('calcite-tab-title[data-file="main.js"]')).toBeFocused();
   expect(await ring("main.js")).toBe("rgba(0, 0, 0, 0)");
   await page.keyboard.press("Shift+Tab");
+  await expect(page.locator('.splitter[aria-orientation="vertical"]')).toBeFocused();
+  // Focusing the splitter reveals its Hide explanations control, adding a Tab stop.
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#docs-toggle")).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.locator('calcite-tab-title[data-file="main.js"]')).toBeFocused();
   // Calcite fades the ring in (outline-color transition, 0.15s): right after Tab it may still be transparent.

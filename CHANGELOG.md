@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- E2E narration expectations include the nested-list fixture content, and the keyboard focus-ring test accounts for the explanations toggle revealed when the splitter receives focus.
+
 ## [0.2.0-beta.11] - 2026-10-18
 
 ### Added
