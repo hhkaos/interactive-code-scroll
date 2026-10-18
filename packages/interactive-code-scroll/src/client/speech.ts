@@ -18,6 +18,20 @@ const SKIP = "pre, script, style, template, button:not(.hint-label), input, text
 const BLOCK = "h1,h2,h3,h4,h5,h6,p,li,td,th,blockquote,summary,details";
 export const ASIDE_PAUSE_MS = 400;
 
+const explanationsHidden = () => document.body.hasAttribute("data-docs-hidden");
+
+/** Ignore only the hidden panel itself; author-hidden prose must stay excluded. */
+function readable(element: HTMLElement): boolean {
+  if (element.checkVisibility()) return true;
+  const column = element.closest(".docs-column");
+  if (!explanationsHidden() || !column) return false;
+  for (let current: HTMLElement | null = element; current && current !== column; current = current.parentElement) {
+    const style = getComputedStyle(current);
+    if (style.display === "none" || style.contentVisibility === "hidden") return false;
+  }
+  return true;
+}
+
 /** The closed <details> whose collapsed content (not its summary) holds this element. */
 function collapsedIn(element: Element): HTMLDetailsElement | undefined {
   const details = element.closest("details:not([open])");
@@ -35,7 +49,7 @@ function sentences(root: HTMLElement, lang: string, aside?: HTMLElement): Senten
       const popover = parent?.closest(".hint-popover");
       if (!parent || parent.closest(SKIP) || (popover && popover !== (aside && root))) return NodeFilter.FILTER_REJECT;
       // Collapsed content is hidden until narration opens it, so the section must be visible instead.
-      return (collapsedIn(parent) ?? parent).checkVisibility() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      return readable(collapsedIn(parent) ?? parent) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
     },
   });
   while (walker.nextNode()) {
@@ -135,6 +149,7 @@ export function startSpeech(engine: StepEngine): void {
   let openHintElement: HTMLElement | undefined;
   /** Show what the next sentence reads: its hint popover, or its collapsed section. */
   function stage(sentence?: Sentence): void {
+    if (explanationsHidden()) sentence = undefined;
     if (openHintElement && openHintElement !== sentence?.hint) closeHint(openHintElement);
     openHintElement = sentence?.hint;
     if (openHintElement) openHint(openHintElement);
@@ -148,6 +163,7 @@ export function startSpeech(engine: StepEngine): void {
   };
   function highlight(sentence: Sentence, start = 0, end = sentence.text.length): void {
     clearHighlight();
+    if (explanationsHidden()) return;
     if (canHighlight) CSS.highlights.set("ics-speech", new Highlight(sentence.range(start, end)));
     else sentence.block.setAttribute("data-speaking", "");
     // The hint popover sits next to its term, which the previous sentence revealed.
@@ -274,7 +290,6 @@ export function startSpeech(engine: StepEngine): void {
   }
   function playPause(): void {
     if (!voices.length) return;
-    if (document.body.hasAttribute("data-docs-hidden")) { render("Show the explanations to listen"); return; }
     if (state === "playing") pause();
     else if (state === "paused" && root === currentRoot() && index < queue.length) {
       state = "playing";
@@ -326,9 +341,12 @@ export function startSpeech(engine: StepEngine): void {
     event.preventDefault();
     playPause();
   });
-  // Narration follows the explanations panel: it keeps playing while presenting, and pauses while hidden.
-  document.addEventListener(DOCS_TOGGLE_EVENT, (event) => {
-    if ((event as CustomEvent<{ hidden: boolean }>).detail.hidden) pause();
+  // Keep audio independent of the panel, restoring its visual cues when shown.
+  document.addEventListener(DOCS_TOGGLE_EVENT, () => {
+    clearHighlight();
+    const sentence = state === "playing" ? queue[index] : undefined;
+    stage(sentence);
+    if (sentence) highlight(sentence, offset);
   });
   addEventListener("pagehide", () => stop());
   synth.addEventListener("voiceschanged", updateVoices);

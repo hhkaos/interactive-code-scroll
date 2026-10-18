@@ -26,7 +26,7 @@ Console is **optional and off by default**. Set frontmatter `console: true` with
 
 ## Read aloud changes (0.2.0-beta.9)
 
-Read aloud now continues in presentation mode; Alt+Shift+L can start it there. Hiding the explanations pauses playback. Collapsed `<details>` sections open as their content is read, and hints are read as asides after their terms. No migration is required. To exclude an element, such as a solution, from narration, add `data-speech="skip"`. See [Listen to a tutorial](authoring.md#listen-to-a-tutorial).
+Read aloud now continues in presentation mode; Alt+Shift+L can start it there. Narration also works with the explanations hidden; Alt+Shift+L starts, pauses or resumes it there. Collapsed `<details>` sections open as their content is read, and hints are read as asides after their terms. No migration is required. To exclude an element, such as a solution, from narration, add `data-speech="skip"`. See [Listen to a tutorial](authoring.md#listen-to-a-tutorial).
 
 ## Recommended Upgrade Flow
 

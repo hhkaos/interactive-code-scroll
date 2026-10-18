@@ -121,7 +121,7 @@ test("automatic advance is optional, skips carousel paging and reads the closing
   await expect(page.locator("#step-position-text")).toHaveText("Done");
 });
 
-test("fields pause narration; presenting keeps it; hidden explanations pause it", async ({ page }) => {
+test("fields pause narration; presenting and hidden explanations keep it", async ({ page }) => {
   await mockSpeech(page);
   await page.goto("/#load-sdk");
   await playPause(page);
@@ -139,12 +139,12 @@ test("fields pause narration; presenting keeps it; hidden explanations pause it"
   expect(await spoken(page)).toBe(reading);
   await page.keyboard.press("e");
   await expect(page.locator("body")).toHaveAttribute("data-docs-hidden", "");
-  expect(await spoken(page)).toBeUndefined();
+  expect(await spoken(page)).toBe(reading);
   await page.keyboard.press("Alt+Shift+L");
   expect(await spoken(page)).toBeUndefined();
-  await expect(page.locator("#speech-status")).toHaveText("Show the explanations to listen");
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe(reading);
   await page.keyboard.press("e");
-  await page.keyboard.press("Alt+Shift+L");
   await expect(page.locator("#speech-toggle")).toHaveText("Pause");
   expect(await spoken(page)).toBeTruthy();
   await page.keyboard.press("Alt+Shift+L");
@@ -153,6 +153,87 @@ test("fields pause narration; presenting keeps it; hidden explanations pause it"
   await expect(page.locator("body")).not.toHaveAttribute("data-presenting", "");
   await expect(page.locator("#speech-toggle")).toHaveText("Resume");
   expect(await spoken(page)).toBeUndefined();
+});
+
+test("starting with hidden explanations reads prose, hints and collapsed sections without revealing them", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#oauth");
+  const expected = [
+    "Register behavior",
+    "This step focuses a multi-line JavaScript region and mentions fixtureState inline.",
+    "The shared object that stores fixture values.",
+    "See the example docs.",
+    "Why register more than one behavior?",
+    "registerOAuthInfos() accepts an array so one app can register more than one configuration.",
+    "Use registered behaviors to respond to changes.",
+    "Callbacks registered for the fixture’s interactions.",
+  ];
+  await page.locator("#oauth").evaluate((step) => {
+    for (const [attribute, value] of [["hidden", ""], ["style", "display: none"], ["data-speech", "skip"], ["aria-hidden", "true"]]) {
+      const p = document.createElement("p");
+      p.setAttribute(attribute!, value!);
+      p.textContent = "Excluded prose must stay silent.";
+      step.append(p);
+    }
+  });
+  await page.locator("#step-position").click();
+  await page.locator('#step-index a[href="#oauth"]').click();
+  await page.locator(".gutter").hover();
+  await page.locator("#docs-toggle").click();
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe(expected[0]);
+  await finishStep(page);
+  expect(await page.evaluate(() => ((window as any).speechMock.calls as string[]).map((text) => text.trim()))).toEqual(expected);
+  await expect(page.locator("body")).toHaveAttribute("data-docs-hidden", "");
+  await expect(page.locator("#oauth details")).not.toHaveAttribute("open", "");
+  await expect(page.locator("#oauth .hint[data-open]")).toHaveCount(0);
+  expect(await page.evaluate(() => CSS.highlights.has("ics-speech"))).toBe(false);
+});
+
+test("hidden narration reads the intro and closing prose", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/");
+  await page.locator(".gutter").hover();
+  await page.locator("#docs-toggle").click();
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBeTruthy();
+  await page.keyboard.press("Alt+Shift+L");
+  await page.locator(".gutter").hover();
+  await page.locator("#docs-toggle").click();
+  await page.locator("#step-position").click();
+  await page.locator("#step-index a").last().click();
+  await page.locator("#step-next").click();
+  await expect(page.locator("body")).toHaveAttribute("data-completed", "");
+  await page.locator(".gutter").hover();
+  await page.locator("#docs-toggle").click();
+  await page.keyboard.press("Alt+Shift+L");
+  expect(await spoken(page)).toBe("You've completed Framework Fixture Tutorial");
+  await mock(page, "end");
+  expect(await spoken(page)).toContain("Outro prose with Markdown and a link");
+  await finishStep(page);
+  expect(await spoken(page)).toBeUndefined();
+  await expect(page.locator("body")).toHaveAttribute("data-docs-hidden", "");
+});
+
+test("automatic and manual step navigation keep narrating with explanations hidden", async ({ page }) => {
+  await mockSpeech(page);
+  await page.goto("/#load-sdk");
+  await playPause(page);
+  await page.locator(".speech-settings summary").click();
+  await page.locator("#speech-auto").check();
+  await page.locator(".gutter").hover();
+  await page.locator("#docs-toggle").click();
+  await finishStep(page);
+  await expect(page).toHaveURL(/#ui$/);
+  await expect.poll(() => spoken(page)).toBe("Build the UI");
+  await page.keyboard.press("PageDown");
+  await expect(page).toHaveURL(/#register-app$/);
+  await expect.poll(() => spoken(page)).toBeTruthy();
+  await expect(page.locator("body")).toHaveAttribute("data-docs-hidden", "");
+  await page.locator(".gutter").hover();
+  await page.locator("#docs-toggle").click();
+  await expect(page.locator("#speech-toggle")).toHaveText("Pause");
+  expect(await page.evaluate(() => CSS.highlights.has("ics-speech"))).toBe(true);
 });
 
 test("hints are read as asides with their popover open; collapsed sections open when read", async ({ page }) => {

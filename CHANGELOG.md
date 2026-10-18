@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Read aloud can start, pause, resume and follow step navigation with the explanations hidden; showing them restores the current sentence’s visual cues.
+
 - Project architecture documents presentation shortcut routing, shared grouped help, temporary code-region emphasis and animated keyboard panel presets with author/manual size precedence.
 
 - Public documentation review now fingerprints every top-level `docs/*.md` file and the root/package READMEs, reports affected paths and detects added or removed pages even without changelog citations. The initial usage audit corrects narration in presentation mode, intro outline/media fallback, request-only Result panes, series card links and README CLI/request-runner descriptions.

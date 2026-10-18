@@ -1,6 +1,13 @@
 {
   "changes": [
     {
+      "change": "Read aloud can start, pause, resume and follow step navigation with the explanations hidden; showing them restores the current sentence’s visual cues.",
+      "docs": [
+        "docs/authoring.md#listen-to-a-tutorial",
+        "docs/features.md#reading-a-tutorial"
+      ]
+    },
+    {
       "change": "Quickly moving or tabbing between inline hints closes the previous popover instead of leaving it stuck open.",
       "reason": "Bug fix restoring existing hint hover/focus behavior; no authoring API or reader controls changed."
     },
@@ -117,17 +124,17 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "e6a11f792a675f100929f73189a6d33a6ff59f06c9fcce54fd5a8703f507db8b",
-  "changelogDigest": "125847658a0a0c4c8c8e6db08a197fb1e0899151468176709b629c276546687c",
+  "sourceDigest": "46f47c074598ca5b35e65646602c08915a4d3ff9994098ab5d6c586e087eb4ad",
+  "changelogDigest": "7ee4083108c545e8eda10061827853a34fd44cf14378aa99159c626e60589064",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
-    "docs/authoring.md": "17b933563410e0a69a20b6b13383abffeec5552e21d49f6470bb7025cf6f14f9",
+    "docs/authoring.md": "b4dc944a0599d1a58d34fa787ab97bfc5f32b05c6f5a0bbf7fd2ffae92daf5ad",
     "docs/cli.md": "3ce991ef73edbad6e6e01016e13499a7e7472cb4773114c9138e6fc1e2fbbf17",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "d4690ce06b81057108b126f72572642431bf94ce20950ce2862cec8b1845d735",
-    "docs/presenting.md": "d6cd556cdd77d20efc7fbff4ffeb0cc172ebeef5d73d1ff2225dd9f202185049",
+    "docs/features.md": "d43765f2b5ad6ff3a0cc053e53bf9d45f7ef63c0620d25c2c58cc02e1e0a87ea",
+    "docs/presenting.md": "e80c312274392cb5cbc1fd56698910f46d8352fae3f89f2ea14b00ed6e521df9",
     "docs/quick-start.md": "4bd4733f9f3fc9da91fd6d76dda6f3b941b70b65c8d39128e25e25d43134b24d",
-    "docs/upgrade.md": "6d4d27c6f60428a4cf755d9db789750eccf46a0b04aec83a4871c2c0d1dea985",
+    "docs/upgrade.md": "ee73c82a2aa32ea8c3bf3390e7f98b2e641e5b52131c289028b17445c9fb5295",
     "packages/create-interactive-code-scroll/README.md": "c21428a5cc2239488c1837d5b3b73f2466edd40060aa13cc7d80f36e8607488b",
     "packages/interactive-code-scroll/README.md": "fd71b4e637bf629fc9f4ab8f96154a0ea1dfb712bc54f7fcdb416531dcd4714e"
   }
