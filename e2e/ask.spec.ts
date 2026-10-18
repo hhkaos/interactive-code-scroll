@@ -20,7 +20,7 @@ test("selecting prose offers the author and AI with its context", async ({ page 
   const selected = await page.evaluate(() => getSelection()!.toString());
 
   const body = bodyOf((await page.locator("#ask-author").getAttribute("href"))!);
-  expect(body).toContain("Tutorial: [Framework Fixture Tutorial](http://localhost:4400/#load-sdk:~:text=");
+  expect(body).toContain(`Tutorial: [Framework Fixture Tutorial](${new URL(page.url()).origin}/#load-sdk:~:text=`);
   expect(body).toContain("Step: Load the runtime");
   expect(body).toContain(`> ${selected.trim()}`);
 

@@ -1,6 +1,10 @@
 {
   "changes": [
     {
+      "change": "Hiding explanations after selecting text preserves the active step; hidden-panel scroll events no longer jump back to the introduction or first step.",
+      "reason": "Bug fix restoring the existing navigation behavior; no authoring API or reader controls changed."
+    },
+    {
       "change": "Public documentation review now fingerprints every top-level `docs/*.md` file and the root/package READMEs, reports affected paths and detects added or removed pages even without changelog citations. The initial usage audit corrects narration in presentation mode, intro outline/media fallback, request-only Result panes, series card links and README CLI/request-runner descriptions.",
       "docs": [
         "docs/features.md#reading-a-tutorial",
@@ -97,8 +101,8 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "946a918b7fd75fb87684df4b7df3cc6170766263bf30f7c1a798d9d0eaa4c92f",
-  "changelogDigest": "ae2d59f3ea373649e3f0c8ddc0a7367d79e25ef4ac4124b52ff15480d3c26473",
+  "sourceDigest": "f0bf6e153b4f856dd21994e5d6b37d1bb7dd1b702c00d628a6c7627d45d78c8c",
+  "changelogDigest": "56626012964811521fe734ae08650b2689ec4598e294b1d0301a7d076a015d94",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
     "docs/authoring.md": "62a534cfceaae43af6afa4f542bdba36474ac4fe3d085d9d188aa05a5bb85e74",

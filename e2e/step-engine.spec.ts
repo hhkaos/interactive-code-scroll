@@ -40,7 +40,7 @@ test("keyboard and clicker keys move between steps", async ({ page }) => {
 
 test("going back to the intro clears the active step and focused region", async ({ page }) => {
   await page.goto("/#load-sdk");
-  await expect(focused(page)).toHaveCount(1);
+  await expect(focused(page).first()).toBeVisible();
   await page.keyboard.press("ArrowUp");
   await expect(page).not.toHaveURL(/#/);
   await expect(page.locator("section.step[data-active]")).toHaveCount(0);

@@ -38,6 +38,32 @@ test("hiding the explanations gives code the full width; keys still move steps",
   await expect(page).toHaveURL(/#oauth$/);
 });
 
+test("hiding explanations after selecting text keeps the active step", async ({ page }) => {
+  await page.goto("/#config");
+  await expect(page.locator("#config")).toHaveAttribute("data-active", "");
+  const box = (await page.locator("#config p").first().boundingBox())!;
+  await page.mouse.move(box.x + 2, box.y + 8);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 200, box.y + 8, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(() => page.evaluate(() => getSelection()?.toString().trim().length ?? 0)).toBeGreaterThan(0);
+
+  await page.locator(".layout .splitter").hover();
+  await page.locator("#docs-toggle").click();
+  await expect(page.locator("main.docs")).toBeHidden();
+  // Let the hidden scroller's scroll/observer callbacks run before checking its state.
+  await page.waitForTimeout(800);
+  await expect(page).toHaveURL(/#config$/);
+  await expect(page.locator("#config")).toHaveAttribute("data-active", "");
+
+  await page.keyboard.press("PageDown");
+  await expect(page).toHaveURL(/#oauth$/);
+  await page.locator("#docs-toggle").click();
+  await expect(page.locator("#oauth h2")).toBeInViewport();
+  await page.waitForTimeout(800);
+  await expect(page).toHaveURL(/#oauth$/);
+});
+
 test("in presentation mode the clicker ends on a full-screen closing slide with a QR code", async ({ page }) => {
   const slide = page.locator("body > .completion[data-slide]");
   await page.goto("/#embed-next-slide");

@@ -468,7 +468,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
   };
   const observer = new IntersectionObserver(
     (entries) => {
-      if (restoring) return;
+      if (restoring || docs.clientHeight === 0) return;
       if (hasIntro && userScrolling && docs.scrollTop <= 1) {
         clearActive();
         return;
@@ -671,7 +671,8 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
   docs.addEventListener(
     "scroll",
     () => {
-      if (!userScrolling || restoring || docs.scrollTop > 1) return;
+      // Hiding the panel reports scrollTop 0 too; that is not navigation back to the intro.
+      if (!userScrolling || restoring || docs.clientHeight === 0 || docs.scrollTop > 1) return;
       if (hasIntro) clearActive();
       else activate(0);
     },

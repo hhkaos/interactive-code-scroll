@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Hiding explanations after selecting text preserves the active step; hidden-panel scroll events no longer jump back to the introduction or first step.
+
 ### Changed
 
 - Public documentation review now fingerprints every top-level `docs/*.md` file and the root/package READMEs, reports affected paths and detects added or removed pages even without changelog citations. The initial usage audit corrects narration in presentation mode, intro outline/media fallback, request-only Result panes, series card links and README CLI/request-runner descriptions.
