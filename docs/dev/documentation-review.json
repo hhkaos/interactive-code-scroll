@@ -1,6 +1,10 @@
 {
   "changes": [
     {
+      "change": "Project architecture documents presentation shortcut routing, shared grouped help, temporary code-region emphasis and animated keyboard panel presets with author/manual size precedence.",
+      "reason": "Internal architecture update describing already documented presentation behavior; no runtime, public API or usage changes."
+    },
+    {
       "change": "Presentation-only panel shortcuts add collapse/restore (`1`), animated 35% / 50% / 75% presets (`2`–`4`), lower-panel/code maximization (`5` / `0`) and temporary region emphasis (`H`). Alt lists all active commands including narration, with persistent grouped help available from the hint or header. Help also lists Esc outside presentation and explains narration availability.",
       "docs": [
         "docs/features.md#presenting",
@@ -110,7 +114,7 @@
     }
   ],
   "sourceDigest": "75ced77cd816f16a9b2024b721558ef87741183a5d5f8fca6e8081360100c98d",
-  "changelogDigest": "aa3c6979c8aefa4acd2649469358583014457341d80f1d1f660335049b9036a0",
+  "changelogDigest": "a9f93750189b37d30b05e85ab34391f0737790ed7d42abe3b9c9e1880a87a046",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
     "docs/authoring.md": "17b933563410e0a69a20b6b13383abffeec5552e21d49f6470bb7025cf6f14f9",
