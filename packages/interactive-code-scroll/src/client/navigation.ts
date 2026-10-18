@@ -126,10 +126,13 @@ export function progressStates(current: number, count: number, completed = false
   return Array.from({ length: count }, (_, i) => (completed || i < current ? "seen" : i === current ? "current" : "pending"));
 }
 
-export type PresentationShortcut = "index" | "explanations";
+export type PresentationShortcut = "index" | "explanations" | "collapse" | "size35" | "size50" | "size75" | "maximizePanel" | "maximizeCode" | "highlight";
 
 /** `O` opens/closes the step index (`b` and `.` too: many clickers send them from their "blank screen" button); `E` the explanations. */
-const PRESENTATION_KEYS: Readonly<Record<string, PresentationShortcut>> = { o: "index", b: "index", ".": "index", e: "explanations" };
+const PRESENTATION_KEYS: Readonly<Record<string, PresentationShortcut>> = {
+  o: "index", b: "index", ".": "index", e: "explanations", h: "highlight",
+  "1": "collapse", "2": "size35", "3": "size50", "4": "size75", "5": "maximizePanel", "0": "maximizeCode",
+};
 
 export interface ShortcutContext {
   presenting: boolean;
@@ -164,18 +167,27 @@ export function isPresentChord({ code, altKey, ctrlKey, metaKey, shiftKey }: Key
 export interface ShortcutHint {
   keys: string[];
   label: string;
+  group: "Navigation" | "Panels" | "Audio";
 }
 
 /** The keys the Alt hint lists: what works in the current mode (single keys only while presenting). */
 export function shortcutHints(presenting: boolean, mac: boolean): ShortcutHint[] {
-  const present = { keys: [mac ? "⌥" : "Alt", "P"], label: presenting ? "Exit presentation" : "Present" };
-  const steps = { keys: ["←", "→"], label: "Previous / next step" };
-  if (!presenting) return [present, steps];
-  return [
-    present,
-    steps,
-    { keys: ["O"], label: "Step list" },
-    { keys: ["E"], label: "Explanations" },
-    { keys: ["Esc"], label: "Close / exit" },
+  const hints: ShortcutHint[] = [
+    { keys: [mac ? "⌥" : "Alt", "P"], label: presenting ? "Exit presentation" : "Present", group: "Navigation" },
+    { keys: ["←", "→", "↑", "↓"], label: "Previous / next step", group: "Navigation" },
+    { keys: ["PageUp", "PageDown"], label: "Previous / next step (clicker)", group: "Navigation" },
   ];
+  if (presenting) hints.push(
+    { keys: ["O", "B", "."], label: "Step list", group: "Navigation" },
+    { keys: ["Esc"], label: "Close / restore / exit", group: "Navigation" },
+    { keys: ["E"], label: "Show / hide explanations", group: "Panels" },
+    { keys: ["1"], label: "Collapse / restore lower panel", group: "Panels" },
+    ...([35, 50, 75] as const).map((size, i): ShortcutHint => ({ keys: [String(i + 2)], label: `Lower panel ${size}%`, group: "Panels" })),
+    { keys: ["5"], label: "Maximize / restore lower panel", group: "Panels" },
+    { keys: ["0"], label: "Maximize / restore code or media", group: "Panels" },
+    { keys: ["H"], label: "Hide / restore region highlight", group: "Panels" },
+  );
+  else hints.push({ keys: ["Esc"], label: "Close / restore", group: "Navigation" });
+  hints.push({ keys: [mac ? "⌥" : "Alt", "Shift", "L"], label: "Start / pause / resume reading", group: "Audio" });
+  return hints;
 }

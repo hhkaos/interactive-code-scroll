@@ -5,7 +5,7 @@ import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 export { MAXIMIZE_EVENT };
 
 /** The pane under the code that the active variant shows (Preview or Result), when it has a frame to fill. */
-function lowerPane(): HTMLElement | undefined {
+export function lowerPane(): HTMLElement | undefined {
   const pane = document.querySelector<HTMLElement>(":is(section.preview, section.result):not([hidden])");
   return pane?.querySelector(".preview-frame, .result-frame") ? pane : undefined;
 }
@@ -78,7 +78,7 @@ export function startMaximize(): void {
     "keydown",
     (event) => {
       // An open dialog, and the step index (a popover: it closes itself), take Esc first.
-      if (event.key !== "Escape" || !state || document.querySelector("calcite-dialog[open], #step-index:popover-open")) return;
+      if (event.key !== "Escape" || !state || document.querySelector("calcite-dialog[open], #step-index:popover-open, #shortcut-help:popover-open")) return;
       event.stopImmediatePropagation();
       set(undefined);
     },

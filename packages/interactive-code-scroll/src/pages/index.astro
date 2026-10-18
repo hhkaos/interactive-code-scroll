@@ -225,6 +225,7 @@ const clientData = JSON.stringify({
           <span id="step-count" aria-live="polite"></span>
         </button>
         <calcite-action id="present-toggle" icon="presentation" text="Present" aria-keyshortcuts="Alt+P" />
+        <calcite-action id="shortcut-help-toggle" icon="keyboard" text="Keyboard shortcuts" aria-haspopup="dialog" aria-controls="shortcut-help" aria-expanded="false" />
         <calcite-action id="theme-toggle" icon="moon" text="Toggle theme" />
       </div>
     </calcite-navigation>
@@ -240,6 +241,14 @@ const clientData = JSON.stringify({
     </div>
     {/* The keys of the current mode, shown by a lone Alt (Option) press (client/presentation.ts). */}
     <div id="shortcut-hint" class="shortcut-hint" role="status" hidden></div>
+    <div id="shortcut-help" class="shortcut-help" popover role="dialog" aria-labelledby="shortcut-help-heading" data-own-keys>
+      <header>
+        <h2 id="shortcut-help-heading">Keyboard shortcuts</h2>
+        <button type="button" id="shortcut-help-close" autofocus aria-label="Close keyboard shortcuts">Close · Esc</button>
+      </header>
+      <div class="shortcut-help-content"></div>
+      <p>Single-key shortcuts work only while presenting, outside fields and embedded apps. Panel sizes keep the selected view. A new step restores its region highlight and applies any panel settings set by the author. Read aloud requires a matching browser voice and visible explanations.</p>
+    </div>
     {
       !currentSibling && (
         /* The full title when the header clips it (client/layout.ts sets the reference element only then). */

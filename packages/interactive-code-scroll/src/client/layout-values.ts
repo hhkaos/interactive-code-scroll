@@ -2,6 +2,8 @@ export type Mode = "light" | "dark";
 
 /** A step or intro requests a lower pane height; manual preferences are not overwritten. */
 export const PANEL_HEIGHT_EVENT = "ics:panel-height";
+/** A manual keyboard preset, animated and remembered like a splitter adjustment. */
+export const PANEL_PRESET_EVENT = "ics:panel-preset";
 
 export const THEME_KEY = "ics:theme";
 

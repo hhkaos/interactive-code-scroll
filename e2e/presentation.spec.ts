@@ -279,7 +279,7 @@ test.describe("Alt+P and the shortcut hint", () => {
     await expect(hint(page)).toBeHidden();
     await page.keyboard.press("Alt");
     await expect(hint(page)).toBeVisible();
-    await expect(hint(page).locator(".shortcut-hint-item")).toHaveText([/P\s*Present$/, /Previous \/ next step/]);
+    await expect(hint(page).locator(".shortcut-hint-item")).toHaveText([/P\s*Present$/, /Previous \/ next step$/, /clicker/, /Close \/ restore/, /Start \/ pause \/ resume reading/]);
     await page.keyboard.press("Alt");
     await expect(hint(page)).toBeHidden();
 
@@ -288,7 +288,7 @@ test.describe("Alt+P and the shortcut hint", () => {
     // Alt+P is a chord, not a lone Alt: no hint.
     await expect(hint(page)).toBeHidden();
     await page.keyboard.press("Alt");
-    await expect(hint(page).locator(".shortcut-hint-item")).toHaveText([/Exit presentation/, /Previous \/ next step/, /O\s*Step list/, /E\s*Explanations/, /Esc\s*Close \/ exit/]);
+    await expect(hint(page).locator(".shortcut-hint-item")).toHaveText([/Exit presentation/, /Previous \/ next step$/, /clicker/, /Step list/, /Close \/ restore \/ exit/, /explanations/, /Collapse \/ restore/, /35%/, /50%/, /75%/, /Maximize \/ restore lower/, /Maximize \/ restore code/, /region highlight/, /Start \/ pause/]);
     // Centered at the bottom.
     const box = (await hint(page).boundingBox())!;
     expect(Math.abs(box.x + box.width / 2 - 720)).toBeLessThan(2);
@@ -302,5 +302,165 @@ test.describe("Alt+P and the shortcut hint", () => {
     await page.locator('calcite-input[data-var="portalUrl"] input').focus();
     await page.keyboard.press("Alt");
     await expect(hint(page)).toBeHidden();
+  });
+});
+
+
+test.describe("presentation panel shortcuts", () => {
+  test("presets animate, preserve Console, remember size and restore after collapse/maximize", async ({ page }) => {
+    await page.goto("/#sign-in");
+    const body = page.locator("body");
+    const frame = page.locator(".preview-frame");
+    const height = () => page.locator(".right").evaluate((el) => el.style.getPropertyValue("--preview-split"));
+    await expect.poll(height).toBe("30%");
+    await page.keyboard.press("4");
+    await expect.poll(height).toBe("30%");
+    await page.keyboard.press("Alt+KeyP");
+    await page.keyboard.press("4");
+    await expect.poll(height).toBe("75%");
+    await expect(page.locator("#preview-tab-console")).toHaveAttribute("aria-selected", "true");
+    expect(await page.evaluate(() => localStorage.getItem("ics:preview-split"))).toBe("75");
+    await page.keyboard.press("1");
+    await expect(frame).toBeHidden();
+    await page.keyboard.press("1");
+    await expect(frame).toBeVisible();
+    await expect.poll(height).toBe("75%");
+    await page.keyboard.press("5");
+    await expect(body).toHaveAttribute("data-maximized", "preview");
+    await page.keyboard.press("5");
+    await expect(body).not.toHaveAttribute("data-maximized");
+    await page.keyboard.press("0");
+    await expect(body).toHaveAttribute("data-maximized", "code");
+    await page.keyboard.press("0");
+    await expect(body).not.toHaveAttribute("data-maximized");
+    await page.keyboard.press("0");
+    await page.keyboard.press("2");
+    await expect(body).not.toHaveAttribute("data-maximized");
+    await expect.poll(height).toBe("35%");
+    await page.keyboard.press("1");
+    await page.keyboard.press("3");
+    await expect(frame).toBeVisible();
+    await expect.poll(height).toBe("50%");
+    await expect(page.locator(".preview-splitter")).toHaveAttribute("aria-valuenow", "50");
+    await page.keyboard.press("PageUp");
+    await page.keyboard.press("PageDown");
+    await expect.poll(height).toBe("30%");
+    expect(await page.evaluate(() => localStorage.getItem("ics:preview-split"))).toBe("50");
+  });
+
+  test("H restores syntax colors without changing focus or scroll, and resets on navigation and exit", async ({ page }) => {
+    await page.goto("/#config");
+    await page.keyboard.press("Alt+KeyP");
+    const code = page.locator('.code:not([hidden])[data-has-focus]');
+    const focused = code.locator(".line[data-focus]").first();
+    await expect(focused).toBeVisible();
+    const colors = () => code.locator(".line:not([data-focus]) span").evaluateAll((spans) => new Set(spans.map((span) => getComputedStyle(span).color)).size);
+    await expect.poll(colors).toBe(1);
+    const region = await code.locator(".line[data-focus]").count();
+    const scroll = await code.evaluate((el) => el.scrollTop);
+    await page.keyboard.press("h");
+    await expect(page.locator("body")).toHaveAttribute("data-highlight-hidden", "");
+    await expect(focused).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect.poll(colors).toBeGreaterThan(1);
+    expect(await code.locator(".line[data-focus]").count()).toBe(region);
+    expect(await code.evaluate((el) => el.scrollTop)).toBe(scroll);
+    await page.keyboard.press("h");
+    await expect(page.locator("body")).not.toHaveAttribute("data-highlight-hidden");
+    await expect(focused).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect.poll(colors).toBe(1);
+    await page.keyboard.press("h");
+    await page.keyboard.press("PageDown");
+    await expect(page.locator("body")).not.toHaveAttribute("data-highlight-hidden");
+    await page.keyboard.press("h");
+    await page.keyboard.press("Alt+KeyP");
+    await expect(page.locator("body")).not.toHaveAttribute("data-highlight-hidden");
+  });
+
+  test("fields, embedded apps, modifiers, repeats and composition keep their keys", async ({ page }) => {
+    await page.goto("/#config");
+    await page.keyboard.press("Alt+KeyP");
+    const field = page.locator('calcite-input[data-var="portalUrl"] input');
+    await field.focus();
+    await page.keyboard.press("5");
+    await page.keyboard.press("h");
+    await expect(page.locator("body")).not.toHaveAttribute("data-maximized");
+    await expect(page.locator("body")).not.toHaveAttribute("data-highlight-hidden");
+    await field.blur();
+    await page.evaluate(() => {
+      for (const options of [{ repeat: true }, { isComposing: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true }]) {
+        dispatchEvent(new KeyboardEvent("keydown", { key: "5", ...options }));
+      }
+    });
+    await expect(page.locator("body")).not.toHaveAttribute("data-maximized");
+    await page.keyboard.press("1");
+    await expect(page.locator(".preview-frame")).toBeVisible();
+    await page.locator("#preview-run").click();
+    const iframe = page.frameLocator(".preview-frame iframe");
+    await iframe.locator("body").click();
+    await page.keyboard.press("5");
+    await expect(page.locator("body")).not.toHaveAttribute("data-maximized");
+  });
+
+  test("persistent help opens from the hint, keeps Esc local, and fits a narrow window", async ({ page }) => {
+    await page.goto("/#config");
+    await page.keyboard.press("Alt+KeyP");
+    await page.keyboard.press("5");
+    await page.keyboard.press("Alt");
+    await page.screenshot({ path: "screenshots/shortcuts-hint-desktop.png" });
+    await page.getByRole("button", { name: "All shortcuts", exact: true }).click();
+    const help = page.locator("#shortcut-help");
+    await expect(help).toBeVisible();
+    await expect(help.locator("h3")).toHaveText(["Navigation", "Panels", "Audio"]);
+    await expect(help).toContainText("35%");
+    await expect(help).toContainText("Start / pause / resume reading");
+    await page.keyboard.press("4");
+    await page.keyboard.press("PageDown");
+    await expect(page).toHaveURL(/#config$/);
+    await expect(page.locator("body")).toHaveAttribute("data-maximized", "preview");
+    await page.screenshot({ path: "screenshots/shortcuts-help-desktop.png" });
+    await page.waitForTimeout(6200);
+    await expect(help).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(help).toBeHidden();
+    await expect(page.locator("body")).toHaveAttribute("data-maximized", "preview");
+    await expect(page.locator("body")).toHaveAttribute("data-presenting", "");
+    await page.keyboard.press("Alt+KeyP");
+    await page.keyboard.press("Escape");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator("#shortcut-help-toggle").click();
+    await expect(help).toBeVisible();
+    await expect(help.locator("h3")).toHaveText(["Navigation", "Audio"]);
+    const box = (await help.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+    await page.screenshot({ path: "screenshots/shortcuts-help-phone.png" });
+  });
+
+  test("reduced motion applies the preset immediately and step settings cancel an ongoing animation", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/#sign-in");
+    await page.keyboard.press("Alt+KeyP");
+    const split = page.locator(".preview-splitter");
+    await page.keyboard.press("4");
+    await expect(split).toHaveAttribute("aria-valuenow", "75");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    const samples = await page.evaluate(async () => {
+      dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
+      const sizes: number[] = [];
+      const start = performance.now();
+      while (performance.now() - start < 240) {
+        await new Promise(requestAnimationFrame);
+        sizes.push(parseFloat(document.querySelector<HTMLElement>(".right")!.style.getPropertyValue("--preview-split")));
+      }
+      return sizes;
+    });
+    expect(samples.some((size) => size > 35 && size < 75)).toBe(true);
+    await expect(split).toHaveAttribute("aria-valuenow", "35");
+    await page.evaluate(() => {
+      dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
+      document.dispatchEvent(new CustomEvent("ics:panel-height", { detail: 42 }));
+    });
+    await page.waitForTimeout(250);
+    await expect(split).toHaveAttribute("aria-valuenow", "42");
   });
 });

@@ -521,7 +521,13 @@ Leave a blank line after `<summary>` and before `</details>`, so the content is 
 </details>
 ```
 
-### Listen to a tutorial
+### Keyboard shortcuts
+
+Enter or leave presentation with Alt+P (Option+P on macOS). Only while presenting, outside editable fields and embedded apps: `1` collapses/restores the lower Preview / Console / Result panel; `2` / `3` / `4` expand it at 35% / 50% / 75% of the right column, preserving its selected view; `5` maximizes/restores that panel; `0` maximizes/restores code or media; `H` hides/restores region emphasis without changing syntax colors or scrolling. A new step restores emphasis and applies any author-defined pane settings. Preset sizes animate briefly (none with reduced motion) and are remembered like manual splitter changes. Compact phone layouts keep their header/maximized behavior.
+
+A lone Alt press shows all current shortcuts, including PageUp/PageDown and Alt+Shift+L for narration. Choose **All shortcuts**, or the header's **Keyboard shortcuts** action, for persistent grouped help; Esc closes help before restoring a pane or leaving presentation. See [Presenting a tutorial](presenting.md#during-the-talk).
+
+## Listen to a tutorial
 
 When the browser supplies a voice matching the page language, **Listen** appears next to the step-position button between Back and Next. The audio row stays hidden until Listen is pressed. It reads the current introduction, step or closing panel's headings and prose (including `<Outro>`), leaving out form fields, controls and code blocks. Inline code is read as part of its sentence. A `<Hint>` term is read in its sentence; the hint text follows that sentence after a short pause, with its popover open. A collapsed `<details>` reads its summary, then opens and reads its content. Add `data-speech="skip"` to leave an element out of narration, for example `<details data-speech="skip">` around a solution. No author configuration or TTS service is required.
 

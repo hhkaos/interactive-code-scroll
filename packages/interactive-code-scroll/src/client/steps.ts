@@ -593,6 +593,7 @@ export function startStepEngine({ variants, otherVariantSteps = "notice", introO
   addEventListener(
     "keydown",
     (event) => {
+      if (document.querySelector("#shortcut-help:popover-open")) return;
       const target = event.target instanceof HTMLElement ? event.target : undefined;
       // Fields, and widgets marked `data-own-keys` (e.g. the splitter), keep their arrow keys;
       // clicker keys move steps from everywhere but multi-line text.

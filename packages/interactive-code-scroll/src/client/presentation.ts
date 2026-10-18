@@ -1,5 +1,9 @@
 import { setAction } from "./actions.ts";
 import { isEditableTag, isMultilineTag, isPresentChord, presentationShortcut, shortcutHints, type PresentationShortcut } from "./navigation.ts";
+import { lowerPane } from "./maximize.ts";
+import { MAXIMIZE_EVENT } from "./maximize-values.ts";
+import { PANEL_PRESET_EVENT } from "./layout-values.ts";
+import { PREVIEW_STATE_EVENT, type PreviewState } from "./preview.ts";
 
 /** Fired on `document` when the explanations panel is shown or hidden. */
 export const DOCS_TOGGLE_EVENT = "ics:docs-toggle";
@@ -14,7 +18,7 @@ function inField(event: KeyboardEvent): boolean {
 
 /** The presentation-mode shortcut a key press triggers (none in fields, with an open dialog or on auto-repeat). */
 export function shortcutFor(event: KeyboardEvent): PresentationShortcut | undefined {
-  if (event.repeat || document.querySelector("calcite-dialog[open]")) return undefined;
+  if (event.defaultPrevented || event.isComposing || event.repeat || document.querySelector("calcite-dialog[open], #shortcut-help:popover-open")) return undefined;
   return presentationShortcut(event.key, {
     presenting: document.body.hasAttribute("data-presenting"),
     editable: inField(event),
@@ -35,6 +39,8 @@ export function startPresentation(): void {
 
   const setPresenting = (on: boolean) => {
     body.toggleAttribute("data-presenting", on);
+    document.querySelector<HTMLElement>("#shortcut-help:popover-open")?.hidePopover();
+    if (!on) body.removeAttribute("data-highlight-hidden");
     setIcon("#present-toggle", on ? "presentation-x" : "presentation", on ? "Exit presentation" : "Present");
     // The large step index belongs to presentation mode (the browser may take the Esc that leaves it).
     if (!on) document.querySelector<HTMLElement>("#step-index:popover-open")?.hidePopover();
@@ -79,7 +85,7 @@ export function startPresentation(): void {
     (event) => {
       if (event.key !== "Escape" || !body.hasAttribute("data-presenting")) return;
       // An open dialog or the step index, then a maximized pane (maximize.ts), take Esc first.
-      if (document.querySelector("calcite-dialog[open], #step-index:popover-open") || body.hasAttribute("data-maximized")) return;
+      if (document.querySelector("calcite-dialog[open], #step-index:popover-open, #shortcut-help:popover-open") || body.hasAttribute("data-maximized")) return;
       setPresenting(false);
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     },
@@ -108,10 +114,37 @@ export function startPresentation(): void {
   // `E` shows/hides the explanations while presenting (client/step-index.ts handles `O`). Not `docsToggle.click()`:
   // Calcite's tooltip manager takes that click for a pointer click and leaves the action's tooltip open.
   addEventListener("keydown", (event) => {
-    if (shortcutFor(event) !== "explanations" || !docsToggle) return;
+    const shortcut = shortcutFor(event);
+    if (!shortcut || shortcut === "index") return;
+    if (shortcut === "explanations") {
+      if (!docsToggle) return;
+      event.preventDefault();
+      toggleDocs();
+      return;
+    }
+    if (shortcut === "highlight") {
+      if (!document.querySelector('.code-panel:not([hidden]):not([data-outline]) .code:not([hidden])[data-has-focus]')) return;
+      event.preventDefault();
+      body.toggleAttribute("data-highlight-hidden");
+      return;
+    }
+    const pane = lowerPane();
+    if (shortcut !== "maximizeCode" && !pane) return;
     event.preventDefault();
-    toggleDocs();
+    const maximize = (value: string) => document.dispatchEvent(new CustomEvent(MAXIMIZE_EVENT, { detail: value }));
+    if (shortcut === "maximizePanel" || shortcut === "maximizeCode") {
+      const target = shortcut === "maximizeCode" ? "code" : "preview";
+      maximize(body.dataset.maximized === target ? "none" : target === "preview" ? "panel" : "code");
+      return;
+    }
+    maximize("none");
+    const collapsed = pane!.querySelector<HTMLElement>(".preview-frame, .result-frame")!.hidden;
+    const state: PreviewState = shortcut === "collapse" && !collapsed ? "collapsed" : "expanded";
+    document.dispatchEvent(new CustomEvent<PreviewState>(PREVIEW_STATE_EVENT, { detail: state }));
+    const size = { size35: 35, size50: 50, size75: 75 }[shortcut as "size35" | "size50" | "size75"];
+    if (size) document.dispatchEvent(new CustomEvent<number>(PANEL_PRESET_EVENT, { detail: size }));
   });
+  document.addEventListener("ics:step", () => body.removeAttribute("data-highlight-hidden"));
 }
 
 /** How long the shortcut hint stays up (ms) unless another key or a click dismisses it first. */
@@ -126,6 +159,44 @@ function startShortcutHint(): void {
   if (!hint) return;
   const platform = (navigator as Navigator & { userAgentData?: { platform: string } }).userAgentData?.platform ?? navigator.platform;
   const mac = /mac|iphone|ipad/i.test(platform);
+  const help = document.querySelector<HTMLElement>("#shortcut-help");
+  const helpButton = document.querySelector<HTMLElement>("#shortcut-help-toggle");
+  const helpContent = help?.querySelector<HTMLElement>(".shortcut-help-content");
+  const itemFor = ({ keys, label }: ReturnType<typeof shortcutHints>[number]) => {
+    const item = document.createElement("span");
+    item.className = "shortcut-hint-item";
+    for (const key of keys) {
+      const kbd = document.createElement("kbd");
+      kbd.textContent = key;
+      item.append(kbd);
+    }
+    item.append(` ${label}`);
+    return item;
+  };
+  const hints = () => shortcutHints(document.body.hasAttribute("data-presenting"), mac);
+  const renderHelp = () => {
+    if (!helpContent) return;
+    helpContent.replaceChildren();
+    for (const group of ["Navigation", "Panels", "Audio"]) {
+      const entries = hints().filter((item) => item.group === group);
+      if (!entries.length) continue;
+      const section = document.createElement("section");
+      const heading = document.createElement("h3");
+      heading.textContent = group;
+      section.append(heading, ...entries.map(itemFor));
+      helpContent.append(section);
+    }
+  };
+  helpButton?.addEventListener("click", () => { renderHelp(); help?.togglePopover(); });
+  document.querySelector("#shortcut-help-close")?.addEventListener("click", () => help?.hidePopover());
+  help?.addEventListener("toggle", (event) => helpButton?.setAttribute("aria-expanded", String((event as ToggleEvent).newState === "open")));
+  addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !help?.matches(":popover-open") || document.querySelector("calcite-dialog[open]")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    help.hidePopover();
+    helpButton?.focus({ preventScroll: true });
+  }, { capture: true });
   let timer: ReturnType<typeof setTimeout> | undefined;
   /** Alt is down and nothing else happened since: its release shows the hint. */
   let lone = false;
@@ -135,19 +206,22 @@ function startShortcutHint(): void {
     hint.hidden = true;
   };
   const show = () => {
-    hint.replaceChildren(
-      ...shortcutHints(document.body.hasAttribute("data-presenting"), mac).map(({ keys, label }) => {
-        const item = document.createElement("span");
-        item.className = "shortcut-hint-item";
-        for (const key of keys) {
-          const kbd = document.createElement("kbd");
-          kbd.textContent = key;
-          item.append(kbd);
-        }
-        item.append(` ${label}`);
-        return item;
-      }),
-    );
+    if (help?.matches(":popover-open")) return;
+    const more = document.createElement("button");
+    more.type = "button";
+    more.textContent = "All shortcuts";
+    more.addEventListener("click", () => { hide(); renderHelp(); help?.showPopover(); });
+    const groups = ["Navigation", "Panels", "Audio"].flatMap((group) => {
+      const entries = hints().filter((item) => item.group === group);
+      if (!entries.length) return [];
+      const section = document.createElement("div");
+      section.className = "shortcut-hint-group";
+      const heading = document.createElement("strong");
+      heading.textContent = group;
+      section.append(heading, ...entries.map(itemFor));
+      return [section];
+    });
+    hint.replaceChildren(...groups, more);
     hint.hidden = false;
     clearTimeout(timer);
     timer = setTimeout(hide, HINT_MS);
@@ -175,7 +249,8 @@ function startShortcutHint(): void {
     else hide();
   });
   for (const type of ["pointerdown", "blur"]) {
-    addEventListener(type, () => {
+    addEventListener(type, (event) => {
+      if (type === "pointerdown" && event.target instanceof Node && hint.contains(event.target)) return;
       lone = false;
       hide();
     });

@@ -157,6 +157,16 @@ describe("presentationShortcut", () => {
     expect(presentationShortcut("E", presenting)).toBe("explanations");
   });
 
+  it.each([
+    ["1", "collapse"], ["2", "size35"], ["3", "size50"], ["4", "size75"],
+    ["5", "maximizePanel"], ["0", "maximizeCode"], ["h", "highlight"], ["H", "highlight"],
+  ])("maps %s to %s only during presentation outside fields", (key, action) => {
+    expect(presentationShortcut(key, presenting)).toBe(action);
+    expect(presentationShortcut(key, { ...presenting, presenting: false })).toBeUndefined();
+    expect(presentationShortcut(key, { ...presenting, editable: true })).toBeUndefined();
+    expect(presentationShortcut(key, { ...presenting, modifier: true })).toBeUndefined();
+  });
+
   it("ignores other keys", () => {
     for (const key of ["x", ">", "Escape", "PageDown", " "]) expect(presentationShortcut(key, presenting)).toBeUndefined();
   });
@@ -186,16 +196,19 @@ describe("isPresentChord", () => {
 });
 
 describe("shortcutHints", () => {
-  it("lists Alt+P and the step keys outside presentation mode", () => {
-    expect(shortcutHints(false, false)).toEqual([
-      { keys: ["Alt", "P"], label: "Present" },
-      { keys: ["←", "→"], label: "Previous / next step" },
+  it("lists reading and clicker chords in both modes, with no single keys outside presentation", () => {
+    const hints = shortcutHints(false, false);
+    expect(hints.map((h) => h.keys)).toEqual([
+      ["Alt", "P"], ["←", "→", "↑", "↓"], ["PageUp", "PageDown"], ["Esc"], ["Alt", "Shift", "L"],
     ]);
+    expect(hints.map((h) => h.group)).toEqual(["Navigation", "Navigation", "Navigation", "Navigation", "Audio"]);
   });
 
-  it("adds the single keys while presenting, with the Option symbol on macOS", () => {
+  it("lists all presentation commands, grouped by purpose, and localizes Option", () => {
     const hints = shortcutHints(true, true);
-    expect(hints[0]).toEqual({ keys: ["⌥", "P"], label: "Exit presentation" });
-    expect(hints.map((h) => h.keys.join("+"))).toEqual(["⌥+P", "←+→", "O", "E", "Esc"]);
+    expect(hints[0]).toEqual({ keys: ["⌥", "P"], label: "Exit presentation", group: "Navigation" });
+    expect(hints.flatMap((h) => h.keys)).toEqual([
+      "⌥", "P", "←", "→", "↑", "↓", "PageUp", "PageDown", "O", "B", ".", "Esc", "E", "1", "2", "3", "4", "5", "0", "H", "⌥", "Shift", "L",
+    ]);
   });
 });

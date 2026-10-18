@@ -1,6 +1,14 @@
 {
   "changes": [
     {
+      "change": "Presentation-only panel shortcuts add collapse/restore (`1`), animated 35% / 50% / 75% presets (`2`–`4`), lower-panel/code maximization (`5` / `0`) and temporary region emphasis (`H`). Alt lists all active commands including narration, with persistent grouped help available from the hint or header. Help also lists Esc outside presentation and explains narration availability.",
+      "docs": [
+        "docs/features.md#presenting",
+        "docs/authoring.md#keyboard-shortcuts",
+        "docs/presenting.md#during-the-talk"
+      ]
+    },
+    {
       "change": "Hiding explanations after selecting text preserves the active step; hidden-panel scroll events no longer jump back to the introduction or first step.",
       "reason": "Bug fix restoring the existing navigation behavior; no authoring API or reader controls changed."
     },
@@ -101,15 +109,15 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "f0bf6e153b4f856dd21994e5d6b37d1bb7dd1b702c00d628a6c7627d45d78c8c",
-  "changelogDigest": "56626012964811521fe734ae08650b2689ec4598e294b1d0301a7d076a015d94",
+  "sourceDigest": "75ced77cd816f16a9b2024b721558ef87741183a5d5f8fca6e8081360100c98d",
+  "changelogDigest": "aa3c6979c8aefa4acd2649469358583014457341d80f1d1f660335049b9036a0",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
-    "docs/authoring.md": "62a534cfceaae43af6afa4f542bdba36474ac4fe3d085d9d188aa05a5bb85e74",
+    "docs/authoring.md": "17b933563410e0a69a20b6b13383abffeec5552e21d49f6470bb7025cf6f14f9",
     "docs/cli.md": "3ce991ef73edbad6e6e01016e13499a7e7472cb4773114c9138e6fc1e2fbbf17",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "c05f10245ca5ce70a28bf799309e2efe9f16ed8fc154f3bba3ed412cc7dea161",
-    "docs/presenting.md": "6bcec56d164a7bf23857514ab14fd883160afe490ec1543fd6f9e8a9f04f2893",
+    "docs/features.md": "d4690ce06b81057108b126f72572642431bf94ce20950ce2862cec8b1845d735",
+    "docs/presenting.md": "d6cd556cdd77d20efc7fbff4ffeb0cc172ebeef5d73d1ff2225dd9f202185049",
     "docs/quick-start.md": "4bd4733f9f3fc9da91fd6d76dda6f3b941b70b65c8d39128e25e25d43134b24d",
     "docs/upgrade.md": "6d4d27c6f60428a4cf755d9db789750eccf46a0b04aec83a4871c2c0d1dea985",
     "packages/create-interactive-code-scroll/README.md": "c21428a5cc2239488c1837d5b3b73f2466edd40060aa13cc7d80f36e8607488b",

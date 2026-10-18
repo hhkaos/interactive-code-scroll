@@ -4,6 +4,7 @@ import {
   DOCS_SPLIT,
   parseStoredSplit,
   PANEL_HEIGHT_EVENT,
+  PANEL_PRESET_EVENT,
   PHONE_QUERY,
   PREVIEW_SPLIT,
   resolveMode,
@@ -52,8 +53,10 @@ interface SplitterOptions {
 }
 
 /** Pointer and keyboard resizing (Shift for bigger steps), remembered in localStorage. */
-function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = false }: SplitterOptions): (percent: number) => void {
+function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = false }: SplitterOptions): (percent: number, manual?: boolean) => void {
   let value = 0;
+  let animation = 0;
+  const cancelAnimation = () => cancelAnimationFrame(animation);
   const set = (percent: number, persist: boolean) => {
     value = clampSplit(percent, range);
     container.style.setProperty(cssVar, `${value}%`);
@@ -62,10 +65,23 @@ function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = fa
   };
   set(parseStoredSplit(read(range.key), range), false);
   for (const splitter of splitters) listen(splitter);
-  return (percent) => set(percent, false);
+  return (percent, manual = false) => {
+    cancelAnimation();
+    if (!manual || matchMedia("(prefers-reduced-motion: reduce)").matches) return set(percent, manual);
+    const from = value;
+    const to = clampSplit(percent, range);
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / 180);
+      set(from + (to - from) * (1 - (1 - progress) ** 3), progress === 1);
+      if (progress < 1) animation = requestAnimationFrame(tick);
+    };
+    animation = requestAnimationFrame(tick);
+  };
 
   function listen(splitter: HTMLElement): void {
     splitter.addEventListener("pointerdown", (event) => {
+      cancelAnimation();
       splitter.setPointerCapture(event.pointerId);
       container.toggleAttribute("data-resizing", true);
     });
@@ -92,6 +108,7 @@ function startSplitter({ splitters, container, cssVar, range, axis, fromEnd = fa
       const step = event.shiftKey ? 10 : 2;
       const delta = event.key === less ? -step : event.key === more ? step : 0;
       if (!delta) return;
+      cancelAnimation();
       event.preventDefault();
       set(value + delta, true);
     });
@@ -128,6 +145,7 @@ export function startLayout(): void {
     });
     // CSS uses this size only in the shared desktop layout; compact and maximized panes keep their geometry.
     document.addEventListener(PANEL_HEIGHT_EVENT, (event) => setHeight((event as CustomEvent<number>).detail));
+    document.addEventListener(PANEL_PRESET_EVENT, (event) => setHeight((event as CustomEvent<number>).detail, true));
   }
 }
 

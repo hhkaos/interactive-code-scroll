@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Presentation-only panel shortcuts add collapse/restore (`1`), animated 35% / 50% / 75% presets (`2`–`4`), lower-panel/code maximization (`5` / `0`) and temporary region emphasis (`H`). Alt lists all active commands including narration, with persistent grouped help available from the hint or header. Help also lists Esc outside presentation and explains narration availability.
+
 ### Fixed
 
 - Hiding explanations after selecting text preserves the active step; hidden-panel scroll events no longer jump back to the introduction or first step.
