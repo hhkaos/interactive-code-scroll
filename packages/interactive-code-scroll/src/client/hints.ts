@@ -26,6 +26,7 @@ function place({ label, popover }: HintState): void {
 function open(state: HintState): void {
   if (closeTimer !== undefined) window.clearTimeout(closeTimer);
   closeTimer = undefined;
+  if (active && active !== state) closeNow(active);
   active = state;
   state.hint.dataset.open = "";
   requestAnimationFrame(() => place(state));

@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Quickly moving or tabbing between inline hints closes the previous popover instead of leaving it stuck open.
+
 - Hiding explanations after selecting text preserves the active step; hidden-panel scroll events no longer jump back to the introduction or first step.
 
 ### Changed

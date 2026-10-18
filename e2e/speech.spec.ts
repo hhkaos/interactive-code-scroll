@@ -158,7 +158,7 @@ test("fields pause narration; presenting keeps it; hidden explanations pause it"
 test("hints are read as asides with their popover open; collapsed sections open when read", async ({ page }) => {
   await mockSpeech(page);
   await page.goto("/#oauth");
-  const hint = page.locator("#oauth .hint");
+  const hint = page.locator("#oauth .hint").first();
   const details = page.locator("#oauth details");
   await expect(details).not.toHaveAttribute("open", "");
   await playPause(page);

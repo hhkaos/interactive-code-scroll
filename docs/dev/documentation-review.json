@@ -1,6 +1,10 @@
 {
   "changes": [
     {
+      "change": "Quickly moving or tabbing between inline hints closes the previous popover instead of leaving it stuck open.",
+      "reason": "Bug fix restoring existing hint hover/focus behavior; no authoring API or reader controls changed."
+    },
+    {
       "change": "Project architecture documents presentation shortcut routing, shared grouped help, temporary code-region emphasis and animated keyboard panel presets with author/manual size precedence.",
       "reason": "Internal architecture update describing already documented presentation behavior; no runtime, public API or usage changes."
     },
@@ -113,8 +117,8 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "75ced77cd816f16a9b2024b721558ef87741183a5d5f8fca6e8081360100c98d",
-  "changelogDigest": "a9f93750189b37d30b05e85ab34391f0737790ed7d42abe3b9c9e1880a87a046",
+  "sourceDigest": "e6a11f792a675f100929f73189a6d33a6ff59f06c9fcce54fd5a8703f507db8b",
+  "changelogDigest": "125847658a0a0c4c8c8e6db08a197fb1e0899151468176709b629c276546687c",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
     "docs/authoring.md": "17b933563410e0a69a20b6b13383abffeec5552e21d49f6470bb7025cf6f14f9",
