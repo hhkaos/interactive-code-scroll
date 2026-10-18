@@ -12,6 +12,7 @@ A tutorial is a folder with `tutorial.mdx` (the explanations), `code/` (the fina
 </picture>
 
 - **Side-by-side layout**: explanations on the left, code on the right. Both splitters (explanations/code, code/Preview) can be dragged, and their sizes are remembered. A handle that appears on the splitter hides the explanations; a thin rail at the left edge brings them back.
+- **Readable lists**: ordered, unordered and nested lists share consistent item spacing, including items with multiple paragraphs, without an extra gap after sublists.
 - **Phones**: in portrait the code sits on top and the explanations scroll below it, with Back / Next at the bottom; tapping the title shows it in full or opens the sibling tutorial menu. On phones the Preview and Result pane open full screen from their header, and copy/download actions are hidden.
 - **Tutorial subtitles**: optional `subtitle` frontmatter adds a smaller, muted line beneath the navigation title, with an ellipsis for long text. See [Frontmatter](authoring.md#frontmatter).
 - **Steps drive the code panel**: when a step becomes active, it can switch file, focus a region (the rest of the file turns gray and the region scrolls into view) or show images instead of code. A text-only step keeps the current file and clears the focus. A file switch stands out: the step names the new file in a chip, and its tab flashes when the step becomes active.

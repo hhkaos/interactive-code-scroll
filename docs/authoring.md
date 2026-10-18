@@ -200,6 +200,8 @@ Fenced code blocks in `tutorial.mdx` (` ```js `) use the same light and dark the
 
 Markdown tables in `tutorial.mdx` are styled to match the page: a header row over a rule, hairlines between rows and the first column as the row label. Long cell content wraps instead of widening the panel.
 
+Ordered and unordered lists use consistent spacing between items, including items with multiple paragraphs. Nested lists stay close to their parent and leave no extra bottom gap before the next item. Use normal Markdown indentation; no custom CSS is needed.
+
 ## Components
 
 <picture>

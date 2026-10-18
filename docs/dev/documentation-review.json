@@ -1,6 +1,13 @@
 {
   "changes": [
     {
+      "change": "Tutorial lists use consistent item spacing, preserve paragraph separation within items and remove the extra bottom gap after nested lists.",
+      "docs": [
+        "docs/authoring.md#syntax-highlighting",
+        "docs/features.md#reading-a-tutorial"
+      ]
+    },
+    {
       "change": "Seeking to the exact start of a sentence selects that sentence instead of replaying the preceding one.",
       "docs": [
         "docs/authoring.md#listen-to-a-tutorial"
@@ -151,14 +158,14 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "379988a0eb4f5d3b82dd282b52601ee045864216152119104c301d29d0b72df2",
-  "changelogDigest": "92a18fd3ec93aec69cef03de12358e7efb8037e0270dd9c60a9ff488d98b46ea",
+  "sourceDigest": "9fcb2579c5d069f9a456b3807e7d3ede69648e6c2042d8a1c98c8756d0bcc610",
+  "changelogDigest": "33702290caef3ce52c5a593d266ebfe9f5a5b02adc232835fcc74d99f91a7b5f",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
-    "docs/authoring.md": "4e536449ecf0bf6840a514d4a9a8d747d41276aaaa6ba42e83a811b322d353bd",
+    "docs/authoring.md": "8018da431067f9505299368487323fe67dd25bb45f015429571306a60dbfe91f",
     "docs/cli.md": "3ce991ef73edbad6e6e01016e13499a7e7472cb4773114c9138e6fc1e2fbbf17",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "5aaec6c45673981ca3197586f122311acb7026833f24ab383067281de9a9b0ff",
+    "docs/features.md": "ef40101a77217ddb8ca1b5bac3ba3ee7ccb07c00212998629fe5f1f243a416c3",
     "docs/presenting.md": "f57237aae1fd96250217ddca9e9a722a947c6c1440ddd57badcb6df45b02eeb3",
     "docs/quick-start.md": "4bd4733f9f3fc9da91fd6d76dda6f3b941b70b65c8d39128e25e25d43134b24d",
     "docs/upgrade.md": "f6173f4ce40cb03dde6d30159612ede4af6eadceb3536531ab874d4368ada578",

@@ -120,6 +120,43 @@ test("styles tutorial tables with row rules aligned to the text", async ({ page 
   expect(styles.tableLeft).toBe(styles.textLeft);
 });
 
+test("keeps list spacing consistent after nested lists and in loose Markdown items", async ({ page }) => {
+  await page.goto("/#oauth");
+  await page.locator("#oauth details summary").click();
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    const spacing = await page.locator("#oauth details").evaluate((step) => {
+      const ordered = step.querySelector("ol")!;
+      const loose = step.querySelector(":scope > ul")!;
+      const items = ordered.children;
+      const gap = (a: Element, b: Element) => b.getBoundingClientRect().top - a.getBoundingClientRect().bottom;
+      const nested = items[1].querySelector("ol")!;
+      const deepest = nested.querySelector("ul")!;
+      const paragraphs = loose.children[0].querySelectorAll(":scope > p");
+      const em = parseFloat(getComputedStyle(ordered).fontSize);
+      return {
+        em,
+        regular: gap(items[0], items[1]),
+        afterNested: gap(items[1], items[2]),
+        nestedMargins: [nested, deepest, loose.querySelector("ul")!].map((list) => getComputedStyle(list).marginBottom),
+        nestedStart: parseFloat(getComputedStyle(nested).marginTop),
+        paragraphGap: gap(paragraphs[0], paragraphs[1]),
+        looseGap: gap(loose.children[0], loose.children[1]),
+        outerMargin: getComputedStyle(ordered).marginBottom,
+        overflow: step.scrollWidth > step.clientWidth,
+      };
+    });
+    expect(spacing.regular).toBeCloseTo(spacing.em * 0.25);
+    expect(spacing.afterNested).toBeCloseTo(spacing.regular);
+    expect(spacing.looseGap).toBeCloseTo(spacing.regular);
+    expect(spacing.nestedMargins).toEqual(["0px", "0px", "0px"]);
+    expect(spacing.nestedStart).toBeCloseTo(spacing.regular);
+    expect(spacing.paragraphGap).toBeCloseTo(spacing.em * 0.5);
+    expect(spacing.outerMargin).toBe("12px");
+    expect(spacing.overflow).toBe(false);
+  }
+});
+
 test("shows code blocks in the page's light/dark mode, not a fixed dark theme", async ({ page }) => {
   const block = page.locator(".intro pre");
   await expect(block).toHaveClass(/github-light-default github-dark-default/);

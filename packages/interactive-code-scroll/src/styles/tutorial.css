@@ -578,6 +578,16 @@ body[data-presenting] .step-nav { display: none; }
   h1, h2, h3 { color: var(--calcite-color-text-1); font-weight: var(--calcite-font-weight-semibold); line-height: 1.3; }
   h1 { margin-block: 0 1.5rem; font-size: var(--calcite-font-size-2xl); }
   p, ul, ol { margin-block: 0 0.75rem; }
+  /* Keep nested lists attached to their parent without adding a gap after the last child. */
+  :is(ul, ol) {
+    padding-inline-start: 1.75em;
+    & > li + li { margin-block-start: 0.25em; }
+    & > li > :is(ul, ol) { margin-block: 0.25em 0; }
+    /* Markdown wraps loose list items in paragraphs; keep their item spacing consistent. */
+    & > li > p { margin-block: 0; }
+    & > li > p + p,
+    & > li > :is(ul, ol) + p { margin-block-start: 0.5em; }
+  }
   blockquote {
     margin: 1rem 0;
     padding: 0.75rem 1rem 0.75rem 1.125rem;

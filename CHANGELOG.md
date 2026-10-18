@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Tutorial lists use consistent item spacing, preserve paragraph separation within items and remove the extra bottom gap after nested lists.
+
 - Seeking to the exact start of a sentence selects that sentence instead of replaying the preceding one.
 
 - Clicking narration settings descriptions or padding keeps the panel open; moving focus no longer dismisses it. Outside presses, Escape and the settings toggle still close it.
