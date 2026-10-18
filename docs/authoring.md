@@ -125,6 +125,7 @@ The YAML block at the top of `tutorial.mdx`. Only `title` is required; every oth
 ---
 # Page
 title: Build a checkout page
+subtitle: Connect your app to a hosted payment form
 description: Accept a payment with a hosted checkout form.
 theme: auto
 logo: logo.svg
@@ -145,6 +146,7 @@ order: 1
 | Field | Values | Default | Description |
 |---|---|---|---|
 | `title` | string | required | Rendered in the app header. Do not repeat it as an MDX `#` heading. |
+| `subtitle` | non-empty string | none | Optional smaller, muted line beneath the tutorial title in the navigation header. Long text ends in an ellipsis; on phones the sibling menu follows it. Independent of `description`, which supplies summaries and SEO metadata. |
 | [`description`](#index-page) | string | none | One sentence: the page's meta description (search results, link previews) and, in a [series site](#series-sites), the index card text. |
 | `theme` | `auto`, `light`, `dark` | `auto` | Author default. Viewer changes are remembered. |
 | [`logo`](#folder-structure) | image path or `https://` URL | none | Relative to `images/`, or an absolute `https://` URL (not checked at build, and it needs the network when serving locally). Use a square SVG or a PNG of at least 512 x 512. It identifies the tutorial, so [series](#series-sites) index cards do not show it: they show [tag logos and variant links](#index-page). Pick colors that read on both light and dark backgrounds (for example a logo with its own background tile). |

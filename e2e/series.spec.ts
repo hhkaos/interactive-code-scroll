@@ -554,12 +554,20 @@ test("a tutorial with a single variant shows no variant switcher", async ({ page
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-  test("the sibling menu becomes the title's second line; tapping the title opens it", async ({ page }) => {
+  test("the sibling menu follows the subtitle on phones; tapping the title opens it", async ({ page }) => {
     await page.goto("/beta/#config");
     const title = page.locator("#header-title");
     await expect(title.locator("#family-dropdown calcite-button")).toHaveText("REST API");
     await expect(title.locator(".page-title-logo")).toBeHidden();
     await expect(title).not.toHaveAttribute("data-clipped");
+    await expect(title.locator(".page-title-subtitle")).toHaveText("Share a token between browser and Python applications");
+    await expect.poll(async () => title.evaluate((el) => {
+      const header = el.closest(".app-header")!.getBoundingClientRect();
+      const heading = el.querySelector("h1")!.getBoundingClientRect();
+      const subtitle = el.querySelector(".page-title-subtitle")!.getBoundingClientRect();
+      const trigger = el.querySelector("#family-dropdown > calcite-button")!.getBoundingClientRect();
+      return heading.top >= header.top && subtitle.top >= heading.bottom && trigger.top >= subtitle.bottom && trigger.bottom <= header.bottom;
+    })).toBe(true);
     // The label lines up with the h1 and both sit inside the 64px bar.
     const h1 = (await title.locator("h1").boundingBox())!;
     const label = await page.evaluate(() => {
@@ -604,7 +612,13 @@ test.describe("on a phone", () => {
     await expect(page.locator(".family-switcher #family-dropdown")).toHaveCount(1);
     await expect(page.locator("#family-dropdown > calcite-button")).toHaveAttribute("appearance", "outline");
     await expect(page.locator("#header-title .page-title-logo")).toBeVisible();
+    await expect(page.locator(".page-title-subtitle")).toBeVisible();
   });
+});
+
+test("tutorials without a subtitle omit its header line", async ({ page }) => {
+  await page.goto("/alpha/");
+  await expect(page.locator(".page-title-subtitle")).toHaveCount(0);
 });
 
 test("the closing panel links the next tutorial: next, else series order; none after the last or with next: false", async ({ page }) => {

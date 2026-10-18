@@ -189,6 +189,7 @@ const clientData = JSON.stringify({
         <img class="page-title-logo" src={headerLogo} alt="" hidden={!headerLogo || undefined} />
         <div class="page-title-text">
           <h1 class="page-title-heading">{config.title}</h1>
+          {config.subtitle && <p class="page-title-subtitle" title={config.subtitle}>{config.subtitle}</p>}
         </div>
       </div>
       {

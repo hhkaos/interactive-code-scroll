@@ -90,6 +90,16 @@ body {
   line-height: 1.25;
   color: var(--calcite-color-text-1);
 }
+.page-title-subtitle {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--calcite-font-size-sm);
+  line-height: 1.25;
+  color: var(--calcite-color-text-2);
+}
 /* A clipped title opens its full text in a popover (tutorials without siblings). */
 body:has(#title-popover) #header-title[data-clipped] .page-title-heading { cursor: pointer; }
 .title-popover-text {
@@ -1832,6 +1842,7 @@ body[data-maximized="code"] .media-panel:not([hidden]):has(.step-embed) ~ .embed
   .page-title { padding-inline: 0.75rem 0.5rem; }
   .page-title-logo { display: none; }
   .page-title-heading { font-size: var(--calcite-font-size-md); }
+  .page-title-subtitle { font-size: var(--calcite-font-size-xs); }
   .family-switcher { display: none; }
   .page-title #family-dropdown > calcite-button {
     margin-inline-start: -0.5rem;

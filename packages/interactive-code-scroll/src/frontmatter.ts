@@ -28,6 +28,8 @@ export interface Variant {
 
 export interface TutorialConfig {
   title: string;
+  /** Optional second line beneath the tutorial title in the navigation header. */
+  subtitle?: string;
   preview: PreviewMode;
   /** Capture embedded Preview logs and show Preview / Console tabs; default false. */
   console: boolean;
@@ -210,6 +212,7 @@ function oneOf<T extends string>(name: string, value: unknown, allowed: readonly
 export function readTutorialConfig(frontmatter: Record<string, unknown>): TutorialConfig {
   const {
     title = "Tutorial",
+    subtitle,
     preview = "both",
     console: captureConsole = false,
     theme = "auto",
@@ -252,6 +255,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
   }
   return {
     title,
+    ...optionalEntry("subtitle", optionalText("subtitle", subtitle)),
     preview: oneOf("preview", preview, PREVIEW_MODES),
     console: captureConsole,
     theme: oneOf("theme", theme, THEMES),

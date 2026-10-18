@@ -40,6 +40,24 @@ describe("readTutorialConfig", () => {
     expect(readTutorialConfig({ logo: "logo.png" })).toMatchObject({ logo: "logo.png" });
   });
 
+  it("accepts an optional subtitle independently of the description", () => {
+    expect(readTutorialConfig({ subtitle: "Authenticate a browser application", description: "Card summary" })).toMatchObject({
+      subtitle: "Authenticate a browser application",
+      description: "Card summary",
+    });
+    expect(readTutorialConfig({})).not.toHaveProperty("subtitle");
+  });
+
+  it.each(["", "  ", 3, false, null, [], {}])("rejects invalid subtitle %j with its frontmatter key", (subtitle) => {
+    expect(() => readTutorialConfig({ subtitle })).toThrow('"subtitle" must be a non-empty string');
+    try {
+      readTutorialConfig({ subtitle });
+    } catch (error) {
+      expect(error).toBeInstanceOf(FrontmatterError);
+      expect((error as FrontmatterError).key).toBe("subtitle");
+    }
+  });
+
   it("rejects invalid values", () => {
     expect(() => readTutorialConfig({ preview: "popup" })).toThrow(/"preview" must be one of off, iframe, tab, both/);
     expect(() => readTutorialConfig({ theme: "blue" })).toThrow(/"theme" must be one of auto, light, dark/);

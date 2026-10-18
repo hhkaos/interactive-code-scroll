@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Presentation-only panel shortcuts add collapse/restore (`1`), animated 35% / 50% / 75% presets (`2`–`4`), lower-panel/code maximization (`5` / `0`) and temporary region emphasis (`H`). Alt lists all active commands including narration, with persistent grouped help available from the hint or header. Help also lists Esc outside presentation and explains narration availability.
 
+- Optional `subtitle` frontmatter displays a smaller, muted line beneath the tutorial navigation title, with ellipsis for long text and space for the sibling selector on phones.
+
 ### Fixed
 
 - Quickly moving or tabbing between inline hints closes the previous popover instead of leaving it stuck open.

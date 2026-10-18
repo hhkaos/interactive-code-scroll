@@ -24,6 +24,13 @@
       ]
     },
     {
+      "change": "Optional `subtitle` frontmatter displays a smaller, muted line beneath the tutorial navigation title, with ellipsis for long text and space for the sibling selector on phones.",
+      "docs": [
+        "docs/authoring.md#frontmatter",
+        "docs/features.md#reading-a-tutorial"
+      ]
+    },
+    {
       "change": "Hiding explanations after selecting text preserves the active step; hidden-panel scroll events no longer jump back to the introduction or first step.",
       "reason": "Bug fix restoring the existing navigation behavior; no authoring API or reader controls changed."
     },
@@ -124,14 +131,14 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "46f47c074598ca5b35e65646602c08915a4d3ff9994098ab5d6c586e087eb4ad",
-  "changelogDigest": "7ee4083108c545e8eda10061827853a34fd44cf14378aa99159c626e60589064",
+  "sourceDigest": "219f4c3ed20b97299547c9001ed78b995c8d0989b88da5cb95ee35dbe22c9f04",
+  "changelogDigest": "25842139dea62fbc72c1a49cecc67705b4475f7f1ff0d24eaa0a476642060adb",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
-    "docs/authoring.md": "b4dc944a0599d1a58d34fa787ab97bfc5f32b05c6f5a0bbf7fd2ffae92daf5ad",
+    "docs/authoring.md": "280da5b03d35f16a19b1fa880df9d74ea12bf09afddbb84003e6edc8b4b8374d",
     "docs/cli.md": "3ce991ef73edbad6e6e01016e13499a7e7472cb4773114c9138e6fc1e2fbbf17",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "d43765f2b5ad6ff3a0cc053e53bf9d45f7ef63c0620d25c2c58cc02e1e0a87ea",
+    "docs/features.md": "3b6925ff89e119851155beeea9ca8d54fd2ffde6ce9a7c69e0d690c8d4d9a3c3",
     "docs/presenting.md": "e80c312274392cb5cbc1fd56698910f46d8352fae3f89f2ea14b00ed6e521df9",
     "docs/quick-start.md": "4bd4733f9f3fc9da91fd6d76dda6f3b941b70b65c8d39128e25e25d43134b24d",
     "docs/upgrade.md": "ee73c82a2aa32ea8c3bf3390e7f98b2e641e5b52131c289028b17445c9fb5295",

@@ -19,6 +19,24 @@ test("shows the frontmatter logo in the header and as favicon", async ({ page })
   expect(await shown.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 });
 
+test("shows the optional subtitle below the title without overflowing the header", async ({ page }) => {
+  const subtitle = page.locator(".page-title-subtitle");
+  await expect(subtitle).toHaveText("Explore interactive code, live previews and guided steps");
+  await expect(page.locator('meta[name="description"]')).toHaveCount(0);
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(subtitle).toBeVisible();
+    await expect(subtitle).toHaveCSS("text-overflow", "ellipsis");
+    await expect.poll(async () => page.evaluate(() => {
+      const header = document.querySelector(".app-header")!.getBoundingClientRect();
+      const heading = document.querySelector(".page-title-heading")!.getBoundingClientRect();
+      const subtitle = document.querySelector(".page-title-subtitle")!.getBoundingClientRect();
+      const actions = document.querySelector(".header-actions")!.getBoundingClientRect();
+      return subtitle.top >= heading.bottom && subtitle.bottom <= header.bottom && subtitle.right <= actions.left && document.documentElement.scrollWidth <= innerWidth;
+    })).toBe(true);
+  }
+});
+
 test("numbers each step's heading", async ({ page }) => {
   const marker = await page
     .locator("section.step#config h2")
