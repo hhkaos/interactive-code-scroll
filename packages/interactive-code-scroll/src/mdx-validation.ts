@@ -2,19 +2,17 @@ import { readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineMdastPlugin, type MdastPluginEntry, type MdxJsxFlowElement, type MdxJsxTextElement } from "satteri";
+import { TUTORIAL_COMPONENTS, tutorialProblems } from "./check.ts";
 import { frontmatterKeyLines, readTutorialConfig } from "./frontmatter.ts";
-import { globToRegExp, STEP_FILES_KEY } from "./visible-files.ts";
-import { parseSource } from "./markers.ts";
-import { credentialWarnings, isTextOutput } from "./output.ts";
+import { STEP_FILES_KEY } from "./visible-files.ts";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
 import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
 import { JSON_REGIONS_KEY, JSON_VARS_KEY } from "./json-vars.ts";
 import { MARKDOWN_PARTS_KEY } from "./llm-markdown.ts";
 import { markdownParts } from "./llm-parts.ts";
-import { jsonRegionTargets, jsonVarTargets, validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
+import { jsonRegionTargets, jsonVarTargets, validateSeriesIndex, type AttributeValue, type ComponentUse } from "./validate.ts";
 import { parsedFiles, stepFileOrder } from "./variants.ts";
 
-const COMPONENTS = new Set(["Hint", "Intro", "Outro", "Step", "VarField"]);
 
 export class TutorialValidationError extends Error {
   /** Position in the MDX of the first problem that has one: the MDX compiler turns it into the dev overlay `loc`. */
@@ -110,7 +108,7 @@ export function tutorialValidation(
     const tutorial = readTutorialFiles(tutorialDir);
     const frontmatter = frontmatterOf(ctx.data);
 
-    const { uses, collect } = componentCollector((name) => COMPONENTS.has(name));
+    const { uses, collect } = componentCollector((name) => TUTORIAL_COMPONENTS.has(name));
     // A <summary> without a blank line after it is parsed as text, inside a <p>: invalid HTML that breaks the block's layout.
     const inlineSummaries: { line: number; column: number }[] = [];
 
@@ -125,24 +123,8 @@ export function tutorialValidation(
       },
       after() {
         const mdxFile = relative(process.cwd(), tutorial.mdxPath);
-        const frontmatterLines = frontmatterKeyLines(readFileSync(tutorial.mdxPath, "utf8"));
-        const problems = validateTutorial({
-          mdxFile,
-          uses,
-          files: tutorial.files,
-          binaries: tutorial.binaries,
-          hiddenCode: tutorial.hiddenCode,
-          ignoredCode: tutorial.ignoredCode,
-          images: tutorial.images,
-          embeds: tutorial.embeds,
-          outputs: tutorial.outputs,
-          requests: tutorial.requests,
-          requestBinaries: tutorial.requestBinaries,
-          fieldOptions: tutorial.fieldOptions,
-          frontmatter,
-          frontmatterLines,
-        });
-        if (problems.length > 0) throw new TutorialValidationError(problems, mdxFile);
+        const { errors, warnings } = tutorialProblems({ mdxFile, tutorial, frontmatter, uses, inlineSummaries, series: seriesDir !== undefined });
+        if (errors.length > 0) throw new TutorialValidationError(errors, mdxFile);
         // The page parses code/ before it renders the MDX, so <VarField json> and <Step region="/…"> targets travel in the frontmatter.
         const { jsonVars } = jsonVarTargets(mdxFile, uses, tutorial.files);
         frontmatter[JSON_VARS_KEY] = jsonVars;
@@ -155,38 +137,7 @@ export function tutorialValidation(
         frontmatter[STEP_FILES_KEY] = stepFileOrder(steps, readTutorialConfig(frontmatter).variants, parsedFiles(tutorial.files, jsonVars));
         // Markdown for LLMs: the MDX parser is a native module the prerender bundle cannot load, so it runs here.
         if (readTutorialConfig(frontmatter).llms) frontmatter[MARKDOWN_PARTS_KEY] = markdownParts(readFileSync(tutorial.mdxPath, "utf8"));
-        const sources = [...parsedFiles(tutorial.files, jsonVars).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
-        const defaults = new Set(sources.flatMap((p) => p.vars.map((v) => v.defaultValue)));
-        const texts = tutorial.outputs
-          .filter(isTextOutput)
-          .map((path) => ({ path, text: readFileSync(join(tutorial.outputDir, path), "utf8") }));
-        for (const warning of credentialWarnings(texts, defaults)) warn(warning);
-        for (const folder of tutorial.skippedCodeDirs) {
-          warn(
-            `${mdxFile}:${frontmatterLines.include ?? 1}:1 code/${folder}/ is not published (paths starting with "." are skipped); add "${folder}/**" to frontmatter "include" to publish it`,
-          );
-        }
-        // An explicit include wins over .gitignore, but the author should know a local-only file goes public.
-        const published = new Set([...tutorial.files.map((f) => f.path), ...tutorial.binaries]);
-        for (const pattern of readTutorialConfig(frontmatter).include ?? []) {
-          const regex = globToRegExp(pattern);
-          const matched = tutorial.ignoredCode.filter(({ path }) => published.has(path) && regex.test(path));
-          if (matched.length === 0) continue;
-          const [first] = matched;
-          const more = matched.length > 1 ? ` and ${matched.length - 1} more gitignored path(s)` : "";
-          warn(
-            `${mdxFile}:${frontmatterLines.include ?? 1}:1 frontmatter include "${pattern}" publishes code/${first!.path}${more}, which ${first!.by} excludes; make sure it holds no secrets or local state`,
-          );
-        }
-        for (const { line, column } of inlineSummaries) {
-          warn(`${mdxFile}:${line}:${column} <summary> is rendered inside a paragraph; put a blank line between it and the <details> content`);
-        }
-        if (seriesDir === undefined && frontmatter.family !== undefined) {
-          warn(`${mdxFile}:${frontmatterLines.family ?? 1}:1 frontmatter "family" has no effect outside a series site`);
-        }
-        if (seriesDir === undefined && frontmatter.next !== undefined) {
-          warn(`${mdxFile}:${frontmatterLines.next ?? 1}:1 frontmatter "next" has no effect outside a series site`);
-        }
+        for (const warning of warnings) warn(warning);
       },
     });
   };

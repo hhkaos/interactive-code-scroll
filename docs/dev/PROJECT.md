@@ -146,7 +146,8 @@ packages/interactive-code-scroll/  # core package: Astro integration
   src/json-vars.ts                 # <VarField json> targets and <Step region="/…"> JSON regions: JSON Pointer locator (own JSON tokenizer) + JSON_VARS_KEY / JSON_REGIONS_KEY
   src/field-options.ts             # <VarField type/options>: field types, static option literals, field-options/ files
   src/validate.ts                  # reference validation (pure)
-  src/mdx-validation.ts            # Sätteri mdast plugin that runs validate.ts with MDX positions
+  src/mdx-validation.ts            # Sätteri mdast plugin that runs validate.ts with MDX positions (problems from check.ts tutorialProblems())
+  src/check.ts                     # tutorialProblems() shared by the MDX compile and `check`; checkTutorials() (CLI `check`: MDX parsed with satteri, no Astro), formatCheck(), toProblem()
   src/var-field-groups.ts          # Sätteri mdast plugin: wraps consecutive <VarField>s in div.var-fields (grid columns)
   src/highlight.ts                 # Shiki build-time highlighting
   src/frontmatter.ts               # title / preview config; logo helpers (isRemoteLogo, logoUrl), tagGroups with tag logos
@@ -469,6 +470,7 @@ The page structure is our own CSS grid (`div.layout` > `div.docs-column` (`main.
 | Unquoted YAML dates in frontmatter | The MDX validation (compile time) sees `updated: 2026-10-16` as a `Date` at midnight UTC | The MDX module's exported `frontmatter` holds it as JSON, so pages read `"2026-10-16T00:00:00.000Z"`; unit tests with a `Date` passed while the build failed (2026-10-16) | A frontmatter reader must accept the value, its `Date` and its JSON text (`readUpdated()` in `frontmatter.ts`); cover the field in a fixture, unquoted |
 | `calcite-icon` in full-page screenshots | In or near the viewport: the icon loads | Off-screen at capture time: never fetched (lazy), so `fullPage` screenshots show empty boxes below the fold | Scroll through the page (and wait) before a full-page screenshot for review |
 | Native modules in injected endpoints | The MDX validation (an mdast plugin) runs in the Astro process, where `satteri` (native binding `@bruits/satteri-<platform>`) resolves | An injected route that imports `satteri` gets it bundled into `dist/.prerender/chunks/`, whose `require` of the binding fails under pnpm ("Cannot find native binding") | Parse MDX at compile time and pass the result in the frontmatter (as `JSON_VARS_KEY` and `MARKDOWN_PARTS_KEY` do); keep runtime modules (`llm-markdown.ts`) free of `satteri` imports. `test/build.test.ts` builds inside the package and does not catch it: build a fixture (`pnpm build`) or run `pnpm test:pack` (2026-10-19). |
+| CLI importing TypeScript sources | Published package: `bin` imports `dist/check.js` | Workspace: `bin` imports `src/check.ts`, and Node's default type stripping rejects parameter properties (`constructor(readonly key…)` in `frontmatter.ts`, `mdx-validation.ts`) with `ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX` | `check()` in `bin/interactive-code-scroll.mjs` re-runs the CLI with `--experimental-transform-types` when the module is `.ts`; Node never strips types inside `node_modules`, so the package must keep importing `.js` (`build-package.mjs` rewrites the URL; `pnpm test:pack` runs `check`) (2026-10-19). |
 
 ---
 

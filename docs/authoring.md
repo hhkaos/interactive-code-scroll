@@ -1324,7 +1324,7 @@ Links are absolute when the Astro project sets [`site`](https://docs.astro.build
 
 ## Validation
 
-The build checks every reference before it writes the site: a wrong file, region, variable, image, output, request or frontmatter value fails it. Every error names the file, line and column, and frontmatter errors point at the offending key. In dev mode, validation re-runs whenever `tutorial.mdx` or a file under `code/`, `images/`, `requests/` or `output/` changes, and the error appears in the browser overlay at the first failing line.
+The build checks every reference before it writes the site: a wrong file, region, variable, image, output, request or frontmatter value fails it. [`interactive-code-scroll check`](cli.md#check-without-building) runs the same checks in about a second without building, with `--json` for scripts and coding agents. Every error names the file, line and column, and frontmatter errors point at the offending key. In dev mode, validation re-runs whenever `tutorial.mdx` or a file under `code/`, `images/`, `requests/` or `output/` changes, and the error appears in the browser overlay at the first failing line.
 
 ### Common build errors
 

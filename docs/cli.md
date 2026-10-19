@@ -41,6 +41,7 @@ npm create interactive-code-scroll@latest docs -- --layout series --tutorials ma
 interactive-code-scroll dev [options]
 interactive-code-scroll build [options]
 interactive-code-scroll serve [options]
+interactive-code-scroll check [options]
 interactive-code-scroll doctor [options]
 interactive-code-scroll init-scripts [options]
 ```
@@ -67,6 +68,7 @@ ics serve
 | `--host [address]` | `dev`, `serve` | Forwarded to Astro. |
 | `--outDir <dir>` | `build` | Forwarded to Astro. |
 | `--write` | `init-scripts` | Writes suggested package scripts. |
+| `--json` | `check` | Prints the problems as JSON. |
 
 Any arguments after `--` are passed to Astro.
 
@@ -111,11 +113,46 @@ Add package scripts without overwriting existing scripts:
 npm exec -- interactive-code-scroll init-scripts --write
 ```
 
+Check every tutorial without building the site (see [Check without building](#check-without-building)):
+
+```sh
+npm exec -- interactive-code-scroll check
+```
+
 Inspect project detection:
 
 ```sh
 npm exec -- interactive-code-scroll doctor
 ```
+
+## Check without Building
+
+`check` runs the same validation as `build` (frontmatter, every file, region, variable, image, output and request reference, and in a series the `index.mdx` and the rules across tutorials), without Astro, in about a second. Use it after each change, by hand or from a coding agent; `build` stays the final check, since it also compiles the pages.
+
+```sh
+npm exec -- interactive-code-scroll check
+```
+
+```text
+error tutorial/tutorial.mdx:12:1 <Step> region "nope" not found in code/main.js
+warning tutorial/tutorial.mdx:20:1 <summary> is rendered inside a paragraph; put a blank line between it and the <details> content
+1 error, 1 warning in 1 tutorial.
+```
+
+With `--json`, the same problems come as one JSON object; paths are relative to the current folder, and `file`, `line` and `column` are left out when a problem has none:
+
+```json
+{
+  "ok": false,
+  "errors": 1,
+  "warnings": 0,
+  "problems": [
+    { "severity": "error", "file": "tutorial/tutorial.mdx", "line": 12, "column": 1, "message": "<Step> region \"nope\" not found in code/main.js" }
+  ]
+}
+```
+
+The exit code is 1 when there is an error, 0 otherwise (warnings included).
 
 ## Package Script Argument Forwarding
 

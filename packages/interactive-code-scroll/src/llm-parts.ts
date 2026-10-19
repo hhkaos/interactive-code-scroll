@@ -44,7 +44,7 @@ export function markdownParts(mdx: string): MarkdownPart[] {
     const children = node.children ?? [];
     return {
       name: node.name!,
-      attributes: attributesOf(node),
+      attributes: jsxAttributes(node),
       children: children.length === 0 ? [] : between(span(children[0]!).from, span(children.at(-1)!).to, children),
     };
   };
@@ -59,7 +59,8 @@ function special(node: Node): Node[] {
   return (node.children ?? []).flatMap(special);
 }
 
-function attributesOf(node: Node): Record<string, AttributeValue> {
+/** A JSX element's attributes: strings, `true` for a bare name, `{ expression }` for `{…}`. */
+export function jsxAttributes(node: Pick<Node, "attributes">): Record<string, AttributeValue> {
   const out: Record<string, AttributeValue> = {};
   for (const attr of node.attributes ?? []) {
     if (attr.type !== "mdxJsxAttribute" || attr.name === undefined) continue;

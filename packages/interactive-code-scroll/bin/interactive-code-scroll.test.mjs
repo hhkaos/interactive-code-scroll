@@ -1,6 +1,8 @@
+import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   doctor,
@@ -132,7 +134,33 @@ describe("interactive-code-scroll CLI", () => {
 
   it("rejects command-specific flags on the wrong command", () => {
     expect(() => planCli(["dev", "--outDir", "public"])).toThrow("--outDir is only supported with build");
+    expect(() => planCli(["build", "--json"])).toThrow("--json is only supported with check");
   });
+
+  it("plans check with --json and keeps it out of the Astro arguments", () => {
+    const plan = planCli(["check", "--json", "--tutorial", "."]);
+    expect(plan).toMatchObject({ command: "check", json: true, tutorial: "." });
+    expect(plan.astroArgs).not.toContain("--json");
+  });
+
+  it("checks a tutorial without Astro: problems as JSON and exit code 1 on errors", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    mkdirSync(join(root, "tutorial", "code"), { recursive: true });
+    writeFileSync(join(root, "tutorial", "tutorial.mdx"), '---\npreview: off\n---\n\n<Step id="a" file="main.py" region="nope">\n\nText.\n\n</Step>\n');
+    writeFileSync(join(root, "tutorial", "code", "main.py"), "print(1)\n");
+    const bin = fileURLToPath(new URL("./interactive-code-scroll.mjs", import.meta.url));
+    const run = spawnSync(process.execPath, [bin, "check", "--json"], { cwd: root, encoding: "utf8" });
+    expect(run.status).toBe(1);
+    expect(JSON.parse(run.stdout)).toEqual({
+      ok: false,
+      errors: 1,
+      warnings: 0,
+      problems: [{ severity: "error", file: "tutorial/tutorial.mdx", line: 5, column: 1, message: '<Step> region "nope" not found in code/main.py' }],
+    });
+    writeFileSync(join(root, "tutorial", "tutorial.mdx"), '---\npreview: off\n---\n\n<Step id="a" file="main.py">\n\nText.\n\n</Step>\n');
+    const fixed = spawnSync(process.execPath, [bin, "check"], { cwd: root, encoding: "utf8" });
+    expect([fixed.status, fixed.stdout.trim()]).toEqual([0, "No problems found in 1 tutorial."]);
+  }, 30_000);
 
   it("rejects unexpected positional arguments before Astro passthrough", () => {
     expect(() => planCli(["dev", "--tutorial", ".", "intro"])).toThrow(/Unexpected argument: intro/);

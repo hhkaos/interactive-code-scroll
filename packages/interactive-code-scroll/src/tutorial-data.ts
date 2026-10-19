@@ -131,7 +131,10 @@ export interface Sibling {
   current: boolean;
 }
 
-function familyMembers(tutorials: readonly TutorialData[]): (FamilyMember & { variants: string[]; logo?: string })[] {
+/** What the cross-tutorial rules read of a tutorial. */
+export type SeriesMember = Pick<TutorialData, "slug" | "frontmatter" | "images">;
+
+function familyMembers(tutorials: readonly SeriesMember[]): (FamilyMember & { variants: string[]; logo?: string })[] {
   return tutorials.map(({ slug, frontmatter, images }) => {
     const { family, logo, order, variants } = readTutorialConfig(frontmatter);
     const src = logoUrl(logo, images) ?? variants?.map((v) => logoUrl(v.logo, images)).find((url) => url !== undefined);
@@ -146,6 +149,16 @@ function familyMembers(tutorials: readonly TutorialData[]): (FamilyMember & { va
 }
 
 const warned = new Set<string>();
+
+/** Cross-tutorial rules of a series (sibling families and `next`); per-tutorial ones run at MDX compile time. */
+export function seriesProblems(tutorials: readonly SeriesMember[]): { errors: string[]; warnings: string[] } {
+  const families = familyProblems(familyMembers(tutorials));
+  const next = nextProblems(completionMembers(tutorials));
+  return {
+    errors: [...families.errors.map((e) => `sibling tutorials: ${e}`), ...next.map((e) => `next tutorial: ${e}`)],
+    warnings: families.warnings,
+  };
+}
 
 /** Cross-tutorial family rules (per-tutorial ones run at MDX compile time); each warning is logged once. */
 export function checkFamilies(tutorials: readonly TutorialData[], warn: (message: string) => void = console.warn): void {
@@ -171,7 +184,7 @@ export function siblingsOf(tutorials: readonly TutorialData[], slug: string, bas
 }
 
 /** Tutorials in series index order, with their `next` (validated at MDX compile time). */
-function completionMembers(tutorials: readonly TutorialData[]): CompletionMember[] {
+function completionMembers(tutorials: readonly Pick<TutorialData, "slug" | "frontmatter">[]): CompletionMember[] {
   return sortCards(
     tutorials.map(({ slug, frontmatter }) => {
       const { title, order, next } = readTutorialConfig(frontmatter);

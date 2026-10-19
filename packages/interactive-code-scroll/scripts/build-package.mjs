@@ -71,7 +71,8 @@ const sourceCli = readFileSync(join(packageRoot, "bin", "interactive-code-scroll
     "const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));",
     "const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));",
   )
-  .replace('new URL("../src/index.ts", import.meta.url).href', 'new URL("../index.js", import.meta.url).href');
+  .replace('new URL("../src/index.ts", import.meta.url).href', 'new URL("../index.js", import.meta.url).href')
+  .replace('new URL("../src/check.ts", import.meta.url).href', 'new URL("../check.js", import.meta.url).href');
 writeFileSync(join(dist, "bin", "interactive-code-scroll.mjs"), sourceCli, { mode: 0o755 });
 
 function rewriteAstroImports(file) {

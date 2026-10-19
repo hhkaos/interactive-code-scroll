@@ -33,6 +33,7 @@ try {
         type: "module",
         scripts: {
           build: "interactive-code-scroll build",
+          check: "interactive-code-scroll check",
         },
         dependencies: {
           astro: "7.3.5",
@@ -46,6 +47,8 @@ try {
   writeFileSync(join(projectDir, "pnpm-workspace.yaml"), "allowBuilds:\n  esbuild: true\n");
 
   run("pnpm", ["install", "--prefer-offline"], projectDir, { CI: "true" });
+  // `check` imports the packed JavaScript (no TypeScript transform inside node_modules).
+  run("pnpm", ["check"], projectDir, { CI: "true" });
   run("pnpm", ["build"], projectDir, { CI: "true" });
   if (!existsSync(join(projectDir, "dist", "index.html"))) {
     throw new Error("Pack smoke test did not produce dist/index.html");

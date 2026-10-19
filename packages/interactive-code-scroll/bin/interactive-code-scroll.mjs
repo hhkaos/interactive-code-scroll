@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
 
-const COMMANDS = new Set(["dev", "build", "serve", "doctor", "init-scripts"]);
+const COMMANDS = new Set(["dev", "build", "serve", "check", "doctor", "init-scripts"]);
 const OPTION_ALIASES = new Map([
   ["-r", "--root"],
   ["-t", "--tutorial"],
@@ -14,19 +14,21 @@ const OPTION_ALIASES = new Map([
 ]);
 const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--tutorials", "--index", "--base", "--site", "--port", "--outDir"]);
 const OPTIONAL_VALUE_OPTIONS = new Set(["--host"]);
-const BOOLEAN_OPTIONS = new Set(["--write"]);
+const BOOLEAN_OPTIONS = new Set(["--write", "--json"]);
 const COMMAND_FLAG_TARGETS = new Map([
   ["--port", new Set(["dev", "serve"])],
   ["--host", new Set(["dev", "serve"])],
   ["--outDir", new Set(["build"])],
+  ["--json", new Set(["check"])],
 ]);
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
+const checkUrl = new URL("../src/check.ts", import.meta.url).href;
 
 /**
  * @typedef {Readonly<{
- *   command: "dev" | "build" | "serve" | "doctor" | "init-scripts";
+ *   command: "dev" | "build" | "serve" | "check" | "doctor" | "init-scripts";
  *   root: string;
  *   tutorial: string;
  *   tutorialAutoDetected: boolean;
@@ -34,6 +36,7 @@ const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
  *   tutorialsAutoDetected: boolean;
  *   index: string | undefined;
  *   write: boolean;
+ *   json: boolean;
  *   configPath: string;
  *   configArg: string;
  *   astroArgs: readonly string[];
@@ -125,12 +128,13 @@ export function planCli(argv, context = {}) {
     if (option === "--root" || option === "--tutorial" || option === "--tutorials" || option === "--index" || option === "--write") continue;
     const targets = COMMAND_FLAG_TARGETS.get(option);
     if (targets && !targets.has(command)) throw new Error(`${option} is only supported with ${[...targets].join(" or ")}.`);
+    if (option === "--json") continue;
     astroArgs.push(option);
     if (value !== true) astroArgs.push(value);
   }
   astroArgs.push(...forwarded);
 
-  return { command, root, tutorial, tutorialAutoDetected, tutorials, tutorialsAutoDetected, index, write: options.get("--write") === true, configPath, configArg, astroArgs };
+  return { command, root, tutorial, tutorialAutoDetected, tutorials, tutorialsAutoDetected, index, write: options.get("--write") === true, json: options.get("--json") === true, configPath, configArg, astroArgs };
 }
 
 /**
@@ -152,7 +156,7 @@ export function writeAstroConfig(plan) {
  * @param {string | undefined} prefix
  */
 function help(prefix) {
-  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --tutorials <dir>  Series site: folder of tutorials (<dir>/<name>/tutorial.mdx).\n                     Used automatically for tutorials/ when there is no single tutorial.\n  --index <file>     Series site: .astro page that replaces the index page.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
+  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|check|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --tutorials <dir>  Series site: folder of tutorials (<dir>/<name>/tutorial.mdx).\n                     Used automatically for tutorials/ when there is no single tutorial.\n  --index <file>     Series site: .astro page that replaces the index page.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n  --json             check: print the problems as JSON.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n  interactive-code-scroll check --json\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
 }
 
 /**
@@ -342,6 +346,36 @@ export function initScripts(plan) {
   return lines.join("\n");
 }
 
+/**
+ * Runs the build's validation without Astro (`src/check.ts`); exit code 1 on errors.
+ * @param {CliPlan} plan
+ * @param {string[]} argv
+ */
+async function check(plan, argv) {
+  // The workspace runs the TypeScript sources: Node strips types but needs its transform mode for
+  // parameter properties, so the CLI runs itself again with it. The published package runs JavaScript.
+  if (checkUrl.endsWith(".ts") && !process.execArgv.includes("--experimental-transform-types")) {
+    const child = spawn(process.execPath, ["--experimental-transform-types", "--disable-warning=ExperimentalWarning", fileURLToPath(import.meta.url), ...argv], {
+      stdio: "inherit",
+    });
+    return await new Promise((resolveExit) => child.on("exit", (code) => resolveExit(code ?? 1)));
+  }
+  const { checkTutorials, formatCheck, toProblem } = await import(checkUrl);
+  try {
+    validateProject(plan);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.log(plan.json ? formatCheck([toProblem("error", message)], { json: true, tutorials: 0 }) : message);
+    return 1;
+  }
+  const result =
+    plan.tutorials === undefined
+      ? checkTutorials({ tutorialDirs: [join(plan.root, plan.tutorial)] })
+      : checkTutorials({ seriesDir: join(plan.root, plan.tutorials) });
+  console.log(formatCheck(result.problems, { json: plan.json, tutorials: result.tutorials }));
+  return result.problems.some((/** @type {{ severity: string }} */ p) => p.severity === "error") ? 1 : 0;
+}
+
 function packageVersion() {
   try {
     return JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).version ?? "unknown";
@@ -368,6 +402,7 @@ export async function main(argv) {
     console.log(initScripts(plan));
     return 0;
   }
+  if (plan.command === "check") return await check(plan, argv);
   validateProject(plan);
   writeAstroConfig(plan);
   console.log(preflightMessage(plan));

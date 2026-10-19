@@ -90,4 +90,4 @@ If you chose the GitHub Pages workflow, push to GitHub and enable **Settings →
 
 - [Features](features.md) — everything the tool can do
 - [Authoring reference](authoring.md) — frontmatter, components, markers, validation rules
-- [CLI reference](cli.md) — `dev`, `build`, `serve`, `doctor` and their options
+- [CLI reference](cli.md) — `dev`, `build`, `serve`, `check`, `doctor` and their options
