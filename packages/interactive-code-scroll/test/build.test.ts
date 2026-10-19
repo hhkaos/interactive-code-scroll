@@ -257,3 +257,74 @@ it("fails a series build when two sibling tutorials share a familyLabel", async 
     rmSync(root, { recursive: true, force: true });
   }
 }, 60_000);
+
+it("publishes Markdown for LLMs per tutorial and variant, and llms.txt without opted-out tutorials", async () => {
+  const root = mkdtempSync(fileURLToPath(new URL("./fixtures/llms-", import.meta.url)));
+  const outDir = join(root, "dist");
+  try {
+    const alpha = join(root, "tutorials", "alpha");
+    mkdirSync(join(alpha, "code", "js"), { recursive: true });
+    mkdirSync(join(alpha, "code", "python"), { recursive: true });
+    writeFileSync(
+      join(alpha, "tutorial.mdx"),
+      [
+        "---",
+        "title: Alpha",
+        "description: First steps.",
+        "preview: off",
+        "variants:",
+        "  - { id: js, label: JavaScript, dir: js, entry: main.js }",
+        "  - { id: python, label: Python, dir: python, entry: main.py }",
+        "---",
+        "",
+        '<Step id="config" region="config">',
+        "",
+        "## Configure",
+        "",
+        '<VarField name="key" label="API key" />',
+        "",
+        "</Step>",
+        "",
+      ].join("\n"),
+    );
+    writeFileSync(join(alpha, "code", "js", "main.js"), '// #region config\nconst key = "KEY"; // @var key\n// #endregion config\n');
+    writeFileSync(join(alpha, "code", "python", "main.py"), '# #region config\nkey = "KEY"  # @var key\n# #endregion config\n');
+    const beta = join(root, "tutorials", "beta");
+    mkdirSync(join(beta, "code"), { recursive: true });
+    writeFileSync(join(beta, "tutorial.mdx"), "---\ntitle: Beta\npreview: off\nllms: false\n---\n\n# Beta\n");
+    writeFileSync(join(beta, "code", "main.py"), "print(1)\n");
+
+    await build({
+      root,
+      outDir,
+      site: "https://example.com",
+      base: "/repo",
+      integrations: [interactiveCodeScroll({ tutorials: "tutorials" })],
+      logLevel: "silent",
+    });
+    const js = readFileSync(join(outDir, "alpha", "tutorial.md"), "utf8");
+    expect(js).toContain("Interactive version: https://example.com/repo/alpha/?variant=js");
+    expect(js).toContain("Other variants: [Python](https://example.com/repo/alpha/tutorial.python.md).");
+    expect(js).toContain('```javascript title="code/js/main.js" region="config"\nconst key = "KEY";\n```');
+    expect(js).toContain("- **API key** (`key`)");
+    expect(readFileSync(join(outDir, "alpha", "tutorial.js.md"), "utf8")).toBe(js);
+    expect(readFileSync(join(outDir, "alpha", "tutorial.python.md"), "utf8")).toContain('title="code/python/main.py" region="config"\nkey = "KEY"\n');
+    expect(readFileSync(join(outDir, "alpha", "index.html"), "utf8")).toContain('<link rel="alternate" type="text/markdown" href="/repo/alpha/tutorial.md">');
+    expect(existsSync(join(outDir, "beta", "tutorial.md"))).toBe(false);
+    expect(readFileSync(join(outDir, "beta", "index.html"), "utf8")).not.toContain("text/markdown");
+    expect(readFileSync(join(outDir, "llms.txt"), "utf8")).toBe(
+      [
+        "# Tutorials",
+        "",
+        "## Tutorials",
+        "",
+        "- [Alpha](https://example.com/repo/alpha/tutorial.md): First steps.",
+        "- [Alpha (JavaScript)](https://example.com/repo/alpha/tutorial.js.md)",
+        "- [Alpha (Python)](https://example.com/repo/alpha/tutorial.python.md)",
+        "",
+      ].join("\n"),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}, 60_000);

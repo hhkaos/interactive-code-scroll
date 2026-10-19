@@ -13,6 +13,7 @@ describe("readTutorialConfig", () => {
       otherVariantSteps: "notice",
       tags: [],
       completion: true,
+      llms: true,
     });
   });
 
@@ -27,6 +28,7 @@ describe("readTutorialConfig", () => {
       otherVariantSteps: "notice",
       tags: [],
       completion: true,
+      llms: true,
     });
   });
 
@@ -266,6 +268,12 @@ describe("completion panel", () => {
     expect(readTutorialConfig({ presentationUrl: "https://owner.github.io/t/{slug}/" }).presentationUrl).toBe("https://owner.github.io/t/{slug}/");
     expect(readTutorialConfig({ presentationUrl: "http://192.168.1.20:4321/" }).presentationUrl).toBe("http://192.168.1.20:4321/");
     expect(readIndexConfig({ presentationUrl: "https://example.com/{slug}/" }).presentationUrl).toBe("https://example.com/{slug}/");
+  });
+
+  it("reads llms (Markdown for LLMs), on by default", () => {
+    expect(readTutorialConfig({ llms: false }).llms).toBe(false);
+    expect(readTutorialConfig({}).llms).toBe(true);
+    expect(keyOf({ llms: "no" })).toBe("llms");
   });
 
   it("reads outline, also as the index.mdx default", () => {

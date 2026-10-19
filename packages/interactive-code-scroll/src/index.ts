@@ -75,6 +75,9 @@ export function interactiveCodeScroll(options: InteractiveCodeScrollOptions = {}
         injectRoute({ pattern: `${prefix}/preview/[...file]`, entrypoint: new URL("./preview/code-file.ts", import.meta.url) });
         injectRoute({ pattern: `${prefix}/output/[...file]`, entrypoint: new URL("./result/output-file.ts", import.meta.url) });
         injectRoute({ pattern: `${prefix}/embeds/[...file]`, entrypoint: new URL("./embed/embed-file.ts", import.meta.url) });
+        // Markdown for LLMs: `tutorial.md` (one per variant) and the site's `llms.txt`.
+        injectRoute({ pattern: `${prefix}/[markdown].md`, entrypoint: new URL("./llms/markdown-file.ts", import.meta.url) });
+        injectRoute({ pattern: "/[llms].txt", entrypoint: new URL("./llms/llms-txt.ts", import.meta.url) });
       },
       // The final base, after every integration's config updates.
       "astro:config:done": ({ config }) => {

@@ -69,6 +69,8 @@ export interface TutorialConfig {
   ask?: AskEntry[] | false;
   /** `false`: an `<Intro>` without media keeps the code instead of the step outline; absent: the series', else true. */
   outline?: boolean;
+  /** Publishes `tutorial.md` (one per variant) and lists the tutorial in `llms.txt`; default true. */
+  llms: boolean;
 }
 
 /** Frontmatter of a series site's optional `index.mdx`. */
@@ -237,6 +239,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     presentationUrl,
     ask,
     outline,
+    llms = true,
   } = frontmatter;
   if (typeof title !== "string") throw new FrontmatterError("title", '"title" must be a string');
   if (typeof captureConsole !== "boolean") throw new FrontmatterError("console", '"console" must be a boolean');
@@ -245,6 +248,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
   if (logo !== undefined && typeof logo !== "string") throw new FrontmatterError("logo", '"logo" must be a string');
   if (order !== undefined && (typeof order !== "number" || !Number.isFinite(order))) throw new FrontmatterError("order", '"order" must be a number');
   if (typeof completion !== "boolean") throw new FrontmatterError("completion", '"completion" must be a boolean');
+  if (typeof llms !== "boolean") throw new FrontmatterError("llms", '"llms" must be a boolean');
   checkOutline(outline);
   if (next !== undefined && next !== false && (typeof next !== "string" || !TUTORIAL_SLUG.test(next))) {
     throw new FrontmatterError("next", '"next" must be the slug (folder name) of a tutorial of the series, or false');
@@ -279,6 +283,7 @@ export function readTutorialConfig(frontmatter: Record<string, unknown>): Tutori
     ...optionalEntry("presentationUrl", readPresentationUrl(presentationUrl)),
     ...readAsk(ask),
     ...(outline === undefined ? {} : { outline: outline as boolean }),
+    llms,
   };
 }
 

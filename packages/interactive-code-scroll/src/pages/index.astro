@@ -12,6 +12,7 @@ import { fillUrl } from "../completion.ts";
 import { resolveAsk, withoutSelection } from "../ask.ts";
 import { highlight } from "../highlight.ts";
 import { parseSource } from "../markers.ts";
+import { MARKDOWN_NAME } from "../llm-markdown.ts";
 import { jsonRegionsOf, jsonVarsOf } from "../json-vars.ts";
 import { zipBadge, zipLabel } from "../downloads.ts";
 import { PREVIEW_ENTRY, previewPagesOf } from "../preview/build-html.ts";
@@ -160,6 +161,7 @@ const clientData = JSON.stringify({
     <title>{config.title}</title>
     {config.description && <meta name="description" content={config.description} />}
     {favicon && <link rel="icon" href={favicon} />}
+    {config.llms && <link rel="alternate" type="text/markdown" href={`${tutorialBase(base, slug)}${MARKDOWN_NAME}.md`} />}
   </head>
   <body data-preview={preview} data-theme={config.theme} data-code-wrap={config.codeWrap ? "" : undefined}>
     <script is:inline>

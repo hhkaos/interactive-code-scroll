@@ -9,6 +9,8 @@ import { credentialWarnings, isTextOutput } from "./output.ts";
 import { SERIES_IMAGES, SERIES_INDEX } from "./series.ts";
 import { listFiles, readTutorialFiles } from "./tutorial-files.ts";
 import { JSON_REGIONS_KEY, JSON_VARS_KEY } from "./json-vars.ts";
+import { MARKDOWN_PARTS_KEY } from "./llm-markdown.ts";
+import { markdownParts } from "./llm-parts.ts";
 import { jsonRegionTargets, jsonVarTargets, validateSeriesIndex, validateTutorial, type AttributeValue, type ComponentUse } from "./validate.ts";
 import { parsedFiles, stepFileOrder } from "./variants.ts";
 
@@ -151,6 +153,8 @@ export function tutorialValidation(
           .filter((use) => use.name === "Step" || use.name === "Intro")
           .map(({ attributes }) => ({ file: text(attributes.file), region: text(attributes.region), only: text(attributes.only) }));
         frontmatter[STEP_FILES_KEY] = stepFileOrder(steps, readTutorialConfig(frontmatter).variants, parsedFiles(tutorial.files, jsonVars));
+        // Markdown for LLMs: the MDX parser is a native module the prerender bundle cannot load, so it runs here.
+        if (readTutorialConfig(frontmatter).llms) frontmatter[MARKDOWN_PARTS_KEY] = markdownParts(readFileSync(tutorial.mdxPath, "utf8"));
         const sources = [...parsedFiles(tutorial.files, jsonVars).values(), ...tutorial.requests.map((f) => parseSource(f.source, `requests/${f.path}`))];
         const defaults = new Set(sources.flatMap((p) => p.vars.map((v) => v.defaultValue)));
         const texts = tutorial.outputs

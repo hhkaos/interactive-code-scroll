@@ -184,6 +184,13 @@ For code that cannot run in the browser Preview (scripts, native apps, HTTP requ
 - **Copy to clipboard**.
 - Framework markers (`#region`, `@var`) are stripped from rendered and downloaded code.
 
+### Markdown for LLMs *(decision 2026-10-19, issue #4)*
+- **Why**: the published page is a poor input for an LLM (layout markup, code split into regions, unresolved variables). Each tutorial also publishes a plain Markdown version that a reader can paste or link in any assistant.
+- **Files**: `<tutorial>/tutorial.md` (in a single-tutorial site, `/tutorial.md`), and `llms.txt` at the site root ([llmstxt.org](https://llmstxt.org) format) listing every tutorial's Markdown. URLs are absolute when the Astro project sets `site`, root-relative (with `base`) otherwise. The tutorial page links its Markdown with `<link rel="alternate" type="text/markdown">`.
+- **Variants**: one file per variant, `tutorial.<variant-id>.md`, with only the steps and code of that variant (steps whose `only` excludes it are left out, whatever `otherVariantSteps` says). `tutorial.md` is the first variant's; each file names the other variants and links their files.
+- **Content**: the title, `description`, a link to the page, then the MDX prose in order, with components turned into Markdown: `<Step>`/`<Intro>`/`<Outro>` keep their content; a step's code follows its content as a fenced block (language from the file type, a `code/<path>` label, the region's lines, markers stripped and `@var` defaults applied; the whole file for a step with `file` and no `region`); `images` become Markdown images, `embed` a link; `<VarField>` a list item (label and var name); `<Hint>` its label followed by the hint text in parentheses. Other HTML/JSX (e.g. `<details>`) stays as written. A closing "Final code" section has every visible file in full (markers stripped, defaults applied). Captured outputs, requests and the step outline are not included.
+- **Opt-out**: frontmatter `llms: false` publishes no Markdown for that tutorial and leaves it out of `llms.txt`; with no tutorial left, there is no `llms.txt`. Default: on.
+
 ### Presentation mode
 - "Full screen mode" that fully hides/collapses the navigation bar.
 - Allows hiding/collapsing the explanations in the left panel.

@@ -19,7 +19,9 @@ rewriteFile(join(dist, "index.js"), (text) =>
   text
     .replaceAll("./preview/code-file.ts", "./preview/code-file.js")
     .replaceAll("./result/output-file.ts", "./result/output-file.js")
-    .replaceAll("./embed/embed-file.ts", "./embed/embed-file.js"),
+    .replaceAll("./embed/embed-file.ts", "./embed/embed-file.js")
+    .replaceAll("./llms/markdown-file.ts", "./llms/markdown-file.js")
+    .replaceAll("./llms/llms-txt.ts", "./llms/llms-txt.js"),
 );
 
 for (const path of [

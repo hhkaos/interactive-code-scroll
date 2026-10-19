@@ -155,6 +155,7 @@ order: 1
 | [`presentationUrl`](presenting.md#during-the-talk) | `http://` or `https://` URL | the series' `index.mdx` one, else Astro `site` + the tutorial's path, else the page URL | Where the QR code of the closing slide (presentation mode) points, e.g. the published copy when you present from `localhost`. `{slug}` is replaced. |
 | [`feedbackUrl`](#outro) | `https://` or `mailto:` URL | the series' `index.mdx` one | "Send feedback" link in the closing panel and ["Ask the author"](#asking-about-a-selection) in the selection toolbar; none without a URL. `{slug}` and `{title}` are replaced (URL-encoded), e.g. `https://github.com/owner/repo/issues/new?title=Feedback:%20{title}`; `{context}`, `{selection}` and `{url}` carry a selection (empty in the closing panel). |
 | [`ask`](#asking-about-a-selection) | list of `author`, `chatgpt`, `claude`, `{ label, url }`, or `false` | the series' `index.mdx` one, else `[author, chatgpt, claude]` | Actions of the selection toolbar, in menu order. `false` turns it off. |
+| [`llms`](#markdown-for-llms) | boolean | `true` | `false`: no `tutorial.md` for this tutorial and no entry in `llms.txt`. |
 
 ### Code and Preview
 
@@ -1307,6 +1308,19 @@ familyLabel: Python
 - Keep siblings and variants apart: a sibling's `familyLabel` should not repeat a language that is already a code variant of another sibling (for example a "REST API" tutorial with a Python variant next to a "Python" sibling), or readers see two "Python" choices that do different things.
 - `family` and `familyLabel` go together, and each label must be unique within its family (build errors). A family with one tutorial, or `family` outside a series site, only warns.
 - The index keeps one card per tutorial.
+
+## Markdown for LLMs
+
+Every tutorial also publishes a plain Markdown version for AI assistants: readers can link or paste it in any chat instead of the interactive page, which an LLM reads poorly. Nothing to write; the build makes it from `tutorial.mdx` and `code/`:
+
+- `tutorial.md` next to the tutorial page (`/tutorial.md`, or `/<slug>/tutorial.md` in a [series site](#series-sites)). The page links it in its `<head>` (`<link rel="alternate" type="text/markdown">`).
+- `llms.txt` at the site root ([llmstxt.org](https://llmstxt.org)), listing every tutorial's Markdown with its `description`.
+
+The Markdown keeps your prose in order and adds each step's code after the step's text: the region it focuses (the whole file for a step with `file` and no `region`), with markers removed and [variables](#variables) at their defaults. `<VarField>` becomes a list item with its label and variable name, `<Hint>` its label followed by the hint text in parentheses, `images` Markdown images and `embed` a link. A closing "Final code" section has every file that gets a tab, in full. Captured outputs, requests and the step outline are left out.
+
+With [variants](#code-variants), each variant gets its own file, `tutorial.<variant-id>.md`, with only its steps and code; `tutorial.md` holds the first variant and links the others.
+
+Links are absolute when the Astro project sets [`site`](https://docs.astro.build/en/reference/configuration-reference/#site), and root-relative otherwise. To leave a tutorial out, set `llms: false` in its frontmatter.
 
 ## Validation
 

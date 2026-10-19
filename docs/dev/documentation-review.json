@@ -1,6 +1,14 @@
 {
   "changes": [
     {
+      "change": "Markdown for LLMs: every tutorial publishes `tutorial.md` (one `tutorial.<variant>.md` per code variant) with its prose, each step's code (markers stripped, variable defaults applied) and the final code, linked from the page `<head>`; the site root gets an `llms.txt` index. Frontmatter `llms: false` opts a tutorial out.",
+      "docs": [
+        "docs/authoring.md#markdown-for-llms",
+        "docs/authoring.md#page",
+        "docs/features.md#markdown-for-ai-assistants"
+      ]
+    },
+    {
       "change": "E2E narration expectations include the nested-list fixture content, and the keyboard focus-ring test accounts for the explanations toggle revealed when the splitter receives focus.",
       "reason": "Test-only corrections for existing fixture content and focus-dependent toggle visibility; no runtime behavior, public API or authoring instructions changed."
     },
@@ -162,14 +170,14 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "5f6dad69036a3198ff1e1f2a88cde05fa5872f8ee4ce1cde51d6d347976742ca",
-  "changelogDigest": "e46aedccc1f4b2eb48f941d2bc9b099ac3472ca55f9fc9491f5c27de68ab4c86",
+  "sourceDigest": "54ee030ba2ac75d5fa517914bdc404f1b54f52fc401cf27b340e0ca417636085",
+  "changelogDigest": "a12e433fae7f72b55b249baef3af9950a9b0a026c26ce001addc6a8373bc96bc",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
-    "docs/authoring.md": "8018da431067f9505299368487323fe67dd25bb45f015429571306a60dbfe91f",
+    "docs/authoring.md": "fc849e4a0c77ca8efb217a0f1182d31459ea83d9bd8b5139e6f93cb9df589d9d",
     "docs/cli.md": "3ce991ef73edbad6e6e01016e13499a7e7472cb4773114c9138e6fc1e2fbbf17",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "ef40101a77217ddb8ca1b5bac3ba3ee7ccb07c00212998629fe5f1f243a416c3",
+    "docs/features.md": "d14c653af54aac83d25b3e720923135b31b696482815929fba9a6e6d1143a036",
     "docs/presenting.md": "f57237aae1fd96250217ddca9e9a722a947c6c1440ddd57badcb6df45b02eeb3",
     "docs/quick-start.md": "4bd4733f9f3fc9da91fd6d76dda6f3b941b70b65c8d39128e25e25d43134b24d",
     "docs/upgrade.md": "f6173f4ce40cb03dde6d30159612ede4af6eadceb3536531ab874d4368ada578",

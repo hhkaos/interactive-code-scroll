@@ -152,6 +152,10 @@ See [`<Step>`](authoring.md#step).
 
 - Copy the current file, download it, or download the whole project as a ZIP with the reader's form values applied, ready to run locally. The ZIP button shows how many files it contains.
 
+## Markdown for AI assistants
+
+- Each tutorial publishes a plain Markdown version, `tutorial.md` (one per code variant), with the prose, each step's code with defaults applied, and the final code; the site lists them all in `llms.txt`. Readers link or paste it in any AI assistant. On by default; see [Markdown for LLMs](authoring.md#markdown-for-llms).
+
 ## Presenting
 
 <picture>

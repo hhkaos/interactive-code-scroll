@@ -1,9 +1,32 @@
 # TODO
 
-## UI polish
+## UI polish & improvements to triage
 
-- Embed steps: the "Open in new tab" action (`.embed-open`) floats over the embedded page. Show it in a strip (bar) instead, so it does not cover the page.
-- Framework Fixture Tutorial, step 4 (`config`): the textarea `<VarField type="textarea">` leaves too little bottom margin.
+- Add at the end: Built with InteractiveCodeScroll attribution (that can be hidden in the frontmatter)
+- When there is only one image embedded, it shouldn't display hide the bullet from the carousel
+- `exclude:` (alternative to include)
+- Enhance the frontmatter to support: og:image, etc
+- is `outline` compatible? with panel shown?
+- InteractiveCodeScroll site: The NavBar in the header is not visible in the mobile view making it more difficult to get to the docs.
+- New enhanncement ideas:
+    - Support videos (mp4, youtube, etc) in addition to images and embeds
+    - Should we provide a better sync between sidebar explanations and carousels or embed presentations (arrows?) Integration with Sli.dev works well, but I'm looking also for ways to do it with slides from google drive for example where I can create images to my liking and updating the very easily (positioning elements, etc).
+    - Enhancement to evaluate: allow to author to highglight a DOM element in the preview with a border color (or similar)
+    - Fields (Vars)
+        - Framework Fixture Tutorial, step 4 (`config`): the textarea `<VarField type="textarea">` leaves too little bottom margin.
+    - Show authors in the cards/tutorials?
+    - Review Google Codelabs navigation patterns (e.g. https://codelabs.developers.google.com/codelabs/the-lit-path?hl=en#5) and decide which to adopt or adapt: like add & update time left (to finish) on each step "XX mins remaining". The tool serves both as a tutorial and as a presentation, so check each idea against both uses (e.g. hide or collapse them in presentation mode) and against what the page already has (step navigation, progress). And also works on mobile
+- Sidebar:
+    - Embed steps: the "Open in new tab" action (`.embed-open`) floats over the embedded page. Show it in a strip (bar) or next to the step title? instead, so it does not cover the page.? or hide in presentation mode and leave the shortcut?
+
+## LLMs and coding agents (#4)
+
+_Three audiences: the author's coding agent, the reader's LLM, an in-browser agent. Update `SPEC.md` before implementing each item._
+
+- [ ] Agent skills (agentskills.io format) in `skills/`: `ics-authoring` (reference, split into `references/`) and `ics-verify` (validate/build loop; add `--json` output with fix hints). Test that every exported component and frontmatter field is covered. Later: `ics skills install`, scaffolder prompt + `AGENTS.md`, `ics-migrate`, pedagogy skills (`tutorial-design`, `tutorial-review`, `talk-to-tutorial`; seed: `docs/dev/research/resources-for-skills/`), evals.
+- [ ] Ask AI toolbar (`ask.ts`): include the tutorial `.md` URL and current step as context in the prompt.
+- [ ] WebMCP spike behind a frontmatter flag: read-only/navigation tools (`goToStep`, `getCurrentStep`, `getStepCode`, `setVar`). Check browser support status first.
+- [ ] When the skills and Ask AI items are done (WebMCP not needed): update the project website and docs. Markdown for LLMs + agent skills are a killer feature for authors/speakers who want to try the tool without reading the docs: mention them clearly at the top of the landing page (together), then details in features, and in the rest of the docs how to get started with an agent and which skills are included.
 
 ## Step index and outline (SPEC: Step navigation, Step outline, Presentation mode; decision 2026-10-16)
 
@@ -12,17 +35,11 @@ Approved mockup v3: https://claude.ai/artifact/XgJaeCjnw3cDHbxaTj8KSg (private).
 
 ---
 
-## Ideas to triage
-
-- Show authors?
-- Review Google Codelabs navigation patterns (e.g. https://codelabs.developers.google.com/codelabs/the-lit-path?hl=en#5) and decide which to adopt or adapt: a table of contents (step overview, sense of progress, jump to any step) and a header with "XX mins remaining" ("Back" / "Next" buttons: done). The tool serves both as a tutorial and as a presentation, so check each idea against both uses (e.g. hide or collapse them in presentation mode) and against what the page already has (step navigation, progress).
-
 ## Backlog
 
 _Derived from `SPEC.md`. Finished tasks move to `CHANGELOG.md`._
 
 - [ ] Check native narration on real desktop, Android and iOS voices in both listening modes, including presentation Hide/Show: word-boundary availability, resume position, online voices and playback after a tab is backgrounded. Automated speech tests use a deterministic engine and do not validate voice quality or device behavior.
-
 - [ ] Phone layout follow-ups (rules in `SPEC.md` Layout → Phones): tooltips stay open after a tap (no hover on touch); hints by tap; `100dvh` so the virtual keyboard (VarFields) does not hide the layout; check on a real iOS and Android device.
 - [ ] Re-enable the real ArcGIS SDK OAuth Preview E2E once the example tutorial UI has stabilized.
 - [ ] Self-host the Calcite assets actually used (t9n `en` + used icons) so "serve locally" works without network (the full CDN asset folder is 27 MB / 6.8k files).
