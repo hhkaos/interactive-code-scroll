@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const digest = (text) => createHash("sha256").update(text).digest("hex");
@@ -42,6 +42,20 @@ export function anchors(markdown) {
   return ids;
 }
 
+const SKILLS_BASELINE = "0.2.0-beta.11";
+/** Changelog doc links that describe authoring (components, frontmatter, markers, CLI): the skills teach the same. */
+const SKILLS_TRIGGER = /^docs\/(authoring|cli)\.md#/;
+const DOC_LINK = /^(?:docs\/[a-z-]+\.md|skills\/[a-z0-9-]+\/(?:SKILL|references\/[a-z0-9-]+)\.md)#[a-z0-9_-]+$/;
+
+/** Every Markdown file of the agent skills (`skills/<name>/SKILL.md`, `references/*.md`). */
+function skillDocuments(root) {
+  const dir = resolve(root, "skills");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+    .map((entry) => relative(root, join(entry.parentPath, entry.name)).split(sep).join("/"));
+}
+
 export function checkDocs(root, { refresh = false, release = false } = {}) {
   const read = (path) => readFileSync(resolve(root, path), "utf8");
   const manifestPath = "docs/dev/documentation-review.json";
@@ -56,6 +70,9 @@ export function checkDocs(root, { refresh = false, release = false } = {}) {
   const baseline = headings.indexOf("0.2.0-beta.10");
   if (baseline < 0) errors.push("Changelog is missing the documentation-review baseline (0.2.0-beta.10).");
   const reviewedVersions = headings.slice(0, baseline + 1);
+  // Entries newer than the skills baseline (0.2.0-beta.11) follow the skills rule; older ones predate the skills.
+  const skillsBaseline = headings.indexOf(SKILLS_BASELINE);
+  const skillsVersions = skillsBaseline < 0 ? [] : headings.slice(0, skillsBaseline);
   const entries = changes(changelog).filter(({ version }) => reviewedVersions.includes(version));
   const keys = new Set(entries.map(({ change }) => change));
   const records = manifest.changes;
@@ -68,6 +85,8 @@ export function checkDocs(root, { refresh = false, release = false } = {}) {
     ...readdirSync(resolve(root, "docs"), { withFileTypes: true })
       .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
       .map((entry) => `docs/${entry.name}`),
+    // Agent skills ship in the package: reviewed like the docs.
+    ...skillDocuments(root),
   ].sort();
   for (const path of documentPaths) {
     try {
@@ -89,9 +108,15 @@ export function checkDocs(root, { refresh = false, release = false } = {}) {
     if ((record.breaking || /^(?:\*\*)?breaking(?:\s|:)/i.test(change)) && (!hasDocs || !record.docs.some((link) => typeof link === "string" && link.startsWith("docs/upgrade.md#")))) {
       errors.push(`Breaking changes require an upgrade-guide section: ${change.slice(0, 80)}`);
     }
+    // Since the skills exist, a change to the authoring reference must reach them too, or say why not.
+    if (skillsVersions.includes(version) && hasDocs && record.docs.some((link) => SKILLS_TRIGGER.test(link))) {
+      const hasSkills = record.docs.some((link) => typeof link === "string" && link.startsWith("skills/"));
+      const hasSkillsReason = typeof record.skillsReason === "string" && record.skillsReason.trim().length >= 20;
+      if (hasSkills === hasSkillsReason) errors.push(`Authoring reference changes need a skills/ section link OR a specific skillsReason: ${change.slice(0, 80)}`);
+    }
     for (const link of hasDocs ? record.docs : []) {
-      if (typeof link !== "string" || !/^docs\/[a-z-]+\.md#[a-z0-9_-]+$/.test(link)) {
-        errors.push(`Use a public documentation section (docs/name.md#heading): ${link}`);
+      if (typeof link !== "string" || !DOC_LINK.test(link)) {
+        errors.push(`Use a public documentation section (docs/name.md#heading or skills/<skill>/…md#heading): ${link}`);
         continue;
       }
       const [path, hash] = link.split("#");

@@ -73,6 +73,33 @@ it("requires either section links or a specific no-docs reason", () => {
   expect(() => checkDocs(root, { refresh: true })).toThrow("Choose documentation links OR");
 });
 
+it("reviews the agent skills like the docs and accepts links to their sections", () => {
+  const root = fixture();
+  write(root, "skills/ics-authoring/SKILL.md", "# Authoring\n\n## Rules\n");
+  write(root, "skills/ics-authoring/references/frontmatter.md", "# Frontmatter\n\n## Page\n");
+  checkDocs(root, { refresh: true });
+  write(root, "skills/ics-authoring/references/frontmatter.md", "# Frontmatter\n\n## Page\n\nChanged.\n");
+  expect(() => checkDocs(root)).toThrow("Reviewed documents changed: skills/ics-authoring/references/frontmatter.md");
+  update(root, (m) => { m.changes[0].docs.push("skills/ics-authoring/references/frontmatter.md#page", "skills/ics-authoring/SKILL.md#rules"); });
+  expect(checkDocs(root, { refresh: true })).toContain("1 changelog");
+  update(root, (m) => { m.changes[0].docs = ["skills/ics-authoring/references/frontmatter.md#missing"]; });
+  expect(() => checkDocs(root, { refresh: true })).toThrow("Missing documentation anchor");
+});
+
+it("after the skills baseline, authoring reference changes need a skills section or a reason", () => {
+  const root = fixture();
+  write(root, "skills/ics-authoring/SKILL.md", "# Authoring\n\n## Rules\n");
+  write(root, "CHANGELOG.md", `# Changelog\n\n## [Unreleased]\n\n### Added\n\n- New prop.\n\n## [0.2.0-beta.11] - 2026-10-18\n\n## [${version}] - 2026-10-17\n\n### Added\n\n- Optional setting.\n`);
+  update(root, (m) => { m.changes.push({ change: "New prop.", docs: ["docs/authoring.md#settings"] }); });
+  expect(() => checkDocs(root, { refresh: true })).toThrow("need a skills/ section link OR a specific skillsReason: New prop.");
+  update(root, (m) => { m.changes[1].docs.push("skills/ics-authoring/SKILL.md#rules"); });
+  expect(checkDocs(root, { refresh: true })).toContain("2 changelog");
+  update(root, (m) => { m.changes[1] = { change: "New prop.", docs: ["docs/authoring.md#settings"], skillsReason: "Reader-only behavior; nothing for an agent to write." }; });
+  expect(checkDocs(root, { refresh: true })).toContain("2 changelog");
+  update(root, (m) => { m.changes[1].docs = ["docs/features.md#features"]; delete m.changes[1].skillsReason; });
+  expect(checkDocs(root, { refresh: true })).toContain("2 changelog");
+});
+
 it("requires breaking changes to link to a migration section", () => {
   const root = fixture();
   update(root, (m) => { m.changes[0].breaking = true; });

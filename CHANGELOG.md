@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- The documentation review covers the agent skills: `skills/**/*.md` fingerprints are checked like the docs, review records may link skill sections, and new changelog entries that link the authoring or CLI reference must also link a skill section or give a `skillsReason`.
+
 - The Ask AI prompt links the tutorial's Markdown for LLMs (`tutorial.md`, or the active variant's `tutorial.<id>.md`) as an absolute URL, so assistants that can open links read the whole tutorial; left out with `llms: false`.
 
 - Agent skills: `ics-authoring` (layout, components, frontmatter, code markers, panes, variants, series, CLI) and `ics-verify` (the `check --json` loop and an error → fix table), in the [Agent Skills](https://agentskills.io) format, in the repository's `skills/` and shipped in the package under `dist/skills/`. A test keeps them in sync with the components, frontmatter and CLI.
