@@ -150,6 +150,8 @@ const clientData = JSON.stringify({
   outline: config.outline ?? indexConfig?.outline ?? true,
   siblings: siblings.map(({ slug, href, variants }) => ({ slug, href, variants })),
   ask: hasAsk ? ask : undefined,
+  // Markdown for LLMs, linked from the Ask AI prompt.
+  markdown: config.llms ? `${tutorialBase(base, slug)}${MARKDOWN_NAME}` : undefined,
 }).replace(/</g, "\\u003c");
 ---
 
@@ -670,6 +672,7 @@ const clientData = JSON.stringify({
         outline: boolean;
         siblings: SiblingInfo[];
         ask?: AskConfig;
+        markdown?: string;
       };
 
       startTooltips();
@@ -688,7 +691,7 @@ const clientData = JSON.stringify({
       startSpeech(engine);
       startImageViewer();
       startEmbedOpen();
-      if (data.ask) startAsk({ title: data.title, ...data.ask });
+      if (data.ask) startAsk({ title: data.title, ...data.ask, markdown: data.markdown, variant: variants && (() => variants.active().id) });
       let refreshPreview = () => {};
       let refreshRequest = () => {};
       const vars = startVars(() => {

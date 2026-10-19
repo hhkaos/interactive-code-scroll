@@ -1,5 +1,5 @@
 import type { Assistant } from "../ask.ts";
-import { askPrompt, assistantUrl, authorUrl, barPosition, linkBack, longEnough, type AskContext } from "./ask-values.ts";
+import { askPrompt, assistantUrl, authorUrl, barPosition, linkBack, longEnough, markdownUrl, type AskContext } from "./ask-values.ts";
 
 type Linkable = HTMLElement & { href: string };
 
@@ -17,7 +17,21 @@ const KEYBOARD_DELAY = 500;
  * (`feedbackUrl` with the selection's context) and "Ask AI" (assistant URLs with a prompt, which is
  * also copied). Links are filled when the toolbar shows, so a plain click opens them.
  */
-export function startAsk({ title, author, assistants }: { title: string; author?: string; assistants: Assistant[] }): void {
+export function startAsk({
+  title,
+  author,
+  assistants,
+  markdown,
+  variant,
+}: {
+  title: string;
+  author?: string;
+  assistants: Assistant[];
+  /** Path of the tutorial's Markdown for LLMs without `.md` (`<base>tutorial`); absent with `llms: false`. */
+  markdown?: string;
+  /** The active code variant's id, with variants. */
+  variant?: () => string;
+}): void {
   const bar = document.querySelector<HTMLElement>("#ask-bar");
   const status = document.querySelector<HTMLElement>("#ask-status");
   if (!bar || !status) return;
@@ -50,7 +64,7 @@ export function startAsk({ title, author, assistants }: { title: string; author?
     if (rect.width === 0 && rect.height === 0) return hide();
 
     const context = contextOf(range, area, text, title);
-    prompt = askPrompt(context);
+    prompt = askPrompt(context, markdown === undefined ? undefined : markdownUrl(markdown, variant?.(), location.href));
     if (authorLink && author) authorLink.href = authorUrl(author, context);
     for (const link of aiLinks) link.href = assistantUrl(assistants[Number(link.dataset.assistant)]!.url, prompt);
 

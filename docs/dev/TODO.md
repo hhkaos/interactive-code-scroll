@@ -24,9 +24,9 @@
 _Three audiences: the author's coding agent, the reader's LLM, an in-browser agent. Update `SPEC.md` before implementing each item._
 
 - [ ] Agent skills, next: `ics skills install [--agent …]` (copy `dist/skills/` to the agent's folder), scaffolder prompt + `AGENTS.md` + a `check` script in generated `package.json`, `ics-migrate`, pedagogy skills (`tutorial-design`, `tutorial-review`, `talk-to-tutorial`; seed: `docs/dev/research/resources-for-skills/`), evals (fixed tasks such as "add a step with a VarField": build passes, regions match).
-- [ ] Ask AI toolbar (`ask.ts`): include the tutorial `.md` URL and current step as context in the prompt.
 - [ ] WebMCP spike behind a frontmatter flag: read-only/navigation tools (`goToStep`, `getCurrentStep`, `getStepCode`, `setVar`). Check browser support status first.
 - [ ] When the skills and Ask AI items are done (WebMCP not needed): update the project website and docs. Markdown for LLMs + agent skills are a killer feature for authors/speakers who want to try the tool without reading the docs: mention them clearly at the top of the landing page (together), then details in features, and in the rest of the docs how to get started with an agent and which skills are included.
+- [ ] Check if the deterministic mechanism that checks if the doc is updated also check if the SKILLs are updated
 
 ## Step index and outline (SPEC: Step navigation, Step outline, Presentation mode; decision 2026-10-16)
 

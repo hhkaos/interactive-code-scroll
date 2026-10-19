@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { askPrompt, assistantUrl, authorUrl, barPosition, contextMarkdown, linkBack, longEnough, truncate, type AskContext } from "./ask-values.ts";
+import { askPrompt, assistantUrl, authorUrl, barPosition, contextMarkdown, linkBack, longEnough, markdownUrl, truncate, type AskContext } from "./ask-values.ts";
 
 const page = "https://example.com/tutorials/display-map/";
 const prose: AskContext = { title: "Display a map", url: `${page}#basemap`, step: "Pick a basemap", selection: "The basemap sets\nthe background." };
@@ -58,6 +58,19 @@ describe("askPrompt", () => {
     expect(prompt).toContain(contextMarkdown(prose));
     expect(prompt).toMatch(/^I'm following this tutorial/);
     expect(prompt).toMatch(/If it looks wrong, say so\.$/);
+    expect(prompt).not.toContain("Markdown");
+  });
+
+  it("links the tutorial's Markdown for LLMs when there is one", () => {
+    const prompt = askPrompt(prose, "https://example.com/map/tutorial.md");
+    expect(prompt).toContain(`${contextMarkdown(prose)}\n\nThe whole tutorial, with its code, is at https://example.com/map/tutorial.md (Markdown).\n\nExplain it`);
+  });
+});
+
+describe("markdownUrl", () => {
+  it("resolves the tutorial's Markdown, per code variant", () => {
+    expect(markdownUrl("/repo/map/tutorial", undefined, "https://o.github.io/repo/map/?x=1#step")).toBe("https://o.github.io/repo/map/tutorial.md");
+    expect(markdownUrl("/repo/map/tutorial", "python", "https://o.github.io/repo/map/")).toBe("https://o.github.io/repo/map/tutorial.python.md");
   });
 });
 

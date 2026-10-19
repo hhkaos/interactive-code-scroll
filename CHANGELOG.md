@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- The Ask AI prompt links the tutorial's Markdown for LLMs (`tutorial.md`, or the active variant's `tutorial.<id>.md`) as an absolute URL, so assistants that can open links read the whole tutorial; left out with `llms: false`.
+
 - Agent skills: `ics-authoring` (layout, components, frontmatter, code markers, panes, variants, series, CLI) and `ics-verify` (the `check --json` loop and an error → fix table), in the [Agent Skills](https://agentskills.io) format, in the repository's `skills/` and shipped in the package under `dist/skills/`. A test keeps them in sync with the components, frontmatter and CLI.
 
 - `interactive-code-scroll check [--json]` runs the build's validation (frontmatter, references, warnings, a series' `index.mdx` and cross-tutorial rules) without Astro in about a second, printing one line per problem or JSON; exit code 1 on errors. The build and `check` share the same validation code.

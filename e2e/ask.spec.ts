@@ -29,6 +29,7 @@ test("selecting prose offers the author and AI with its context", async ({ page 
   await expect(chatgpt).toBeVisible();
   const prompt = new URL((await chatgpt.getAttribute("href"))!).searchParams.get("q")!;
   expect(prompt).toContain(body);
+  expect(prompt).toContain(`The whole tutorial, with its code, is at ${new URL(page.url()).origin}/tutorial.md (Markdown).`);
   expect(prompt).toMatch(/If it looks wrong, say so\.$/);
   // No {prompt}: the assistant opens as is.
   await expect(page.locator("calcite-dropdown-item", { hasText: "Docs assistant" })).toHaveAttribute("href", "https://docs.example.com/assistant");

@@ -1,6 +1,13 @@
 {
   "changes": [
     {
+      "change": "The Ask AI prompt links the tutorial's Markdown for LLMs (`tutorial.md`, or the active variant's `tutorial.<id>.md`) as an absolute URL, so assistants that can open links read the whole tutorial; left out with `llms: false`.",
+      "docs": [
+        "docs/authoring.md#asking-about-a-selection",
+        "docs/features.md#asking-about-a-selection"
+      ]
+    },
+    {
       "change": "Agent skills: `ics-authoring` (layout, components, frontmatter, code markers, panes, variants, series, CLI) and `ics-verify` (the `check --json` loop and an error → fix table), in the [Agent Skills](https://agentskills.io) format, in the repository's `skills/` and shipped in the package under `dist/skills/`. A test keeps them in sync with the components, frontmatter and CLI.",
       "docs": [
         "docs/quick-start.md#use-a-coding-agent",
@@ -185,14 +192,14 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "2abcaafc12776ed8dbe24428158d09873c09d68c355be234745bab521fb54cb9",
-  "changelogDigest": "fcd5bc06d4a701b95901142c7225d89969917c93fd485b0c3e6a4c907964d39d",
+  "sourceDigest": "39f7a4703f48ff478f54cee18e5b700c3ab1f5da84e6b0ae52a573b02b8356d5",
+  "changelogDigest": "41b256c0232a9ec8ba58ba3876560a0d891e0a85b138ab246856d281247848bf",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
-    "docs/authoring.md": "85933b9f7ca1ccd35ca0f02fb00ba945207731ea92099888d4aaef8373de622f",
+    "docs/authoring.md": "8233b3169823f39a1e45ec69587cea2e71e9d3684f5b4453756b2663a304c9b9",
     "docs/cli.md": "de64db040deffec3f4af1ab19b20d14a0cdcc9ed9b1e9ee5d8a41ecc876ee787",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "a23c4dcbaefdc9fc5d4bf02bfb31248cd5c852308830fc3caf93159baf1e0388",
+    "docs/features.md": "6859ed486a3bcef23db227b97cb6b93680e7238ad3f9c4d0dc57728faa8e0560",
     "docs/presenting.md": "f57237aae1fd96250217ddca9e9a722a947c6c1440ddd57badcb6df45b02eeb3",
     "docs/quick-start.md": "bb46e9b1ec944c3314c99a2ebbcc3c4c3e6712fa8da50f26665d24d195775265",
     "docs/upgrade.md": "f6173f4ce40cb03dde6d30159612ede4af6eadceb3536531ab874d4368ada578",

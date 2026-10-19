@@ -302,7 +302,7 @@ Frontmatter `completion: false` removes the panel (then `<Outro>` is a build err
 Readers who select text in the explanations (two words or more) or in the code panel get a small toolbar over the selection:
 
 - **Ask the author** opens your [`feedbackUrl`](#page) with the selection's context, so the question reaches you (for example as a GitHub issue).
-- **Ask AI** opens an AI assistant with a ready prompt: the tutorial title, the step, a link back to the selection and the selected text (from the code panel: the file, its lines and the code, with [secret](#varfield) values masked). The prompt is also copied to the clipboard, because the assistants' prefill links are not official and may change.
+- **Ask AI** opens an AI assistant with a ready prompt: the tutorial title, the step, a link back to the selection and the selected text (from the code panel: the file, its lines and the code, with [secret](#varfield) values masked), plus the link to the tutorial's [Markdown version](#markdown-for-llms) (of the active variant), so an assistant that can open links reads the whole tutorial. The prompt is also copied to the clipboard, because the assistants' prefill links are not official and may change.
 
 The link back opens the step and highlights the selected text ([text fragment](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments)). The toolbar shows when the selection ends, not while dragging, and never on touch screens or in presentation mode; Esc hides it.
 

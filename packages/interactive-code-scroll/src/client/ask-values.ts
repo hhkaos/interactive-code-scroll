@@ -61,9 +61,18 @@ export function contextMarkdown(context: AskContext): string {
   return `${lines.join("\n")}\n\n${selectionBlock(context)}`;
 }
 
-/** Self-contained (ChatGPT sends a prefilled prompt at once): it asks for something without a follow-up. */
-export function askPrompt(context: AskContext): string {
-  return `I'm following this tutorial and selected a part of it.\n\n${contextMarkdown(context)}\n\nExplain it in the context of the tutorial. If it looks wrong, say so.`;
+/**
+ * Self-contained (ChatGPT sends a prefilled prompt at once): it asks for something without a follow-up.
+ * `markdown` is the tutorial's Markdown for LLMs (absolute URL), so an assistant that can read it sees the whole tutorial.
+ */
+export function askPrompt(context: AskContext, markdown?: string): string {
+  const whole = markdown === undefined ? "" : `\n\nThe whole tutorial, with its code, is at ${markdown} (Markdown).`;
+  return `I'm following this tutorial and selected a part of it.\n\n${contextMarkdown(context)}${whole}\n\nExplain it in the context of the tutorial. If it looks wrong, say so.`;
+}
+
+/** Absolute URL of the tutorial's Markdown: `<name>.md`, or `<name>.<variant>.md` for the active code variant. */
+export function markdownUrl(name: string, variant: string | undefined, page: string): string {
+  return new URL(`${name}${variant === undefined ? "" : `.${variant}`}.md`, page).href;
 }
 
 /** `feedbackUrl` (slug and title already filled) with `{context}`, `{selection}` and `{url}`, URL-encoded. */

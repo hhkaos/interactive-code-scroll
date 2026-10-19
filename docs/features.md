@@ -38,7 +38,7 @@ See [Components](authoring.md#components).
 
 - **A toolbar on the selection**: selecting a sentence in the explanations or a few lines of code shows a small toolbar over it, once the selection ends. It stays out of the way: not for a single word, not on touch screens or in presentation mode, and Esc hides it.
 - **Ask the author**: opens your `feedbackUrl` (for example a new GitHub issue) with the step, the selected text and a link back to it, so a human answers.
-- **Ask AI**: opens ChatGPT, Claude or your own assistant with a ready prompt about the selection; the prompt is also copied, for assistants that cannot take it in the link.
+- **Ask AI**: opens ChatGPT, Claude or your own assistant with a ready prompt about the selection, linking the whole tutorial as Markdown; the prompt is also copied, for assistants that cannot take it in the link.
 - **A link back to the exact spot**: the link opens the step and highlights the selected text. Code selections carry the file and line numbers, with secret values masked.
 - **Configurable**: on by default; `ask` picks the actions per tutorial or for a whole series, or turns the toolbar off. See [Asking about a selection](authoring.md#asking-about-a-selection).
 
