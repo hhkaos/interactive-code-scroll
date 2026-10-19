@@ -125,7 +125,7 @@ test("phones get a screenshot link instead of the embedded demo, without horizon
 });
 
 // The docs (Starlight under <base>docs/) render docs/*.md in place.
-const DOCS = ["quick-start", "features", "authoring", "presenting", "cli", "deployment", "upgrade"];
+const DOCS = ["quick-start", "agents", "features", "authoring", "presenting", "cli", "deployment", "upgrade"];
 
 test("docs open on the quick start and list the pages in order", async ({ page }) => {
   await page.goto(`${BASE}docs/`);
@@ -133,7 +133,7 @@ test("docs open on the quick start and list the pages in order", async ({ page }
   await expect(page.locator("h1")).toHaveText(["Quick Start"]);
   await expect(page.getByRole("link", { name: "View Markdown source on GitHub" })).toHaveAttribute("href", "https://github.com/hhkaos/interactive-code-scroll/blob/main/docs/quick-start.md");
   const sidebar = page.locator("#starlight__sidebar ul.top-level a");
-  await expect(sidebar).toHaveText(["Quick start", "Features", "Authoring reference", "Presenting", "CLI", "Deployment", "Upgrade guide"]);
+  await expect(sidebar).toHaveText(["Quick start", "Coding agents", "Features", "Authoring reference", "Presenting", "CLI", "Deployment", "Upgrade guide"]);
   expect(await sidebar.evaluateAll((links) => links.map((link) => link.getAttribute("href")))).toEqual(
     DOCS.map((name) => `${BASE}docs/${name}/`),
   );

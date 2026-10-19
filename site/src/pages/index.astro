@@ -76,7 +76,7 @@ const highlights = [
 ];
 
 const features = [
-  { icon: "⌨️", title: "Live Console · coming next", text: "Explain what the running app actually logged. Enable Console per tutorial; steps select Preview or Console, with expandable objects, type colors and source lines beside the code." },
+  { icon: "⌨️", title: "Live Console", text: "Explain what the running app actually logged. Enable Console per tutorial; steps select Preview or Console, with expandable objects, type colors and source lines beside the code." },
   { icon: "🔊", title: "Read aloud", text: "Listen from introduction to closing recap, with pause, speed and optional automatic advance. Follow highlighted sentences and, with compatible voices, words." },
   { icon: "📡", title: "Request runner", text: "Run `.http` requests from the page, with captured output when there is no token and a JSON viewer." },
   { icon: "✏️", title: "Fields → code", text: "Readers type their own values; code, Preview and downloads update. Secrets stay in their browser." },
@@ -86,6 +86,21 @@ const features = [
   { icon: "🔗", title: "Deep links", text: "Every step has a URL. Share “step 4” in chat or on a slide." },
   { icon: "🚀", title: "Static output", text: "Deploy anywhere. The wizard can add a GitHub Pages workflow for you." },
   { icon: "🌗", title: "Light & dark", text: "Follows the reader's system, with a toggle. Projector-friendly either way." },
+];
+
+const agentSkills = [
+  { name: "ics-tutorial-design", text: "plans the demo with you, one idea per step" },
+  { name: "ics-migrate", text: "turns a blog post or codelab into a tutorial" },
+  { name: "ics-authoring", text: "writes steps, regions, fields and variants" },
+  { name: "ics-verify", text: "checks every change in a second" },
+  { name: "ics-tutorial-review", text: "reviews the draft like a first-time reader" },
+  { name: "ics-talk", text: "gets it ready for the stage" },
+];
+
+const agentPoints = [
+  { icon: "🧩", title: "Skills that ship with the package", text: "One command copies them for Claude Code, GitHub Copilot or any agent that reads .agents/skills/. Upgrade the package, run it again." },
+  { icon: "✅", title: "A check your agent can read", text: "check --json runs the build's validation in about a second and points at the file, the line and the fix. Agents learn from it." },
+  { icon: "📄", title: "Markdown for your readers' AI", text: "Every tutorial also publishes tutorial.md and the site an llms.txt. Ask AI links them, so assistants read the whole tutorial." },
 ];
 
 const audiences = [
@@ -128,6 +143,7 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
       </a>
       <nav aria-label="Main">
         <a href="#demo">Demo</a>
+        <a href="#agents">AI agents</a>
         <a href="#features">Features</a>
         <a href="#showcase">Showcase</a>
         <a href={docsPageUrl("quick-start")}>Docs</a>
@@ -166,6 +182,9 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
             <a class="btn btn-primary" href="#demo">Try the live demo ↓</a>
             <a class="btn" href={repo}>★ Star on GitHub{starLabel && <span class="count">{starLabel}</span>}</a>
           </div>
+          <a class="agent-line" href="#agents">
+            <span class="tag">AI-ready</span> Skills for Claude Code, Copilot and other coding agents included →
+          </a>
         </div>
         <ul class="stack reveal" aria-label="Built with">
           <li>Astro</li>
@@ -205,6 +224,57 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
           />
           <p class="demo-more"><a href="#showcase">More tutorials in the showcase ↓</a></p>
         </div>
+      </div>
+    </section>
+
+    <section id="agents" class="agents">
+      <div class="container agents-grid">
+        <div class="reveal">
+          <span class="eyebrow">AI-ready</span>
+          <h2>No time to learn a new tool? <span class="gradient-text">Your coding agent already knows it.</span></h2>
+          <p class="muted">
+            The package ships skills that teach Claude Code, GitHub Copilot and other agents how InteractiveCodeScroll works. Ask
+            for a demo plan, a converted blog post or the next step: the agent checks its own work and you keep the story.
+          </p>
+          <ul class="skill-list">
+            {
+              agentSkills.map((skill) => (
+                <li>
+                  <code>{skill.name}</code> {skill.text}
+                </li>
+              ))
+            }
+          </ul>
+          <a class="btn btn-primary" href={docsPageUrl("agents")}>Start with an agent →</a>
+        </div>
+        <figure class="terminal reveal">
+          <div class="terminal-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span> coding agent</div>
+          <pre class="agent-session"><span class="prompt">$</span> npm create interactive-code-scroll@latest my-talk -- --agents claude
+<span class="ok">✓</span> Created the project · installed 6 skills in .claude/skills/
+
+<span class="you">›</span> Turn my geocoding blog post into a 10-minute demo,
+  with cURL and Python.
+
+<span class="dim">●</span> ics-migrate + ics-tutorial-design
+  Wrote TUTORIAL-PLAN.md: 11 steps, about 50 s each
+<span class="dim">●</span> ics-authoring
+  Wrote code/curl, code/python and the first 4 steps
+<span class="dim">●</span> ics-verify
+  <span class="prompt">$</span> npm run check
+  <span class="ok">No problems found in 1 tutorial.</span></pre>
+          <figcaption>Illustrative session</figcaption>
+        </figure>
+      </div>
+      <div class="container agent-points">
+        {
+          agentPoints.map((point) => (
+            <div class="card reveal">
+              <span class="feature-icon" aria-hidden="true">{point.icon}</span>
+              <h3>{point.title}</h3>
+              <p>{point.text}</p>
+            </div>
+          ))
+        }
       </div>
     </section>
 
@@ -655,6 +725,103 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
     padding-top: 2rem;
   }
 
+  /* AI agents */
+  .agent-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    text-decoration: none;
+  }
+
+  .agent-line:hover {
+    color: var(--text);
+  }
+
+  .agent-line .tag {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .agents {
+    background: var(--bg-soft);
+  }
+
+  .agents-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .agents-grid > * {
+    min-width: 0;
+  }
+
+  .agents h2 {
+    margin-bottom: 1.2rem;
+  }
+
+  .skill-list {
+    display: grid;
+    gap: 0.5rem;
+    margin: 1.5rem 0 2rem;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+  }
+
+  .skill-list code {
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.35rem;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.85em;
+  }
+
+  .agents figure {
+    margin: 0;
+  }
+
+  .agent-session {
+    margin: 0;
+    padding: 1.2rem 1.3rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .agent-session .prompt,
+  .agent-session .dim {
+    color: #64748b;
+  }
+
+  .agent-session .you {
+    color: #7dd3fc;
+    font-weight: 700;
+  }
+
+  .agent-session .ok {
+    color: #4ade80;
+  }
+
+  .agents figcaption {
+    padding: 0 1.3rem 0.8rem;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-align: right;
+  }
+
+  .agent-points {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+
   /* Start */
   .start-grid {
     display: grid;
@@ -1021,7 +1188,8 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
     }
 
     .showcase-grid,
-    .open-grid {
+    .open-grid,
+    .agent-points {
       grid-template-columns: 1fr 1fr;
     }
   }
@@ -1032,6 +1200,7 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
     }
 
     .start-grid,
+    .agents-grid,
     .highlight {
       grid-template-columns: 1fr;
       gap: 2rem;
@@ -1054,7 +1223,8 @@ const showcase: { title: string; text: string; href: string; shot: string; tags:
     .feature-grid,
     .audience-grid,
     .showcase-grid,
-    .open-grid {
+    .open-grid,
+    .agent-points {
       grid-template-columns: 1fr;
     }
 

@@ -1,6 +1,14 @@
 {
   "changes": [
     {
+      "change": "Coding agents docs page (how to start with an agent, the skills, what to ask, the validation loop, Markdown for readers' AI, supported agents) and an \"AI agents\" section on the website landing page, announced in its hero. The landing's Live Console card no longer says \"coming next\".",
+      "docs": [
+        "docs/agents.md#start-with-an-agent",
+        "docs/agents.md#skills-included",
+        "docs/quick-start.md#use-a-coding-agent"
+      ]
+    },
+    {
       "change": "Workflow agent skills: `ics-tutorial-design` (plan a tutorial in `TUTORIAL-PLAN.md`, one idea per step), `ics-tutorial-review` (reader and editor review with findings per step), `ics-talk` (prepare a tutorial for a live talk) and `ics-migrate` (convert a blog post, codelab or repository, or upgrade the package). `pnpm eval:skills` runs a coding agent on fixed tasks and grades the results.",
       "docs": [
         "docs/cli.md#agent-skills",
@@ -226,15 +234,16 @@
     }
   ],
   "sourceDigest": "bd2d03d2f87ca726fed4a5128bd2228091d681105be737f57a475d748f08b3f8",
-  "changelogDigest": "be1e97b479b5f04cf446f8952e56dd03d8317a3247627703d555bb9a7bcda83d",
+  "changelogDigest": "1f81ce9ff69265f391670cd318d3abb5191b57e04a98b8c650cdce0c5e1de3e6",
   "documents": {
     "README.md": "1429bf2dd5b7a31b9927df5598aaf845d3d50d9c8ae297256fe7d2e5c88a1218",
+    "docs/agents.md": "e33cda4b18cfe30d1449032537bcc5c855f6e01c0d2800df1c23664c8a156e43",
     "docs/authoring.md": "8233b3169823f39a1e45ec69587cea2e71e9d3684f5b4453756b2663a304c9b9",
     "docs/cli.md": "0bdc9d26a7494a4b987e32a27f871b401fd66f528ce9c29de169c2fc6ffdbf49",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
     "docs/features.md": "d6eda589a89ccd0d836fd74b890d1bd3b2c47a0e0a1ae28403c447f0187de0be",
     "docs/presenting.md": "f57237aae1fd96250217ddca9e9a722a947c6c1440ddd57badcb6df45b02eeb3",
-    "docs/quick-start.md": "de5fb0798777b84f68659b9a4d64be8dc108f62acc50edaeb294f9113c688ae0",
+    "docs/quick-start.md": "108cfbbb5e644217b84b5dbc7ddb2ea803841d4e0fe2bb648999a83aa6059505",
     "docs/upgrade.md": "f6173f4ce40cb03dde6d30159612ede4af6eadceb3536531ab874d4368ada578",
     "packages/create-interactive-code-scroll/README.md": "3e9f97abd999eb95f7b435bb2f4a826e64486004142a8224f71a0bbb406a7e64",
     "packages/interactive-code-scroll/README.md": "fd71b4e637bf629fc9f4ab8f96154a0ea1dfb712bc54f7fcdb416531dcd4714e",

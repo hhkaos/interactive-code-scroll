@@ -25,7 +25,6 @@ _Three audiences: the author's coding agent, the reader's LLM, an in-browser age
 
 - [ ] Agent skills: run `pnpm eval:skills` with a real agent (billed) and tune the skills on the failures; add tasks for variants, a series and `ics-talk`. Confirm the project skill folders of Codex, Cursor and Gemini CLI (not found in their docs on 2026-10-19) before adding `--agent` values for them.
 - [ ] WebMCP spike behind a frontmatter flag: read-only/navigation tools (`goToStep`, `getCurrentStep`, `getStepCode`, `setVar`). Check browser support status first.
-- [ ] When the skills and Ask AI items are done (WebMCP not needed): update the project website and docs. Markdown for LLMs + agent skills are a killer feature for authors/speakers who want to try the tool without reading the docs: mention them clearly at the top of the landing page (together), then details in features, and in the rest of the docs how to get started with an agent and which skills are included.
 
 ## Step index and outline (SPEC: Step navigation, Step outline, Presentation mode; decision 2026-10-16)
 

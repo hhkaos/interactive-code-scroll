@@ -11,6 +11,7 @@ export const docsDir = fileURLToPath(new URL("../docs/", import.meta.url));
 /** Published pages, in sidebar order. `file` is the Markdown file in docs/ and the page slug. docs/dev/ is never published. */
 export const docsPages = [
   { file: "quick-start", label: "Quick start" },
+  { file: "agents", label: "Coding agents" },
   { file: "features", label: "Features" },
   { file: "authoring", label: "Authoring reference" },
   { file: "presenting", label: "Presenting" },

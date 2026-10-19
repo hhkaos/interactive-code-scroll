@@ -100,10 +100,11 @@ Pick your agents when you create the project (the wizard asks, or `--agents clau
 npx interactive-code-scroll skills install --agent claude   # or copilot, agents, all
 ```
 
-Then ask for what you want, for example "plan a 10-minute demo of this API", "add a step that explains the config region", "turn this blog post into a tutorial" or "review the tutorial before my talk". Run it again after upgrading the package. See [Agent Skills](cli.md#agent-skills). The same skills are in the repository's [`skills/`](https://github.com/hhkaos/interactive-code-scroll/tree/main/skills) folder.
+Then ask for what you want, for example "plan a 10-minute demo of this API", "add a step that explains the config region", "turn this blog post into a tutorial" or "review the tutorial before my talk". Run it again after upgrading the package. See [Coding Agents](agents.md) for the skills, what to ask and the validation loop. The same skills are in the repository's [`skills/`](https://github.com/hhkaos/interactive-code-scroll/tree/main/skills) folder.
 
 ## Next steps
 
+- [Coding agents](agents.md) — build tutorials with Claude Code, GitHub Copilot or another agent
 - [Features](features.md) — everything the tool can do
 - [Authoring reference](authoring.md) — frontmatter, components, markers, validation rules
 - [CLI reference](cli.md) — `dev`, `build`, `serve`, `check`, `doctor` and their options

@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Coding agents docs page (how to start with an agent, the skills, what to ask, the validation loop, Markdown for readers' AI, supported agents) and an "AI agents" section on the website landing page, announced in its hero. The landing's Live Console card no longer says "coming next".
+
 - Workflow agent skills: `ics-tutorial-design` (plan a tutorial in `TUTORIAL-PLAN.md`, one idea per step), `ics-tutorial-review` (reader and editor review with findings per step), `ics-talk` (prepare a tutorial for a live talk) and `ics-migrate` (convert a blog post, codelab or repository, or upgrade the package). `pnpm eval:skills` runs a coding agent on fixed tasks and grades the results.
 
 - `interactive-code-scroll skills install [--agent claude|copilot|agents|all]` copies the agent skills from the installed package into `.claude/skills/`, `.github/skills/` or `.agents/skills/` (default: the agent folders the project has). The project wizard asks which coding agents to set up (`--agents`, default none): it adds `skills` and `check` scripts, `AGENTS.md` and, for Claude Code, a `CLAUDE.md` importing it, and installs the skills after the dependencies; both READMEs mention the question.
