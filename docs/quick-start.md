@@ -86,6 +86,22 @@ npm run serve    # check the built site locally
 
 If you chose the GitHub Pages workflow, push to GitHub and enable **Settings → Pages → Source: GitHub Actions**; every push to the default branch publishes the site. For other hosts and base paths, see [Deployment](deployment.md).
 
+## Use a coding agent
+
+The package ships two [Agent Skills](https://agentskills.io) that teach a coding agent (Claude Code, Codex, Copilot, Cursor…) how this tool works, so it does not have to read these docs first:
+
+- `ics-authoring`: the project layout, components, frontmatter, code markers, panes, variants and series, and the CLI.
+- `ics-verify`: the validation loop on [`interactive-code-scroll check --json`](cli.md#check-without-building), then a build.
+
+They are installed with the package, versioned with it, in `node_modules/interactive-code-scroll/dist/skills/`. Copy them to the folder your agent reads skills from, for example for Claude Code:
+
+```sh
+mkdir -p .claude/skills
+cp -R node_modules/interactive-code-scroll/dist/skills/* .claude/skills/
+```
+
+Then ask for what you want, for example "add a step that explains the config region" or "turn this blog post into a tutorial". Copy them again after upgrading the package. The same skills are in the repository's [`skills/`](https://github.com/hhkaos/interactive-code-scroll/tree/main/skills) folder.
+
 ## Next steps
 
 - [Features](features.md) — everything the tool can do

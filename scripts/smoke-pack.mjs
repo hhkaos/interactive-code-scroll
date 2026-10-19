@@ -53,6 +53,11 @@ try {
   if (!existsSync(join(projectDir, "dist", "index.html"))) {
     throw new Error("Pack smoke test did not produce dist/index.html");
   }
+  for (const skill of ["ics-authoring", "ics-verify"]) {
+    if (!existsSync(join(projectDir, "node_modules", "interactive-code-scroll", "dist", "skills", skill, "SKILL.md"))) {
+      throw new Error(`Pack smoke test: the package has no dist/skills/${skill}/SKILL.md`);
+    }
+  }
 
   // Series site with a custom index page, through the packed CLI (tutorials/ auto-detected) and the
   // public `interactive-code-scroll/series` module.

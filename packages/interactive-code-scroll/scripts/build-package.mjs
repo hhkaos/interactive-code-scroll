@@ -65,6 +65,9 @@ rewriteAstroImports(join(dist, "pages", "index.astro"));
 rewriteAstroImports(join(dist, "pages", "series-index.astro"));
 rewriteAstroImports(join(dist, "preview", "page.astro"));
 
+// Agent skills (repository root skills/), versioned with the package: node_modules/interactive-code-scroll/dist/skills/.
+cpSync(join(packageRoot, "..", "..", "skills"), join(dist, "skills"), { recursive: true });
+
 mkdirSync(join(dist, "bin"), { recursive: true });
 const sourceCli = readFileSync(join(packageRoot, "bin", "interactive-code-scroll.mjs"), "utf8")
   .replace(

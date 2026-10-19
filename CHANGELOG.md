@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Agent skills: `ics-authoring` (layout, components, frontmatter, code markers, panes, variants, series, CLI) and `ics-verify` (the `check --json` loop and an error → fix table), in the [Agent Skills](https://agentskills.io) format, in the repository's `skills/` and shipped in the package under `dist/skills/`. A test keeps them in sync with the components, frontmatter and CLI.
+
 - `interactive-code-scroll check [--json]` runs the build's validation (frontmatter, references, warnings, a series' `index.mdx` and cross-tutorial rules) without Astro in about a second, printing one line per problem or JSON; exit code 1 on errors. The build and `check` share the same validation code.
 
 - Markdown for LLMs: every tutorial publishes `tutorial.md` (one `tutorial.<variant>.md` per code variant) with its prose, each step's code (markers stripped, variable defaults applied) and the final code, linked from the page `<head>`; the site root gets an `llms.txt` index. Frontmatter `llms: false` opts a tutorial out.

@@ -115,6 +115,7 @@ docs/dev/SPEC.md    # requirements source of truth
 docs/dev/PROJECT.md # shared AI agent context (this file)
 docs/dev/TODO.md    # pending tasks only
 docs/dev/research/  # plans, spikes and go/no-go reviews
+skills/             # Agent Skills (ics-authoring, ics-verify): copied to the package dist/skills/ by build-package.mjs; test/skills.test.ts checks format and coverage of components, frontmatter and CLI
 docs/features.md   # public one-page overview of every capability, linking to the reference
 docs/authoring.md  # public authoring/API reference for tutorial writers
 docs/cli.md        # public CLI reference

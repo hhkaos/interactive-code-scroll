@@ -1,6 +1,13 @@
 {
   "changes": [
     {
+      "change": "Agent skills: `ics-authoring` (layout, components, frontmatter, code markers, panes, variants, series, CLI) and `ics-verify` (the `check --json` loop and an error → fix table), in the [Agent Skills](https://agentskills.io) format, in the repository's `skills/` and shipped in the package under `dist/skills/`. A test keeps them in sync with the components, frontmatter and CLI.",
+      "docs": [
+        "docs/quick-start.md#use-a-coding-agent",
+        "docs/features.md#writing-tutorials"
+      ]
+    },
+    {
       "change": "`interactive-code-scroll check [--json]` runs the build's validation (frontmatter, references, warnings, a series' `index.mdx` and cross-tutorial rules) without Astro in about a second, printing one line per problem or JSON; exit code 1 on errors. The build and `check` share the same validation code.",
       "docs": [
         "docs/cli.md#check-without-building",
@@ -178,16 +185,16 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "17fc6930468f58d5f23d1f2e6fae8182507a787cc7148a29bd4c0fdb6b9d22b4",
-  "changelogDigest": "86c806ad5ba9dad31451431e7057127d704ba6d6aa23d65e84c64d8ae2cf0f47",
+  "sourceDigest": "2abcaafc12776ed8dbe24428158d09873c09d68c355be234745bab521fb54cb9",
+  "changelogDigest": "fcd5bc06d4a701b95901142c7225d89969917c93fd485b0c3e6a4c907964d39d",
   "documents": {
     "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
     "docs/authoring.md": "85933b9f7ca1ccd35ca0f02fb00ba945207731ea92099888d4aaef8373de622f",
     "docs/cli.md": "de64db040deffec3f4af1ab19b20d14a0cdcc9ed9b1e9ee5d8a41ecc876ee787",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "0e3d5338ecf5add164537c4d9a36d32fb1b96a6752cdaf9b2c96cb57ff53b472",
+    "docs/features.md": "a23c4dcbaefdc9fc5d4bf02bfb31248cd5c852308830fc3caf93159baf1e0388",
     "docs/presenting.md": "f57237aae1fd96250217ddca9e9a722a947c6c1440ddd57badcb6df45b02eeb3",
-    "docs/quick-start.md": "d90cf8de2b50dfa6a2a9f460ac71e8f6621e207cb500fe5ce4bbce5f1279afa6",
+    "docs/quick-start.md": "bb46e9b1ec944c3314c99a2ebbcc3c4c3e6712fa8da50f26665d24d195775265",
     "docs/upgrade.md": "f6173f4ce40cb03dde6d30159612ede4af6eadceb3536531ab874d4368ada578",
     "packages/create-interactive-code-scroll/README.md": "c21428a5cc2239488c1837d5b3b73f2466edd40060aa13cc7d80f36e8607488b",
     "packages/interactive-code-scroll/README.md": "fd71b4e637bf629fc9f4ab8f96154a0ea1dfb712bc54f7fcdb416531dcd4714e"
