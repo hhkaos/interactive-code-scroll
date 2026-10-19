@@ -233,8 +233,8 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "bd2d03d2f87ca726fed4a5128bd2228091d681105be737f57a475d748f08b3f8",
-  "changelogDigest": "1f81ce9ff69265f391670cd318d3abb5191b57e04a98b8c650cdce0c5e1de3e6",
+  "sourceDigest": "8592708c0bea1a4bbacf6dba507b9222c4c567dca87e1b224ddb93bc556b4da9",
+  "changelogDigest": "eb18d187eee4c78aad7a03ab9e78309aa2e9ad89a8dce89a7daf9ac73f6d15a0",
   "documents": {
     "README.md": "1429bf2dd5b7a31b9927df5598aaf845d3d50d9c8ae297256fe7d2e5c88a1218",
     "docs/agents.md": "e33cda4b18cfe30d1449032537bcc5c855f6e01c0d2800df1c23664c8a156e43",

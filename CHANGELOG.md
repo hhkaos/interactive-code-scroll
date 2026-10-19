@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0-beta.12] - 2026-10-19
+
 ### Added
 
 - Coding agents docs page (how to start with an agent, the skills, what to ask, the validation loop, Markdown for readers' AI, supported agents) and an "AI agents" section on the website landing page, announced in its hero. The landing's Live Console card no longer says "coming next".
