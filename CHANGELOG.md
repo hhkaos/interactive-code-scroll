@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `interactive-code-scroll skills install [--agent claude|copilot|agents|all]` copies the agent skills from the installed package into `.claude/skills/`, `.github/skills/` or `.agents/skills/` (default: the agent folders the project has). The project wizard asks which coding agents to set up (`--agents`, default none): it adds `skills` and `check` scripts, `AGENTS.md` and, for Claude Code, a `CLAUDE.md` importing it, and installs the skills after the dependencies; both READMEs mention the question.
+
 - The documentation review covers the agent skills: `skills/**/*.md` fingerprints are checked like the docs, review records may link skill sections, and new changelog entries that link the authoring or CLI reference must also link a skill section or give a `skillsReason`.
 
 - The Ask AI prompt links the tutorial's Markdown for LLMs (`tutorial.md`, or the active variant's `tutorial.<id>.md`) as an absolute URL, so assistants that can open links read the whole tutorial; left out with `llms: false`.

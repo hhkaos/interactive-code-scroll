@@ -39,6 +39,7 @@ Package `interactive-code-scroll` (alias `ics`). Run through the project: `npx i
 | `build` | Static site in `dist/`; fails on any broken reference. |
 | `serve` | Serves the built site locally (offline fallback for talks). |
 | `check [--json]` | The build's validation in about a second, no Astro (see the `ics-verify` skill). |
+| `skills install [--agent …]` | Copies these agent skills, from the installed package version, into the project's agent folders. |
 | `doctor` | Shows project detection and the recommended command. |
 | `init-scripts [--write]` | Adds `dev`/`build`/`serve` scripts to `package.json`. |
 
@@ -52,6 +53,7 @@ Package `interactive-code-scroll` (alias `ics`). Run through the project: `npx i
 | `--port`, `--host` | `dev`, `serve` | |
 | `--outDir <dir>` | `build` | |
 | `--json` | `check` | Machine-readable problems. |
+| `--agent <list>` | `skills install` | `claude` (`.claude/skills/`), `copilot` (`.github/skills/`), `agents` (`.agents/skills/`) or `all`; default: the agent folders the project has. |
 
 Arguments after `--` go to Astro.
 
@@ -71,6 +73,7 @@ Arguments after `--` go to Astro.
 | `--pages` / `--no-pages` | GitHub Pages workflow |
 | `--git` / `--no-git` | `git init` |
 | `--install` / `--no-install` | install dependencies |
+| `--agents` / `--no-agents` | `claude,copilot,agents`: skills script, `AGENTS.md`, `CLAUDE.md` (default none) |
 | `-y`, `--yes` | defaults for the rest |
 
 ```sh

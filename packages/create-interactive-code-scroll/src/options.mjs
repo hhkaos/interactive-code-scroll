@@ -5,6 +5,7 @@ import { basename } from "node:path";
 /** Languages are runtimes: browser JavaScript and Node.js are different entries. */
 /** @typedef {"javascript" | "node" | "curl" | "python" | "kotlin" | "swift" | "csharp"} Language */
 /** @typedef {{ kind: Kind; lang: Language }} Choice */
+/** @typedef {"claude" | "copilot" | "agents"} Agent */
 
 /**
  * @typedef {{
@@ -19,6 +20,7 @@ import { basename } from "node:path";
  *   pages: boolean;
  *   git: boolean;
  *   install: boolean;
+ *   agents: Agent[];
  * }} Answers
  * `use` applies to every tutorial; `useBy` (series only) overrides it for the named tutorials.
  */
@@ -36,6 +38,14 @@ export const LANGUAGES = { javascript: "JavaScript", node: "Node.js", curl: "cUR
 
 export const SLUG = /^[a-z0-9][a-z0-9-]*$/;
 
+/** Coding agents the project gets the skills for (`interactive-code-scroll skills install --agent`): the folder each reads. */
+/** @type {Record<Agent, { label: string; dir: string }>} */
+export const AGENTS = {
+  claude: { label: "Claude Code", dir: ".claude/skills/" },
+  copilot: { label: "GitHub Copilot", dir: ".github/skills/" },
+  agents: { label: "Other agents", dir: ".agents/skills/" },
+};
+
 /** Every question: its flag, for errors about missing answers without a terminal. */
 export const FLAGS = {
   dir: "<dir>",
@@ -49,6 +59,7 @@ export const FLAGS = {
   pages: "--pages / --no-pages",
   git: "--git / --no-git",
   install: "--install / --no-install",
+  agents: "--agents claude,copilot,agents / --no-agents",
 };
 
 const VALUE_FLAGS = new Map([
@@ -96,6 +107,8 @@ export function parseArgs(argv) {
       if (named) useBy[/** @type {string} */ (named[1])] = parseUse(/** @type {string} */ (named[2]));
       else answers.use = parseUse(entry);
     } else if (flag === "--type") kind = value();
+    else if (flag === "--agents") answers.agents = list(value());
+    else if (flag === "--no-agents") answers.agents = [];
     else if (flag === "--langs") langs = list(value());
     else if (VALUE_FLAGS.has(flag)) {
       const key = /** @type {string} */ (VALUE_FLAGS.get(flag));
@@ -154,6 +167,7 @@ export function defaults(detectedPm) {
     pages: true,
     git: true,
     install: true,
+    agents: [],
   };
 }
 
@@ -176,7 +190,8 @@ export function usesByTutorial(answers) {
 }
 
 /**
- * Questions still to ask: the keys of `Answers` a prompt would cover.
+ * Questions still to ask: the keys of `Answers` a prompt would cover. `agents` is optional: without a terminal
+ * it defaults to none, so scripts written before the question keep working.
  * @param {Partial<Answers>} answers
  * @returns {(keyof Answers)[]}
  */
@@ -205,6 +220,9 @@ export function validate(answers) {
   if (!["default", "mdx", "custom"].includes(answers.index)) errors.push(`--index must be default, mdx or custom, got "${answers.index}".`);
   if (!["npm", "pnpm"].includes(answers.pm)) errors.push(`--pm must be npm or pnpm, got "${answers.pm}".`);
   if (!["variants", "siblings"].includes(answers.languagesAs)) errors.push(`--languages-as must be variants or siblings, got "${answers.languagesAs}".`);
+  for (const agent of answers.agents) {
+    if (!(agent in AGENTS)) errors.push(`--agents: unknown agent "${agent}" (${Object.keys(AGENTS).join(", ")}).`);
+  }
   const series = answers.layout === "series";
   if (series) {
     if (answers.tutorials.length === 0) errors.push("--tutorials needs at least one name.");

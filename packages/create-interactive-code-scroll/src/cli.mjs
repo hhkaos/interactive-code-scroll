@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import * as p from "@clack/prompts";
 import { nextSteps } from "./next-steps.mjs";
-import { FLAGS, KINDS, LANGUAGES, SLUG, complete, defaults, list, parseArgs, parseUse, unanswered, validate } from "./options.mjs";
+import { AGENTS, FLAGS, KINDS, LANGUAGES, SLUG, complete, defaults, list, parseArgs, parseUse, unanswered, validate } from "./options.mjs";
 import { commands, detectPackageManager, pnpmVersion } from "./package-manager.mjs";
 import { planProject } from "./plan.mjs";
 import { ASTRO_VERSION, VERSION } from "./versions.mjs";
@@ -32,6 +32,8 @@ Options:
   --pages / --no-pages             Add a GitHub Pages workflow.
   --git / --no-git                 Run git init.
   --install / --no-install         Install dependencies.
+  --agents <list> / --no-agents    Agent skills for coding agents: claude, copilot, agents
+                                   (.claude/, .github/, .agents/skills/). Default: none.
   -y, --yes                        Use defaults for everything not given.
   -h, --help                       Show this help.`;
 
@@ -165,6 +167,16 @@ async function ask(given, fallback) {
     );
   }
   if (a.pages === undefined) a.pages = answer(await p.confirm({ message: "Add a GitHub Pages workflow?", initialValue: fallback.pages }));
+  if (a.agents === undefined) {
+    a.agents = answer(
+      await p.multiselect({
+        message: "Coding agent skills (teach your agent this tool; space to select, enter to skip)",
+        options: Object.entries(AGENTS).map(([value, { label, dir }]) => ({ value: /** @type {import("./options.mjs").Agent} */ (value), label, hint: dir })),
+        initialValues: fallback.agents,
+        required: false,
+      }),
+    );
+  }
   if (a.git === undefined) a.git = answer(await p.confirm({ message: "Initialize a git repository?", initialValue: fallback.git }));
   if (a.install === undefined) a.install = answer(await p.confirm({ message: "Install dependencies now?", initialValue: fallback.install }));
   return complete(a, fallback);
@@ -249,7 +261,13 @@ export async function main(argv) {
       installed = spawnSync(answers.pm, ["install"], { cwd: target, stdio: "inherit", shell: process.platform === "win32" }).status === 0;
       if (!installed) p.log.warn("Installing dependencies failed; run it again from the project folder.");
     }
-    p.note(nextSteps(answers, { installed, gitInitialized }).join("\n"), "Next steps");
+    let skills = false;
+    if (installed && answers.agents.length > 0) {
+      const [command = answers.pm, ...args] = commands(answers.pm).run("skills").split(" ");
+      skills = spawnSync(command, args, { cwd: target, stdio: "inherit", shell: process.platform === "win32" }).status === 0;
+      if (!skills) p.log.warn("Installing the agent skills failed; run it again from the project folder.");
+    }
+    p.note(nextSteps(answers, { installed, gitInitialized, skills }).join("\n"), "Next steps");
     p.outro("Happy writing!");
     return 0;
   } catch (error) {

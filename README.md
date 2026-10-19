@@ -32,7 +32,7 @@ cd my-tutorial
 npm run dev
 ```
 
-The wizard asks for one tutorial or a series, what each tutorial uses (web app, REST API, script, native app and their languages), your package manager and whether to add a GitHub Pages workflow. It writes a working example you can edit right away.
+The wizard asks for one tutorial or a series, what each tutorial uses (web app, REST API, script, native app and their languages), your package manager, whether to add a GitHub Pages workflow and which coding agents to set up with the bundled agent skills. It writes a working example you can edit right away.
 
 ## Why
 
@@ -103,7 +103,7 @@ On the website, with search. The source is [`docs/`](docs/).
 - [Features](https://www.rauljimenez.info/interactive-code-scroll/docs/features/) — everything the tool can do, in one page
 - [Authoring reference](https://www.rauljimenez.info/interactive-code-scroll/docs/authoring/) — how a tutorial works, folder structure, frontmatter, components, code markers, build errors
 - [Presenting a tutorial](https://www.rauljimenez.info/interactive-code-scroll/docs/presenting/) — presentation mode, clickers, zoom and offline fallback for talks
-- [CLI reference](https://www.rauljimenez.info/interactive-code-scroll/docs/cli/) — the project wizard, `dev`, `build`, `serve`, `doctor` and `init-scripts`
+- [CLI reference](https://www.rauljimenez.info/interactive-code-scroll/docs/cli/) — the project wizard, `dev`, `build`, `serve`, `check`, `skills install`, `doctor` and `init-scripts`
 - [Deployment](https://www.rauljimenez.info/interactive-code-scroll/docs/deployment/) — GitHub Pages and other static hosts
 - [Upgrade guide](https://www.rauljimenez.info/interactive-code-scroll/docs/upgrade/)
 

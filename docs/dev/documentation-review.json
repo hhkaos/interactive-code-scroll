@@ -1,6 +1,17 @@
 {
   "changes": [
     {
+      "change": "`interactive-code-scroll skills install [--agent claude|copilot|agents|all]` copies the agent skills from the installed package into `.claude/skills/`, `.github/skills/` or `.agents/skills/` (default: the agent folders the project has). The project wizard asks which coding agents to set up (`--agents`, default none): it adds `skills` and `check` scripts, `AGENTS.md` and, for Claude Code, a `CLAUDE.md` importing it, and installs the skills after the dependencies; both READMEs mention the question.",
+      "docs": [
+        "docs/cli.md#agent-skills",
+        "docs/cli.md#create-a-project",
+        "docs/quick-start.md#use-a-coding-agent",
+        "docs/features.md#writing-tutorials",
+        "skills/ics-authoring/references/project-setup.md#cli",
+        "skills/ics-authoring/references/project-setup.md#create-a-project-scaffolder"
+      ]
+    },
+    {
       "change": "The documentation review covers the agent skills: `skills/**/*.md` fingerprints are checked like the docs, review records may link skill sections, and new changelog entries that link the authoring or CLI reference must also link a skill section or give a `skillsReason`.",
       "reason": "Contributor tooling for this repository (scripts/check-docs.mjs); no change to the package, its CLI or what authors and readers do. Described in CONTRIBUTING.md."
     },
@@ -201,25 +212,25 @@
       "breaking": true
     }
   ],
-  "sourceDigest": "39f7a4703f48ff478f54cee18e5b700c3ab1f5da84e6b0ae52a573b02b8356d5",
-  "changelogDigest": "0bd819fb3aa22d30ccc59725f121f9fbd1bf784da79f9904dabf75692e7da565",
+  "sourceDigest": "bd2d03d2f87ca726fed4a5128bd2228091d681105be737f57a475d748f08b3f8",
+  "changelogDigest": "45919aa51f5646af03b0a10d51fdc0dd086a7916b5d0e77ba59de7a180f5b232",
   "documents": {
-    "README.md": "05032d254b5a82cdead0bf6d7d724d4bbe9ff162cfc9bf99d985622f7325abc8",
+    "README.md": "1429bf2dd5b7a31b9927df5598aaf845d3d50d9c8ae297256fe7d2e5c88a1218",
     "docs/authoring.md": "8233b3169823f39a1e45ec69587cea2e71e9d3684f5b4453756b2663a304c9b9",
-    "docs/cli.md": "de64db040deffec3f4af1ab19b20d14a0cdcc9ed9b1e9ee5d8a41ecc876ee787",
+    "docs/cli.md": "10e1db2cba72e5fa5d5d1a9e17fae1181efcb41517a9c138c0507b324ec70865",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "6859ed486a3bcef23db227b97cb6b93680e7238ad3f9c4d0dc57728faa8e0560",
+    "docs/features.md": "1fdc047f590205f5653538a6d1fd12d2f815c325f07b8e83660742a90b063970",
     "docs/presenting.md": "f57237aae1fd96250217ddca9e9a722a947c6c1440ddd57badcb6df45b02eeb3",
-    "docs/quick-start.md": "bb46e9b1ec944c3314c99a2ebbcc3c4c3e6712fa8da50f26665d24d195775265",
+    "docs/quick-start.md": "1310a00932c8b793c0f4cee43ebbcccb4d9b4f0928604bd0a827f641e1c12058",
     "docs/upgrade.md": "f6173f4ce40cb03dde6d30159612ede4af6eadceb3536531ab874d4368ada578",
-    "packages/create-interactive-code-scroll/README.md": "c21428a5cc2239488c1837d5b3b73f2466edd40060aa13cc7d80f36e8607488b",
+    "packages/create-interactive-code-scroll/README.md": "3e9f97abd999eb95f7b435bb2f4a826e64486004142a8224f71a0bbb406a7e64",
     "packages/interactive-code-scroll/README.md": "fd71b4e637bf629fc9f4ab8f96154a0ea1dfb712bc54f7fcdb416531dcd4714e",
     "skills/ics-authoring/SKILL.md": "86ac090bf7f6f1b6cfe7889230c63ec4c707a481fc06d89413b9d42aa6b35d2d",
     "skills/ics-authoring/references/code-markers.md": "2720e493f91decd19a2d1a7ee097dc22be4a4dfddbf914f2852328168d16a79f",
     "skills/ics-authoring/references/components.md": "ae3b6c7a9c0fc027cd884ab3a31a70d2791e6702299c212b60e3c61e2a58e042",
     "skills/ics-authoring/references/frontmatter.md": "58f182a2698ed41f2de71cb419faa2f2f14eebcde9ec7149ac2610ad9eb78634",
     "skills/ics-authoring/references/panes-and-results.md": "8f1cbc51cf58d936a8daa1c881b1449633e372920f461bafc0e713fed9ede1e7",
-    "skills/ics-authoring/references/project-setup.md": "c6a793e96325629774e90b292628f9266fd7e74a2ee785b9b30919f874062bbe",
+    "skills/ics-authoring/references/project-setup.md": "7a5c6218e277b49cfdfc592658ab1b566eccd1569e8e30dcba1c4f242e1fc49e",
     "skills/ics-authoring/references/variants-and-series.md": "876c51526d36a1085627471cb64c1510b3d3ef367727451614a6b5e765621186",
     "skills/ics-verify/SKILL.md": "f1194e467ba15123ecde99fd5de7755637aac6298387750577c56659a9b4b324",
     "skills/ics-verify/references/errors.md": "3ada633b59d3cdbd9afa774b181539af321e27949e27b740315a90111952024b"

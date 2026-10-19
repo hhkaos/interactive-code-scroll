@@ -8,7 +8,7 @@ npm create interactive-code-scroll@latest my-tutorial
 pnpm create interactive-code-scroll@latest my-tutorial
 ```
 
-The wizard asks what to create — one tutorial or a series with an index page, what it teaches (web app, REST API, script or native app), its languages (as code variants or one tutorial per language), the package manager, a GitHub Pages workflow, `git init` and installing dependencies — then writes a small working example and prints the next steps.
+The wizard asks what to create — one tutorial or a series with an index page, what it teaches (web app, REST API, script or native app), its languages (as code variants or one tutorial per language), the package manager, a GitHub Pages workflow, agent skills for your coding agents (Claude Code, GitHub Copilot, others), `git init` and installing dependencies — then writes a small working example and prints the next steps.
 
 Every question has an option, so the same project can be created without a terminal:
 

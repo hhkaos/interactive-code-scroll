@@ -104,7 +104,7 @@ try {
   const generated = join(createDir, "docs");
   run(
     process.execPath,
-    [createBin, "docs", "--yes", "--layout", "series", "--tutorials", "intro,geo", "--use", "web:javascript,script:python", "--use", "geo=rest:curl", "--index", "custom", "--pm", "pnpm", "--no-git", "--no-install"],
+    [createBin, "docs", "--yes", "--layout", "series", "--tutorials", "intro,geo", "--use", "web:javascript,script:python", "--use", "geo=rest:curl", "--index", "custom", "--pm", "pnpm", "--agents", "claude,agents", "--no-git", "--no-install"],
     createDir,
     { CI: "true" },
   );
@@ -116,9 +116,15 @@ try {
   generatedPackage.devDependencies["interactive-code-scroll"] = `file:${tarball}`;
   writeFileSync(join(generated, "package.json"), JSON.stringify(generatedPackage, null, 2));
   run("pnpm", ["install", "--prefer-offline"], generated, { CI: "true" });
+  run("pnpm", ["check"], generated, { CI: "true" });
   run("pnpm", ["build"], generated, { CI: "true" });
   for (const page of ["index.html", "intro/preview/javascript/index.html", "geo/output/items.json"]) {
     if (!existsSync(join(generated, "dist", page))) throw new Error(`Pack smoke test: the scaffolded project did not build ${page}`);
+  }
+  // Coding agents: AGENTS.md, CLAUDE.md, and the skills script copying the packed core's skills.
+  run("pnpm", ["skills"], generated, { CI: "true" });
+  for (const path of ["AGENTS.md", "CLAUDE.md", ".claude/skills/ics-authoring/SKILL.md", ".agents/skills/ics-verify/SKILL.md"]) {
+    if (!existsSync(join(generated, path))) throw new Error(`Pack smoke test: the scaffolded project has no ${path}`);
   }
   failed = false;
 } finally {

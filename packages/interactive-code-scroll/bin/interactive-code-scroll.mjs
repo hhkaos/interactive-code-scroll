@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 // @ts-check
-import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
 
-const COMMANDS = new Set(["dev", "build", "serve", "check", "doctor", "init-scripts"]);
+const COMMANDS = new Set(["dev", "build", "serve", "check", "skills", "doctor", "init-scripts"]);
 const OPTION_ALIASES = new Map([
   ["-r", "--root"],
   ["-t", "--tutorial"],
   ["-p", "--port"],
   ["-h", "--host"],
 ]);
-const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--tutorials", "--index", "--base", "--site", "--port", "--outDir"]);
+const VALUE_OPTIONS = new Set(["--root", "--tutorial", "--tutorials", "--index", "--base", "--site", "--port", "--outDir", "--agent"]);
 const OPTIONAL_VALUE_OPTIONS = new Set(["--host"]);
 const BOOLEAN_OPTIONS = new Set(["--write", "--json"]);
 const COMMAND_FLAG_TARGETS = new Map([
@@ -20,15 +20,21 @@ const COMMAND_FLAG_TARGETS = new Map([
   ["--host", new Set(["dev", "serve"])],
   ["--outDir", new Set(["build"])],
   ["--json", new Set(["check"])],
+  ["--agent", new Set(["skills"])],
 ]);
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const integrationUrl = new URL("../src/index.ts", import.meta.url).href;
 const checkUrl = new URL("../src/check.ts", import.meta.url).href;
+/** Agent skills shipped with the package (the repository's skills/; dist/skills/ once built). */
+const skillsDir = fileURLToPath(new URL("../../../skills/", import.meta.url));
+
+/** Project folders coding agents read skills from (`--agent` values). */
+export const AGENT_SKILL_DIRS = { claude: ".claude/skills", copilot: ".github/skills", agents: ".agents/skills" };
 
 /**
  * @typedef {Readonly<{
- *   command: "dev" | "build" | "serve" | "check" | "doctor" | "init-scripts";
+ *   command: "dev" | "build" | "serve" | "check" | "skills" | "doctor" | "init-scripts";
  *   root: string;
  *   tutorial: string;
  *   tutorialAutoDetected: boolean;
@@ -37,6 +43,7 @@ const checkUrl = new URL("../src/check.ts", import.meta.url).href;
  *   index: string | undefined;
  *   write: boolean;
  *   json: boolean;
+ *   agent: string | undefined;
  *   configPath: string;
  *   configArg: string;
  *   astroArgs: readonly string[];
@@ -49,8 +56,12 @@ const checkUrl = new URL("../src/check.ts", import.meta.url).href;
  * @returns {CliPlan}
  */
 export function planCli(argv, context = {}) {
-  const [command, ...rest] = argv;
+  let [command, ...rest] = argv;
   if (!COMMANDS.has(command ?? "")) throw new Error(help(command ? `Unknown command "${command}".` : undefined));
+  if (command === "skills") {
+    if (rest[0] !== "install") throw new Error(`Usage: interactive-code-scroll skills install [--agent ${[...Object.keys(AGENT_SKILL_DIRS), "all"].join("|")}]`);
+    rest = rest.slice(1);
+  }
 
   const cwd = context.cwd ?? process.cwd();
   const options = new Map();
@@ -128,13 +139,13 @@ export function planCli(argv, context = {}) {
     if (option === "--root" || option === "--tutorial" || option === "--tutorials" || option === "--index" || option === "--write") continue;
     const targets = COMMAND_FLAG_TARGETS.get(option);
     if (targets && !targets.has(command)) throw new Error(`${option} is only supported with ${[...targets].join(" or ")}.`);
-    if (option === "--json") continue;
+    if (option === "--json" || option === "--agent") continue;
     astroArgs.push(option);
     if (value !== true) astroArgs.push(value);
   }
   astroArgs.push(...forwarded);
 
-  return { command, root, tutorial, tutorialAutoDetected, tutorials, tutorialsAutoDetected, index, write: options.get("--write") === true, json: options.get("--json") === true, configPath, configArg, astroArgs };
+  return { command, root, tutorial, tutorialAutoDetected, tutorials, tutorialsAutoDetected, index, write: options.get("--write") === true, json: options.get("--json") === true, agent: options.get("--agent"), configPath, configArg, astroArgs };
 }
 
 /**
@@ -156,7 +167,7 @@ export function writeAstroConfig(plan) {
  * @param {string | undefined} prefix
  */
 function help(prefix) {
-  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|check|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --tutorials <dir>  Series site: folder of tutorials (<dir>/<name>/tutorial.mdx).\n                     Used automatically for tutorials/ when there is no single tutorial.\n  --index <file>     Series site: .astro page that replaces the index page.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n  --json             check: print the problems as JSON.\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n  interactive-code-scroll check --json\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
+  return `${prefix ? `${prefix}\n\n` : ""}Usage: interactive-code-scroll <dev|build|serve|check|skills install|doctor|init-scripts> [options] [-- Astro flags]\n\nOptions:\n  --root <dir>       Project root. Defaults to the current directory.\n  --tutorial <dir>   Tutorial folder inside the root. Defaults to tutorial.\n  --tutorials <dir>  Series site: folder of tutorials (<dir>/<name>/tutorial.mdx).\n                     Used automatically for tutorials/ when there is no single tutorial.\n  --index <file>     Series site: .astro page that replaces the index page.\n  --base <path>      Astro base path.\n  --site <url>       Astro site URL.\n  --port <port>      Dev/serve port.\n  --host [address]   Dev/serve host flag value.\n  --outDir <dir>     Build output directory.\n  --write            Write package.json changes for init-scripts.\n  --json             check: print the problems as JSON.\n  --agent <list>     skills install: claude, copilot, agents or all (default: the agent folders the project has).\n\nExamples:\n  npm exec -- interactive-code-scroll dev --tutorial .\n  pnpm exec interactive-code-scroll dev --tutorial .\n  npx --no-install interactive-code-scroll dev --tutorial .\n  interactive-code-scroll doctor\n  interactive-code-scroll check --json\n  interactive-code-scroll skills install --agent claude\n\nWith package.json scripts:\n  \"scripts\": {\n    \"dev\": \"interactive-code-scroll dev\",\n    \"build\": \"interactive-code-scroll build\",\n    \"serve\": \"interactive-code-scroll serve\"\n  }\n\nThen run:\n  npm run dev -- --tutorial .\n  pnpm run dev -- --tutorial .\n\nThe CLI is topic-agnostic. OAuth or provider-specific guidance must come from explicit project configuration.`;
 }
 
 /**
@@ -376,6 +387,46 @@ async function check(plan, argv) {
   return result.problems.some((/** @type {{ severity: string }} */ p) => p.severity === "error") ? 1 : 0;
 }
 
+/**
+ * Copies the package's agent skills into the project's agent folders (replacing older copies of the same skills,
+ * never other skills). Without `agent`, the agent folders the project already has.
+ * @param {string} root
+ * @param {string | undefined} agent comma-separated `AGENT_SKILL_DIRS` keys, or `all`
+ * @param {string} [source]
+ */
+export function installSkills(root, agent, source = skillsDir) {
+  /** @type {(keyof typeof AGENT_SKILL_DIRS)[]} */
+  const known = /** @type {any} */ (Object.keys(AGENT_SKILL_DIRS));
+  const usage = `Pick one or more with --agent ${known.join(",")} (or all): ${known.map((a) => `${a} → ${AGENT_SKILL_DIRS[a]}/`).join(", ")}.`;
+  let agents;
+  if (agent === undefined) {
+    agents = known.filter((a) => existsSync(join(root, a === "copilot" ? AGENT_SKILL_DIRS.copilot : dirname(AGENT_SKILL_DIRS[a]))));
+    if (agents.length === 0) throw new Error(`No coding agent folder found in ${root} (.claude/, .agents/ or .github/skills/).\n\n${usage}`);
+  } else {
+    const names = agent === "all" ? known : agent.split(",").map((a) => a.trim()).filter(Boolean);
+    const unknown = names.find((a) => !known.includes(/** @type {any} */ (a)));
+    if (unknown !== undefined || names.length === 0) throw new Error(`Unknown agent "${unknown ?? agent}".\n\n${usage}`);
+    agents = /** @type {(keyof typeof AGENT_SKILL_DIRS)[]} */ (names);
+  }
+  const skills = readdirSync(source, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(source, entry.name, "SKILL.md")))
+    .map((entry) => entry.name)
+    .sort();
+  for (const a of agents) {
+    for (const skill of skills) {
+      const target = join(root, AGENT_SKILL_DIRS[a], skill);
+      rmSync(target, { recursive: true, force: true });
+      cpSync(join(source, skill), target, { recursive: true });
+    }
+  }
+  return [
+    `Installed ${skills.join(", ")} (interactive-code-scroll ${packageVersion()}) in:`,
+    ...agents.map((a) => `  ${AGENT_SKILL_DIRS[a]}/`),
+    "",
+    "Run it again after upgrading the package.",
+  ].join("\n");
+}
+
 function packageVersion() {
   try {
     return JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).version ?? "unknown";
@@ -403,6 +454,10 @@ export async function main(argv) {
     return 0;
   }
   if (plan.command === "check") return await check(plan, argv);
+  if (plan.command === "skills") {
+    console.log(installSkills(plan.root, plan.agent));
+    return 0;
+  }
   validateProject(plan);
   writeAstroConfig(plan);
   console.log(preflightMessage(plan));

@@ -27,6 +27,7 @@ Every question has an option. Without a terminal (CI, scripts, agents), give the
 | `--pages` / `--no-pages` | | Adds `.github/workflows/pages.yml` (see [Deployment](deployment.md#github-pages)). |
 | `--git` / `--no-git` | | `git init -b main`, skipped inside an existing repository. |
 | `--install` / `--no-install` | | Installs dependencies. |
+| `--agents` / `--no-agents` | `claude,copilot,agents` | Sets up [agent skills](#agent-skills) for those coding agents: a `skills` script (run after installing), `AGENTS.md`, and a `CLAUDE.md` that imports it for Claude Code. Default: none, also without a terminal. |
 | `-y`, `--yes` | | Defaults for every question not given. |
 
 ```sh
@@ -42,6 +43,7 @@ interactive-code-scroll dev [options]
 interactive-code-scroll build [options]
 interactive-code-scroll serve [options]
 interactive-code-scroll check [options]
+interactive-code-scroll skills install [options]
 interactive-code-scroll doctor [options]
 interactive-code-scroll init-scripts [options]
 ```
@@ -69,6 +71,7 @@ ics serve
 | `--outDir <dir>` | `build` | Forwarded to Astro. |
 | `--write` | `init-scripts` | Writes suggested package scripts. |
 | `--json` | `check` | Prints the problems as JSON. |
+| `--agent <list>` | `skills install` | `claude` (`.claude/skills/`), `copilot` (`.github/skills/`), `agents` (`.agents/skills/`), comma-separated, or `all`. Default: the agent folders the project already has. |
 
 Any arguments after `--` are passed to Astro.
 
@@ -153,6 +156,24 @@ With `--json`, the same problems come as one JSON object; paths are relative to 
 ```
 
 The exit code is 1 when there is an error, 0 otherwise (warnings included).
+
+## Agent Skills
+
+The package ships two [Agent Skills](https://agentskills.io) that teach coding agents this tool: `ics-authoring` (writing tutorials) and `ics-verify` (the `check` loop). `skills install` copies them, from the installed version, into the folders agents read in your project:
+
+```sh
+npm exec -- interactive-code-scroll skills install --agent claude
+npm exec -- interactive-code-scroll skills install --agent claude,copilot
+npm exec -- interactive-code-scroll skills install   # the agent folders the project already has
+```
+
+| `--agent` | Folder | For |
+|---|---|---|
+| `claude` | `.claude/skills/` | Claude Code |
+| `copilot` | `.github/skills/` | GitHub Copilot |
+| `agents` | `.agents/skills/` | Other agents that read this generic folder (VS Code, among others) |
+
+Older copies of the same skills are replaced; other skills in those folders are kept. Run it again after upgrading the package, and commit the folders so everyone working on the tutorial gets them. Without `--agent`, it installs into `.claude/`, `.agents/` and `.github/skills/` when they exist, and otherwise lists the choices. Projects created with `--agents` get it as `npm run skills`.
 
 ## Package Script Argument Forwarding
 

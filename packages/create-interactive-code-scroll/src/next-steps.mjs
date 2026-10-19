@@ -7,15 +7,17 @@ import { tutorialPlans } from "./plan.mjs";
 /**
  * What to do after the project is written.
  * @param {Answers} answers
- * @param {{ installed: boolean; gitInitialized: boolean }} done
+ * @param {{ installed: boolean; gitInitialized: boolean; skills?: boolean }} done
  * @returns {string[]}
  */
 export function nextSteps(answers, done) {
   const { install, run, exec } = commands(answers.pm);
   const steps = [`cd ${answers.dir}`];
   if (!done.installed) steps.push(install);
+  if (answers.agents.length > 0 && !done.skills) steps.push(`${run("skills")}   # agent skills for your coding agent`);
   steps.push(`${run("dev")}   # open the printed URL; edits reload live`);
   steps.push(`${exec("doctor")}   # if something does not start`);
+  if (answers.agents.length > 0) steps.push(`${run("check")}   # validate after each change (your agent knows: see AGENTS.md)`);
   const lines = [...steps, ""];
   const tutorials = tutorialPlans(answers);
   lines.push(

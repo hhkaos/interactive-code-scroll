@@ -71,6 +71,13 @@ describe("complete and validate", () => {
     expect(validate(complete(mixed, fallback))).toEqual([]);
   });
 
+  it("reads the coding agents, optional without a terminal", () => {
+    expect(parseArgs(["--agents", "claude, agents"]).answers.agents).toEqual(["claude", "agents"]);
+    expect(parseArgs(["--no-agents"]).answers.agents).toEqual([]);
+    expect(unanswered({ dir: "d", layout: "single", use: [], pm: "npm", pages: false, git: false, install: false })).toEqual([]);
+    expect(validate(complete({ agents: [/** @type {any} */ ("cursor")] }, fallback))).toEqual(['--agents: unknown agent "cursor" (claude, copilot, agents).']);
+  });
+
   it("names the flag of every invalid answer", () => {
     const { answers } = parseArgs(["--use", "script:swift,rest:python,script:python,mobile:java", "--index", "mdx", "--languages-as", "siblings", "--pm", "yarn"]);
     expect(validate(complete(answers, fallback))).toEqual([

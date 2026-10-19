@@ -2,7 +2,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { KINDS, LANGUAGES, packageName, titleFrom, usesByTutorial } from "./options.mjs";
+import { AGENTS, KINDS, LANGUAGES, packageName, titleFrom, usesByTutorial } from "./options.mjs";
+import { commands } from "./package-manager.mjs";
 
 /** @typedef {import("./options.mjs").Answers} Answers */
 /** @typedef {import("./options.mjs").Choice} Choice */
@@ -86,7 +87,35 @@ export function planProject(answers, versions) {
   if (series && answers.index === "mdx") files.set("tutorials/index.mdx", indexMdx(title));
   if (custom) files.set(CUSTOM_INDEX, customIndex(title));
   if (answers.pages) files.set(".github/workflows/pages.yml", pagesWorkflow(answers.pm));
+  if (answers.agents.length > 0) {
+    files.set("AGENTS.md", agentsMd(answers));
+    // Claude Code reads CLAUDE.md, which can import AGENTS.md.
+    if (answers.agents.includes("claude")) files.set("CLAUDE.md", "@AGENTS.md\n");
+  }
   return files;
+}
+
+/**
+ * Instructions for coding agents: where the tutorial is, the skills and the check loop.
+ * @param {Answers} answers
+ */
+export function agentsMd(answers) {
+  const { run } = commands(answers.pm);
+  const series = answers.layout === "series";
+  const dirs = answers.agents.map((agent) => `\`${AGENTS[agent].dir}\``).join(", ");
+  return [
+    "# Agent instructions",
+    "",
+    `This project is an InteractiveCodeScroll ${series ? "series site" : "tutorial"}: explanations in MDX next to a real, runnable project. Each \`<Step>\` highlights a region of a code file.`,
+    "",
+    series
+      ? "- Tutorials: `tutorials/<name>/tutorial.mdx` (the steps) and `tutorials/<name>/code/` (the code they highlight)."
+      : "- Tutorial: `tutorial/tutorial.mdx` (the steps) and `tutorial/code/` (the code they highlight).",
+    `- Skills: \`ics-authoring\` (how to write tutorials) and \`ics-verify\` (how to check them), in ${dirs}. \`${run("skills")}\` installs them from the installed \`interactive-code-scroll\`; run it again after upgrading.`,
+    `- After every change: \`${run("check")}\` (append \`-- --json\` for JSON). Before committing: \`${run("build")}\`.`,
+    `- Preview: \`${run("dev")}\` starts a dev server that runs until stopped.`,
+    "",
+  ].join("\n");
 }
 
 /** @param {"npm" | "pnpm"} pm */
@@ -110,6 +139,8 @@ function packageJson(answers, versions, custom) {
       dev: `interactive-code-scroll dev${index}`,
       build: `interactive-code-scroll build${index}`,
       serve: "interactive-code-scroll serve",
+      check: "interactive-code-scroll check",
+      ...(answers.agents.length > 0 ? { skills: `interactive-code-scroll skills install --agent ${answers.agents.join(",")}` } : {}),
     },
     devDependencies: {
       astro: versions.astro,

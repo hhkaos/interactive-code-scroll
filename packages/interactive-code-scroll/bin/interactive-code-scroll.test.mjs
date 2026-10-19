@@ -1,13 +1,15 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  AGENT_SKILL_DIRS,
   doctor,
   findTutorialCandidates,
   initScripts,
+  installSkills,
   packageManager,
   planCli,
   preflightMessage,
@@ -141,6 +143,37 @@ describe("interactive-code-scroll CLI", () => {
     const plan = planCli(["check", "--json", "--tutorial", "."]);
     expect(plan).toMatchObject({ command: "check", json: true, tutorial: "." });
     expect(plan.astroArgs).not.toContain("--json");
+  });
+
+  it("plans skills install, which needs its subcommand", () => {
+    expect(planCli(["skills", "install", "--agent", "claude,copilot"])).toMatchObject({ command: "skills", agent: "claude,copilot" });
+    expect(() => planCli(["skills"])).toThrow("Usage: interactive-code-scroll skills install");
+    expect(() => planCli(["dev", "--agent", "claude"])).toThrow("--agent is only supported with skills");
+  });
+
+  it("installs the package skills into the agent folders the project has, replacing only its own skills", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    mkdirSync(join(root, ".claude", "skills", "my-skill"), { recursive: true });
+    mkdirSync(join(root, ".claude", "skills", "ics-verify"), { recursive: true });
+    writeFileSync(join(root, ".claude", "skills", "ics-verify", "old.md"), "stale");
+    mkdirSync(join(root, ".github", "workflows"), { recursive: true });
+
+    const output = installSkills(root, undefined);
+    expect(output).toContain("Installed ics-authoring, ics-verify");
+    expect(output).toContain("  .claude/skills/");
+    expect(output).not.toContain(".github/skills/");
+    expect(readFileSync(join(root, ".claude", "skills", "ics-authoring", "SKILL.md"), "utf8")).toMatch(/^---\nname: ics-authoring\n/);
+    expect(existsSync(join(root, ".claude", "skills", "ics-authoring", "references", "components.md"))).toBe(true);
+    expect(existsSync(join(root, ".claude", "skills", "ics-verify", "old.md"))).toBe(false);
+    expect(existsSync(join(root, ".claude", "skills", "my-skill"))).toBe(true);
+  });
+
+  it("installs for the agents named with --agent, and explains the choices without any", () => {
+    const root = mkdtempSync(join(tmpdir(), "ics-cli-"));
+    expect(() => installSkills(root, undefined)).toThrow(/No coding agent folder found[\s\S]*--agent claude,copilot,agents/);
+    expect(() => installSkills(root, "cursor")).toThrow('Unknown agent "cursor"');
+    installSkills(root, "all");
+    for (const dir of Object.values(AGENT_SKILL_DIRS)) expect(existsSync(join(root, dir, "ics-verify", "SKILL.md")), dir).toBe(true);
   });
 
   it("checks a tutorial without Astro: problems as JSON and exit code 1 on errors", () => {

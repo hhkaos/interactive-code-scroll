@@ -30,7 +30,7 @@ describe("planProject", () => {
       name: "my-docs",
       private: true,
       type: "module",
-      scripts: { dev: "interactive-code-scroll dev", build: "interactive-code-scroll build", serve: "interactive-code-scroll serve" },
+      scripts: { dev: "interactive-code-scroll dev", build: "interactive-code-scroll build", serve: "interactive-code-scroll serve", check: "interactive-code-scroll check" },
       devDependencies: { astro: "^7.3.5", "interactive-code-scroll": "^1.2.3" },
     });
   });
@@ -102,8 +102,28 @@ describe("planProject", () => {
       dev: "interactive-code-scroll dev --index site/index.astro",
       build: "interactive-code-scroll build --index site/index.astro",
       serve: "interactive-code-scroll serve",
+      check: "interactive-code-scroll check",
     });
     expect(plan({ layout: "series", index: "default" }).has("tutorials/index.mdx")).toBe(false);
+  });
+
+  it("sets up the chosen coding agents: skills script, AGENTS.md and a CLAUDE.md import for Claude Code", () => {
+    expect(plan({}).has("AGENTS.md")).toBe(false);
+    expect(JSON.parse(plan({}).get("package.json") ?? "").scripts.skills).toBeUndefined();
+
+    const files = plan({ agents: ["claude", "copilot"] });
+    expect(JSON.parse(files.get("package.json") ?? "").scripts.skills).toBe("interactive-code-scroll skills install --agent claude,copilot");
+    expect(files.get("CLAUDE.md")).toBe("@AGENTS.md\n");
+    const agents = files.get("AGENTS.md") ?? "";
+    expect(agents).toContain("`tutorial/tutorial.mdx`");
+    expect(agents).toContain("in `.claude/skills/`, `.github/skills/`");
+    expect(agents).toContain("`npm run skills`");
+    expect(agents).toContain("After every change: `npm run check`");
+
+    const series = plan({ layout: "series", pm: "pnpm", agents: ["agents"] });
+    expect(series.has("CLAUDE.md")).toBe(false);
+    expect(series.get("AGENTS.md")).toContain("`tutorials/<name>/tutorial.mdx`");
+    expect(series.get("AGENTS.md")).toContain("`pnpm check`");
   });
 
   it("sets up pnpm with packageManager, esbuild builds and the pnpm workflow", () => {
@@ -140,6 +160,19 @@ describe("nextSteps", () => {
       "",
       "Edit tutorial/tutorial.mdx and the files in tutorial/code/.",
     ]);
+  });
+
+  it("adds the skills install (unless it ran) and the check loop for coding agents", () => {
+    const answers = complete({ dir: "docs", pages: false, agents: ["claude"] }, defaults("npm"));
+    expect(nextSteps(answers, { installed: true, gitInitialized: false, skills: false }).slice(0, 4)).toEqual([
+      "cd docs",
+      "npm run skills   # agent skills for your coding agent",
+      "npm run dev   # open the printed URL; edits reload live",
+      "npx interactive-code-scroll doctor   # if something does not start",
+    ]);
+    const done = nextSteps(answers, { installed: true, gitInitialized: false, skills: true });
+    expect(done).not.toContain("npm run skills   # agent skills for your coding agent");
+    expect(done).toContain("npm run check   # validate after each change (your agent knows: see AGENTS.md)");
   });
 });
 
