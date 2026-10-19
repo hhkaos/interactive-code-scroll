@@ -1,6 +1,19 @@
 {
   "changes": [
     {
+      "change": "Workflow agent skills: `ics-tutorial-design` (plan a tutorial in `TUTORIAL-PLAN.md`, one idea per step), `ics-tutorial-review` (reader and editor review with findings per step), `ics-talk` (prepare a tutorial for a live talk) and `ics-migrate` (convert a blog post, codelab or repository, or upgrade the package). `pnpm eval:skills` runs a coding agent on fixed tasks and grades the results.",
+      "docs": [
+        "docs/cli.md#agent-skills",
+        "docs/quick-start.md#use-a-coding-agent",
+        "docs/features.md#writing-tutorials",
+        "skills/ics-tutorial-design/SKILL.md#designing-a-tutorial",
+        "skills/ics-tutorial-review/SKILL.md#reviewing-a-tutorial",
+        "skills/ics-talk/SKILL.md#preparing-a-tutorial-for-a-talk",
+        "skills/ics-migrate/SKILL.md#migrating-to-interactivecodescroll",
+        "skills/ics-authoring/SKILL.md#authoring-interactivecodescroll-tutorials"
+      ]
+    },
+    {
       "change": "`interactive-code-scroll skills install [--agent claude|copilot|agents|all]` copies the agent skills from the installed package into `.claude/skills/`, `.github/skills/` or `.agents/skills/` (default: the agent folders the project has). The project wizard asks which coding agents to set up (`--agents`, default none): it adds `skills` and `check` scripts, `AGENTS.md` and, for Claude Code, a `CLAUDE.md` importing it, and installs the skills after the dependencies; both READMEs mention the question.",
       "docs": [
         "docs/cli.md#agent-skills",
@@ -213,25 +226,29 @@
     }
   ],
   "sourceDigest": "bd2d03d2f87ca726fed4a5128bd2228091d681105be737f57a475d748f08b3f8",
-  "changelogDigest": "45919aa51f5646af03b0a10d51fdc0dd086a7916b5d0e77ba59de7a180f5b232",
+  "changelogDigest": "be1e97b479b5f04cf446f8952e56dd03d8317a3247627703d555bb9a7bcda83d",
   "documents": {
     "README.md": "1429bf2dd5b7a31b9927df5598aaf845d3d50d9c8ae297256fe7d2e5c88a1218",
     "docs/authoring.md": "8233b3169823f39a1e45ec69587cea2e71e9d3684f5b4453756b2663a304c9b9",
-    "docs/cli.md": "10e1db2cba72e5fa5d5d1a9e17fae1181efcb41517a9c138c0507b324ec70865",
+    "docs/cli.md": "0bdc9d26a7494a4b987e32a27f871b401fd66f528ce9c29de169c2fc6ffdbf49",
     "docs/deployment.md": "f235310bae2048407e9c08b07db3512f72696431f77a2a03ada77dda2f6c4f04",
-    "docs/features.md": "1fdc047f590205f5653538a6d1fd12d2f815c325f07b8e83660742a90b063970",
+    "docs/features.md": "d6eda589a89ccd0d836fd74b890d1bd3b2c47a0e0a1ae28403c447f0187de0be",
     "docs/presenting.md": "f57237aae1fd96250217ddca9e9a722a947c6c1440ddd57badcb6df45b02eeb3",
-    "docs/quick-start.md": "1310a00932c8b793c0f4cee43ebbcccb4d9b4f0928604bd0a827f641e1c12058",
+    "docs/quick-start.md": "de5fb0798777b84f68659b9a4d64be8dc108f62acc50edaeb294f9113c688ae0",
     "docs/upgrade.md": "f6173f4ce40cb03dde6d30159612ede4af6eadceb3536531ab874d4368ada578",
     "packages/create-interactive-code-scroll/README.md": "3e9f97abd999eb95f7b435bb2f4a826e64486004142a8224f71a0bbb406a7e64",
     "packages/interactive-code-scroll/README.md": "fd71b4e637bf629fc9f4ab8f96154a0ea1dfb712bc54f7fcdb416531dcd4714e",
-    "skills/ics-authoring/SKILL.md": "86ac090bf7f6f1b6cfe7889230c63ec4c707a481fc06d89413b9d42aa6b35d2d",
+    "skills/ics-authoring/SKILL.md": "1e53f494349f95dd838bdf39607a91eb6b2887b9eda2dde3fe25468843899cf5",
     "skills/ics-authoring/references/code-markers.md": "2720e493f91decd19a2d1a7ee097dc22be4a4dfddbf914f2852328168d16a79f",
     "skills/ics-authoring/references/components.md": "ae3b6c7a9c0fc027cd884ab3a31a70d2791e6702299c212b60e3c61e2a58e042",
     "skills/ics-authoring/references/frontmatter.md": "58f182a2698ed41f2de71cb419faa2f2f14eebcde9ec7149ac2610ad9eb78634",
     "skills/ics-authoring/references/panes-and-results.md": "8f1cbc51cf58d936a8daa1c881b1449633e372920f461bafc0e713fed9ede1e7",
     "skills/ics-authoring/references/project-setup.md": "7a5c6218e277b49cfdfc592658ab1b566eccd1569e8e30dcba1c4f242e1fc49e",
     "skills/ics-authoring/references/variants-and-series.md": "876c51526d36a1085627471cb64c1510b3d3ef367727451614a6b5e765621186",
+    "skills/ics-migrate/SKILL.md": "68358cbbfd0d11e5c4737bc88f163f4623964f9581eea0d3a9f9ec9fc9ac7820",
+    "skills/ics-talk/SKILL.md": "e7f7bced2851216c17e47fc3ba6f35cd2e48d09ec22da66ab242a426e44e068c",
+    "skills/ics-tutorial-design/SKILL.md": "66c16ec42cae6bf56bd52b8d98195000114cd7cf71898cd92cbdc9075d7d30b9",
+    "skills/ics-tutorial-review/SKILL.md": "fef2e39822edf14797c2612b7d00e00d00393a1aa90bc952acd456af10bf3c8f",
     "skills/ics-verify/SKILL.md": "f1194e467ba15123ecde99fd5de7755637aac6298387750577c56659a9b4b324",
     "skills/ics-verify/references/errors.md": "3ada633b59d3cdbd9afa774b181539af321e27949e27b740315a90111952024b"
   }

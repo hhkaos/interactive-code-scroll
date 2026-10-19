@@ -159,7 +159,18 @@ The exit code is 1 when there is an error, 0 otherwise (warnings included).
 
 ## Agent Skills
 
-The package ships two [Agent Skills](https://agentskills.io) that teach coding agents this tool: `ics-authoring` (writing tutorials) and `ics-verify` (the `check` loop). `skills install` copies them, from the installed version, into the folders agents read in your project:
+The package ships [Agent Skills](https://agentskills.io) that teach coding agents this tool:
+
+| Skill | Use it to |
+|---|---|
+| `ics-authoring` | Write and edit tutorials: layout, components, frontmatter, code markers, panes, variants, series, CLI. |
+| `ics-verify` | Check a tutorial after each change (`check --json`, then `build`) and fix what fails. |
+| `ics-tutorial-design` | Plan a tutorial before writing it: audience, goal, one idea per step, `TUTORIAL-PLAN.md`. |
+| `ics-tutorial-review` | Review a draft as a first-time reader and an editor, with findings per step. |
+| `ics-talk` | Prepare a tutorial for a talk: timing, slides as steps, big results, fallbacks, rehearsal. |
+| `ics-migrate` | Convert a blog post, codelab or repository into a tutorial, or upgrade to a new version. |
+
+`skills install` copies them, from the installed version, into the folders agents read in your project:
 
 ```sh
 npm exec -- interactive-code-scroll skills install --agent claude

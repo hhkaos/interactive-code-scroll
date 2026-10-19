@@ -1,0 +1,53 @@
+{
+  "$comment": "Skill evals: each task starts from a project, gives the agent a prompt, then grades the result (grade.mjs). Run with `pnpm eval:skills`.",
+  "suffix": "Validate your work with `npm run check` (this environment has no build or dev server). Do not ask me questions: make reasonable assumptions and say which.",
+  "tasks": [
+    {
+      "id": "add-varfield",
+      "starter": "web",
+      "prompt": "Add a step after \"Show the greeting\" that lets readers choose the greeting word (for example Hello or Hi) with a form field, highlighting only the line that defines it.",
+      "assertions": [
+        { "type": "check" },
+        { "type": "grows", "path": "tutorial/tutorial.mdx", "pattern": "<Step ", "by": 1 },
+        { "type": "grows", "path": "tutorial/tutorial.mdx", "pattern": "<VarField ", "by": 1 },
+        { "type": "grows", "path": "tutorial/code/main.js", "pattern": "@var ", "by": 1 },
+        { "type": "grows", "path": "tutorial/code/main.js", "pattern": "#region ", "by": 1 }
+      ]
+    },
+    {
+      "id": "migrate-post",
+      "starter": "empty",
+      "files": "migrate-post",
+      "prompt": "Convert post.md into an InteractiveCodeScroll tutorial in the tutorial/ folder.",
+      "assertions": [
+        { "type": "check" },
+        { "type": "exists", "path": "tutorial/code/index.html" },
+        { "type": "count", "path": "tutorial/tutorial.mdx", "pattern": "<Step [^>]*region=", "min": 3 },
+        { "type": "count", "path": "tutorial/tutorial.mdx", "pattern": "<VarField ", "min": 1 },
+        { "type": "matches", "path": "tutorial/code/main.js", "pattern": "api\\.open-meteo\\.com" }
+      ]
+    },
+    {
+      "id": "design-plan",
+      "starter": "web",
+      "prompt": "Plan a tutorial that teaches beginners how to add a dark mode toggle to this page, for a 5-minute talk. Do not write the steps yet.",
+      "assertions": [
+        { "type": "exists", "path": "tutorial/TUTORIAL-PLAN.md" },
+        { "type": "matches", "path": "tutorial/TUTORIAL-PLAN.md", "pattern": "^\\|\\s*id\\s*\\|" },
+        { "type": "matches", "path": "tutorial/TUTORIAL-PLAN.md", "pattern": "Audience" },
+        { "type": "unchanged", "path": "tutorial/tutorial.mdx" }
+      ]
+    },
+    {
+      "id": "review",
+      "starter": "web",
+      "prompt": "Review this tutorial and write the findings to REVIEW.md. Do not change the tutorial.",
+      "assertions": [
+        { "type": "matches", "path": "REVIEW.md", "pattern": "^# Review" },
+        { "type": "matches", "path": "REVIEW.md", "pattern": "blocker|major|minor" },
+        { "type": "unchanged", "path": "tutorial/tutorial.mdx" },
+        { "type": "check" }
+      ]
+    }
+  ]
+}

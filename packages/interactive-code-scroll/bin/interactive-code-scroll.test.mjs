@@ -159,7 +159,7 @@ describe("interactive-code-scroll CLI", () => {
     mkdirSync(join(root, ".github", "workflows"), { recursive: true });
 
     const output = installSkills(root, undefined);
-    expect(output).toContain("Installed ics-authoring, ics-verify");
+    expect(output).toContain("Installed ics-authoring, ics-migrate, ics-talk, ics-tutorial-design, ics-tutorial-review, ics-verify");
     expect(output).toContain("  .claude/skills/");
     expect(output).not.toContain(".github/skills/");
     expect(readFileSync(join(root, ".claude", "skills", "ics-authoring", "SKILL.md"), "utf8")).toMatch(/^---\nname: ics-authoring\n/);

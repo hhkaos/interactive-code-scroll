@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Workflow agent skills: `ics-tutorial-design` (plan a tutorial in `TUTORIAL-PLAN.md`, one idea per step), `ics-tutorial-review` (reader and editor review with findings per step), `ics-talk` (prepare a tutorial for a live talk) and `ics-migrate` (convert a blog post, codelab or repository, or upgrade the package). `pnpm eval:skills` runs a coding agent on fixed tasks and grades the results.
+
 - `interactive-code-scroll skills install [--agent claude|copilot|agents|all]` copies the agent skills from the installed package into `.claude/skills/`, `.github/skills/` or `.agents/skills/` (default: the agent folders the project has). The project wizard asks which coding agents to set up (`--agents`, default none): it adds `skills` and `check` scripts, `AGENTS.md` and, for Claude Code, a `CLAUDE.md` importing it, and installs the skills after the dependencies; both READMEs mention the question.
 
 - The documentation review covers the agent skills: `skills/**/*.md` fingerprints are checked like the docs, review records may link skill sections, and new changelog entries that link the authoring or CLI reference must also link a skill section or give a `skillsReason`.

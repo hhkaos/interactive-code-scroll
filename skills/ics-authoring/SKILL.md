@@ -10,7 +10,7 @@ metadata:
 
 A tutorial is explanations in MDX next to a real, runnable project. Each `<Step>` points at a **region** of a code file; as the reader scrolls, the code panel shows that file and highlights the region. Web code (`code/index.html`) runs in a live **Preview**; scripts, REST calls and native apps show captured results in the **Result pane**.
 
-Validate with the `ics-verify` skill (`interactive-code-scroll check --json`) after every change.
+Validate with the `ics-verify` skill (`interactive-code-scroll check --json`) after every change. Related skills: `ics-tutorial-design` (plan before writing), `ics-tutorial-review` (critique a draft), `ics-talk` (present it live), `ics-migrate` (convert a blog post or codelab, or upgrade the package).
 
 ## Find the project
 

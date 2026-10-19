@@ -39,6 +39,7 @@ pnpm preflight:release # same as package preflight before tagging/publishing
 pnpm test         # Vitest unit tests
 pnpm test:pack    # pack the package, install it in a temporary project, and build that project
 pnpm test:e2e     # Playwright: builds and serves the fixtures (:4400 main, :4401 variants, :4402 variants with hidden steps)
+pnpm eval:skills  # agent skill evals: runs a coding agent (default `claude -p`, ICS_EVAL_AGENT overrides) on scripts/skills-eval/tasks.json, then grades; billed, manual, never in CI
 ```
 
 For non-interactive agent/CI runs, prefix preflight commands with `CI=true` so pnpm never prompts while checking dependency state.
@@ -115,7 +116,8 @@ docs/dev/SPEC.md    # requirements source of truth
 docs/dev/PROJECT.md # shared AI agent context (this file)
 docs/dev/TODO.md    # pending tasks only
 docs/dev/research/  # plans, spikes and go/no-go reviews
-skills/             # Agent Skills (ics-authoring, ics-verify): copied to the package dist/skills/ by build-package.mjs; test/skills.test.ts checks format and coverage of components, frontmatter and CLI
+scripts/skills-eval/ # skill evals: tasks.json (prompt, starter, assertions), grade.mjs (deterministic, tested by test/skills-eval.test.mjs), run.mjs (agent run, manual)
+skills/             # Agent Skills (ics-authoring, ics-verify, ics-tutorial-design, ics-tutorial-review, ics-talk, ics-migrate): copied to the package dist/skills/ by build-package.mjs; test/skills.test.ts checks format and coverage of components, frontmatter and CLI
 docs/features.md   # public one-page overview of every capability, linking to the reference
 docs/authoring.md  # public authoring/API reference for tutorial writers
 docs/cli.md        # public CLI reference

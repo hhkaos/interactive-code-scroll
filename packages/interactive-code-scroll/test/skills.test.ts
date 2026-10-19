@@ -17,8 +17,8 @@ const codeSpans = (text: string) => new Set([...text.matchAll(/`([^`\n]+)`/g)].m
 const mentions = (text: string, name: string) => codeSpans(text).has(name) || new RegExp("`[^`\\n]*\\b" + name + "\\b[^`\\n]*`").test(text);
 
 describe("agent skills", () => {
-  it("ships ics-authoring and ics-verify", () => {
-    expect(skills).toEqual(expect.arrayContaining(["ics-authoring", "ics-verify"]));
+  it("ships the authoring, verify, design, review, talk and migrate skills", () => {
+    expect(skills.sort()).toEqual(["ics-authoring", "ics-migrate", "ics-talk", "ics-tutorial-design", "ics-tutorial-review", "ics-verify"]);
   });
 
   for (const skill of skills) {

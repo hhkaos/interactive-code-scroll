@@ -88,10 +88,11 @@ If you chose the GitHub Pages workflow, push to GitHub and enable **Settings →
 
 ## Use a coding agent
 
-The package ships two [Agent Skills](https://agentskills.io) that teach a coding agent (Claude Code, Codex, Copilot, Cursor…) how this tool works, so it does not have to read these docs first:
+The package ships [Agent Skills](https://agentskills.io) that teach a coding agent (Claude Code, GitHub Copilot and others) how this tool works, so it does not have to read these docs first:
 
 - `ics-authoring`: the project layout, components, frontmatter, code markers, panes, variants and series, and the CLI.
 - `ics-verify`: the validation loop on [`interactive-code-scroll check --json`](cli.md#check-without-building), then a build.
+- `ics-tutorial-design`, `ics-tutorial-review`, `ics-talk` and `ics-migrate`: plan a tutorial, review a draft, prepare it for a talk, and convert a blog post or codelab (or upgrade). See [Agent Skills](cli.md#agent-skills).
 
 Pick your agents when you create the project (the wizard asks, or `--agents claude,copilot,agents`): it adds a `skills` script, an `AGENTS.md` and, for Claude Code, a `CLAUDE.md`. In an existing project, copy the skills into your agent's folder from the installed version:
 
@@ -99,7 +100,7 @@ Pick your agents when you create the project (the wizard asks, or `--agents clau
 npx interactive-code-scroll skills install --agent claude   # or copilot, agents, all
 ```
 
-Then ask for what you want, for example "add a step that explains the config region" or "turn this blog post into a tutorial". Run it again after upgrading the package. See [Agent Skills](cli.md#agent-skills). The same skills are in the repository's [`skills/`](https://github.com/hhkaos/interactive-code-scroll/tree/main/skills) folder.
+Then ask for what you want, for example "plan a 10-minute demo of this API", "add a step that explains the config region", "turn this blog post into a tutorial" or "review the tutorial before my talk". Run it again after upgrading the package. See [Agent Skills](cli.md#agent-skills). The same skills are in the repository's [`skills/`](https://github.com/hhkaos/interactive-code-scroll/tree/main/skills) folder.
 
 ## Next steps
 

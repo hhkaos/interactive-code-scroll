@@ -21,7 +21,8 @@
     "test:pack": "node scripts/smoke-pack.mjs",
     "record": "vhs site/recordings/start.tape",
     "docs:check": "node scripts/check-docs.mjs",
-    "docs:review": "node scripts/check-docs.mjs --refresh"
+    "docs:review": "node scripts/check-docs.mjs --refresh",
+    "eval:skills": "node scripts/skills-eval/run.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
